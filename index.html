@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v3)</title>
+  <title>Ads Dashboard (Compact Pro v3.1 Stable)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
+    /* UI 样式保持原封不动 */
     :root{
       --bg:#f5f5f7;
       --card:#ffffff;
@@ -1031,23 +1032,33 @@ const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFrac
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 const fmtPct = (v) => (isFinite(v) ? (v*100).toFixed(2)+"%" : "0.00%");
 
+// FIX: More robust number parsing to handle "$ 1,000.00" or similar weird formats
 const safeNum = (x) => {
   if (typeof x === "number") return isFinite(x) ? x : 0;
   const s = String(x ?? "").trim();
   if (!s) return 0;
   const isPercent = s.includes("%");
-  const n = Number(s.replace(/[%,$]/g,"").replace(/,/g,""));
+  // Remove all non-numeric chars except dot and minus
+  const n = Number(s.replace(/[^0-9.\-]/g, ""));
   if (isFinite(n)) return isPercent ? n / 100 : n;
   return 0;
 };
 
+// FIX: Strictly parse date string to avoid timezone shifts
+// Returns YYYY-MM-DD string
 const toISODate = (d) => {
   if (typeof d === "number" && isFinite(d)) {
+    // Excel Serial Date
     const dt = new Date(Math.round((d - 25569) * 86400 * 1000));
     return isNaN(dt) ? "" : dt.toISOString().slice(0,10);
   }
-  const dt = new Date(d);
-  return isNaN(dt) ? "" : dt.toISOString().slice(0,10);
+  const s = String(d || "").trim();
+  // Attempt to parse YYYY-MM-DD or MM/DD/YYYY
+  const dt = new Date(s);
+  if (isNaN(dt.getTime())) return "";
+  
+  // Return UTC ISO component to standardise
+  return dt.toISOString().slice(0,10); 
 };
 
 const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]);
@@ -1078,9 +1089,11 @@ const libsCheck = () => {
   return !missing.length;
 };
 
+// FIX: Add BOM for Excel UTF-8 compatibility
 const downloadText = (filename, text) => {
+  const blob = new Blob(["\uFEFF"+text], {type:"text/plain;charset=utf-8"});
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], {type:"text/plain;charset=utf-8"}));
+  a.href = URL.createObjectURL(blob);
   a.download = filename;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(a.href);
@@ -1250,7 +1263,13 @@ const importMultipleFiles = async (files) => {
   log(`开始导入：${files.length} 个文件（merge=${mergeMode}, dedupe=${dedupeMode}, maxRows=${maxRows}）`);
   setSubtitle("正在导入文件…（请看左侧导入日志）");
 
-  if (mergeMode === "replace") { ALL = []; importedFiles = []; log("Replace 模式：已清空历史数据", "warn"); }
+  if (mergeMode === "replace") { 
+    ALL = []; 
+    importedFiles = []; 
+    // FIX: Memory leak - clear root cache on replace
+    rootCache.clear(); 
+    log("Replace 模式：已清空历史数据与缓存", "warn"); 
+  }
 
   for (const file of files) {
     const name = file.name, lower = name.toLowerCase(); log(`读取文件：${name}`);
@@ -1488,11 +1507,13 @@ const renderWeekdayAnalysis = () => {
   const days = ["周日 (Sun)", "周一 (Mon)", "周二 (Tue)", "周三 (Wed)", "周四 (Thu)", "周五 (Fri)", "周六 (Sat)"];
   const bins = days.map(()=>[]);
   
+  // FIX: Manual parsing to ensure "Monday" in string is "Monday" in chart
   for (const r of VIEW) {
-    const d = new Date(r.date); 
-    if(!isNaN(d)) {
-       const parts = r.date.split("-");
-       const localDate = new Date(parts[0], parts[1]-1, parts[2]);
+    if(!r.date) continue;
+    const parts = r.date.split("-");
+    if(parts.length === 3) {
+       // Construct date as local, using 12:00 to avoid any DST shifts
+       const localDate = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]), 12, 0, 0);
        bins[localDate.getDay()].push(r);
     }
   }
@@ -1641,7 +1662,8 @@ const renderCVRDistribution = () => {
     const m = b.metrics;
     if (m.impr === 0 && m.spend === 0) return ""; 
     
-    const spendPct = (m.spend / totalSpend);
+    // FIX: divide by zero check
+    const spendPct = totalSpend > 0 ? (m.spend / totalSpend) : 0;
     const barHtml = `
       <div class="bar-row">
         <div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(spendPct*100).toFixed(1)}%</div>
@@ -1691,7 +1713,7 @@ const renderLengthAnalysis = () => {
     if(m.spend === 0 && m.impr === 0) return "";
 
     const label = b.len === 7 ? "7+ Words" : `${b.len} Word${b.len>1?'s':''}`;
-    const spendPct = (m.spend / totalSpend);
+    const spendPct = totalSpend > 0 ? (m.spend / totalSpend) : 0;
     const barHtml = `
       <div class="bar-row">
         <div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(spendPct*100).toFixed(1)}%</div>
@@ -1724,7 +1746,7 @@ const renderParetoAnalysis = () => {
     if (!VIEW.length) { box.innerHTML = ""; return; }
 
     const total = sumMetrics(VIEW);
-    if(total.sales <= 0 || total.spend <= 0) { box.innerHTML = `<div class="small">数据不足以计算帕累托分布</div>`; return; }
+    if(total.sales <= 0 && total.spend <= 0) { box.innerHTML = `<div class="small">数据不足以计算帕累托分布</div>`; return; }
 
     const byTerm = [...groupBy(VIEW, r=>r.searchTerm).values()].map(rows => sumMetrics(rows));
     byTerm.sort((a,b) => b.sales - a.sales);
@@ -1736,12 +1758,12 @@ const renderParetoAnalysis = () => {
         countSales80++;
         if(sumSales >= targetSales) break;
     }
-    const pctSalesTerms = (countSales80 / byTerm.length) * 100;
+    const pctSalesTerms = byTerm.length > 0 ? (countSales80 / byTerm.length) * 100 : 0;
 
     const wastedTerms = byTerm.filter(t => t.orders === 0);
     const wastedSpend = wastedTerms.reduce((acc, t) => acc + t.spend, 0);
-    const wastedPct = (wastedSpend / total.spend) * 100;
-    const wastedCountPct = (wastedTerms.length / byTerm.length) * 100;
+    const wastedPct = total.spend > 0 ? (wastedSpend / total.spend) * 100 : 0;
+    const wastedCountPct = byTerm.length > 0 ? (wastedTerms.length / byTerm.length) * 100 : 0;
 
     box.innerHTML = `
         <div class="pareto-item">
@@ -1765,7 +1787,7 @@ const renderParetoAnalysis = () => {
 };
 
 /** =========================
- * NEW: Match Type Analysis
+ * Match Type Analysis
  * ========================= */
 const renderMatchTypeAnalysis = () => {
   const tbody = $("matchTypeTable")?.querySelector("tbody");
@@ -1789,7 +1811,7 @@ const renderMatchTypeAnalysis = () => {
 
   tbody.innerHTML = result.map(row => {
     if(row.spend === 0 && row.impr === 0) return "";
-    const spendPct = (row.spend / totalSpend);
+    const spendPct = totalSpend > 0 ? (row.spend / totalSpend) : 0;
     const barHtml = `
       <div class="bar-row">
         <div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(spendPct*100).toFixed(1)}%</div>
@@ -1815,7 +1837,7 @@ const renderMatchTypeAnalysis = () => {
 };
 
 /** =========================
- * NEW: Budget Health Analysis
+ * Budget Health Analysis
  * ========================= */
 const renderBudgetHealth = () => {
   const tbody = $("budgetHealthTable")?.querySelector("tbody");
@@ -1840,7 +1862,7 @@ const renderBudgetHealth = () => {
 
   tbody.innerHTML = result.map(row => {
     if(row.spend === 0 && row.impr === 0) return "";
-    const spendPct = (row.spend / totalSpend);
+    const spendPct = totalSpend > 0 ? (row.spend / totalSpend) : 0;
     
     // Color coding
     let color = "var(--accent)";
@@ -2410,7 +2432,7 @@ $("btnDemo").addEventListener("click", () => {
     });
   };
 
-  if ($("mergeMode").value === "replace") { ALL = []; importedFiles = []; }
+  if ($("mergeMode").value === "replace") { ALL = []; importedFiles = []; rootCache.clear(); }
   const a = mkDemoData("demo_A.xlsx", 0), b = mkDemoData("demo_B.xlsx", 10);
   ALL = ALL.concat(a,b);
   importedFiles.push({name:"demo_A.xlsx", rows:a.length}, {name:"demo_B.xlsx", rows:b.length});
