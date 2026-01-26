@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Pro Analysis Suite)</title>
+  <title>Ads Dashboard (Compact Pro)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -36,15 +36,19 @@
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
       font-weight: 500;
+      /* 保持微调后的字体大小 12.8px */
+      font-size: 12.8px;
     }
     
     input, select, button, textarea {
       font-weight: 500;
       font-family: inherit;
+      font-size: 12.8px;
     }
 
     .app{
       display:grid;
+      /* 恢复原始宽度和间距 */
       grid-template-columns: 360px 1fr;
       min-height:100vh;
       gap:18px;
@@ -84,12 +88,12 @@
     .title{ display:flex; flex-direction:column; gap:4px; }
     .title h1{
       margin:0;
-      font-size:18px;
+      font-size:18.5px;
       letter-spacing:-.2px;
       font-weight:800;
     }
     .title .sub{
-      font-size:12px;
+      font-size:12.2px;
       color:var(--muted);
       line-height:1.35;
       max-width: 900px;
@@ -108,7 +112,7 @@
       background:#fff;
       border-radius:999px;
       padding:10px 12px;
-      font-size:12.5px;
+      font-size:12.7px;
       cursor:pointer;
       color:var(--text);
       transition:transform .08s ease, background .2s ease, border-color .2s ease;
@@ -148,9 +152,9 @@
     }
 
     .kpi{ grid-column: span 3; user-select:none; }
-    .kpi .label{ font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; gap:10px; font-weight: 500; }
-    .kpi .value{ margin-top:6px; font-size:22px; font-weight:800; letter-spacing:-.3px; }
-    .kpi .meta{ margin-top:4px; font-size:11.5px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap; font-weight: 500; }
+    .kpi .label{ font-size:12.2px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; gap:10px; font-weight: 500; }
+    .kpi .value{ margin-top:6px; font-size:22.5px; font-weight:800; letter-spacing:-.3px; }
+    .kpi .meta{ margin-top:4px; font-size:11.8px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap; font-weight: 500; }
 
     .pill{
       display:inline-flex;
@@ -160,7 +164,7 @@
       border-radius:999px;
       background:var(--chip);
       border:1px solid var(--line);
-      font-size:11.5px;
+      font-size:11.8px;
       color:var(--muted);
       white-space:nowrap;
       font-weight: 500;
@@ -177,8 +181,8 @@
       margin-bottom:10px;
       flex-wrap:wrap;
     }
-    .cardTitle h2{ margin:0; font-size:14px; letter-spacing:-.2px; font-weight: 700; }
-    .cardTitle .hint{ font-size:12px; color:var(--muted); font-weight: 500; }
+    .cardTitle h2{ margin:0; font-size:14.2px; letter-spacing:-.2px; font-weight: 700; }
+    .cardTitle .hint{ font-size:12.2px; color:var(--muted); font-weight: 500; }
     .cardTitle .rightTools{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
     .chartWrap{ position:relative; width:100%; height:260px; }
@@ -195,14 +199,14 @@
     .fieldGroup:last-child{ border-bottom:none; padding-bottom:0; margin-bottom:0; }
     .fieldRow{ display:flex; flex-direction:column; gap:6px; }
 
-    label{ font-size:12px; color:var(--muted); font-weight: 500; }
+    label{ font-size:12.2px; color:var(--muted); font-weight: 500; }
     input[type="text"], input[type="date"], input[type="number"], select{
       width:100%;
       padding:10px 10px;
       border-radius:12px;
       border:1px solid var(--line);
       background:#fff;
-      font-size:12.5px;
+      font-size:12.7px;
       outline:none;
       transition:border-color .2s ease, box-shadow .2s ease;
       appearance:none;
@@ -220,13 +224,13 @@
       transform:translateY(-50%);
       color:var(--muted);
       pointer-events:none;
-      font-size:12px;
+      font-size:12.2px;
       font-weight: 700;
     }
 
     .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-    .small{ font-size:11.5px; color:var(--muted); line-height:1.35; font-weight: 500; }
+    .small{ font-size:11.8px; color:var(--muted); line-height:1.35; font-weight: 500; }
 
     .chips{ display:flex; gap:8px; flex-wrap:wrap; }
     .chipBtn{
@@ -234,7 +238,7 @@
       background:#fff;
       border-radius:999px;
       padding:8px 10px;
-      font-size:12px;
+      font-size:12.2px;
       cursor:pointer;
     }
     .chipBtn.active{
@@ -270,7 +274,7 @@
       position:sticky; top:0;
       background:var(--card);
       border-bottom:1px solid var(--line);
-      font-size:12px;
+      font-size:12.2px;
       color:var(--muted);
       text-align:left;
       padding:10px 10px;
@@ -283,8 +287,9 @@
     tbody td{
       padding:10px 10px;
       border-bottom:1px solid rgba(229,229,234,.7);
-      font-size:12.5px;
+      font-size:12.8px;
       vertical-align:top;
+      font-variant-numeric: tabular-nums; /* 唯一的“美化”保留：数字等宽对齐 */
     }
     tbody tr:hover{ background:#fbfbfd; }
     tbody tr:last-child td{ border-bottom:none; }
@@ -296,7 +301,7 @@
       padding:4px 8px;
       border-radius:999px;
       border:1px solid var(--line);
-      font-size:11.5px;
+      font-size:11.8px;
       white-space:nowrap;
       user-select:none;
       font-weight: 600;
@@ -318,7 +323,7 @@
       border:0;
       background:transparent;
       padding:8px 12px;
-      font-size:12px;
+      font-size:12.2px;
       cursor:pointer;
       color:var(--muted);
       font-weight: 500;
@@ -333,13 +338,13 @@
       width:110px !important;
       padding:8px 10px !important;
       border-radius:999px !important;
-      font-size:12px !important;
+      font-size:12.2px !important;
     }
     .miniSelect{
       width:150px !important;
       padding:8px 10px !important;
       border-radius:999px !important;
-      font-size:12px !important;
+      font-size:12.2px !important;
     }
 
     #autoManualTable th:last-child, 
@@ -359,7 +364,7 @@
         align-items: center; 
         justify-content: flex-start; 
         gap: 8px; 
-        font-size: 11px;
+        font-size: 11.5px;
         width: 100%;
         max-width: 200px;
     }
@@ -681,7 +686,7 @@
           </table>
         </div>
         <div class="small" style="margin-top:10px;">
-          说明：根据每个词的实际平均 CPC 归类。如果某个低价区间的 ROAS 很高，说明可以尝试在该区间获取更多流量；如果高价区间 ROAS 低，需警惕。
+          说明：根据每个词的实际平均 CPC 归类。1.00-2.00 区间已按 0.1 细分，助你精准定位最佳出价。
         </div>
       </div>
 
@@ -996,7 +1001,7 @@ const PHRASE_REGEXES = PHRASES.map(p => ({
 }));
 
 const normalizeTextBase = (s) => {
-  let x = (s || "").toLowerCase().replace(/[\u2010-\u2015]/g, "-");
+  let x = String(s ?? "").toLowerCase().replace(/[\u2010-\u2015]/g, "-");
   SYNONYM_MAP.forEach(m => { x = x.replace(m.re, m.to); });
   PHRASE_REGEXES.forEach(m => { x = x.replace(m.re, m.to); });
   return x.replace(/[^a-z0-9._\s]/g, " ").replace(/\s+/g, " ").trim();
@@ -1041,10 +1046,10 @@ const COL_MAP_ALIASES = {
   impr: ["展示量","Impressions","Impr"],
   clicks: ["点击量","Clicks"],
   spend: ["花费","Spend","Cost"],
-  sales7d: ["7天总销售额","7 Day Total Sales","7-day total sales","7 day total sales"],
-  orders7d: ["7天总订单数","7天总订单数(#)","7天总订单数 (#)","7天总订单数（#）","7 Day Total Orders (#)","7-day total orders","7 day total orders"],
+  sales7d: ["7天总销售额","7 Day Total Sales","7-day total sales","7 day total sales","Total Sales","Est. Total Sales"],
+  orders7d: ["7天总订单数","7天总订单数(#)","7天总订单数 (#)","7天总订单数（#）","7 Day Total Orders (#)","7-day total orders","7 day total orders","Total Orders","Est. Total Orders"],
   ctr: ["点击率","CTR"],
-  cpc: ["每次点击费用","CPC","Cost per click"],
+  cpc: ["每次点击费用","CPC","Cost per click","Cost per click (CPC)"],
   cvr: ["7天的转化率","7 Day Conversion Rate","7-day conversion rate","7 day conversion rate"],
   acos: ["ACOS","Acos"],
   roas: ["ROAS","Roas"],
@@ -1069,6 +1074,7 @@ const buildMap = (rows) => {
 const normalizeRow = (raw, map, sourceFile) => {
   const impr = safeNum(raw[map.impr]), clicks = safeNum(raw[map.clicks]), spend = safeNum(raw[map.spend]);
   const sales = safeNum(raw[map.sales7d]), orders = safeNum(raw[map.orders7d]);
+  
   return {
     sourceFile, date: toISODate(raw[map.date]),
     portfolio: String(raw[map.portfolio] ?? "").trim(), campaign: String(raw[map.campaign] ?? "").trim(),
@@ -1410,22 +1416,37 @@ const renderWeekdayAnalysis = () => {
 };
 
 /** =========================
- * CPC Distribution Analysis
+ * CPC Distribution Analysis (Granular 1.0-2.0)
  * ========================= */
 const renderCPCDistribution = () => {
   const tbody = $("cpcDistTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
 
+  // Define Buckets
   const buckets = [
       { label: "< 0.50", min:0, max:0.5, rows: [] },
-      { label: "0.50 - 1.00", min:0.5, max:1.0, rows: [] },
-      { label: "1.00 - 1.50", min:1.0, max:1.5, rows: [] },
-      { label: "1.50 - 2.00", min:1.5, max:2.0, rows: [] },
+      { label: "0.50 - 1.00", min:0.5, max:1.0, rows: [] }
+  ];
+
+  // Granular 1.00 - 2.00 in 0.1 steps
+  for (let i = 10; i < 20; i++) {
+      const start = i / 10;
+      const end = (i + 1) / 10;
+      buckets.push({
+          label: `${start.toFixed(2)} - ${end.toFixed(2)}`,
+          min: start,
+          max: end,
+          rows: []
+      });
+  }
+
+  // Higher Buckets
+  buckets.push(
       { label: "2.00 - 3.00", min:2.0, max:3.0, rows: [] },
       { label: "3.00 - 5.00", min:3.0, max:5.0, rows: [] },
       { label: "> 5.00", min:5.0, max:9999, rows: [] }
-  ];
+  );
 
   for (const r of VIEW) {
       if (r.clicks <= 0) continue; 
@@ -1471,14 +1492,13 @@ const renderCPCDistribution = () => {
 };
 
 /** =========================
- * NEW: CVR Efficiency Analysis
+ * CVR Efficiency Analysis
  * ========================= */
 const renderCVRDistribution = () => {
   const tbody = $("cvrDistTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
 
-  // Buckets: 0% (Exact 0), 0-5%, 5-10%, 10-20%, >20%
   const buckets = [
       { label: "0% (无转化)", type: "zero", rows: [] },
       { label: "0% - 5%", min:0, max:0.05, rows: [] },
@@ -1511,7 +1531,6 @@ const renderCVRDistribution = () => {
     const m = b.metrics;
     if (m.impr === 0 && m.spend === 0) return ""; 
     
-    // Visualize Spend Share (where is the money going?)
     const spendPct = (m.spend / totalSpend);
     const barHtml = `
       <div class="bar-row">
@@ -1891,8 +1910,8 @@ const applyFilters = (initial=false) => {
   renderWordFreq();
   renderLongTailMining(); 
   renderWeekdayAnalysis(); 
-  renderCPCDistribution();
-  renderCVRDistribution(); // NEW
+  renderCPCDistribution(); 
+  renderCVRDistribution(); 
   renderAutoManual();
 
   if (initial) {
@@ -2039,16 +2058,20 @@ $("btnDemo").addEventListener("click", () => {
       "reading glasses men 2.5", "women cat-eye blue light readers 2.0", "cheap readers 3.0", "b07ybhgt31"
     ];
     const asins = ["B07YBHGT31","B0ABCDE1234","B0ZZZZZ9999","B0QWERTY123"];
-    return Array.from({length:14}).map((_,i) => {
-      const d = new Date(base); d.setDate(d.getDate() - (13-i) - offset);
+    return Array.from({length:20}).map((_,i) => {
+      const d = new Date(base); 
+      d.setDate(d.getDate() - (13-i) - offset);
+      
       const spend = Math.random()*80 + 10, clicks = Math.round(Math.random()*120);
       const impr = clicks* (Math.round(Math.random()*30)+10);
       const orders = Math.random()<0.35 ? 0 : Math.round(Math.random()*4);
       const sales = orders * (Math.random()*40 + 18);
       const st = terms[Math.floor(Math.random()*terms.length)];
       const targeting = Math.random()<0.5 ? "keyword" : `asin=${asins[Math.floor(Math.random()*asins.length)]}`;
+      
       return {
-        sourceFile:file, date:toISODate(d), portfolio:"Portfolio A",
+        sourceFile:file, date:toISODate(d),
+        portfolio:"Portfolio A",
         campaign:(Math.random()<0.5?"Campaign Manual":"Campaign Auto"),
         adGroup:(Math.random()<0.5?"AdGroup Core":"AdGroup Test"),
         targeting, matchType:(Math.random()<0.4?"broad":(Math.random()<0.6?"phrase":"exact")),
@@ -2070,7 +2093,7 @@ $("btnDemo").addEventListener("click", () => {
   const dates = ALL.map(r=>r.date).sort();
   $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length-1];
   applyFilters(true);
-  log("已载入演示数据（全功能：Root/Action/长尾/周维度/CPC分布/CVR分布/词频）", "good");
+  log("已载入演示数据（全功能分析：周维度 + CPC分布(细分) + CVR阶梯 + 长尾挖掘 + 词频）", "good");
 });
 
 /** =========================
