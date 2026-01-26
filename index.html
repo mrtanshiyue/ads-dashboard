@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v3.1 Stable)</title>
+  <title>Ads Dashboard (Compact Pro v3.2 - Conflict Check)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -361,7 +361,9 @@
     #matchTypeTable th:last-child,
     #matchTypeTable td:last-child,
     #budgetHealthTable th:last-child,
-    #budgetHealthTable td:last-child {
+    #budgetHealthTable td:last-child,
+    #conflictTable th:last-child,
+    #conflictTable td:last-child {
       text-align: left; 
     }
     .bar-row {
@@ -826,6 +828,34 @@
         </div>
         <div class="pareto-box" id="paretoContent">
             </div>
+      </div>
+
+      <div class="card tableCard" id="conflictCard">
+        <div class="cardTitle">
+          <h2>内部竞争/关键词冲突检测 (Conflict & Cannibalization)</h2>
+          <div class="hint">同一 Search Term 出现于多个广告组（权重分散）</div>
+          <div class="rightTools">
+             <span class="pill" style="background:#fff3cd; color:#b54708; border-color:#ffeeba">建议：点击冲突词 → 筛选 → 关掉表现差的组</span>
+          </div>
+        </div>
+        <div class="table-container" style="max-height:480px;">
+          <table id="conflictTable">
+            <thead>
+              <tr>
+                <th>搜索词 (Search Term)</th>
+                <th>冲突位置数 (Count)</th>
+                <th style="width:300px;">涉及广告组 (Locations)</th>
+                <th>总花费</th>
+                <th>总订单</th>
+                <th>ROAS</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="small" style="margin-top:10px;">
+          原理：列出在 2 个或以上不同广告组（Campaign+AdGroup）中消耗预算的词。如果该词在多个组表现差异巨大，建议将预算集中到表现最好的组，否定差的组。
+        </div>
       </div>
 
       <div class="card tableCard">
@@ -1946,6 +1976,80 @@ const renderAutoManual = () => {
 };
 
 /** =========================
+ * Conflict Analysis (NEW)
+ * ========================= */
+const renderConflictAnalysis = () => {
+  const tbody = $("conflictTable")?.querySelector("tbody");
+  if (!tbody) return;
+  if (!VIEW.length) { tbody.innerHTML = ""; return; }
+
+  const map = new Map();
+  // Group by Search Term, record unique Locations
+  for (const r of VIEW) {
+    if (!r.searchTerm || isASINLike(r.searchTerm)) continue; // Skip ASINs
+    if (!map.has(r.searchTerm)) map.set(r.searchTerm, { rows: [], locations: new Set() });
+    const entry = map.get(r.searchTerm);
+    entry.rows.push(r);
+    // Key for location: Campaign > AdGroup
+    entry.locations.add(`${r.campaign} > ${r.adGroup}`);
+  }
+
+  const conflicts = [];
+  for (const [term, data] of map.entries()) {
+    // Conflict definition: Appears in > 1 unique Ad Group location
+    if (data.locations.size > 1) {
+      const m = sumMetrics(data.rows);
+      // Only care if spend > some minimal amount to avoid noise
+      if (m.spend > 5) {
+        conflicts.push({
+          term,
+          count: data.locations.size,
+          locs: Array.from(data.locations),
+          ...m
+        });
+      }
+    }
+  }
+
+  // Sort by Spend descending (focus on costly conflicts)
+  conflicts.sort((a,b) => b.spend - a.spend);
+
+  if (conflicts.length === 0) {
+     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">未检测到明显的内部竞争（条件：不同广告组数 > 1 且 花费 > 5）</td></tr>`;
+     return;
+  }
+
+  tbody.innerHTML = conflicts.slice(0, 50).map(c => {
+    // Format locations for display: first 2, then count
+    const displayLocs = c.locs.slice(0, 2).map(l => `<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(l)}</div>`).join("");
+    const moreCount = c.locs.length > 2 ? `<div style="font-size:10px;color:var(--muted)">+${c.locs.length - 2} more...</div>` : "";
+    
+    // Join all locations for tooltip
+    const fullLocs = c.locs.join("\n");
+
+    return `
+      <tr data-term="${escapeHtml(c.term)}" style="cursor:pointer" title="点击筛选该词">
+        <td style="font-weight:600;color:var(--text)">${escapeHtml(c.term)}</td>
+        <td><span class="tag bad" style="font-size:11px">${c.count}个</span></td>
+        <td title="${escapeHtml(fullLocs)}">${displayLocs}${moreCount}</td>
+        <td>${fmtMoney(c.spend)}</td>
+        <td>${fmtInt(c.orders)}</td>
+        <td>${c.roas.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join("");
+};
+
+// Add listener for conflict table click
+$("conflictTable").addEventListener("click", (e) => {
+  const tr = e.target.closest("tr");
+  if (!tr || !tr.dataset.term) return;
+  $("filterSearchTerm").value = tr.dataset.term;
+  applyFilters();
+});
+
+
+/** =========================
  * Actions (自动判定)
  * ========================= */
 const getRules = () => ({
@@ -2218,9 +2322,11 @@ const applyFilters = (initial=false) => {
     renderCVRDistribution();
     renderLengthAnalysis();
     renderParetoAnalysis();
-    // NEW: Render new features
+    
+    // NEW Features
     renderMatchTypeAnalysis();
     renderBudgetHealth();
+    renderConflictAnalysis();
     return;
   }
 
@@ -2262,6 +2368,7 @@ const applyFilters = (initial=false) => {
   // NEW: Call new render functions
   renderMatchTypeAnalysis();
   renderBudgetHealth();
+  renderConflictAnalysis(); // The new checker
 
   if (initial) {
     document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
@@ -2284,7 +2391,7 @@ const applyQuickRange = (type) => {
     "7d": () => start.setDate(start.getDate()-6),
     "30d": () => start.setDate(start.getDate()-29),
     mtd: () => start.setDate(1),
-    all: () => { $("dateStart").value = minD; $("dateEnd").value = maxD; return; }
+    "all": () => { $("dateStart").value = minD; $("dateEnd").value = maxD; return; }
   };
   rangeMap[type]();
   const isoStart = toISODate(start);
@@ -2406,23 +2513,32 @@ $("btnDemo").addEventListener("click", () => {
       "spring hinge reading glasses 2.5", "progressive readers", "anti glare computer glasses 2.0",
       "reading glasses men 2.5", "women cat-eye blue light readers 2.0", "cheap readers 3.0", "b07ybhgt31"
     ];
+    // FORCE CONFLICT DATA: Ensure "blue light reading glasses 2.0" appears in multiple different groups
     const asins = ["B07YBHGT31","B0ABCDE1234","B0ZZZZZ9999","B0QWERTY123"];
-    return Array.from({length:20}).map((_,i) => {
+    return Array.from({length:30}).map((_,i) => {
       const d = new Date(base); 
       d.setDate(d.getDate() - (13-i) - offset);
       
+      let st = terms[Math.floor(Math.random()*terms.length)];
+      // Inject deliberate conflict
+      if(i % 5 === 0) st = "blue light reading glasses 2.0"; 
+
       const spend = Math.random()*80 + 10, clicks = Math.round(Math.random()*120);
       const impr = clicks* (Math.round(Math.random()*30)+10);
       const orders = Math.random()<0.35 ? 0 : Math.round(Math.random()*4);
       const sales = orders * (Math.random()*40 + 18);
-      const st = terms[Math.floor(Math.random()*terms.length)];
+      
       const targeting = Math.random()<0.5 ? "keyword" : `asin=${asins[Math.floor(Math.random()*asins.length)]}`;
       
+      // Randomize Campaign/AdGroup to create conflicts
+      const campaign = Math.random()<0.5 ? "Campaign Manual" : (Math.random()<0.5?"Campaign Auto":"Campaign Seasonal");
+      const adGroup = Math.random()<0.5 ? "AdGroup Core" : "AdGroup Test";
+
       return {
         sourceFile:file, date:toISODate(d),
         portfolio:"Portfolio A",
-        campaign:(Math.random()<0.5?"Campaign Manual":"Campaign Auto"),
-        adGroup:(Math.random()<0.5?"AdGroup Core":"AdGroup Test"),
+        campaign,
+        adGroup,
         targeting, matchType:(Math.random()<0.4?"broad":(Math.random()<0.6?"phrase":"exact")),
         searchTerm:st, searchTermRoot:searchTermToRoot(st),
         impr, clicks, spend, sales, orders,
@@ -2442,7 +2558,7 @@ $("btnDemo").addEventListener("click", () => {
   const dates = ALL.map(r=>r.date).sort();
   $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length-1];
   applyFilters(true);
-  log("已载入演示数据（全功能分析：周维度 + 匹配类型 + 预算健康 + 帕累托 + CVR/CPC分布）", "good");
+  log("已载入演示数据（含冲突检测演示）", "good");
 });
 
 /** =========================
