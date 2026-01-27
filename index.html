@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v3.5 - Log Moved)</title>
+  <title>Ads Dashboard (Compact Pro v3.6 - Unique Exports)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1175,6 +1175,18 @@ const toISODate = (d) => {
   return dt.toISOString().slice(0,10); 
 };
 
+// [新增] 生成简单时间戳字符串 (用于文件名去重)
+const getTs = () => {
+  const now = new Date();
+  const YYYY = now.getFullYear();
+  const MM = String(now.getMonth() + 1).padStart(2, '0');
+  const DD = String(now.getDate()).padStart(2, '0');
+  const HH = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  return `${YYYY}${MM}${DD}_${HH}${mm}${ss}`;
+};
+
 const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]);
 const clamp = (v,min,max)=>Math.max(min, Math.min(max, v));
 const setSubtitle = (text)=>$("subtitle").textContent = text;
@@ -1610,7 +1622,7 @@ const exportLongTailCSV = () => {
             c.term, c.wordCount, c.spend.toFixed(2), c.sales.toFixed(2), c.orders, c.roas.toFixed(2), (c.acos*100).toFixed(2)+"%"
         ]);
     }
-    const filename = `long_tail_mining_${$("dateStart").value}.csv`;
+    const filename = `long_tail_mining_${$("dateStart").value}_${getTs()}.csv`;
     downloadText(filename, toCSV(rows));
 };
 
@@ -2218,7 +2230,9 @@ const exportNegativesCSV = () => {
     }
   }
   if (rows.length === 1) { log("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）", "warn"); alert("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）。"); return; }
-  const filename = `negatives_${rankBy}_${negMatch}_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}.csv`;
+  
+  // [修改] 增加时间戳
+  const filename = `negatives_${rankBy}_${negMatch}_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
   downloadText(filename, toCSV(rows));
   log(`已导出否定词 CSV：${filename}（${rows.length-1} 条）`, "good");
 };
@@ -2236,7 +2250,8 @@ const exportBidUpCSV = () => {
       (it.roas ?? 0).toFixed(2), ((it.acos ?? 0) * 100).toFixed(2) + "%"
     ]);
   }
-  const filename = `bidup_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}.csv`;
+  // [修改] 增加时间戳
+  const filename = `bidup_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
   downloadText(filename, toCSV(rows));
   log(`已导出加价词 CSV：${filename}（${rows.length-1} 条）`, "good");
 };
@@ -2267,7 +2282,8 @@ const exportRankCSV = () => {
             r.reason
          ]);
     }
-    const filename = `rank_list_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}.csv`;
+    // [修改] 增加时间戳
+    const filename = `rank_list_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
     downloadText(filename, toCSV(rows));
     log(`已导出榜单 CSV：${filename}（${rows.length-1} 条）`, "good");
 };
