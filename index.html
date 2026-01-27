@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v4.1 - Top N 120)</title>
+  <title>Ads Dashboard (Compact Pro v4.2 - Optimized)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -79,7 +79,7 @@
       font-size: 12.8px;
       transition: background .3s ease, color .3s ease;
     }
-     
+      
     input, select, button, textarea {
       font-weight: 500;
       font-family: inherit;
@@ -168,7 +168,7 @@
     }
     .btn:hover{ background:var(--hover-bg); border-color:var(--muted); }
     .btn:active{ transform:scale(.98); }
-     
+      
     .btn.primary{
       border-color:rgba(0,113,227,.25);
       background:rgba(0,113,227,.08);
@@ -1103,6 +1103,9 @@ const safeNum = (x) => {
 // [修复] 日期解析逻辑 (Fix Timezone Shifting Bug)
 // 之前使用 new Date(string) 会导致 "2023-10-01" 在某些时区(如美国)变成 "2023-09-30"
 const toISODate = (d) => {
+  // [优化] 增加对 Date 对象的直接支持
+  if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
+
   if (typeof d === "number" && isFinite(d)) {
     // Excel Serial Date (1900 bug handled by assuming standard logic is fine for ad data)
     // -25569 is offset for 1970-01-01
@@ -1281,12 +1284,17 @@ const normalizeRow = (raw, map, sourceFile) => {
   const impr = safeNum(raw[map.impr]), clicks = safeNum(raw[map.clicks]), spend = safeNum(raw[map.spend]);
   const sales = safeNum(raw[map.sales7d]), orders = safeNum(raw[map.orders7d]);
   
+  // [优化] 预计算小写 searchTerm 供筛选使用
+  const st = String(raw[map.searchTerm] ?? "").trim();
+
   return {
     sourceFile, date: toISODate(raw[map.date]),
     portfolio: String(raw[map.portfolio] ?? "").trim(), campaign: String(raw[map.campaign] ?? "").trim(),
     adGroup: String(raw[map.adGroup] ?? "").trim(), targeting: String(raw[map.targeting] ?? "").trim(),
-    matchType: String(raw[map.matchType] ?? "").trim(), searchTerm: String(raw[map.searchTerm] ?? "").trim(),
-    searchTermRoot: searchTermToRoot(String(raw[map.searchTerm] ?? "").trim()),
+    matchType: String(raw[map.matchType] ?? "").trim(), 
+    searchTerm: st,
+    searchTermLower: st.toLowerCase(), // 预计算，提速明显
+    searchTermRoot: searchTermToRoot(st),
     impr, clicks, spend, sales, orders,
     ctr: map.ctr ? safeNum(raw[map.ctr]) : (impr > 0 ? clicks / impr : 0),
     cpc: map.cpc ? safeNum(raw[map.cpc]) : (clicks > 0 ? spend / clicks : 0),
@@ -1443,8 +1451,6 @@ const wireCascade = () => {
  * Aggregations
  * ========================= */
 const withinDate = (r, start, end) => (!start || r.date >= start) && (!end || r.date <= end);
-// [修改] 支持 exact 参数
-const includesSearch = (r, q, exact) => (!q || (exact ? (r.searchTerm||"").toLowerCase() === q.toLowerCase() : (r.searchTerm || "").toLowerCase().includes(q.toLowerCase())));
 
 const sumMetrics = (rows) => {
   const sums = { impr:0, clicks:0, spend:0, sales:0, orders:0 };
@@ -1865,38 +1871,51 @@ const renderAutoManual = () => {
 };
 
 /** =========================
- * Conflict Analysis (NEW)
+ * Conflict Analysis (Optimized)
  * ========================= */
 const renderConflictAnalysis = () => {
   const tbody = $("conflictTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
 
+  // [优化] 使用 Map 聚合数据，而不是存储完整的 rows 数组，极大降低内存占用
   const map = new Map();
-  // Group by Search Term, record unique Locations
+  
   for (const r of VIEW) {
     if (!r.searchTerm || isASINLike(r.searchTerm)) continue; // Skip ASINs
-    if (!map.has(r.searchTerm)) map.set(r.searchTerm, { rows: [], locations: new Set() });
+    
+    // 初始化聚合对象
+    if (!map.has(r.searchTerm)) {
+        map.set(r.searchTerm, { 
+            locations: new Set(), 
+            spend: 0, 
+            orders: 0, 
+            sales: 0 
+        });
+    }
+    
     const entry = map.get(r.searchTerm);
-    entry.rows.push(r);
-    // Key for location: Campaign > AdGroup
     entry.locations.add(`${r.campaign} > ${r.adGroup}`);
+    // 累加指标
+    entry.spend += r.spend;
+    entry.orders += r.orders;
+    entry.sales += r.sales;
   }
 
   const conflicts = [];
   for (const [term, data] of map.entries()) {
     // Conflict definition: Appears in > 1 unique Ad Group location
-    if (data.locations.size > 1) {
-      const m = sumMetrics(data.rows);
-      // Only care if spend > some minimal amount to avoid noise
-      if (m.spend > 5) {
-        conflicts.push({
-          term,
-          count: data.locations.size,
-          locs: Array.from(data.locations),
-          ...m
-        });
-      }
+    // Only care if spend > some minimal amount to avoid noise
+    if (data.locations.size > 1 && data.spend > 5) {
+      conflicts.push({
+        term,
+        count: data.locations.size,
+        locs: Array.from(data.locations),
+        spend: data.spend,
+        orders: data.orders,
+        // 计算 ROAS
+        roas: data.spend > 0 ? data.sales / data.spend : 0
+      });
     }
   }
 
@@ -2025,7 +2044,6 @@ const exportNegativesCSV = () => {
   }
   if (rows.length === 1) { log("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）", "warn"); alert("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）。"); return; }
   
-  // [修改] 增加时间戳
   const filename = `negatives_${rankBy}_${negMatch}_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
   downloadText(filename, toCSV(rows));
   log(`已导出否定词 CSV：${filename}（${rows.length-1} 条）`, "good");
@@ -2044,7 +2062,6 @@ const exportBidUpCSV = () => {
       (it.roas ?? 0).toFixed(2), ((it.acos ?? 0) * 100).toFixed(2) + "%"
     ]);
   }
-  // [修改] 增加时间戳
   const filename = `bidup_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
   downloadText(filename, toCSV(rows));
   log(`已导出加价词 CSV：${filename}（${rows.length-1} 条）`, "good");
@@ -2076,7 +2093,6 @@ const exportRankCSV = () => {
             r.reason
          ]);
     }
-    // [修改] 增加时间戳
     const filename = `rank_list_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
     downloadText(filename, toCSV(rows));
     log(`已导出榜单 CSV：${filename}（${rows.length-1} 条）`, "good");
@@ -2256,7 +2272,6 @@ const applyFilters = (initial=false) => {
     
     // NEW Features
     renderMatchTypeAnalysis();
-    // [Removed] renderBudgetHealth();
     renderConflictAnalysis();
     return;
   }
@@ -2292,8 +2307,15 @@ const applyFilters = (initial=false) => {
         if (filters.filterAdType === "auto" && isManual) return false;
     }
 
-    // 搜索词筛选
-    if (!includesSearch(r, filters.filterSearchTerm, filters.filterSearchExact)) return false;
+    // [优化] 使用预计算的 Lowercase Search Term 进行筛选，大幅提升速度
+    if (filters.filterSearchTerm) {
+        const term = filters.filterSearchTerm.toLowerCase();
+        if (filters.filterSearchExact) {
+            if (r.searchTermLower !== term) return false;
+        } else {
+            if (!r.searchTermLower.includes(term)) return false;
+        }
+    }
 
     return true;
   });
@@ -2502,7 +2524,7 @@ $("btnDemo").addEventListener("click", () => {
       const adGroup = Math.random()<0.5 ? "AdGroup Core" : "AdGroup Test";
 
       return {
-        sourceFile:file, date:toISODate(d),
+        sourceFile:file, date:toISODate(d), // Now safe due to updated toISODate
         portfolio:"Portfolio A",
         campaign,
         adGroup,
