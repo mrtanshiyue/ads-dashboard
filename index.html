@@ -3,14 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v3.3 - Export Added)</title>
+  <title>Ads Dashboard (Compact Pro v3.5 - Log Moved)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
+  <script>
+    (() => {
+      const saved = localStorage.getItem("theme");
+      if (saved) document.documentElement.setAttribute("data-theme", saved);
+    })();
+  </script>
+
   <style>
-    /* UI 样式保持原封不动 */
+    /* ================= UI 样式 (保持不变) ================= */
     :root{
       --bg:#f5f5f7;
       --card:#ffffff;
@@ -27,7 +34,34 @@
       --softGood: rgba(26,127,55,.10);
       --softBad: rgba(180,35,24,.10);
       --softWarn: rgba(181,71,8,.12);
+      --input-bg: #ffffff;
+      --hover-bg: #fbfbfd;
+      --th-bg: #ffffff;
+      --chart-grid: rgba(229,229,234,.6); /* 图表网格线颜色变量 */
     }
+
+    /* Dark Mode Variables */
+    [data-theme="dark"] {
+      --bg: #151516;
+      --card: #242426;
+      --text: #f5f5f7;
+      --muted: #a1a1a6;
+      --line: #38383a;
+      --shadow: 0 10px 30px rgba(0,0,0,.5);
+      --accent: #0a84ff;
+      --good: #30d158;
+      --bad: #ff453a;
+      --warn: #ff9f0a;
+      --chip: #3a3a3c;
+      --softGood: rgba(48, 209, 88, 0.15);
+      --softBad: rgba(255, 69, 58, 0.15);
+      --softWarn: rgba(255, 159, 10, 0.15);
+      --input-bg: #1c1c1e;
+      --hover-bg: #323234;
+      --th-bg: #242426;
+      --chart-grid: rgba(255,255,255,.1); /* 深色模式网格线 */
+    }
+
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -38,6 +72,7 @@
       -moz-osx-font-smoothing:grayscale;
       font-weight: 500;
       font-size: 12.8px;
+      transition: background .3s ease, color .3s ease;
     }
     
     input, select, button, textarea {
@@ -60,13 +95,15 @@
       top:18px;
       height:calc(100vh - 36px);
       overflow:auto;
-      background:rgba(255,255,255,.7);
-      backdrop-filter:saturate(180%) blur(16px);
+      background:var(--card);
       border:1px solid var(--line);
       border-radius:var(--radius);
       padding:16px;
       box-shadow:var(--shadow);
+      transition: background .3s ease, border-color .3s ease;
     }
+    [data-theme="dark"] .sidebar { background: #242426; }
+
     .content{
       display:flex;
       flex-direction:column;
@@ -80,9 +117,10 @@
       gap:12px;
       padding:14px 16px;
       border-radius:var(--radius);
-      background:rgba(255,255,255,.75);
+      background:var(--card);
       border:1px solid var(--line);
       box-shadow:var(--shadow);
+      transition: background .3s ease, border-color .3s ease;
     }
     .title{ display:flex; flex-direction:column; gap:4px; }
     .title h1{
@@ -90,6 +128,7 @@
       font-size:18.5px;
       letter-spacing:-.2px;
       font-weight:800;
+      color: var(--text);
     }
     .title .sub{
       font-size:12.2px;
@@ -108,13 +147,13 @@
     .btn{
       appearance:none;
       border:1px solid var(--line);
-      background:#fff;
+      background:var(--card);
       border-radius:999px;
       padding:10px 12px;
       font-size:12.7px;
       cursor:pointer;
       color:var(--text);
-      transition:transform .08s ease, background .2s ease, border-color .2s ease;
+      transition:all .2s ease;
       display:inline-flex;
       align-items:center;
       gap:8px;
@@ -122,17 +161,29 @@
       user-select:none;
       white-space:nowrap;
     }
-    .btn:hover{ background:#fbfbfd; border-color:#d2d2d7; }
+    .btn:hover{ background:var(--hover-bg); border-color:var(--muted); }
     .btn:active{ transform:scale(.98); }
+    
     .btn.primary{
       border-color:rgba(0,113,227,.25);
       background:rgba(0,113,227,.08);
-      color:#0b62c6;
+      color:var(--accent);
     }
+    [data-theme="dark"] .btn.primary {
+       background: rgba(10, 132, 255, 0.15);
+       color: #409cff;
+       border-color: rgba(10, 132, 255, 0.3);
+    }
+
     .btn.danger{
       border-color:rgba(180,35,24,.22);
       background:rgba(180,35,24,.08);
-      color:#8a1f17;
+      color:var(--bad);
+    }
+    [data-theme="dark"] .btn.danger {
+       background: rgba(255, 69, 58, 0.15);
+       color: #ff453a;
+       border-color: rgba(255, 69, 58, 0.3);
     }
 
     .grid{
@@ -148,11 +199,12 @@
       box-shadow:var(--shadow);
       padding:14px;
       min-width:0;
+      transition: background .3s ease, border-color .3s ease;
     }
 
     .kpi{ grid-column: span 3; user-select:none; }
     .kpi .label{ font-size:12.2px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; gap:10px; font-weight: 500; }
-    .kpi .value{ margin-top:6px; font-size:22.5px; font-weight:800; letter-spacing:-.3px; }
+    .kpi .value{ margin-top:6px; font-size:22.5px; font-weight:800; letter-spacing:-.3px; color:var(--text); }
     .kpi .meta{ margin-top:4px; font-size:11.8px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap; font-weight: 500; }
 
     .pill{
@@ -180,7 +232,7 @@
       margin-bottom:10px;
       flex-wrap:wrap;
     }
-    .cardTitle h2{ margin:0; font-size:14.2px; letter-spacing:-.2px; font-weight: 700; }
+    .cardTitle h2{ margin:0; font-size:14.2px; letter-spacing:-.2px; font-weight: 700; color:var(--text); }
     .cardTitle .hint{ font-size:12.2px; color:var(--muted); font-weight: 500; }
     .cardTitle .rightTools{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
@@ -204,16 +256,21 @@
       padding:10px 10px;
       border-radius:12px;
       border:1px solid var(--line);
-      background:#fff;
+      background:var(--input-bg);
+      color: var(--text);
       font-size:12.7px;
       outline:none;
-      transition:border-color .2s ease, box-shadow .2s ease;
+      transition:border-color .2s ease, box-shadow .2s ease, background .3s ease;
       appearance:none;
     }
     input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, select:focus{
-      border-color:rgba(0,113,227,.45);
+      border-color:var(--accent);
       box-shadow:0 0 0 4px rgba(0,113,227,.12);
     }
+    [data-theme="dark"] input[type="text"]:focus, [data-theme="dark"] input[type="date"]:focus, [data-theme="dark"] select:focus {
+        box-shadow: 0 0 0 4px rgba(10,132,255,0.2);
+    }
+
     .selectWrap{ position:relative; }
     .selectWrap:after{
       content:"▾";
@@ -234,23 +291,28 @@
     .chips{ display:flex; gap:8px; flex-wrap:wrap; }
     .chipBtn{
       border:1px solid var(--line);
-      background:#fff;
+      background:var(--input-bg);
       border-radius:999px;
       padding:8px 10px;
       font-size:12.2px;
       cursor:pointer;
+      color: var(--text);
     }
     .chipBtn.active{
       border-color:rgba(0,113,227,.35);
       background:rgba(0,113,227,.08);
-      color:#0b62c6;
+      color:var(--accent);
       font-weight: 600;
+    }
+    [data-theme="dark"] .chipBtn.active {
+        background: rgba(10,132,255,0.2);
+        color: #409cff;
     }
 
     .fileList{
       border:1px solid var(--line);
       border-radius:14px;
-      background:#fff;
+      background:var(--input-bg);
       padding:10px;
       max-height:180px;
       overflow:auto;
@@ -271,7 +333,7 @@
     }
     thead th{
       position:sticky; top:0;
-      background:var(--card);
+      background:var(--th-bg);
       border-bottom:1px solid var(--line);
       font-size:12.2px;
       color:var(--muted);
@@ -282,15 +344,17 @@
       user-select:none;
       z-index:2;
       font-weight: 600;
+      transition: background .3s ease;
     }
     tbody td{
       padding:10px 10px;
-      border-bottom:1px solid rgba(229,229,234,.7);
+      border-bottom:1px solid var(--line);
       font-size:12.8px;
       vertical-align:top;
       font-variant-numeric: tabular-nums; 
+      color: var(--text);
     }
-    tbody tr:hover{ background:#fbfbfd; }
+    tbody tr:hover{ background:var(--hover-bg); }
     tbody tr:last-child td{ border-bottom:none; }
 
     .tag{
@@ -305,15 +369,15 @@
       user-select:none;
       font-weight: 600;
     }
-    .tag.good{ color:var(--good); background:var(--softGood); border-color:rgba(26,127,55,.18); }
-    .tag.bad{ color:var(--bad); background:var(--softBad); border-color:rgba(180,35,24,.18); }
-    .tag.warn{ color:var(--warn); background:var(--softWarn); border-color:rgba(181,71,8,.20); }
+    .tag.good{ color:var(--good); background:var(--softGood); border-color:transparent; }
+    .tag.bad{ color:var(--bad); background:var(--softBad); border-color:transparent; }
+    .tag.warn{ color:var(--warn); background:var(--softWarn); border-color:transparent; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
     .seg{
       display:inline-flex;
       border:1px solid var(--line);
-      background:#fff;
+      background:var(--input-bg);
       border-radius:999px;
       overflow:hidden;
       box-shadow:0 6px 16px rgba(0,0,0,.06);
@@ -329,8 +393,11 @@
     }
     .segBtn.active{
       background:rgba(0,113,227,.10);
-      color:#0b62c6;
+      color:var(--accent);
       font-weight: 600;
+    }
+    [data-theme="dark"] .segBtn.active {
+        background: rgba(10,132,255,0.2);
     }
 
     .miniInput{
@@ -346,6 +413,7 @@
       font-size:12.2px !important;
     }
 
+    /* 对齐调整 */
     #autoManualTable th:last-child, 
     #autoManualTable td:last-child,
     #longTailTable th:last-child,
@@ -378,7 +446,7 @@
     .bar-track {
         flex: 1;
         height: 6px; 
-        background: #e5e5ea; 
+        background: var(--line); 
         border-radius: 3px; 
         overflow: hidden; 
         display: flex;
@@ -393,7 +461,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 12px;
-      background: #fbfbfd;
+      background: var(--hover-bg);
       border: 1px solid var(--line);
       border-radius: 12px;
     }
@@ -454,11 +522,6 @@
       <div class="fieldRow">
         <label>已导入文件</label>
         <div id="fileList" class="fileList"><div class="small">暂无</div></div>
-      </div>
-
-      <div class="fieldRow">
-        <label>导入日志</label>
-        <div id="logBox" class="fileList" style="max-height:220px"><div class="small">暂无</div></div>
       </div>
 
       <div class="row2">
@@ -618,6 +681,14 @@
       <div class="fieldRow"><button class="btn" id="btnReset" type="button">重置筛选</button></div>
       <div class="fieldRow"><button class="btn danger" id="btnClearAll" type="button">清空已导入数据</button></div>
     </div>
+
+    <div class="fieldGroup">
+      <div class="fieldRow">
+        <label>导入日志</label>
+        <div id="logBox" class="fileList" style="max-height:220px"><div class="small">暂无</div></div>
+      </div>
+    </div>
+
   </aside>
 
   <main class="content">
@@ -627,6 +698,7 @@
         <div class="sub" id="subtitle">未导入数据。请导入同类报表（支持多文件）。</div>
       </div>
       <div class="actions">
+        <button class="btn" id="btnTheme" type="button">🌗 深色/浅色</button>
         <button class="btn" id="btnCheck" type="button">依赖自检</button>
         <button class="btn" id="btnDemo" type="button">载入演示数据（两文件合并）</button>
       </div>
@@ -835,7 +907,7 @@
           <h2>内部竞争/关键词冲突检测 (Conflict & Cannibalization)</h2>
           <div class="hint">同一 Search Term 出现于多个广告组（权重分散）</div>
           <div class="rightTools">
-             <span class="pill" style="background:#fff3cd; color:#b54708; border-color:#ffeeba">建议：点击冲突词 → 筛选 → 关掉表现差的组</span>
+             <span class="pill" style="background:var(--softWarn); color:var(--warn); border-color:transparent">建议：点击冲突词 → 筛选 → 关掉表现差的组</span>
           </div>
         </div>
         <div class="table-container" style="max-height:480px;">
@@ -1064,32 +1136,42 @@ const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFrac
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 const fmtPct = (v) => (isFinite(v) ? (v*100).toFixed(2)+"%" : "0.00%");
 
-// FIX: More robust number parsing to handle "$ 1,000.00" or similar weird formats
+// Robust number parsing
 const safeNum = (x) => {
   if (typeof x === "number") return isFinite(x) ? x : 0;
   const s = String(x ?? "").trim();
   if (!s) return 0;
   const isPercent = s.includes("%");
-  // Remove all non-numeric chars except dot and minus
   const n = Number(s.replace(/[^0-9.\-]/g, ""));
   if (isFinite(n)) return isPercent ? n / 100 : n;
   return 0;
 };
 
-// FIX: Strictly parse date string to avoid timezone shifts
-// Returns YYYY-MM-DD string
+// [修复] 日期解析逻辑 (Fix Timezone Shifting Bug)
+// 之前使用 new Date(string) 会导致 "2023-10-01" 在某些时区(如美国)变成 "2023-09-30"
 const toISODate = (d) => {
   if (typeof d === "number" && isFinite(d)) {
-    // Excel Serial Date
+    // Excel Serial Date (1900 bug handled by assuming standard logic is fine for ad data)
+    // -25569 is offset for 1970-01-01
     const dt = new Date(Math.round((d - 25569) * 86400 * 1000));
     return isNaN(dt) ? "" : dt.toISOString().slice(0,10);
   }
   const s = String(d || "").trim();
-  // Attempt to parse YYYY-MM-DD or MM/DD/YYYY
+  if (!s) return "";
+  
+  // 尝试匹配 YYYY-MM-DD 或 YYYY/MM/DD
+  // 如果直接匹配成功，直接返回字符串，避免进入 Date 对象进行时区转换
+  const matchISO = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  if (matchISO) {
+    const y = matchISO[1];
+    const m = matchISO[2].padStart(2, "0");
+    const d = matchISO[3].padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  // Fallback for M/D/YY or other formats
   const dt = new Date(s);
   if (isNaN(dt.getTime())) return "";
-  
-  // Return UTC ISO component to standardise
   return dt.toISOString().slice(0,10); 
 };
 
@@ -1121,7 +1203,16 @@ const libsCheck = () => {
   return !missing.length;
 };
 
-// FIX: Add BOM for Excel UTF-8 compatibility
+// [修复] CSV 注入防御 (Formula Injection Protection)
+const toCSV = (rows) => rows.map(r => r.map(v => {
+  let s = String(v ?? "");
+  // 如果首字符是 = + - @，在前面加单引号，防止 Excel 自动执行
+  if (/^[=+\-@]/.test(s)) {
+     s = "'" + s;
+  }
+  return /[",\n]/.test(s) ? `"${s.replaceAll('"','""')}"` : s;
+}).join(",")).join("\n");
+
 const downloadText = (filename, text) => {
   const blob = new Blob(["\uFEFF"+text], {type:"text/plain;charset=utf-8"});
   const a = document.createElement("a");
@@ -1130,10 +1221,6 @@ const downloadText = (filename, text) => {
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(a.href);
 };
-const toCSV = (rows) => rows.map(r => r.map(v => {
-  const s = String(v ?? "");
-  return /[",\n]/.test(s) ? `"${s.replaceAll('"','""')}"` : s;
-}).join(",")).join("\n");
 
 /** =========================
  * Root Mining
@@ -1298,7 +1385,6 @@ const importMultipleFiles = async (files) => {
   if (mergeMode === "replace") { 
     ALL = []; 
     importedFiles = []; 
-    // FIX: Memory leak - clear root cache on replace
     rootCache.clear(); 
     log("Replace 模式：已清空历史数据与缓存", "warn"); 
   }
@@ -1539,12 +1625,11 @@ const renderWeekdayAnalysis = () => {
   const days = ["周日 (Sun)", "周一 (Mon)", "周二 (Tue)", "周三 (Wed)", "周四 (Thu)", "周五 (Fri)", "周六 (Sat)"];
   const bins = days.map(()=>[]);
   
-  // FIX: Manual parsing to ensure "Monday" in string is "Monday" in chart
   for (const r of VIEW) {
     if(!r.date) continue;
     const parts = r.date.split("-");
     if(parts.length === 3) {
-       // Construct date as local, using 12:00 to avoid any DST shifts
+       // Construct date as local, using 12:00 to avoid any DST shifts or timezone boundary issues
        const localDate = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]), 12, 0, 0);
        bins[localDate.getDay()].push(r);
     }
@@ -1586,13 +1671,11 @@ const renderCPCDistribution = () => {
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
 
-  // Define Buckets
   const buckets = [
       { label: "< 0.50", min:0, max:0.5, rows: [] },
       { label: "0.50 - 1.00", min:0.5, max:1.0, rows: [] }
   ];
 
-  // Granular 1.00 - 2.00 in 0.1 steps
   for (let i = 10; i < 20; i++) {
       const start = i / 10;
       const end = (i + 1) / 10;
@@ -1604,7 +1687,6 @@ const renderCPCDistribution = () => {
       });
   }
 
-  // Higher Buckets
   buckets.push(
       { label: "2.00 - 3.00", min:2.0, max:3.0, rows: [] },
       { label: "3.00 - 5.00", min:3.0, max:5.0, rows: [] },
@@ -1694,7 +1776,6 @@ const renderCVRDistribution = () => {
     const m = b.metrics;
     if (m.impr === 0 && m.spend === 0) return ""; 
     
-    // FIX: divide by zero check
     const spendPct = totalSpend > 0 ? (m.spend / totalSpend) : 0;
     const barHtml = `
       <div class="bar-row">
@@ -2017,8 +2098,8 @@ const renderConflictAnalysis = () => {
   conflicts.sort((a,b) => b.spend - a.spend);
 
   if (conflicts.length === 0) {
-     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">未检测到明显的内部竞争（条件：不同广告组数 > 1 且 花费 > 5）</td></tr>`;
-     return;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">未检测到明显的内部竞争（条件：不同广告组数 > 1 且 花费 > 5）</td></tr>`;
+      return;
   }
 
   tbody.innerHTML = conflicts.slice(0, 50).map(c => {
@@ -2214,10 +2295,15 @@ const renderKPIs = (total) => {
   `).join("");
 };
 
+// [优化] 图表网格线自适应深色模式
 const renderTrend = (rows) => {
   const byDate = groupBy(rows, r=>r.date);
   const series = [...byDate.keys()].sort().map(d=>({ date:d, ...sumMetrics(byDate.get(d)) }));
   const dataMap = (key, transform = v => v) => series.map(s => transform(s[key]));
+  
+  // 获取当前主题对应的网格线颜色
+  const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || "rgba(229,229,234,.6)";
+
   const datasets = [
     { label:"花费", data:dataMap("spend"), tension:.25, pointRadius:0, borderWidth:2 },
     { label:"销售额", data:dataMap("sales"), tension:.25, pointRadius:0, borderWidth:2 },
@@ -2231,7 +2317,7 @@ const renderTrend = (rows) => {
     options:{
       responsive:true, maintainAspectRatio:false, interaction:{ mode:"index", intersect:false },
       scales:{
-        y:{ beginAtZero:true, grid:{ color:"rgba(229,229,234,.6)" } },
+        y:{ beginAtZero:true, grid:{ color: gridColor } },
         y1:{ beginAtZero:true, position:"right", grid:{ drawOnChartArea:false } },
         x:{ grid:{ display:false } }
       }
@@ -2533,6 +2619,22 @@ $("btnCheck").addEventListener("click", () => {
   if(libsCheck()) alert("所有依赖库加载正常！");
   else alert("依赖库缺失，请检查网络或控制台日志。");
 });
+
+// ========================
+// Dark Mode Logic (Optimized)
+// ========================
+const toggleTheme = () => {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const newTheme = isDark ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
+  
+  // [优化] 切换主题时，重绘图表以适配网格线颜色
+  if (trendChart && VIEW.length) renderTrend(VIEW);
+};
+
+$("btnTheme").addEventListener("click", toggleTheme);
+
 
 /** =========================
  * Demo
