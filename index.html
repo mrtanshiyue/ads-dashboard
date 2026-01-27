@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v3.9 - Optimized)</title>
+  <title>Ads Dashboard (Compact Pro v4.0 - Audited)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <script>
+    // 初始化主题
     (() => {
       const saved = localStorage.getItem("theme");
       if (saved) document.documentElement.setAttribute("data-theme", saved);
@@ -19,7 +20,6 @@
   <style>
     /* ================= UI 样式 ================= */
     :root{
-      /* [优化] 启用浏览器原生深色模式支持(滚动条/控件) */
       color-scheme: light; 
       
       --bg:#f5f5f7;
@@ -45,7 +45,7 @@
 
     /* Dark Mode Variables */
     [data-theme="dark"] {
-      color-scheme: dark; /* [优化] */
+      color-scheme: dark;
 
       --bg: #151516;
       --card: #242426;
@@ -79,7 +79,7 @@
       font-size: 12.8px;
       transition: background .3s ease, color .3s ease;
     }
-    
+     
     input, select, button, textarea {
       font-weight: 500;
       font-family: inherit;
@@ -168,7 +168,7 @@
     }
     .btn:hover{ background:var(--hover-bg); border-color:var(--muted); }
     .btn:active{ transform:scale(.98); }
-    
+     
     .btn.primary{
       border-color:rgba(0,113,227,.25);
       background:rgba(0,113,227,.08);
@@ -431,8 +431,6 @@
     #lengthTable td:last-child,
     #matchTypeTable th:last-child,
     #matchTypeTable td:last-child,
-    #budgetHealthTable th:last-child,
-    #budgetHealthTable td:last-child,
     #conflictTable th:last-child,
     #conflictTable td:last-child {
       text-align: left; 
@@ -575,8 +573,23 @@
       </div>
 
       <div class="fieldRow">
-        <label>客户搜索词（Search Term）模糊搜索</label>
+        <label>广告类型 (Ad Type)</label>
+        <div class="selectWrap">
+            <select id="filterAdType">
+                <option value="" selected>全部 (All)</option>
+                <option value="manual">手动广告 (Manual)</option>
+                <option value="auto">自动广告 (Auto)</option>
+            </select>
+        </div>
+      </div>
+
+      <div class="fieldRow">
+        <label>客户搜索词（Search Term）</label>
         <input id="filterSearchTerm" type="text" placeholder="例如: blue light / magnification / women / cat eye / b07ybhgt31" />
+        <div style="display:flex; align-items:center; gap:6px; margin-top:6px; padding-left:2px;">
+           <input type="checkbox" id="filterSearchExact" style="width:14px; height:14px; appearance:auto; -webkit-appearance:checkbox; margin:0; cursor:pointer">
+           <label for="filterSearchExact" style="margin:0; cursor:pointer; font-size:12px; color:var(--text);">精准搜索 (Exact Match)</label>
+        </div>
       </div>
       <div class="small">筛选改动将自动生效（无需点击应用）</div>
     </div>
@@ -719,6 +732,30 @@
         <div class="chartWrap tall"><canvas id="trendChart"></canvas></div>
       </div>
 
+      <div class="card tableCard">
+        <div class="cardTitle">
+          <h2>周维度分析 (Weekday Performance)</h2>
+          <div class="hint">发现一周中的最佳销售日/亏损日 (Mon-Sun)</div>
+        </div>
+        <div class="table-container">
+          <table id="weekdayTable">
+            <thead>
+              <tr>
+                <th>星期</th>
+                <th style="width:200px;">销售额热度</th>
+                <th>花费</th>
+                <th>销售额</th>
+                <th>订单数</th>
+                <th>ROAS</th>
+                <th>ACOS</th>
+                <th>CPC</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card tableCard" id="autoManualCard">
         <div class="cardTitle">
           <h2>自动/手动广告对比</h2>
@@ -757,57 +794,6 @@
                 <th>ACOS</th>
                 <th>CPC</th>
                 <th>CVR</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card tableCard" id="budgetHealthCard">
-        <div class="cardTitle">
-          <h2>预算健康度分析 (Budget Health Check)</h2>
-          <div class="hint">花费去向：纯浪费(0单) vs 低效能(ROAS低) vs 高效能</div>
-        </div>
-        <div class="table-container">
-          <table id="budgetHealthTable">
-            <thead>
-              <tr>
-                <th>类型</th>
-                <th style="width:200px;">花费占比</th>
-                <th>花费</th>
-                <th>销售额</th>
-                <th>订单数</th>
-                <th>ROAS</th>
-                <th>ACOS</th>
-                <th>说明</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="small" style="margin-top:10px;">
-           规则联动：低效能判定标准 = 左侧“否定 ROAS < N”的设定值。
-        </div>
-      </div>
-
-      <div class="card tableCard">
-        <div class="cardTitle">
-          <h2>周维度分析 (Weekday Performance)</h2>
-          <div class="hint">发现一周中的最佳销售日/亏损日 (Mon-Sun)</div>
-        </div>
-        <div class="table-container">
-          <table id="weekdayTable">
-            <thead>
-              <tr>
-                <th>星期</th>
-                <th style="width:200px;">销售额热度</th>
-                <th>花费</th>
-                <th>销售额</th>
-                <th>订单数</th>
-                <th>ROAS</th>
-                <th>ACOS</th>
-                <th>CPC</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -1186,7 +1172,7 @@ const toCSV = (rows) => rows.map(r => r.map(v => {
   let s = String(v ?? "");
   // 如果首字符是 = + - @，在前面加单引号，防止 Excel 自动执行
   if (/^[=+\-@]/.test(s)) {
-     s = "'" + s;
+      s = "'" + s;
   }
   return /[",\n]/.test(s) ? `"${s.replaceAll('"','""')}"` : s;
 }).join(",")).join("\n");
@@ -1267,7 +1253,7 @@ const COL_MAP_ALIASES = {
   clicks: ["点击量","Clicks"],
   spend: ["花费","Spend","Cost"],
   sales7d: ["7天总销售额","7 Day Total Sales","7-day total sales","7 day total sales","Total Sales","Est. Total Sales"],
-  orders7d: ["7天总订单数","7天总订单数(#)","7天总订单数 (#)","7天总订单数（#）","7 Day Total Orders (#)","7-day total orders","7 day total orders","Total Orders","Est. Total Orders"],
+  orders7d: ["7天总订单数","7天总订单数 (#)","7天总订单数(#)","7天总订单数（#）","7 Day Total Orders (#)","7-day total orders","7 day total orders","Total Orders","Est. Total Orders"],
   ctr: ["点击率","CTR"],
   cpc: ["每次点击费用","CPC","Cost per click","Cost per click (CPC)"],
   cvr: ["7天的转化率","7 Day Conversion Rate","7-day conversion rate","7 day conversion rate"],
@@ -1457,7 +1443,9 @@ const wireCascade = () => {
  * Aggregations
  * ========================= */
 const withinDate = (r, start, end) => (!start || r.date >= start) && (!end || r.date <= end);
-const includesSearch = (r, q) => (!q || (r.searchTerm || "").toLowerCase().includes(q.toLowerCase()));
+// [修改] 支持 exact 参数
+const includesSearch = (r, q, exact) => (!q || (exact ? (r.searchTerm||"").toLowerCase() === q.toLowerCase() : (r.searchTerm || "").toLowerCase().includes(q.toLowerCase())));
+
 const sumMetrics = (rows) => {
   const sums = { impr:0, clicks:0, spend:0, sales:0, orders:0 };
   for (const r of rows) for (const k in sums) sums[k] += r[k];
@@ -1623,7 +1611,7 @@ const renderWeekdayAnalysis = () => {
   const totalSales = sumMetrics(VIEW).sales || 1;
 
   tbody.innerHTML = result.map(row => {
-    const salesPct = (row.sales / totalSales);
+    const salesPct = totalSales > 0 ? (row.sales / totalSales) : 0;
     const barHtml = `
       <div class="bar-row">
         <div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(salesPct*100).toFixed(1)}%</div>
@@ -1695,7 +1683,7 @@ const renderCPCDistribution = () => {
     const m = b.metrics;
     if (m.impr === 0 && m.spend === 0) return ""; 
     
-    const salesPct = (m.sales / totalSales);
+    const salesPct = totalSales > 0 ? (m.sales / totalSales) : 0;
     const barHtml = `
       <div class="bar-row">
         <div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(salesPct*100).toFixed(1)}%</div>
@@ -1820,63 +1808,6 @@ const renderMatchTypeAnalysis = () => {
   }).join("");
 };
 
-/** =========================
- * Budget Health Analysis
- * ========================= */
-const renderBudgetHealth = () => {
-  const tbody = $("budgetHealthTable")?.querySelector("tbody");
-  if (!tbody) return;
-  if (!VIEW.length) { tbody.innerHTML = ""; return; }
-
-  const roasThreshold = safeNum($("ruleRoasNeg").value) || 1.5;
-  const buckets = {
-      waste: { label:"纯浪费 (0 Orders)", rows:[], note:"0 出单" },
-      poor: { label:`低效能 (ROAS < ${roasThreshold})`, rows:[], note:"有出单但亏损" },
-      good: { label:`高效能 (ROAS ≥ ${roasThreshold})`, rows:[], note:"盈利/健康" }
-  };
-
-  for (const r of VIEW) {
-      if(r.orders === 0) buckets.waste.rows.push(r);
-      else if(r.roas < roasThreshold) buckets.poor.rows.push(r);
-      else buckets.good.rows.push(r);
-  }
-
-  const result = Object.values(buckets).map(b => ({ ...b, ...sumMetrics(b.rows) }));
-  const totalSpend = sumMetrics(VIEW).spend || 1;
-
-  tbody.innerHTML = result.map(row => {
-    if(row.spend === 0 && row.impr === 0) return "";
-    const spendPct = totalSpend > 0 ? (row.spend / totalSpend) : 0;
-    
-    // Color coding
-    let color = "var(--accent)";
-    if(row.label.includes("纯浪费")) color = "#b42318"; // Red
-    else if(row.label.includes("低效能")) color = "#b54708"; // Orange
-    else color = "#1a7f37"; // Green
-
-    const barHtml = `
-      <div class="bar-row">
-        <div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(spendPct*100).toFixed(1)}%</div>
-        <div class="bar-track">
-           <div style="width:${spendPct*100}%;background:${color}"></div>
-        </div>
-      </div>
-    `;
-    return `
-      <tr>
-        <td style="font-weight:600;color:${color}">${row.label}</td>
-        <td>${barHtml}</td>
-        <td>${fmtMoney(row.spend)}</td>
-        <td>${fmtMoney(row.sales)}</td>
-        <td>${fmtInt(row.orders)}</td>
-        <td>${row.roas.toFixed(2)}</td>
-        <td>${fmtPct(row.acos)}</td>
-        <td style="color:var(--muted);font-size:11.5px;">${row.note}</td>
-      </tr>
-    `;
-  }).join("");
-};
-
 
 /** =========================
  * Auto / Manual Comparison
@@ -1885,7 +1816,11 @@ const renderAutoManual = () => {
   if (!VIEW.length) return;
   const tbody = $("autoManualTable")?.querySelector("tbody");
   if (!tbody) return;
-  const isManual = (t) => ["broad","phrase","exact"].includes((t||"").toLowerCase());
+  // [优化] 手动广告判定逻辑加强 (Broad, Phrase, Exact, Product, Targeting)
+  const isManual = (t) => {
+      const lower = (t||"").toLowerCase();
+      return ["broad","phrase","exact"].includes(lower) || lower.includes("product") || lower.includes("targeting");
+  };
   const autoRows = [], manualRows = [];
   for (const r of VIEW) {
     if (isManual(r.matchType)) manualRows.push(r);
@@ -2321,7 +2256,7 @@ const applyFilters = (initial=false) => {
     
     // NEW Features
     renderMatchTypeAnalysis();
-    renderBudgetHealth();
+    // [Removed] renderBudgetHealth();
     renderConflictAnalysis();
     return;
   }
@@ -2331,19 +2266,37 @@ const applyFilters = (initial=false) => {
     filterSource: $("filterSource").value, filterPortfolio: $("filterPortfolio").value,
     filterCampaign: $("filterCampaign").value, filterAdGroup: $("filterAdGroup").value,
     filterTargeting: $("filterTargeting").value, filterMatchType: $("filterMatchType").value,
-    filterSearchTerm: $("filterSearchTerm").value.trim()
+    filterAdType: $("filterAdType").value, 
+    filterSearchTerm: $("filterSearchTerm").value.trim(),
+    filterSearchExact: $("filterSearchExact").checked 
   };
 
-  VIEW = ALL.filter(r =>
-    withinDate(r, filters.dateStart, filters.dateEnd) &&
-    (!filters.filterSource || r.sourceFile === filters.filterSource) &&
-    (!filters.filterPortfolio || r.portfolio === filters.filterPortfolio) &&
-    (!filters.filterCampaign || r.campaign === filters.filterCampaign) &&
-    (!filters.filterAdGroup || r.adGroup === filters.filterAdGroup) &&
-    (!filters.filterTargeting || r.targeting === filters.filterTargeting) &&
-    (!filters.filterMatchType || r.matchType === filters.filterMatchType) &&
-    includesSearch(r, filters.filterSearchTerm)
-  );
+  VIEW = ALL.filter(r => {
+    // 基础筛选
+    if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false;
+    if (filters.filterSource && r.sourceFile !== filters.filterSource) return false;
+    if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) return false;
+    if (filters.filterCampaign && r.campaign !== filters.filterCampaign) return false;
+    if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) return false;
+    if (filters.filterTargeting && r.targeting !== filters.filterTargeting) return false;
+    if (filters.filterMatchType && r.matchType !== filters.filterMatchType) return false;
+
+    // [优化] 广告类型筛选
+    if (filters.filterAdType) {
+        // 判断是否为手动广告 (Broad, Phrase, Exact, Product, Targeting)
+        // 涵盖了常见的 Keyword Targeting 和 Product Targeting (PAT) 场景
+        const lowerMatch = (r.matchType || "").toLowerCase();
+        const isManual = ["broad", "phrase", "exact"].includes(lowerMatch) || lowerMatch.includes("product") || lowerMatch.includes("targeting");
+        
+        if (filters.filterAdType === "manual" && !isManual) return false;
+        if (filters.filterAdType === "auto" && isManual) return false;
+    }
+
+    // 搜索词筛选
+    if (!includesSearch(r, filters.filterSearchTerm, filters.filterSearchExact)) return false;
+
+    return true;
+  });
 
   const total = sumMetrics(VIEW);
   setSubtitle(`已导入 ${importedFiles.length} 个文件；ALL=${ALL.length.toLocaleString()} 行；当前视图=${VIEW.length.toLocaleString()} 行；日期范围 ${filters.dateStart} → ${filters.dateEnd}`);
@@ -2359,10 +2312,8 @@ const applyFilters = (initial=false) => {
   renderAutoManual();
   renderLengthAnalysis();
   
-  // NEW: Call new render functions
   renderMatchTypeAnalysis();
-  renderBudgetHealth();
-  renderConflictAnalysis(); // The new checker
+  renderConflictAnalysis(); 
 
   if (initial) {
     document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
@@ -2384,7 +2335,7 @@ const applyQuickRange = (type) => {
     yesterday: () => start.setDate(start.getDate()-1),
     "7d": () => start.setDate(start.getDate()-6),
     "30d": () => start.setDate(start.getDate()-29),
-    mtd: () => start.setDate(1),
+    "mtd": () => start.setDate(1),
     "all": () => { $("dateStart").value = minD; $("dateEnd").value = maxD; return; }
   };
   rangeMap[type]();
@@ -2406,13 +2357,15 @@ const filterIds = [
   "rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin",
   "exportScope","exportNegMatch","bidSpend","bidOrders","bidRoas","bidIntensity",
   "wfMinFreq","wfMinSpend",
-  "ltMinWords","ltMinOrders","ltMinRoas"
+  "ltMinWords","ltMinOrders","ltMinRoas",
+  "filterSearchExact",
+  "filterAdType" 
 ];
 filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280));
 
 $("btnReset").addEventListener("click", () => {
-  ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm"].forEach(id => ($(id).value = ""));
+  ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = ""));
   $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" };
   rankTypeFilter = "all"; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b=>b.classList.toggle("active", b.dataset.type === "all"));
   actionTypeFilter = "all"; document.querySelectorAll('.seg[aria-label="Action Type Filter"] .segBtn').forEach(b=>b.classList.toggle("active", b.dataset.act === "all"));
@@ -2422,6 +2375,8 @@ $("btnReset").addEventListener("click", () => {
   wfSort = { key: "spend", dir: "desc" };
   // Reset Long Tail
   $("ltMinWords").value = 3; $("ltMinOrders").value = 2; $("ltMinRoas").value = 2.0;
+  // Reset Checkbox
+  $("filterSearchExact").checked = false;
 
   populateDropdowns(); applyFilters(); log("已重置筛选", "good");
 });
