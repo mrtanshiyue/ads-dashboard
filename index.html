@@ -21,7 +21,7 @@
     /* ================= UI 样式 ================= */
     :root{
       color-scheme: light; 
-      
+       
       --bg:#f5f5f7;
       --card:#ffffff;
       --text:#1d1d1f;
@@ -358,7 +358,19 @@
       vertical-align:top;
       font-variant-numeric: tabular-nums; 
       color: var(--text);
+      
+      /* [新增] 防止超长词撑爆布局，超过 400px 显示省略号 */
+      max-width: 400px; 
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap; 
     }
+    /* 针对特定列放宽限制，例如名称列，让内容可以换行看清楚 */
+    #rankTable td:first-child, #negListTable td:nth-child(2), #bidUpTable td:nth-child(2) {
+        white-space: normal; 
+        word-break: break-word;
+    }
+    
     tbody tr:hover{ background:var(--hover-bg); }
     tbody tr:last-child td{ border-bottom:none; }
 
@@ -479,6 +491,9 @@
         vertical-align: middle;
         transition: opacity 0.2s, transform 0.2s;
         display: inline-block;
+        /* 防止图标被选中复制 */
+        user-select: none;
+        -webkit-user-select: none;
     }
     .action-icon:hover {
         opacity: 1;
@@ -756,7 +771,7 @@
     <section class="grid" id="kpiGrid"></section>
 
     <section class="grid">
-      
+       
       <div class="card chartCard">
         <div class="cardTitle">
           <h2>每日趋势</h2>
@@ -1123,29 +1138,41 @@ const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFrac
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 const fmtPct = (v) => (isFinite(v) ? (v*100).toFixed(2)+"%" : "0.00%");
 
-// Robust number parsing
+// [优化] 提升百万次调用时的性能 - 避免无意义的正则
 const safeNum = (x) => {
   if (typeof x === "number") return isFinite(x) ? x : 0;
-  const s = String(x ?? "").trim();
+  if (!x) return 0; // 处理 null/undefined/""
+  
+  // 快速路径：如果是普通字符串数字，避免正则
+  const s = String(x).trim();
   if (!s) return 0;
-  const isPercent = s.includes("%");
-  const n = Number(s.replace(/[^0-9.\-]/g, ""));
-  if (isFinite(n)) return isPercent ? n / 100 : n;
-  return 0;
+  
+  // 如果包含 % 或货币符号，才走正则清洗路径
+  if (s.indexOf('%') !== -1) {
+      const n = parseFloat(s.replace(/[^0-9.\-]/g, ""));
+      return isFinite(n) ? n / 100 : 0;
+  }
+  
+  // 尝试直接转换
+  const n = parseFloat(s.replace(/[^0-9.\-]/g, "")); 
+  return isFinite(n) ? n : 0;
 };
 
-// [修复] 日期解析逻辑 (Fix Timezone Shifting Bug)
-// 之前使用 new Date(string) 会导致 "2023-10-01" 在某些时区(如美国)变成 "2023-09-30"
+// [修复] Excel 日期解析逻辑 (Fix Timezone Shifting Bug)
 const toISODate = (d) => {
   // [优化] 增加对 Date 对象的直接支持
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
 
   if (typeof d === "number" && isFinite(d)) {
-    // Excel Serial Date (1900 bug handled by assuming standard logic is fine for ad data)
-    // -25569 is offset for 1970-01-01
-    const dt = new Date(Math.round((d - 25569) * 86400 * 1000));
-    return isNaN(dt) ? "" : dt.toISOString().slice(0,10);
+    // [修复] Excel Serial Date: 强制解析为 UTC，防止本地时区导致日期-1
+    // Excel base date: 1899-12-30 (diff 25569 days to 1970-01-01)
+    // 86400 * 1000 = ms per day
+    const dateObj = new Date((d - 25569) * 86400000);
+    // 加上 12 小时的缓冲，防止浮点数精度丢失导致跳变 (e.g. 23:59:59.999)
+    dateObj.setUTCHours(dateObj.getUTCHours() + 12); 
+    return dateObj.toISOString().slice(0,10);
   }
+
   const s = String(d || "").trim();
   if (!s) return "";
   
@@ -1505,20 +1532,38 @@ const groupBy = (rows, keyFn) => {
 };
 
 /** =========================
- * Word Frequency Builder
+ * Word Frequency Builder (Optimized)
  * ========================= */
+// [优化] 词频统计：增加 Token 缓存，避免重复拆分相同 Search Term
+const tokenCache = new Map(); // 缓存: term -> words[]
+
 const buildWordStats = () => {
   const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3)));
   const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10));
   const mp = new Map();
 
+  // 清理过大的缓存防止内存溢出
+  if(tokenCache.size > 20000) tokenCache.clear();
+
   for (const r of VIEW) {
     const term = r.searchTerm || "";
-    let words = [];
-    if (WF_MODE === "token") words = tokenize(term);
-    else if (WF_MODE === "bigram") words = ngrams(tokenize(term), 2);
-    else if (WF_MODE === "trigram") words = ngrams(tokenize(term), 3);
-    else if (WF_MODE === "mag") words = extractMagnification(term);
+    if (!term) continue;
+
+    // 1. 尝试从缓存获取分词结果
+    let words;
+    const cacheKey = `${WF_MODE}:${term}`; // 区分模式缓存
+    
+    if (tokenCache.has(cacheKey)) {
+      words = tokenCache.get(cacheKey);
+    } else {
+      // 2. 缓存未命中，执行计算
+      if (WF_MODE === "token") words = tokenize(term);
+      else if (WF_MODE === "bigram") words = ngrams(tokenize(term), 2);
+      else if (WF_MODE === "trigram") words = ngrams(tokenize(term), 3);
+      else if (WF_MODE === "mag") words = extractMagnification(term);
+      
+      tokenCache.set(cacheKey, words);
+    }
 
     const uniqueWords = new Set(words); 
     for (const w of uniqueWords) {
@@ -1544,7 +1589,11 @@ const buildWordStats = () => {
   out.sort((a,b)=>{
     const av = (key==="word"||key==="action") ? String(a[key]||"") : (a[key] ?? 0);
     const bv = (key==="word"||key==="action") ? String(b[key]||"") : (b[key] ?? 0);
-    return (typeof av === "string" ? av.localeCompare(bv) : (av > bv ? 1 : -1)) * mul;
+    // [优化] 移除 localeCompare，数字和英文混合排序用 > < 更快
+    if (typeof av === "string" && typeof bv === "string") {
+        return av.localeCompare(bv) * mul;
+    }
+    return (av > bv ? 1 : -1) * mul;
   });
   return out.slice(0, 100);
 };
@@ -2446,6 +2495,7 @@ $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280));
 $("btnClearSearch").addEventListener("click", () => {
   $("filterSearchTerm").value = "";
   $("filterSearchExact").checked = false; // 可选：清除时取消精准搜索
+  $("filterSearchTerm").focus(); // [新增] 聚焦回输入框
   applyFilters();
   log("已清空搜索词", "info");
 });
