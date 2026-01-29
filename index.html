@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v4.4 - Search Tools)</title>
+  <title>Ads Dashboard (Compact Pro v4.5 - Search Tools)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -21,7 +21,7 @@
     /* ================= UI 样式 ================= */
     :root{
       color-scheme: light; 
-       
+        
       --bg:#f5f5f7;
       --card:#ffffff;
       --text:#1d1d1f;
@@ -764,14 +764,13 @@
       <div class="actions">
         <button class="btn" id="btnTheme" type="button">🌗 深色/浅色</button>
         <button class="btn" id="btnCheck" type="button">依赖自检</button>
-        <button class="btn" id="btnDemo" type="button">载入演示数据（两文件合并）</button>
       </div>
     </section>
 
     <section class="grid" id="kpiGrid"></section>
 
     <section class="grid">
-       
+        
       <div class="card chartCard">
         <div class="cardTitle">
           <h2>每日趋势</h2>
@@ -1138,51 +1137,50 @@ const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFrac
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 const fmtPct = (v) => (isFinite(v) ? (v*100).toFixed(2)+"%" : "0.00%");
 
-// [优化] 提升百万次调用时的性能 - 避免无意义的正则
+// [优化] 提升数值解析健壮性 - 修复了货币符号和千分位可能导致的 NaN 问题
 const safeNum = (x) => {
   if (typeof x === "number") return isFinite(x) ? x : 0;
   if (!x) return 0; // 处理 null/undefined/""
   
-  // 快速路径：如果是普通字符串数字，避免正则
   const s = String(x).trim();
   if (!s) return 0;
   
-  // 如果包含 % 或货币符号，才走正则清洗路径
-  if (s.indexOf('%') !== -1) {
-      const n = parseFloat(s.replace(/[^0-9.\-]/g, ""));
-      return isFinite(n) ? n / 100 : 0;
-  }
+  // 移除常见的货币符号和逗号，保留数字、小数点和负号
+  // 注意：如果您的 Excel 使用逗号作为小数点（如德语环境），此处需调整
+  const clean = s.replace(/[^0-9.\-]/g, "");
   
-  // 尝试直接转换
-  const n = parseFloat(s.replace(/[^0-9.\-]/g, "")); 
+  // 修复多重小数点问题（保留第一个）
+  const parts = clean.split('.');
+  const sanitized = parts.length > 1 ? parts.shift() + '.' + parts.join('') : clean;
+
+  const n = parseFloat(sanitized); 
   return isFinite(n) ? n : 0;
 };
 
-// [修复] Excel 日期解析逻辑 (Fix Timezone Shifting Bug)
+// [修复] 日期解析逻辑 (Fix Safari/Excel Compatibility)
 const toISODate = (d) => {
-  // [优化] 增加对 Date 对象的直接支持
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
 
+  // Excel Serial Date
   if (typeof d === "number" && isFinite(d)) {
-    // [修复] Excel Serial Date: 强制解析为 UTC，防止本地时区导致日期-1
-    // Excel base date: 1899-12-30 (diff 25569 days to 1970-01-01)
-    // 86400 * 1000 = ms per day
-    const dateObj = new Date((d - 25569) * 86400000);
-    // 加上 12 小时的缓冲，防止浮点数精度丢失导致跳变 (e.g. 23:59:59.999)
-    dateObj.setUTCHours(dateObj.getUTCHours() + 12); 
+    // 25569 = Days between 1900-01-01 and 1970-01-01
+    // 加上 12 小时的缓冲防止时区导致的日期回退
+    const dateObj = new Date((d - 25569) * 86400000 + 43200000);
     return dateObj.toISOString().slice(0,10);
   }
 
   const s = String(d || "").trim();
   if (!s) return "";
   
-  // 尝试匹配 YYYY-MM-DD 或 YYYY/MM/DD 或 YYYY.MM.DD
+  // 匹配 YYYY-MM-DD 或 YYYY/MM/DD
   const matchISO = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
   if (matchISO) {
-    const y = matchISO[1];
-    const m = matchISO[2].padStart(2, "0");
-    const d = matchISO[3].padStart(2, "0");
-    return `${y}-${m}-${d}`;
+    const y = parseInt(matchISO[1], 10);
+    const m = parseInt(matchISO[2], 10);
+    const day = parseInt(matchISO[3], 10);
+    // 使用本地时间构造，避免 UTC 偏移问题
+    const dt = new Date(y, m - 1, day, 12, 0, 0); 
+    return dt.toISOString().slice(0,10);
   }
 
   // Fallback for M/D/YY or other formats
@@ -1342,6 +1340,9 @@ const buildMap = (rows) => {
   return map;
 };
 const normalizeRow = (raw, map, sourceFile) => {
+  // [安全] 增加空值检查，防止报错
+  if (!raw) return null;
+  
   const impr = safeNum(raw[map.impr]), clicks = safeNum(raw[map.clicks]), spend = safeNum(raw[map.spend]);
   const sales = safeNum(raw[map.sales7d]), orders = safeNum(raw[map.orders7d]);
   
@@ -1397,7 +1398,8 @@ let LONG_TAIL_ROWS = [];
 /** =========================
  * Importers
  * ========================= */
-const parseCSV = (file) => new Promise((r,j)=>Papa.parse(file, {header:true, skipEmptyLines:true, complete:res=>r(res.data), error:j}));
+// [优化] skipEmptyLines: 'greedy' 避免文件末尾空行产生空对象
+const parseCSV = (file) => new Promise((r,j)=>Papa.parse(file, {header:true, skipEmptyLines: 'greedy', complete:res=>r(res.data), error:j}));
 const parseXLSX = (file) => new Promise((r,j)=>{
   const reader = new FileReader();
   reader.onload = (e)=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});r(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""}));}catch(err){j(err);}};
@@ -1441,7 +1443,7 @@ const importMultipleFiles = async (files) => {
       if (rows.length > maxRows) { log(`警告：${name} 行数 ${rows.length.toLocaleString()} 超过 maxRows，将截断到 ${maxRows.toLocaleString()}`, "warn"); rows = rows.slice(0, maxRows); }
 
       log(`识别字段映射：${name}`); const map = buildMap(rows);
-      log(`标准化字段 + 生成 Root：${name}`); const normalized = rows.map(r => normalizeRow(r, map, name)).filter(r => r.date);
+      log(`标准化字段 + 生成 Root：${name}`); const normalized = rows.map(r => normalizeRow(r, map, name)).filter(r => r && r.date);
       log(`追加：${name} → ${normalized.length.toLocaleString()} 行`, "good");
       ALL = ALL.concat(normalized); importedFiles.push({ name, rows: normalized.length });
       await new Promise(r => setTimeout(r, 0));
@@ -1691,7 +1693,11 @@ const renderWeekdayAnalysis = () => {
     const parts = r.date.split("-");
     if(parts.length === 3) {
        // Construct date as local, using 12:00 to avoid any DST shifts or timezone boundary issues
-       const localDate = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]), 12, 0, 0);
+       // [优化] 使用更兼容的 Date 构造方法
+       const y = parseInt(parts[0], 10);
+       const m = parseInt(parts[1], 10) - 1;
+       const d = parseInt(parts[2], 10);
+       const localDate = new Date(y, m, d, 12, 0, 0);
        bins[localDate.getDay()].push(r);
     }
   }
@@ -2180,16 +2186,16 @@ const exportRankCSV = () => {
     for (const r of RANK_ROWS) {
          rows.push([
             r.name,
-            r.spend.toFixed(2),
-            r.sales.toFixed(2),
+            (r.spend || 0).toFixed(2),
+            (r.sales || 0).toFixed(2),
             r.orders,
             r.impr,
             r.clicks,
-            (r.ctr * 100).toFixed(2) + "%",
-            r.cpc.toFixed(2),
-            (r.cvr * 100).toFixed(2) + "%",
-            (r.acos * 100).toFixed(2) + "%",
-            r.roas.toFixed(2),
+            ((r.ctr || 0) * 100).toFixed(2) + "%",
+            (r.cpc || 0).toFixed(2),
+            ((r.cvr || 0) * 100).toFixed(2) + "%",
+            ((r.acos || 0) * 100).toFixed(2) + "%",
+            (r.roas || 0).toFixed(2),
             r.action,
             r.reason
          ]);
@@ -2276,7 +2282,11 @@ const sortRank = (items) => {
   items.sort((a,b)=>{
     const av = key==="name"||key==="action" ? String(a[key]||"") : (a[key] ?? 0);
     const bv = key==="name"||key==="action" ? String(b[key]||"") : (b[key] ?? 0);
-    return (typeof av === "string" ? av.localeCompare(bv) : (av > bv ? 1 : -1)) * mul;
+    // [修复] 强制类型安全比较，防止 mixed types 崩溃
+    if (typeof av === "string" && typeof bv === "string") {
+        return av.localeCompare(bv) * mul;
+    }
+    return (av > bv ? 1 : -1) * mul;
   });
 };
 
@@ -2621,66 +2631,6 @@ const toggleTheme = () => {
 };
 
 $("btnTheme").addEventListener("click", toggleTheme);
-
-
-/** =========================
- * Demo
- * ========================= */
-$("btnDemo").addEventListener("click", () => {
-  clearLog(); libsCheck();
-  const mkDemoData = (file, offset) => {
-    const base = new Date(), terms = [
-      "blue light reading glasses 2.0", "2.0 magnification readers for women", "cat eye readers 1.5",
-      "spring hinge reading glasses 2.5", "progressive readers", "anti glare computer glasses 2.0",
-      "reading glasses men 2.5", "women cat-eye blue light readers 2.0", "cheap readers 3.0", "b07ybhgt31"
-    ];
-    // FORCE CONFLICT DATA: Ensure "blue light reading glasses 2.0" appears in multiple different groups
-    const asins = ["B07YBHGT31","B0ABCDE1234","B0ZZZZZ9999","B0QWERTY123"];
-    return Array.from({length:30}).map((_,i) => {
-      const d = new Date(base); 
-      d.setDate(d.getDate() - (13-i) - offset);
-      
-      let st = terms[Math.floor(Math.random()*terms.length)];
-      // Inject deliberate conflict
-      if(i % 5 === 0) st = "blue light reading glasses 2.0"; 
-
-      const spend = Math.random()*80 + 10, clicks = Math.round(Math.random()*120);
-      const impr = clicks* (Math.round(Math.random()*30)+10);
-      const orders = Math.random()<0.35 ? 0 : Math.round(Math.random()*4);
-      const sales = orders * (Math.random()*40 + 18);
-      
-      const targeting = Math.random()<0.5 ? "keyword" : `asin=${asins[Math.floor(Math.random()*asins.length)]}`;
-      
-      // Randomize Campaign/AdGroup to create conflicts
-      const campaign = Math.random()<0.5 ? "Campaign Manual" : (Math.random()<0.5?"Campaign Auto":"Campaign Seasonal");
-      const adGroup = Math.random()<0.5 ? "AdGroup Core" : "AdGroup Test";
-
-      return {
-        sourceFile:file, date:toISODate(d), // Now safe due to updated toISODate
-        portfolio:"Portfolio A",
-        campaign,
-        adGroup,
-        targeting, matchType:(Math.random()<0.4?"broad":(Math.random()<0.6?"phrase":"exact")),
-        searchTerm:st, searchTermRoot:searchTermToRoot(st),
-        impr, clicks, spend, sales, orders,
-        ctr:impr>0?clicks/impr:0, cpc:clicks>0?spend/clicks:0, cvr:clicks>0?orders/clicks:0,
-        acos:sales>0?spend/sales:0, roas:spend>0?sales/spend:0,
-      };
-    });
-  };
-
-  if ($("mergeMode").value === "replace") { ALL = []; importedFiles = []; rootCache.clear(); }
-  const a = mkDemoData("demo_A.xlsx", 0), b = mkDemoData("demo_B.xlsx", 10);
-  ALL = ALL.concat(a,b);
-  importedFiles.push({name:"demo_A.xlsx", rows:a.length}, {name:"demo_B.xlsx", rows:b.length});
-
-  if ($("dedupeMode").value === "on") { const before = ALL.length; ALL = dedupeRows(ALL); log(`演示数据去重：${before} → ${ALL.length}`, "good"); }
-  renderFileList(); populateDropdowns();
-  const dates = ALL.map(r=>r.date).sort();
-  $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length-1];
-  applyFilters(true);
-  log("已载入演示数据（含冲突检测演示）", "good");
-});
 
 /** =========================
  * Boot
