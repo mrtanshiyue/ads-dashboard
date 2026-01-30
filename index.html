@@ -358,7 +358,7 @@
       vertical-align:top;
       font-variant-numeric: tabular-nums; 
       color: var(--text);
-      
+       
       /* [新增] 防止超长词撑爆布局，超过 400px 显示省略号 */
       max-width: 400px; 
       overflow: hidden;
@@ -2460,22 +2460,31 @@ const applyFilters = (initial=false) => {
 const autoApply = debounce(applyFilters, 200);
 
 /** =========================
- * Quick Range
+ * Quick Range (FIXED)
  * ========================= */
 const applyQuickRange = (type) => {
   if (!ALL.length) return;
   const dates = ALL.map(r=>r.date).filter(Boolean).sort();
   const [minD, maxD] = [dates[0], dates[dates.length-1]];
+
+  // [修复] 单独处理 "all" 并直接返回，防止被后续逻辑覆盖
+  if (type === "all") {
+     $("dateStart").value = minD;
+     $("dateEnd").value = maxD;
+     return;
+  }
+
   const max = new Date(maxD);
   let start = new Date(max);
   const rangeMap = {
     yesterday: () => start.setDate(start.getDate()-1),
     "7d": () => start.setDate(start.getDate()-6),
     "30d": () => start.setDate(start.getDate()-29),
-    "mtd": () => start.setDate(1),
-    "all": () => { $("dateStart").value = minD; $("dateEnd").value = maxD; return; }
+    "mtd": () => start.setDate(1)
   };
-  rangeMap[type]();
+  
+  if(rangeMap[type]) rangeMap[type]();
+
   const isoStart = toISODate(start);
   $("dateStart").value = isoStart < minD ? minD : isoStart;
   $("dateEnd").value = maxD;
