@@ -370,7 +370,7 @@
         white-space: normal; 
         word-break: break-word;
     }
-    
+     
     tbody tr:hover{ background:var(--hover-bg); }
     tbody tr:last-child td{ border-bottom:none; }
 
@@ -2228,7 +2228,7 @@ const renderKPIs = (total) => {
   `).join("");
 };
 
-// [优化] 图表网格线自适应深色模式
+// [优化] 图表网格线自适应深色模式 + 稳健的 Context 获取
 const renderTrend = (rows) => {
   const byDate = groupBy(rows, r=>r.date);
   const series = [...byDate.keys()].sort().map(d=>({ date:d, ...sumMetrics(byDate.get(d)) }));
@@ -2244,15 +2244,19 @@ const renderTrend = (rows) => {
     { label:"ACOS %", data:dataMap("acos", v => isFinite(v) ? v*100 : 0), tension:.25, pointRadius:0, borderWidth:2, yAxisID:"y1" },
     { label:"ROAS", data:dataMap("roas", v => isFinite(v) ? v : 0), tension:.25, pointRadius:0, borderWidth:2, yAxisID:"y1" },
   ];
-  // [优化] 销毁前检查 context 防止内存泄漏
+  
+  // [安全] 销毁前检查 context 防止内存泄漏或 Canvas 占用错误
   if (trendChart) {
       trendChart.destroy();
       trendChart = null;
   }
-  const ctx = $("trendChart");
-  if(ctx) {
+  
+  const canvas = $("trendChart");
+  if (canvas) {
+      const ctx = canvas.getContext("2d");
       trendChart = new Chart(ctx, {
-        type:"line", data:{ labels:series.map(s=>s.date), datasets },
+        type:"line", 
+        data:{ labels:series.map(s=>s.date), datasets },
         options:{
           responsive:true, maintainAspectRatio:false, interaction:{ mode:"index", intersect:false },
           scales:{
