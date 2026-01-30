@@ -1739,11 +1739,12 @@ const renderCPCDistribution = () => {
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
 
   const buckets = [
-      { label: "< 0.50", min:0, max:0.5, rows: [] },
-      { label: "0.50 - 1.00", min:0.5, max:1.0, rows: [] }
+      { label: "< 0.50", min:0, max:0.5, rows: [] }
   ];
 
-  for (let i = 10; i < 20; i++) {
+  // [修改] 0.50 - 1.50 均按 0.1 步长显示
+  // i=5 -> 0.5; i<15 -> 1.4
+  for (let i = 5; i < 15; i++) {
       const start = i / 10;
       const end = (i + 1) / 10;
       buckets.push({
@@ -1754,10 +1755,9 @@ const renderCPCDistribution = () => {
       });
   }
 
+  // [新增] 1.50 之后的兜底区间 (因为最高出价 1.5)
   buckets.push(
-      { label: "2.00 - 3.00", min:2.0, max:3.0, rows: [] },
-      { label: "3.00 - 5.00", min:3.0, max:5.0, rows: [] },
-      { label: "> 5.00", min:5.0, max:9999, rows: [] }
+      { label: "> 1.50", min:1.5, max:9999, rows: [] }
   );
 
   for (const r of VIEW) {
