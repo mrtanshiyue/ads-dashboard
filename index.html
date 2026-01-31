@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v4.5 - Search Tools)</title>
+  <title>Ads Dashboard (Compact Pro v5.0 - AI Tools)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <script>
     // 初始化主题
@@ -178,6 +179,17 @@
        background: rgba(10, 132, 255, 0.15);
        color: #409cff;
        border-color: rgba(10, 132, 255, 0.3);
+    }
+    
+    .btn.ai-magic {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+    }
+    .btn.ai-magic:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
     }
 
     .btn.danger{
@@ -515,6 +527,49 @@
         background: var(--hover-bg);
     }
 
+    /* ================= AI Modal Styles ================= */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 1000;
+      display: none; justify-content: center; align-items: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius); width: 90%; max-width: 650px;
+      max-height: 85vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      padding: 16px; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .modal-body { padding: 20px; overflow-y: auto; line-height: 1.6; font-size: 13.5px; color: var(--text); }
+    
+    /* Markdown Styles for AI Content */
+    .ai-content h1, .ai-content h2, .ai-content h3 { margin-top: 1em; margin-bottom: 0.5em; color: var(--text); }
+    .ai-content ul { padding-left: 20px; }
+    .ai-content li { margin-bottom: 6px; }
+    .ai-content strong { color: var(--text); font-weight: 700; }
+    .ai-content p { margin-bottom: 1em; }
+    
+    .api-key-input {
+      width: 100%; padding: 10px; margin-bottom: 10px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--input-bg);
+      color: var(--text);
+    }
+    .modal-footer {
+      padding: 12px 16px; border-top: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--hover-bg);
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+    .settings-toggle {
+        font-size: 11px; color: var(--muted); cursor: pointer; text-decoration: underline;
+    }
+
     @media (max-width: 1400px){
       .app{ max-width: 100vw; }
     }
@@ -762,6 +817,7 @@
         <div class="sub" id="subtitle">未导入数据。请导入同类报表（支持多文件）。</div>
       </div>
       <div class="actions">
+        <button class="btn ai-magic" id="btnAI" type="button">✨ AI 诊断</button>
         <button class="btn" id="btnTheme" type="button">🌗 深色/浅色</button>
         <button class="btn" id="btnCheck" type="button">依赖自检</button>
       </div>
@@ -1128,6 +1184,64 @@
   </main>
 </div>
 
+<div id="aiModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">✨ Gemini 智能诊断 (Beta 5.0)</div>
+      <button class="btn" id="btnCloseAI" style="padding:4px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="aiKeySection">
+        <p>请输入您的 Google Gemini API Key 以启用智能分析。</p>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Key 仅保存在您的浏览器本地缓存中，不会上传至任何服务器。</p>
+        <input type="password" id="geminiKeyInput" class="api-key-input" placeholder="输入 API Key (以 AIza 开头...)" />
+        
+        <div style="margin-top:10px;">
+            <span id="btnToggleSettings" class="settings-toggle">⚙️ 高级设置 (自定义 API 地址)</span>
+        </div>
+        <div id="settingsBox" style="display:none; margin-top:10px; padding:10px; background:var(--hover-bg); border-radius:8px;">
+            <label style="display:block; margin-bottom:4px;">API Base URL (可选)</label>
+            <input type="text" id="apiBaseUrl" class="api-key-input" style="margin-bottom:0;" value="https://generativelanguage.googleapis.com" placeholder="例如: https://my-proxy.com" />
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">默认: https://generativelanguage.googleapis.com</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px; border-top:1px solid var(--line); padding-top:12px;">
+          <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px;">🤖 AI 工具箱</label>
+          
+          <div class="chips" style="margin-bottom:10px;">
+            <button class="chipBtn active" id="aiModeChat" onclick="setAIMode('chat')">💬 自由对话/诊断</button>
+            <button class="chipBtn" id="aiModeCluster" onclick="setAIMode('cluster')">🧩 语义聚类</button>
+            <button class="chipBtn" id="aiModeSeo" onclick="setAIMode('seo')">📝 SEO 文案生成</button>
+            <button class="chipBtn" id="aiModeAudit" onclick="setAIMode('audit')">⚖️ 相关性审计</button>
+            <button class="chipBtn" id="aiModeNlp" onclick="setAIMode('nlp')">🗣️ 语音控屏</button>
+          </div>
+
+          <div id="aiToolHint" class="small" style="margin-bottom:6px; color:var(--accent);">
+            默认模式：生成诊断报告，或回答关于数据的具体问题。
+          </div>
+
+          <textarea id="aiQuestionInput" class="api-key-input" style="height:80px; resize:vertical; font-family:inherit;" placeholder="例如：为什么上周 ACOS 升高了？"></textarea>
+          
+          <input type="text" id="aiProductContext" class="api-key-input" style="display:none; margin-top:5px;" placeholder="请输入产品名称/核心词 (例如: Blue Light Glasses)..." />
+      </div>
+
+      <div id="aiLoading" style="display:none; text-align:center; padding:40px;">
+        <div style="font-size:24px; margin-bottom:10px;">🤖</div>
+        <div>正在分析数据，请稍候...</div>
+        <div id="aiLoadingStatus" style="font-size:12px; color:var(--muted); margin-top:8px;"></div>
+      </div>
+      <div id="aiResult" class="ai-content" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <div>
+          <button class="btn" id="btnClearKey" style="display:none; font-size:12px;">清除 Key</button>
+      </div>
+      <button class="btn primary" id="btnStartAnalyze">开始分析 / 提问</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /** =========================
  * Utils
@@ -1137,59 +1251,39 @@ const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFrac
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 const fmtPct = (v) => (isFinite(v) ? (v*100).toFixed(2)+"%" : "0.00%");
 
-// [优化] 提升数值解析健壮性 - 修复了货币符号和千分位可能导致的 NaN 问题
 const safeNum = (x) => {
   if (typeof x === "number") return isFinite(x) ? x : 0;
-  if (!x) return 0; // 处理 null/undefined/""
-  
+  if (!x) return 0;
   const s = String(x).trim();
   if (!s) return 0;
-  
-  // 移除常见的货币符号和逗号，保留数字、小数点和负号
-  // 注意：如果您的 Excel 使用逗号作为小数点（如德语环境），此处需调整
   const clean = s.replace(/[^0-9.\-]/g, "");
-  
-  // 修复多重小数点问题（保留第一个）
   const parts = clean.split('.');
   const sanitized = parts.length > 1 ? parts.shift() + '.' + parts.join('') : clean;
-
   const n = parseFloat(sanitized); 
   return isFinite(n) ? n : 0;
 };
 
-// [修复] 日期解析逻辑 (Fix Safari/Excel Compatibility)
 const toISODate = (d) => {
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
-
-  // Excel Serial Date
   if (typeof d === "number" && isFinite(d)) {
-    // 25569 = Days between 1900-01-01 and 1970-01-01
-    // 加上 12 小时的缓冲防止时区导致的日期回退
     const dateObj = new Date((d - 25569) * 86400000 + 43200000);
     return dateObj.toISOString().slice(0,10);
   }
-
   const s = String(d || "").trim();
   if (!s) return "";
-  
-  // 匹配 YYYY-MM-DD 或 YYYY/MM/DD
   const matchISO = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
   if (matchISO) {
     const y = parseInt(matchISO[1], 10);
     const m = parseInt(matchISO[2], 10);
     const day = parseInt(matchISO[3], 10);
-    // 使用本地时间构造，避免 UTC 偏移问题
     const dt = new Date(y, m - 1, day, 12, 0, 0); 
     return dt.toISOString().slice(0,10);
   }
-
-  // Fallback for M/D/YY or other formats
   const dt = new Date(s);
   if (isNaN(dt.getTime())) return "";
   return dt.toISOString().slice(0,10); 
 };
 
-// [新增] 生成简单时间戳字符串 (用于文件名去重)
 const getTs = () => {
   const now = new Date();
   const YYYY = now.getFullYear();
@@ -1224,15 +1318,15 @@ const libsCheck = () => {
   if (typeof Papa === "undefined") missing.push("PapaParse(Papa)");
   if (typeof XLSX === "undefined") missing.push("XLSX(xlsx)");
   if (typeof Chart === "undefined") missing.push("Chart.js(Chart)");
-  if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。原因多为网络限制 / CDN 被拦。解决方案：换网络，或改为本地引入 3 个 JS 文件。", "bad");
-  else log("依赖库 OK（PapaParse / XLSX / Chart.js）", "good");
+  if (typeof marked === "undefined") missing.push("marked");
+  
+  if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn");
+  else log("依赖库 OK", "good");
   return !missing.length;
 };
 
-// [修复] CSV 注入防御 (Formula Injection Protection)
 const toCSV = (rows) => rows.map(r => r.map(v => {
   let s = String(v ?? "");
-  // 如果首字符是 = + - @，在前面加单引号，防止 Excel 自动执行
   if (/^[=+\-@]/.test(s)) {
       s = "'" + s;
   }
@@ -1340,13 +1434,11 @@ const buildMap = (rows) => {
   return map;
 };
 const normalizeRow = (raw, map, sourceFile) => {
-  // [安全] 增加空值检查，防止报错
   if (!raw) return null;
   
   const impr = safeNum(raw[map.impr]), clicks = safeNum(raw[map.clicks]), spend = safeNum(raw[map.spend]);
   const sales = safeNum(raw[map.sales7d]), orders = safeNum(raw[map.orders7d]);
   
-  // [优化] 预计算小写 searchTerm 供筛选使用
   const st = String(raw[map.searchTerm] ?? "").trim();
 
   return {
@@ -1355,7 +1447,7 @@ const normalizeRow = (raw, map, sourceFile) => {
     adGroup: String(raw[map.adGroup] ?? "").trim(), targeting: String(raw[map.targeting] ?? "").trim(),
     matchType: String(raw[map.matchType] ?? "").trim(), 
     searchTerm: st,
-    searchTermLower: st.toLowerCase(), // 预计算，提速明显
+    searchTermLower: st.toLowerCase(),
     searchTermRoot: searchTermToRoot(st),
     impr, clicks, spend, sales, orders,
     ctr: map.ctr ? safeNum(raw[map.ctr]) : (impr > 0 ? clicks / impr : 0),
@@ -1367,7 +1459,7 @@ const normalizeRow = (raw, map, sourceFile) => {
 };
 
 /** =========================
- * ASIN detector (Optimized)
+ * ASIN detector
  * ========================= */
 const ASIN_CANDIDATE_RE = /[A-Z0-9]{10}/ig;
 const ASIN_STRICT_RE = /^[B0-9][A-Z0-9]{9}$/i;
@@ -1375,7 +1467,6 @@ const ASIN_STRICT_RE = /^[B0-9][A-Z0-9]{9}$/i;
 const isASINLike = (s) => {
   const x = String(s || "").trim();
   if (!x) return false;
-  // Use regex to find candidates
   const candidates = x.match(ASIN_CANDIDATE_RE);
   if (!candidates) return false;
   
@@ -1398,7 +1489,6 @@ let LONG_TAIL_ROWS = [];
 /** =========================
  * Importers
  * ========================= */
-// [优化] skipEmptyLines: 'greedy' 避免文件末尾空行产生空对象
 const parseCSV = (file) => new Promise((r,j)=>Papa.parse(file, {header:true, skipEmptyLines: 'greedy', complete:res=>r(res.data), error:j}));
 const parseXLSX = (file) => new Promise((r,j)=>{
   const reader = new FileReader();
@@ -1534,31 +1624,27 @@ const groupBy = (rows, keyFn) => {
 };
 
 /** =========================
- * Word Frequency Builder (Optimized)
+ * Word Frequency Builder
  * ========================= */
-// [优化] 词频统计：增加 Token 缓存，避免重复拆分相同 Search Term
-const tokenCache = new Map(); // 缓存: term -> words[]
+const tokenCache = new Map();
 
 const buildWordStats = () => {
   const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3)));
   const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10));
   const mp = new Map();
 
-  // 清理过大的缓存防止内存溢出
   if(tokenCache.size > 20000) tokenCache.clear();
 
   for (const r of VIEW) {
     const term = r.searchTerm || "";
     if (!term) continue;
 
-    // 1. 尝试从缓存获取分词结果
     let words;
-    const cacheKey = `${WF_MODE}:${term}`; // 区分模式缓存
+    const cacheKey = `${WF_MODE}:${term}`;
     
     if (tokenCache.has(cacheKey)) {
       words = tokenCache.get(cacheKey);
     } else {
-      // 2. 缓存未命中，执行计算
       if (WF_MODE === "token") words = tokenize(term);
       else if (WF_MODE === "bigram") words = ngrams(tokenize(term), 2);
       else if (WF_MODE === "trigram") words = ngrams(tokenize(term), 3);
@@ -1591,7 +1677,6 @@ const buildWordStats = () => {
   out.sort((a,b)=>{
     const av = (key==="word"||key==="action") ? String(a[key]||"") : (a[key] ?? 0);
     const bv = (key==="word"||key==="action") ? String(b[key]||"") : (b[key] ?? 0);
-    // [优化] 移除 localeCompare，数字和英文混合排序用 > < 更快
     if (typeof av === "string" && typeof bv === "string") {
         return av.localeCompare(bv) * mul;
     }
@@ -1619,7 +1704,7 @@ const renderWordFreq = () => {
 };
 
 /** =========================
- * Long Tail Keyword Mining (List)
+ * Long Tail Keyword Mining
  * ========================= */
 const renderLongTailMining = () => {
   const tbody = $("longTailTable")?.querySelector("tbody");
@@ -1692,8 +1777,6 @@ const renderWeekdayAnalysis = () => {
     if(!r.date) continue;
     const parts = r.date.split("-");
     if(parts.length === 3) {
-       // Construct date as local, using 12:00 to avoid any DST shifts or timezone boundary issues
-       // [优化] 使用更兼容的 Date 构造方法
        const y = parseInt(parts[0], 10);
        const m = parseInt(parts[1], 10) - 1;
        const d = parseInt(parts[2], 10);
@@ -1731,7 +1814,7 @@ const renderWeekdayAnalysis = () => {
 };
 
 /** =========================
- * CPC Distribution Analysis
+ * CPC Distribution
  * ========================= */
 const renderCPCDistribution = () => {
   const tbody = $("cpcDistTable")?.querySelector("tbody");
@@ -1742,8 +1825,6 @@ const renderCPCDistribution = () => {
       { label: "< 0.50", min:0, max:0.5, rows: [] }
   ];
 
-  // [修改] 0.50 - 1.50 均按 0.1 步长显示
-  // i=5 -> 0.5; i<15 -> 1.4
   for (let i = 5; i < 15; i++) {
       const start = i / 10;
       const end = (i + 1) / 10;
@@ -1755,7 +1836,6 @@ const renderCPCDistribution = () => {
       });
   }
 
-  // [新增] 1.50 之后的兜底区间 (因为最高出价 1.5)
   buckets.push(
       { label: "> 1.50", min:1.5, max:9999, rows: [] }
   );
@@ -1772,17 +1852,14 @@ const renderCPCDistribution = () => {
   }
 
   const result = buckets.map(b => ({ ...b, metrics: sumMetrics(b.rows) }));
-  
-  // Calculate Totals
   const totalMetrics = sumMetrics(VIEW);
   const totalSales = totalMetrics.sales || 1;
-  const totalOrders = totalMetrics.orders || 1; // Avoid division by zero
+  const totalOrders = totalMetrics.orders || 1; 
 
   tbody.innerHTML = result.map(b => {
     const m = b.metrics;
     if (m.impr === 0 && m.spend === 0) return ""; 
     
-    // Sales Percentage
     const salesPct = totalSales > 0 ? (m.sales / totalSales) : 0;
     const salesBarHtml = `
       <div class="bar-row">
@@ -1793,9 +1870,7 @@ const renderCPCDistribution = () => {
       </div>
     `;
 
-    // Order Percentage (New Function: Transaction Bid Ratio)
     const orderPct = totalOrders > 0 ? (m.orders / totalOrders) : 0;
-    // 使用不同颜色的 Bar 区分 (Green for orders)
     const orderBarHtml = `
       <div class="bar-row">
         <div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(orderPct*100).toFixed(1)}%</div>
@@ -1822,7 +1897,7 @@ const renderCPCDistribution = () => {
 };
 
 /** =========================
- * Keyword Length Analysis
+ * Length Analysis
  * ========================= */
 const renderLengthAnalysis = () => {
   const tbody = $("lengthTable")?.querySelector("tbody");
@@ -1888,7 +1963,7 @@ const renderMatchTypeAnalysis = () => {
      else if(m.includes("phrase")) bins["Phrase"].push(r);
      else if(m.includes("broad")) bins["Broad"].push(r);
      else if(m === "-" || m === "") bins["Auto"].push(r); 
-     else bins["Auto"].push(r); // default to Auto for unknowns
+     else bins["Auto"].push(r);
   }
 
   const result = types.map(t => ({ type:t, ...sumMetrics(bins[t]) }));
@@ -1929,7 +2004,6 @@ const renderAutoManual = () => {
   if (!VIEW.length) return;
   const tbody = $("autoManualTable")?.querySelector("tbody");
   if (!tbody) return;
-  // [优化] 手动广告判定逻辑加强 (Broad, Phrase, Exact, Product, Targeting)
   const isManual = (t) => {
       const lower = (t||"").toLowerCase();
       return ["broad","phrase","exact"].includes(lower) || lower.includes("product") || lower.includes("targeting");
@@ -1978,20 +2052,18 @@ const renderAutoManual = () => {
 };
 
 /** =========================
- * Conflict Analysis (Optimized)
+ * Conflict Analysis
  * ========================= */
 const renderConflictAnalysis = () => {
   const tbody = $("conflictTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
 
-  // [优化] 使用 Map 聚合数据，而不是存储完整的 rows 数组，极大降低内存占用
   const map = new Map();
   
   for (const r of VIEW) {
-    if (!r.searchTerm || isASINLike(r.searchTerm)) continue; // Skip ASINs
+    if (!r.searchTerm || isASINLike(r.searchTerm)) continue; 
     
-    // 初始化聚合对象
     if (!map.has(r.searchTerm)) {
         map.set(r.searchTerm, { 
             locations: new Set(), 
@@ -2003,7 +2075,6 @@ const renderConflictAnalysis = () => {
     
     const entry = map.get(r.searchTerm);
     entry.locations.add(`${r.campaign} > ${r.adGroup}`);
-    // 累加指标
     entry.spend += r.spend;
     entry.orders += r.orders;
     entry.sales += r.sales;
@@ -2011,8 +2082,6 @@ const renderConflictAnalysis = () => {
 
   const conflicts = [];
   for (const [term, data] of map.entries()) {
-    // Conflict definition: Appears in > 1 unique Ad Group location
-    // Only care if spend > some minimal amount to avoid noise
     if (data.locations.size > 1 && data.spend > 5) {
       conflicts.push({
         term,
@@ -2020,13 +2089,11 @@ const renderConflictAnalysis = () => {
         locs: Array.from(data.locations),
         spend: data.spend,
         orders: data.orders,
-        // 计算 ROAS
         roas: data.spend > 0 ? data.sales / data.spend : 0
       });
     }
   }
 
-  // Sort by Spend descending (focus on costly conflicts)
   conflicts.sort((a,b) => b.spend - a.spend);
 
   if (conflicts.length === 0) {
@@ -2035,11 +2102,9 @@ const renderConflictAnalysis = () => {
   }
 
   tbody.innerHTML = conflicts.slice(0, 50).map(c => {
-    // Format locations for display: first 2, then count
     const displayLocs = c.locs.slice(0, 2).map(l => `<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(l)}</div>`).join("");
     const moreCount = c.locs.length > 2 ? `<div style="font-size:10px;color:var(--muted)">+${c.locs.length - 2} more...</div>` : "";
     
-    // Join all locations for tooltip
     const fullLocs = c.locs.join("\n");
 
     return `
@@ -2055,7 +2120,6 @@ const renderConflictAnalysis = () => {
   }).join("");
 };
 
-// Add listener for conflict table click
 $("conflictTable").addEventListener("click", (e) => {
   const tr = e.target.closest("tr");
   if (!tr || !tr.dataset.term) return;
@@ -2174,12 +2238,8 @@ const exportBidUpCSV = () => {
   log(`已导出加价词 CSV：${filename}（${rows.length-1} 条）`, "good");
 };
 
-// ======================
-// NEW: Export Rank CSV Function
-// ======================
 const exportRankCSV = () => {
     if (!RANK_ROWS.length) { alert("当前榜单为空，无数据可导出。"); return; }
-    // Define headers matching table
     const headers = ["Name", "Spend", "Sales", "Orders", "Impressions", "Clicks", "CTR", "CPC", "CVR", "ACOS", "ROAS", "Action", "Reason"];
     const rows = [headers];
 
@@ -2228,13 +2288,11 @@ const renderKPIs = (total) => {
   `).join("");
 };
 
-// [优化] 图表网格线自适应深色模式 + 稳健的 Context 获取
 const renderTrend = (rows) => {
   const byDate = groupBy(rows, r=>r.date);
   const series = [...byDate.keys()].sort().map(d=>({ date:d, ...sumMetrics(byDate.get(d)) }));
   const dataMap = (key, transform = v => v) => series.map(s => transform(s[key]));
   
-  // 获取当前主题对应的网格线颜色
   const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || "rgba(229,229,234,.6)";
 
   const datasets = [
@@ -2245,7 +2303,6 @@ const renderTrend = (rows) => {
     { label:"ROAS", data:dataMap("roas", v => isFinite(v) ? v : 0), tension:.25, pointRadius:0, borderWidth:2, yAxisID:"y1" },
   ];
   
-  // [安全] 销毁前检查 context 防止内存泄漏或 Canvas 占用错误
   if (trendChart) {
       trendChart.destroy();
       trendChart = null;
@@ -2286,7 +2343,6 @@ const sortRank = (items) => {
   items.sort((a,b)=>{
     const av = key==="name"||key==="action" ? String(a[key]||"") : (a[key] ?? 0);
     const bv = key==="name"||key==="action" ? String(b[key]||"") : (b[key] ?? 0);
-    // [修复] 强制类型安全比较，防止 mixed types 崩溃
     if (typeof av === "string" && typeof bv === "string") {
         return av.localeCompare(bv) * mul;
     }
@@ -2309,7 +2365,6 @@ const buildRankTable = (rows) => {
 const renderRankTable = () => {
   buildRankTable(VIEW);
   
-  // [新增] 搜索按钮 HTML
   const searchBtnHtml = `<span class="action-icon search-btn" title="精准搜索">🔍</span>`;
   
   $("rankTable").querySelector("tbody").innerHTML = RANK_ROWS.map(it => `
@@ -2389,7 +2444,6 @@ const applyFilters = (initial=false) => {
     renderCPCDistribution();
     renderLengthAnalysis();
     
-    // NEW Features
     renderMatchTypeAnalysis();
     renderConflictAnalysis();
     return;
@@ -2406,7 +2460,6 @@ const applyFilters = (initial=false) => {
   };
 
   VIEW = ALL.filter(r => {
-    // 基础筛选
     if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false;
     if (filters.filterSource && r.sourceFile !== filters.filterSource) return false;
     if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) return false;
@@ -2415,10 +2468,7 @@ const applyFilters = (initial=false) => {
     if (filters.filterTargeting && r.targeting !== filters.filterTargeting) return false;
     if (filters.filterMatchType && r.matchType !== filters.filterMatchType) return false;
 
-    // [优化] 广告类型筛选
     if (filters.filterAdType) {
-        // 判断是否为手动广告 (Broad, Phrase, Exact, Product, Targeting)
-        // 涵盖了常见的 Keyword Targeting 和 Product Targeting (PAT) 场景
         const lowerMatch = (r.matchType || "").toLowerCase();
         const isManual = ["broad", "phrase", "exact"].includes(lowerMatch) || lowerMatch.includes("product") || lowerMatch.includes("targeting");
         
@@ -2426,7 +2476,6 @@ const applyFilters = (initial=false) => {
         if (filters.filterAdType === "auto" && isManual) return false;
     }
 
-    // [优化] 使用预计算的 Lowercase Search Term 进行筛选，大幅提升速度
     if (filters.filterSearchTerm) {
         const term = filters.filterSearchTerm.toLowerCase();
         if (filters.filterSearchExact) {
@@ -2463,15 +2512,11 @@ const applyFilters = (initial=false) => {
 };
 const autoApply = debounce(applyFilters, 200);
 
-/** =========================
- * Quick Range (FIXED)
- * ========================= */
 const applyQuickRange = (type) => {
   if (!ALL.length) return;
   const dates = ALL.map(r=>r.date).filter(Boolean).sort();
   const [minD, maxD] = [dates[0], dates[dates.length-1]];
 
-  // [修复] 单独处理 "all" 并直接返回，防止被后续逻辑覆盖
   if (type === "all") {
      $("dateStart").value = minD;
      $("dateEnd").value = maxD;
@@ -2495,7 +2540,458 @@ const applyQuickRange = (type) => {
 };
 
 /** =========================
- * Events
+ * AI Integration Logic (Updated V5.0)
+ * ========================= */
+const aiModal = $('aiModal');
+const geminiKeyInput = $('geminiKeyInput');
+const btnStartAnalyze = $('btnStartAnalyze');
+const aiResult = $('aiResult');
+const aiLoading = $('aiLoading');
+const aiLoadingStatus = $('aiLoadingStatus');
+const aiKeySection = $('aiKeySection');
+const btnClearKey = $('btnClearKey');
+const btnToggleSettings = $('btnToggleSettings');
+const settingsBox = $('settingsBox');
+const apiBaseUrlInput = $('apiBaseUrl');
+const aiQuestionInput = $('aiQuestionInput'); 
+
+const loadGeminiKey = () => localStorage.getItem("gemini_key") || "";
+const loadApiBase = () => localStorage.getItem("gemini_api_base") || "https://generativelanguage.googleapis.com";
+
+const toggleAIModal = (show) => {
+  aiModal.classList.toggle('active', show);
+  if (show) {
+    const key = loadGeminiKey();
+    const base = loadApiBase();
+    
+    apiBaseUrlInput.value = base; 
+    
+    if (key) {
+      geminiKeyInput.value = key;
+      geminiKeyInput.style.display = 'none'; 
+      $('aiKeySection').querySelector('p').textContent = "API Key 已加载。点击“开始分析”生成报告。";
+      btnClearKey.style.display = 'block';
+    } else {
+      geminiKeyInput.style.display = 'block';
+      aiKeySection.style.display = 'block';
+      btnClearKey.style.display = 'none';
+    }
+  }
+};
+
+const callGemini = async (prompt) => {
+  const key = loadGeminiKey();
+  if (!key) throw new Error("Missing API Key");
+  
+  let baseUrl = (apiBaseUrlInput.value || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
+  localStorage.setItem("gemini_api_base", baseUrl);
+
+  const models = [
+    "gemini-2.0-flash-exp",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-pro"
+  ];
+
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      aiLoadingStatus.textContent = `正在尝试模型: ${model}...`;
+      const url = `${baseUrl}/v1beta/models/${model}:generateContent?key=${key}`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+
+      if (!response.ok) {
+        const status = response.status;
+        const errJson = await response.json().catch(()=>({}));
+        const errMsg = errJson.error?.message || `HTTP ${status}`;
+
+        if (status === 400 && errMsg.includes("API key")) {
+            throw new Error("API Key 无效 (Invalid API Key)");
+        }
+        if (status === 401 || status === 403) {
+            throw new Error(`权限拒绝 (${status})。请检查 Key 或 API 地址是否受限。`);
+        }
+        console.warn(`Model ${model} failed (${status}): ${errMsg}`);
+        continue; 
+      }
+
+      const data = await response.json();
+      if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+          throw new Error("API 返回了空数据");
+      }
+      return data.candidates[0].content.parts[0].text;
+
+    } catch (e) {
+      lastError = e;
+      if (e.message.includes("API Key") || e.message.includes("权限拒绝")) throw e;
+    }
+  }
+  
+  throw lastError || new Error("所有模型尝试均失败。请检查网络连接或更换 API Base URL (高级设置)。");
+};
+
+/** =========================
+ * AI Extensions (Features 1, 2, 3, 4)
+ * ========================= */
+
+let currentAIMode = 'chat';
+
+// 切换 AI 模式 UI 状态
+const setAIMode = (mode) => {
+    currentAIMode = mode;
+    // 更新按钮状态
+    const btns = ['aiModeChat', 'aiModeCluster', 'aiModeSeo', 'aiModeAudit', 'aiModeNlp'];
+    btns.forEach(id => {
+        const btn = $(id);
+        if (btn) btn.classList.remove('active');
+    });
+    // Find active button by mapping
+    const map = { 'chat': 'aiModeChat', 'cluster': 'aiModeCluster', 'seo': 'aiModeSeo', 'audit': 'aiModeAudit', 'nlp': 'aiModeNlp' };
+    if ($(map[mode])) $(map[mode]).classList.add('active');
+
+    const hint = $('aiToolHint');
+    const input = $('aiQuestionInput');
+    const ctxInput = $('aiProductContext');
+    ctxInput.style.display = 'none';
+
+    // 重置输入框 placeholder 和提示
+    if (mode === 'chat') {
+        hint.textContent = "默认模式：生成诊断报告，或回答关于数据的具体问题。";
+        input.style.display = 'block';
+        input.placeholder = "例如：为什么上周 ACOS 升高了？";
+        input.value = "";
+    } else if (mode === 'cluster') {
+        hint.textContent = "功能：将 Top 100 搜索词按语义归类 (例如：将 'computer glasses' 和 'screen eyewear' 归为一组)。";
+        input.style.display = 'block';
+        input.placeholder = "无需输入，直接点击“开始分析”即可。";
+        input.value = "请执行语义聚类分析";
+    } else if (mode === 'seo') {
+        hint.textContent = "功能：基于当前高 ROAS 词，生成 Listing 标题和五点描述。";
+        input.style.display = 'none';
+        ctxInput.style.display = 'block';
+        ctxInput.placeholder = "请输入产品名称 (必填，如: Retro Cat Eye Sunglasses)";
+    } else if (mode === 'audit') {
+        hint.textContent = "功能：检查亏损词 (Bleeders) 与产品的相关性，发现无效流量。";
+        input.style.display = 'none';
+        ctxInput.style.display = 'block';
+        ctxInput.placeholder = "请输入产品核心词 (必填，用于判断相关性)";
+    } else if (mode === 'nlp') {
+        hint.textContent = "功能：用自然语言控制筛选器 (例如：'帮我筛出花费大于50且不出单的词')。";
+        input.style.display = 'block';
+        input.placeholder = "请输入指令...";
+        input.value = "";
+    }
+};
+
+// [核心] 修改原有的 generateReport 函数，使其作为总路由
+const generateReport = async () => {
+    if (!VIEW.length) { alert("当前视图无数据，无法分析。"); return; }
+    
+    // Key Check
+    const key = geminiKeyInput.value.trim();
+    if (key && !loadGeminiKey()) localStorage.setItem("gemini_key", key);
+    if (!loadGeminiKey()) { alert("请输入 API Key"); return; }
+
+    // UI Loading
+    aiKeySection.style.display = 'none';
+    aiLoading.style.display = 'block';
+    aiResult.innerHTML = "";
+    btnStartAnalyze.disabled = true;
+
+    try {
+        let prompt = "";
+        
+        // === 分发逻辑 ===
+        if (currentAIMode === 'nlp') {
+            await runNLPFilter(); // 特殊处理：直接操作 DOM，不渲染 Markdown
+            aiLoading.style.display = 'none';
+            btnStartAnalyze.disabled = false;
+            return; 
+        } 
+        else if (currentAIMode === 'cluster') {
+            prompt = buildClusterPrompt();
+        } 
+        else if (currentAIMode === 'seo') {
+            prompt = buildSEOPrompt();
+        } 
+        else if (currentAIMode === 'audit') {
+            prompt = buildAuditPrompt();
+        } 
+        else {
+            // Default Chat Mode (Original Logic)
+            prompt = buildDefaultChatPrompt();
+        }
+
+        aiLoadingStatus.textContent = "正在思考...";
+        const responseText = await callGemini(prompt);
+        
+        // 渲染结果
+        if (currentAIMode === 'chat' || currentAIMode === 'seo') {
+            aiResult.innerHTML = typeof marked !== 'undefined' ? marked.parse(responseText) : `<pre>${responseText}</pre>`;
+        } else {
+            // Cluster 和 Audit 返回的是 JSON 混合文本，需要特殊渲染
+            renderJSONResult(responseText, currentAIMode);
+        }
+        
+        aiResult.style.display = 'block';
+
+    } catch (e) {
+        aiResult.innerHTML = `<div style="color:#b42318; padding:10px; border:1px solid #b42318; border-radius:8px; background:var(--softBad);">
+        <strong>分析失败:</strong> ${e.message}<br><br>
+        <small>如果是网络问题，请尝试开启“高级设置”并更换 API 代理地址。</small>
+        </div>`;
+        aiResult.style.display = 'block';
+        if (e.message.includes("API Key") || e.message.includes("权限")) {
+            localStorage.removeItem("gemini_key");
+            geminiKeyInput.value = "";
+            aiKeySection.style.display = 'block';
+            $('aiKeySection').querySelector('p').textContent = "Key 可能无效，请重新输入：";
+            btnClearKey.style.display = 'none';
+            geminiKeyInput.style.display = 'block';
+        }
+    } finally {
+        aiLoading.style.display = 'none';
+        btnStartAnalyze.disabled = false;
+    }
+};
+
+// --- Helper: Clean JSON from Markdown blocks ---
+const extractJSON = (text) => {
+    const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\{[\s\S]*\}/) || text.match(/\[[\s\S]*\]/);
+    try {
+        return JSON.parse(jsonMatch ? jsonMatch[1] || jsonMatch[0] : text);
+    } catch (e) {
+        return null;
+    }
+};
+
+// --- Feature 1: Semantic Clustering Prompt ---
+const buildClusterPrompt = () => {
+    // Get Top 100 Search Terms by Spend
+    const terms = groupBy(VIEW, r => r.searchTerm);
+    const topTerms = [...terms.entries()]
+        .map(([t, list]) => ({ term: t, spend: sumMetrics(list).spend }))
+        .sort((a,b) => b.spend - a.spend)
+        .slice(0, 100)
+        .map(t => t.term)
+        .join(", ");
+
+    return `
+    Analyze the following list of Amazon Search Terms. 
+    Group them into 5-10 semantic clusters based on user intent (e.g., "Blue Light", "Reading", "Style/Shape", "Competitor Brand").
+    
+    List: [${topTerms}]
+
+    Return ONLY a JSON object where keys are Cluster Names and values are arrays of terms.
+    Example: { "Blue Light": ["blue light glasses", "anti blue"], "Cat Eye": ["cat eye frames"] }
+    `;
+};
+
+// --- Feature 2: SEO Prompt ---
+const buildSEOPrompt = () => {
+    const product = $('aiProductContext').value || "Eyewear";
+    // Get High Performing Keywords (Orders > 2 or ROAS > 3)
+    const goodKeywords = VIEW.filter(r => r.orders >= 2 || r.roas >= 3)
+        .map(r => r.searchTerm)
+        .slice(0, 30) // Top 30
+        .join(", ");
+    
+    return `
+    Act as an Amazon Listing Copywriter.
+    Product: ${product}
+    High Performing Keywords: ${goodKeywords}
+
+    Task:
+    1. Write a compelling Product Title (max 200 chars) incorporating the most important keywords naturally.
+    2. Write 5 Bullet Points (Features & Benefits) incorporating the other keywords.
+    3. Output in Markdown. Highlight used keywords in **bold**.
+    Reply in the language appropriate for the keywords (e.g., English).
+    `;
+};
+
+// --- Feature 3: Relevance Audit Prompt ---
+const buildAuditPrompt = () => {
+    const product = $('aiProductContext').value || "Eyewear";
+    // Get Bleeders (Spend > 10, ROAS < 1)
+    const bleeders = VIEW.filter(r => r.spend > 10 && r.roas < 1)
+        .sort((a,b) => b.spend - a.spend)
+        .slice(0, 20);
+    
+    const bleederList = bleeders.map(r => `${r.searchTerm} (Spend: $${r.spend.toFixed(0)})`).join("\n");
+
+    return `
+    Act as a Relevance Auditor. 
+    My Product: ${product}
+    
+    Analyze these "wasted spend" search terms. Determine if they are irrelevant to my product.
+    
+    List:
+    ${bleederList}
+
+    Return ONLY a JSON array of objects: 
+    [{ "term": "...", "spend": "...", "relevance_score": 1-5, "reason": "Short explanation" }]
+    (1 = Completely Irrelevant/Negative Keyword Candidate, 5 = Highly Relevant but maybe bad bid)
+    `;
+};
+
+// --- Feature 4: NLP Filter Logic ---
+const runNLPFilter = async () => {
+    const userQuery = $('aiQuestionInput').value;
+    if (!userQuery) { alert("请输入指令"); return; }
+
+    const prompt = `
+    You are a dashboard controller. Map the user's natural language request to specific filter variables.
+    
+    Available Variables & IDs:
+    - Min Spend (negative rule): "ruleSpendNeg" (number)
+    - Min ROAS (keep rule): "ruleRoasKeep" (number)
+    - Search Term contains: "filterSearchTerm" (string)
+    - Date Start: "dateStart" (YYYY-MM-DD)
+    - Date End: "dateEnd" (YYYY-MM-DD)
+    
+    User Request: "${userQuery}"
+
+    Return ONLY a JSON object with the IDs and values to set.
+    Example: { "ruleSpendNeg": 50, "filterSearchTerm": "blue" }
+    If date is mentioned like "last 7 days", calculate the dates based on today (${new Date().toISOString().slice(0,10)}).
+    `;
+
+    aiLoadingStatus.textContent = "正在解析指令...";
+    const text = await callGemini(prompt);
+    const config = extractJSON(text);
+
+    if (config) {
+        let msg = "已执行指令：\n";
+        for (const [id, val] of Object.entries(config)) {
+            const el = $(id);
+            if (el) {
+                el.value = val;
+                // 特殊处理 Checkbox
+                if (el.type === 'checkbox') el.checked = val;
+                msg += `- 设置 ${id} 为 ${val}\n`;
+            }
+        }
+        applyFilters(); // 触发筛选
+        aiResult.innerHTML = `<pre>${msg}</pre>`;
+        aiResult.style.display = 'block';
+    } else {
+        throw new Error("无法理解指令，请尝试更清晰的描述。");
+    }
+};
+
+// --- Original Chat Prompt Builder (Restored) ---
+const buildDefaultChatPrompt = () => {
+    const total = sumMetrics(VIEW);
+    const byTerm = groupBy(VIEW, r => r.searchTerm || "(blank)");
+    const terms = [...byTerm.entries()].map(([k,v]) => ({name:k, ...sumMetrics(v)}));
+    terms.sort((a,b) => b.spend - a.spend);
+    const topSpend = terms.slice(0, 8).map(t => `${t.name} (Spend:$${t.spend.toFixed(0)}, ROAS:${t.roas.toFixed(2)})`).join("\n");
+    
+    terms.sort((a,b) => b.sales - a.sales);
+    const topSales = terms.slice(0, 5).map(t => `${t.name} (Sales:$${t.sales.toFixed(0)})`).join("\n");
+
+    const bleeders = terms.filter(t => t.orders === 0 && t.spend > 10).sort((a,b)=>b.spend-a.spend).slice(0, 5);
+    const bleederText = bleeders.map(t => `${t.name} (Spend:$${t.spend.toFixed(0)}, 0 Orders)`).join("\n");
+
+    const userQuestion = $('aiQuestionInput').value;
+    
+    return `
+    You are an expert Amazon Ads Analyst. Analyze the following campaign performance data.
+    
+    ## Context
+    - Date Range: ${$('dateStart').value} to ${$('dateEnd').value}
+    - Total Spend: $${total.spend.toFixed(2)}
+    - Total Sales: $${total.sales.toFixed(2)}
+    - Overall ACOS: ${(total.acos*100).toFixed(2)}%
+    - Overall ROAS: ${total.roas.toFixed(2)}
+    
+    ## Top Spenders (High Volume)
+    ${topSpend}
+    
+    ## Top Sellers
+    ${topSales}
+
+    ## Bleeders
+    ${bleederText}
+    
+    User Question: "${userQuestion || "Please give a diagnostic report."}"
+    
+    Reply in CHINESE (Simplified Chinese). Use Markdown.
+    `;
+};
+
+// --- Renderer for JSON Results ---
+const renderJSONResult = (text, mode) => {
+    const data = extractJSON(text);
+    if (!data) {
+        aiResult.innerHTML = typeof marked !== 'undefined' ? marked.parse(text) : text;
+        return;
+    }
+
+    if (mode === 'cluster') {
+        let html = `<h3>🧩 语义聚类结果</h3><div class="grid" style="grid-template-columns:1fr 1fr; gap:10px;">`;
+        for (const [cluster, terms] of Object.entries(data)) {
+            const termStr = Array.isArray(terms) ? terms.join(", ") : String(terms);
+            html += `
+            <div class="card" style="padding:10px;">
+                <div style="font-weight:bold; color:var(--accent); margin-bottom:4px;">${cluster}</div>
+                <div style="font-size:12px; color:var(--text);">${termStr}</div>
+            </div>`;
+        }
+        html += `</div>`;
+        aiResult.innerHTML = html;
+    } 
+    else if (mode === 'audit') {
+        let html = `<h3>⚖️ 相关性审计 (1分建议否定)</h3>
+        <table style="width:100%; text-align:left; font-size:12px; border-collapse:collapse;">
+        <thead style="background:var(--hover-bg);"><tr style="border-bottom:1px solid var(--line);">
+            <th style="padding:8px;">搜索词</th><th style="padding:8px;">花费</th><th style="padding:8px;">得分</th><th style="padding:8px;">理由</th>
+        </tr></thead><tbody>`;
+        
+        data.forEach(item => {
+            const scoreColor = item.relevance_score <= 2 ? 'color:var(--bad); font-weight:bold;' : 'color:var(--text);';
+            html += `
+            <tr style="border-bottom:1px solid var(--line);">
+                <td style="padding:8px;">${item.term}</td>
+                <td style="padding:8px;">${item.spend}</td>
+                <td style="padding:8px; ${scoreColor}">${item.relevance_score}/5</td>
+                <td style="padding:8px; color:var(--muted);">${item.reason}</td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+        aiResult.innerHTML = html;
+    }
+};
+
+// Event Listeners for AI
+$('btnAI').addEventListener('click', () => toggleAIModal(true));
+$('btnCloseAI').addEventListener('click', () => toggleAIModal(false));
+$('btnStartAnalyze').addEventListener('click', generateReport);
+$('btnClearKey').addEventListener('click', () => {
+  localStorage.removeItem("gemini_key");
+  geminiKeyInput.value = "";
+  geminiKeyInput.style.display = 'block';
+  aiKeySection.style.display = 'block';
+  $('aiKeySection').querySelector('p').textContent = "请输入您的 Google Gemini API Key 以启用智能分析。";
+  btnClearKey.style.display = 'none';
+});
+btnToggleSettings.addEventListener('click', () => {
+    const isHidden = settingsBox.style.display === 'none';
+    settingsBox.style.display = isHidden ? 'block' : 'none';
+});
+
+
+/** =========================
+ * Events (Original)
  * ========================= */
 $("fileInput").addEventListener("change", async (e)=>{
   const files = Array.from(e.target.files || []);
@@ -2514,11 +3010,10 @@ const filterIds = [
 filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280));
 
-// [新增] 清除搜索词按钮事件
 $("btnClearSearch").addEventListener("click", () => {
   $("filterSearchTerm").value = "";
-  $("filterSearchExact").checked = false; // 可选：清除时取消精准搜索
-  $("filterSearchTerm").focus(); // [新增] 聚焦回输入框
+  $("filterSearchExact").checked = false; 
+  $("filterSearchTerm").focus(); 
   applyFilters();
   log("已清空搜索词", "info");
 });
@@ -2532,9 +3027,7 @@ $("btnReset").addEventListener("click", () => {
   document.querySelectorAll('.seg[aria-label="Word Frequency Mode"] .segBtn').forEach(b=>b.classList.toggle("active", b.dataset.wf === "token"));
   $("wfMinFreq").value = 3; $("wfMinSpend").value = 10;
   wfSort = { key: "spend", dir: "desc" };
-  // Reset Long Tail
   $("ltMinWords").value = 3; $("ltMinOrders").value = 2; $("ltMinRoas").value = 2.0;
-  // Reset Checkbox
   $("filterSearchExact").checked = false;
 
   populateDropdowns(); applyFilters(); log("已重置筛选", "good");
@@ -2546,7 +3039,9 @@ $("btnClearAll").addEventListener("click", () => {
 });
 
 document.querySelectorAll(".chipBtn").forEach(btn => btn.addEventListener("click", () => {
-  document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
+  // Fix: prevent affecting AI modal buttons which also have chipBtn class
+  if (btn.closest('#aiModal')) return; 
+  document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters();
 }));
 
@@ -2557,17 +3052,14 @@ $("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("c
   renderRankTable(); renderActionLists(); renderWordFreq();
 }));
 
-// [新增] 榜单中点击放大镜的委托事件
 $("rankTable").addEventListener("click", (e) => {
-    // 检查是否点击了 search-btn
     if (e.target.classList.contains("search-btn")) {
         const td = e.target.closest("td");
-        const term = td.getAttribute("data-name"); // 使用 dataset 获取原始词（无 HTML）
+        const term = td.getAttribute("data-name"); 
         if (term) {
             $("filterSearchTerm").value = term;
-            $("filterSearchExact").checked = true; // 自动勾选精准搜索
+            $("filterSearchExact").checked = true; 
             applyFilters();
-            // 滚动到顶部方便看筛选栏
             $(".sidebar").scrollTop = 0;
             log(`已精准搜索：${term}`, "good");
         }
@@ -2615,7 +3107,6 @@ $("wfTable").addEventListener("click", (e)=>{
 $("btnExportNeg").addEventListener("click", exportNegativesCSV);
 $("btnExportBidUp").addEventListener("click", exportBidUpCSV);
 $("btnExportLongTail").addEventListener("click", exportLongTailCSV);
-// NEW: Bind Export Rank Button
 $("btnExportRank").addEventListener("click", exportRankCSV);
 
 $("btnRuleReset").addEventListener("click", () => {
@@ -2630,16 +3121,12 @@ $("btnCheck").addEventListener("click", () => {
   else alert("依赖库缺失，请检查网络或控制台日志。");
 });
 
-// ========================
-// Dark Mode Logic (Optimized)
-// ========================
 const toggleTheme = () => {
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
   const newTheme = isDark ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", newTheme);
   localStorage.setItem("theme", newTheme);
   
-  // [优化] 切换主题时，重绘图表以适配网格线颜色
   if (trendChart && VIEW.length) renderTrend(VIEW);
 };
 
