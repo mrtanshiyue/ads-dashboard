@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v5.0 - AI Tools)</title>
+  <title>Ads Dashboard (Compact Pro v5.3 - Stability Checked)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -19,7 +19,7 @@
   </script>
 
   <style>
-    /* ================= UI 样式 (保持完全不变) ================= */
+    /* ================= UI 样式 (保持不变) ================= */
     :root{
       color-scheme: light; 
         
@@ -375,7 +375,7 @@
       text-overflow: ellipsis;
       white-space: nowrap; 
     }
-    #rankTable td:first-child, #negListTable td:nth-child(2), #bidUpTable td:nth-child(2) {
+    #rankTable td:first-child, #negListTable td:nth-child(2), #bidUpTable td:nth-child(2), #businessReportTable td:nth-child(2) {
         white-space: normal; 
         word-break: break-word;
     }
@@ -436,7 +436,8 @@
     #cpcDistTable th:last-child, #cpcDistTable td:last-child,
     #lengthTable th:last-child, #lengthTable td:last-child,
     #matchTypeTable th:last-child, #matchTypeTable td:last-child,
-    #conflictTable th:last-child, #conflictTable td:last-child {
+    #conflictTable th:last-child, #conflictTable td:last-child,
+    #businessReportTable th:last-child, #businessReportTable td:last-child {
       text-align: left; 
     }
     .bar-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; font-size: 11.5px; width: 100%; max-width: 200px; }
@@ -479,7 +480,7 @@
       <div class="fieldRow">
         <label>导入同类报表（多文件 CSV / XLSX）</label>
         <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" multiple />
-        <div class="small">默认追加合并；默认开启去重；导入过程/错误请看“导入日志”</div>
+        <div class="small">支持：Sponsored Products 广告报表 & Business Report (业务报告)</div>
       </div>
 
       <div class="row2">
@@ -696,6 +697,32 @@
     </section>
 
     <section class="grid" id="kpiGrid"></section>
+    
+    <div class="card tableCard" id="businessReportCard" style="display:none; grid-column: span 12;">
+      <div class="cardTitle">
+        <h2>业务报告分析 (Business Report Analysis)</h2>
+        <div class="hint">ASIN 流量与转化 (Session / CVR / Sales) - 自动计算转化率 (Units/Sessions)</div>
+      </div>
+      <div class="table-container">
+        <table id="businessReportTable">
+          <thead>
+            <tr>
+              <th style="min-width:100px;">ASIN</th>
+              <th style="min-width:300px;">商品标题</th>
+              <th>会话数 (Sessions)</th>
+              <th>订单数 (Units)</th>
+              <th>转化率 (CVR)</th>
+              <th>销售额 (Sales)</th>
+              <th>客单价 (AOV)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="small" style="margin-top:10px;">
+         数据来源：Business Report (业务报告)。转化率 = 订单数 / 会话数 (Sessions)。
+      </div>
+    </div>
 
     <section class="grid">
       <div class="card chartCard">
@@ -919,7 +946,10 @@
             <input id="wfMinFreq" class="miniInput" type="number" step="1" value="3" title="最小出现次数" />
             <span class="pill">Min Spend</span>
             <input id="wfMinSpend" class="miniInput" type="number" step="0.01" value="10" title="最小花费" />
-            <span class="hint">点击表头排序，点击词条搜索</span>
+            
+            <button class="btn primary" id="btnExportWf" type="button" style="padding: 6px 12px; font-size:11.8px;">导出词频 CSV</button>
+            
+            <span class="hint">点击表头排序</span>
           </div>
         </div>
         <div class="table-container" style="max-height:480px;">
@@ -1130,9 +1160,6 @@ const safeNum = (x) => {
 const toISODate = (d) => {
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
   if (typeof d === "number" && isFinite(d)) {
-    // Excel date (offset 25569 days from 1970-01-01)
-    // Add 12 hours (43200000ms) to safely land in the middle of the day (Noon UTC)
-    // ensuring toISOString() doesn't shift the day backwards due to minor precision errors.
     const dateObj = new Date((d - 25569) * 86400000 + 43200000);
     return dateObj.toISOString().slice(0,10);
   }
@@ -1284,6 +1311,16 @@ const COL_MAP_ALIASES = {
   roas: ["ROAS","Roas"],
 };
 
+const BR_MAP_ALIASES = {
+    asin: ["（父）ASIN", "(Parent) ASIN", "ASIN"],
+    title: ["标题", "Title", "Product Name"],
+    sessions: ["会话数 - 总计", "Sessions - Total", "Sessions"],
+    units: ["已订购商品数量", "Units Ordered", "Units Ordered - Total"],
+    sales: ["已订购商品销售额", "Ordered Product Sales", "Ordered Product Sales - Total"],
+    // Optional
+    cvr: ["商品会话百分比", "Unit Session Percentage", "转化率 - 总计"]
+};
+
 const pickCol = (header, aliases) => {
   const normHeader = header.map(h => String(h).trim().toLowerCase());
   for (const a of aliases) {
@@ -1293,13 +1330,22 @@ const pickCol = (header, aliases) => {
   }
   return null;
 };
+
 const buildMap = (rows) => {
   const header = rows.length ? Object.keys(rows[0]) : [];
   const map = {};
   for (const key in COL_MAP_ALIASES) map[key] = pickCol(header, COL_MAP_ALIASES[key]);
-  if (!map.date) throw new Error("未识别到日期列（Date/日期）。请检查你的报表列名。");
+  if (!map.date) throw new Error("未识别到日期列（Date/日期）。可能是业务报告？");
   return map;
 };
+
+const buildBrMap = (rows) => {
+    const header = rows.length ? Object.keys(rows[0]) : [];
+    const map = {};
+    for (const key in BR_MAP_ALIASES) map[key] = pickCol(header, BR_MAP_ALIASES[key]);
+    return map;
+};
+
 const normalizeRow = (raw, map, sourceFile) => {
   if (!raw) return null;
    
@@ -1325,6 +1371,25 @@ const normalizeRow = (raw, map, sourceFile) => {
   };
 };
 
+const normalizeBrRow = (raw, map, sourceFile) => {
+    const sessions = safeNum(raw[map.sessions]);
+    const units = safeNum(raw[map.units]);
+    const sales = safeNum(raw[map.sales]);
+    // Calculate CVR manually to ensure accuracy
+    const calculatedCvr = sessions > 0 ? units / sessions : 0;
+    
+    return {
+        sourceFile,
+        asin: String(raw[map.asin] ?? "").trim(),
+        title: String(raw[map.title] ?? "").trim(),
+        sessions,
+        units,
+        sales,
+        cvr: calculatedCvr,
+        aov: units > 0 ? sales / units : 0
+    };
+};
+
 /** =========================
  * ASIN detector
  * ========================= */
@@ -1348,6 +1413,7 @@ const detectRowType = (name, rankBy) => (rankBy === "searchTerm" || rankBy === "
  * State
  * ========================= */
 let ALL = [], VIEW = [], importedFiles = [], trendChart = null;
+let BUSINESS_ROWS = []; // New separate store for business reports
 let rankSort = { key: "spend", dir: "desc" };
 let RANK_ROWS = [], rankTypeFilter = "all";
 let actionTypeFilter = "all", BID_ROWS = [], NEG_ROWS = [];
@@ -1382,6 +1448,7 @@ const importMultipleFiles = async (files) => {
 
   if (mergeMode === "replace") { 
     ALL = []; 
+    BUSINESS_ROWS = [];
     importedFiles = []; 
     rootCache.clear(); 
     log("Replace 模式：已清空历史数据与缓存", "warn"); 
@@ -1399,25 +1466,50 @@ const importMultipleFiles = async (files) => {
       if (!rows.length) { log(`警告：${name} 解析后为空`, "warn"); continue; }
       if (rows.length > maxRows) { log(`警告：${name} 行数 ${rows.length.toLocaleString()} 超过 maxRows，将截断到 ${maxRows.toLocaleString()}`, "warn"); rows = rows.slice(0, maxRows); }
 
-      log(`识别字段映射：${name}`); const map = buildMap(rows);
-      log(`标准化字段 + 生成 Root：${name}`); const normalized = rows.map(r => normalizeRow(r, map, name)).filter(r => r && r.date);
-      log(`追加：${name} → ${normalized.length.toLocaleString()} 行`, "good");
-      ALL = ALL.concat(normalized); importedFiles.push({ name, rows: normalized.length });
+      log(`识别字段映射：${name}`); 
+      // Intelligent Check: Is it a Business Report?
+      const brMap = buildBrMap(rows);
+      if (brMap.asin && brMap.sessions) {
+         log(`>> 检测到业务报告 (Business Report) 格式`, "good");
+         const norm = rows.map(r => normalizeBrRow(r, brMap, name)).filter(r => r.asin);
+         BUSINESS_ROWS = BUSINESS_ROWS.concat(norm);
+         log(`导入业务报告：${name} → ${norm.length.toLocaleString()} 行`, "good");
+      } else {
+         // Assume Ads Report
+         try {
+             const map = buildMap(rows);
+             log(`标准化字段 + 生成 Root：${name}`); 
+             const normalized = rows.map(r => normalizeRow(r, map, name)).filter(r => r && r.date);
+             log(`追加广告数据：${name} → ${normalized.length.toLocaleString()} 行`, "good");
+             ALL = ALL.concat(normalized); 
+         } catch (e) {
+             log(`跳过：${name} - ${e.message}`, "bad");
+         }
+      }
+
+      importedFiles.push({ name, rows: rows.length });
       await new Promise(r => setTimeout(r, 0));
     } catch (err) { log(`错误：${name} 导入失败：${err?.message || err}`, "bad"); }
   }
 
-  if (!ALL.length) {
-    log("导入结束：ALL 为空。请重点检查：1) 依赖库是否加载 2) 是否存在 Date/日期列 3) 日期是否能解析", "bad");
-    setSubtitle("导入结束：数据为空（请看左侧导入日志）");
-  } else {
-    if (dedupeMode === "on") { const before = ALL.length; ALL = dedupeRows(ALL); log(`去重完成：${before.toLocaleString()} → ${ALL.length.toLocaleString()}`, "good"); }
-    const dates = ALL.map(r => r.date).filter(Boolean).sort();
-    $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length - 1];
-    log(`导入完成：文件 ${importedFiles.length} 个；ALL=${ALL.length.toLocaleString()} 行`, "good");
-    setSubtitle(`导入完成：文件 ${importedFiles.length} 个；ALL=${ALL.length.toLocaleString()} 行；日期范围 ${$("dateStart").value} → ${$("dateEnd").value}`);
+  // Finalize
+  if (dedupeMode === "on" && ALL.length) { 
+      const before = ALL.length; 
+      ALL = dedupeRows(ALL); 
+      log(`Ads 数据去重完成：${before.toLocaleString()} → ${ALL.length.toLocaleString()}`, "good"); 
   }
-  renderFileList(); populateDropdowns(); applyFilters(true);
+  
+  if (ALL.length > 0) {
+      const dates = ALL.map(r => r.date).filter(Boolean).sort();
+      $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length - 1];
+  }
+
+  log(`导入完成：文件 ${importedFiles.length} 个`, "good");
+  setSubtitle(`导入完成：文件 ${importedFiles.length} 个；Ads Rows=${ALL.length.toLocaleString()}；Business Rows=${BUSINESS_ROWS.length.toLocaleString()}`);
+
+  renderFileList(); 
+  populateDropdowns(); 
+  applyFilters(true);
 };
 
 const renderFileList = () => {
@@ -1428,6 +1520,55 @@ const renderFileList = () => {
       <div style="font-size:11.5px;color:var(--muted);white-space:nowrap;">${fmtInt(f.rows)} rows</div>
     </div>
   `).join("") : `<div class="small">暂无</div>`;
+};
+
+/** =========================
+ * Business Report Renderer
+ * ========================= */
+const renderBusinessReport = () => {
+    const card = $("businessReportCard");
+    const tbody = $("businessReportTable").querySelector("tbody");
+    
+    if (!BUSINESS_ROWS || BUSINESS_ROWS.length === 0) {
+        card.style.display = "none";
+        return;
+    }
+    
+    card.style.display = "block"; // Show if data exists
+    
+    // Aggregate by ASIN (just in case multiple files have same ASINs, typically they are unique per report)
+    // But let's just show them as imported or dedupe by ASIN?
+    // Let's group by ASIN to handle multiple files
+    const map = new Map();
+    for (const r of BUSINESS_ROWS) {
+        if (!map.has(r.asin)) {
+            map.set(r.asin, { asin: r.asin, title: r.title, sessions: 0, units: 0, sales: 0 });
+        }
+        const entry = map.get(r.asin);
+        entry.sessions += r.sessions;
+        entry.units += r.units;
+        entry.sales += r.sales;
+        if (r.title && r.title.length > entry.title.length) entry.title = r.title; // keep longest title
+    }
+    
+    const aggregated = Array.from(map.values()).sort((a,b) => b.units - a.units);
+    
+    tbody.innerHTML = aggregated.map(r => {
+        const cvr = r.sessions > 0 ? r.units / r.sessions : 0;
+        const aov = r.units > 0 ? r.sales / r.units : 0;
+        
+        return `
+            <tr>
+                <td style="font-weight:600; color:var(--text);">${escapeHtml(r.asin)}</td>
+                <td title="${escapeHtml(r.title)}">${escapeHtml(r.title).slice(0, 80)}...</td>
+                <td>${fmtInt(r.sessions)}</td>
+                <td>${fmtInt(r.units)}</td>
+                <td style="font-weight:bold; color:var(--accent);">${fmtPct(cvr)}</td>
+                <td>${fmtMoney(r.sales)}</td>
+                <td>${fmtMoney(aov)}</td>
+            </tr>
+        `;
+    }).join("");
 };
 
 /** =========================
@@ -1505,6 +1646,9 @@ const buildWordStats = () => {
   for (const r of VIEW) {
     const term = r.searchTerm || "";
     if (!term) continue;
+    
+    // NEW: Skip ASINs
+    if (isASINLike(term)) continue;
 
     let words;
     const cacheKey = `${WF_MODE}:${term}`;
@@ -1558,7 +1702,7 @@ const renderWordFreq = () => {
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
   const rows = buildWordStats();
   tbody.innerHTML = rows.map(r => `
-    <tr data-word="${escapeHtml(r.word)}" style="cursor:pointer;">
+    <tr>
       <td title="${escapeHtml(r.word)}">${escapeHtml(r.word).slice(0, 180)}</td>
       <td>${fmtInt(r.freq)}</td>
       <td>${fmtMoney(r.spend)}</td>
@@ -1568,6 +1712,25 @@ const renderWordFreq = () => {
       <td>${actionTag(r.action)}</td>
     </tr>
   `).join("");
+};
+
+const exportWordFreqCSV = () => {
+    const rows = buildWordStats();
+    if (!rows.length) { alert("当前词频列表为空。"); return; }
+    const csvData = [["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS", "Action"]];
+    rows.forEach(r => {
+        csvData.push([
+            r.word, 
+            r.freq, 
+            r.spend.toFixed(2), 
+            r.orders, 
+            r.roas.toFixed(2), 
+            (r.acos*100).toFixed(2)+"%", 
+            r.action
+        ]);
+    });
+    const filename = `word_freq_${$("dateStart").value}_${getTs()}.csv`;
+    downloadText(filename, toCSV(csvData));
 };
 
 /** =========================
@@ -2299,7 +2462,7 @@ const renderActionLists = () => {
  * Apply Filters
  * ========================= */
 const applyFilters = (initial=false) => {
-  if (!ALL.length) {
+  if (!ALL.length && !BUSINESS_ROWS.length) {
     setSubtitle("未导入数据。请导入同类报表（支持多文件）。");
     $("kpiGrid").innerHTML = "";
     if (trendChart) { trendChart.destroy(); trendChart = null; }
@@ -2313,6 +2476,7 @@ const applyFilters = (initial=false) => {
       
     renderMatchTypeAnalysis();
     renderConflictAnalysis();
+    renderBusinessReport();
     return;
   }
 
@@ -2356,7 +2520,12 @@ const applyFilters = (initial=false) => {
   });
 
   const total = sumMetrics(VIEW);
-  setSubtitle(`已导入 ${importedFiles.length} 个文件；ALL=${ALL.length.toLocaleString()} 行；当前视图=${VIEW.length.toLocaleString()} 行；日期范围 ${filters.dateStart} → ${filters.dateEnd}`);
+  
+  if (ALL.length > 0) {
+      setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads Rows=${ALL.length.toLocaleString()}；Business Rows=${BUSINESS_ROWS.length.toLocaleString()}；日期范围 ${filters.dateStart} → ${filters.dateEnd}`);
+  } else {
+      setSubtitle(`已导入 Business Report；Row=${BUSINESS_ROWS.length.toLocaleString()}`);
+  }
 
   renderKPIs(total);
   renderTrend(VIEW);
@@ -2371,6 +2540,7 @@ const applyFilters = (initial=false) => {
    
   renderMatchTypeAnalysis();
   renderConflictAnalysis(); 
+  renderBusinessReport(); // New Render
 
   if (initial) {
     document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
@@ -2554,7 +2724,8 @@ const setAIMode = (mode) => {
 };
 
 const generateReport = async () => {
-    if (!VIEW.length) { alert("当前视图无数据，无法分析。"); return; }
+    // Check if any data exists
+    if (!VIEW.length && !BUSINESS_ROWS.length) { alert("当前视图无数据，无法分析。"); return; }
      
     const key = geminiKeyInput.value.trim();
     if (key && !loadGeminiKey()) localStorage.setItem("gemini_key", key);
@@ -2620,10 +2791,8 @@ const generateReport = async () => {
     }
 };
 
-// [修复] 更强壮的 JSON 提取逻辑，防止 AI 说废话导致报错
 const extractJSON = (text) => {
     if (!text) return null;
-    // 尝试找第一个 { 和最后一个 }
     const firstOpen = text.indexOf('{');
     const lastClose = text.lastIndexOf('}');
     const firstBracket = text.indexOf('[');
@@ -2631,11 +2800,9 @@ const extractJSON = (text) => {
 
     let jsonStr = "";
     
-    // 优先尝试对象 {}
     if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
         jsonStr = text.substring(firstOpen, lastClose + 1);
     } 
-    // 其次尝试数组 []
     else if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
         jsonStr = text.substring(firstBracket, lastBracket + 1);
     } else {
@@ -2650,7 +2817,6 @@ const extractJSON = (text) => {
     }
 };
 
-// [优化] 提示词：更注重“意图”和“否定机会”
 const buildClusterPrompt = () => {
     const terms = groupBy(VIEW, r => r.searchTerm);
     const topTerms = [...terms.entries()]
@@ -2683,7 +2849,6 @@ const buildClusterPrompt = () => {
     `;
 };
 
-// [优化] 提示词：Listing 优化
 const buildSEOPrompt = () => {
     const product = $('aiProductContext').value || "Eyewear";
     const goodKeywords = VIEW.filter(r => r.orders >= 2 || r.roas >= 2.5)
@@ -2706,7 +2871,6 @@ const buildSEOPrompt = () => {
     `;
 };
 
-// [优化] 提示词：审计更严格
 const buildAuditPrompt = () => {
     const product = $('aiProductContext').value || "Eyewear";
     const bleeders = VIEW.filter(r => r.spend > 15 && r.roas < 0.8)
@@ -2732,7 +2896,6 @@ const buildAuditPrompt = () => {
     `;
 };
 
-// [优化] 提示词：NLP 强制 JSON
 const runNLPFilter = async () => {
     const userQuery = $('aiQuestionInput').value;
     if (!userQuery) { alert("请输入指令"); return; }
@@ -2775,14 +2938,12 @@ const runNLPFilter = async () => {
     }
 };
 
-// [优化] 提示词：默认对话更专业
 const buildDefaultChatPrompt = () => {
     const total = sumMetrics(VIEW);
     const terms = [...groupBy(VIEW, r => r.searchTerm).entries()].map(([k,v]) => ({name:k, ...sumMetrics(v)}));
     terms.sort((a,b) => b.spend - a.spend);
     const topSpend = terms.slice(0, 10).map(t => `${t.name} ($${t.spend.toFixed(0)}, ROAS:${t.roas.toFixed(2)})`).join("\n");
     
-    // 计算 CVR 趋势 (简单对比前后半段) - 简化逻辑，仅提供聚合数据
     const totalCVR = total.cvr * 100;
     const totalCPC = total.cpc;
     
@@ -2810,10 +2971,8 @@ const buildDefaultChatPrompt = () => {
     `;
 };
 
-// [修复] 渲染逻辑兼容性增强
 const renderJSONResult = (text, mode) => {
     const data = extractJSON(text);
-    // 如果解析失败，回退到普通文本显示，避免白屏
     const mdParse = (typeof marked !== 'undefined' && typeof marked.parse === 'function') ? marked.parse : (typeof marked === 'function' ? marked : (t)=>t);
 
     if (!data) {
@@ -2827,7 +2986,6 @@ const renderJSONResult = (text, mode) => {
     if (mode === 'cluster') {
         let html = `<h3>🧩 语义聚类 & 否定机会</h3><div class="grid" style="grid-template-columns:1fr 1fr; gap:10px;">`;
         for (const [cluster, info] of Object.entries(data)) {
-            // 兼容旧格式或 AI 偶尔返回的数组格式
             const terms = Array.isArray(info) ? info : (info.terms || []);
             const insight = info.insight || "暂无分析";
             const negs = info.potential_negatives || [];
@@ -2929,7 +3087,7 @@ $("btnReset").addEventListener("click", () => {
 });
 
 $("btnClearAll").addEventListener("click", () => {
-  ALL = []; VIEW = []; importedFiles = [];
+  ALL = []; VIEW = []; BUSINESS_ROWS = []; importedFiles = [];
   renderFileList(); populateDropdowns(); applyFilters(true); clearLog(); log("已清空全部数据", "warn");
 });
 
@@ -2991,12 +3149,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-$("wfTable").addEventListener("click", (e)=>{
-  const tr = e.target.closest("tr");
-  if (!tr || !tr.dataset.word) return;
-  $("filterSearchTerm").value = tr.dataset.word;
-  applyFilters();
-});
+$("btnExportWf").addEventListener("click", exportWordFreqCSV); 
 
 $("btnExportNeg").addEventListener("click", exportNegativesCSV);
 $("btnExportBidUp").addEventListener("click", exportBidUpCSV);
