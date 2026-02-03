@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v5.11 - Gemini 2.5 Flash Only)</title>
+  <title>Ads Dashboard (Compact Pro v5.18 - AI Context Aware)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -528,6 +528,14 @@
         <button class="chipBtn" data-range="all" type="button">全部</button>
       </div>
     </div>
+    
+    <div class="fieldGroup">
+      <div class="fieldRow">
+         <label>品牌词识别 (Brand Name)</label>
+         <input id="brandNameInput" type="text" value="YTDBNS, EYEURL" placeholder="输入品牌名 (区分大小写)" />
+         <div class="small">流量将分为: Brand / Competitor (ASIN) / Generic</div>
+      </div>
+    </div>
 
     <div class="fieldGroup">
       <div class="fieldRow">
@@ -698,6 +706,22 @@
 
     <section class="grid" id="kpiGrid"></section>
     
+    <div class="card tableCard" id="trafficSegCard" style="grid-column: span 12;">
+       <div class="cardTitle">
+         <h2>流量结构分析 (Traffic Segmentation)</h2>
+         <div class="hint">Brand vs Generic vs Competitor (ASIN) - 需在左侧输入品牌名</div>
+       </div>
+       <div class="grid" style="grid-template-columns: 1fr 1fr; gap:20px;">
+          <div class="chartWrap" style="height:200px"><canvas id="trafficChart"></canvas></div>
+          <div class="table-container" style="max-height:200px">
+             <table id="trafficTable">
+                <thead><tr><th>类型</th><th>花费</th><th>销售额</th><th>ROAS</th><th>占比 (Spend)</th></tr></thead>
+                <tbody></tbody>
+             </table>
+          </div>
+       </div>
+    </div>
+    
     <div class="card tableCard" id="businessReportCard" style="display:none; grid-column: span 12;">
       <div class="cardTitle">
         <h2>业务报告分析 (Business Report Analysis)</h2>
@@ -867,9 +891,6 @@
               <button id="btnTypeAsin" class="segBtn" data-type="asin" type="button">ASIN</button>
             </div>
             <button class="btn primary" id="btnExportRank" type="button" style="padding: 6px 12px; font-size:11.8px;">导出榜单 CSV</button>
-            <span class="tag bad">否定</span>
-            <span class="tag warn">迁移</span>
-            <span class="tag good">保留</span>
             <span class="hint">点击表头排序，点击🔍精准搜索</span>
           </div>
         </div>
@@ -962,7 +983,6 @@
                 <th data-sort="orders">订单</th>
                 <th data-sort="roas">ROAS</th>
                 <th data-sort="acos">ACOS</th>
-                <th data-sort="action">动作</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -1081,7 +1101,7 @@
 <div id="aiModal" class="modal-overlay">
   <div class="modal-card">
     <div class="modal-header">
-      <div class="modal-title">✨ Gemini 智能诊断 (Beta 5.11 - Strict 2.5 Flash)</div>
+      <div class="modal-title">✨ Gemini 智能诊断 (Beta 5.18 - Context Aware)</div>
       <button class="btn" id="btnCloseAI" style="padding:4px 10px;">✕</button>
     </div>
     <div class="modal-body">
@@ -1417,6 +1437,7 @@ const detectRowType = (name, rankBy) => (rankBy === "searchTerm" || rankBy === "
  * State
  * ========================= */
 let ALL = [], VIEW = [], importedFiles = [], trendChart = null;
+let trafficChart = null;
 let BUSINESS_ROWS = []; // New separate store for business reports
 let rankSort = { key: "spend", dir: "desc" };
 let RANK_ROWS = [], rankTypeFilter = "all";
@@ -1549,22 +1570,23 @@ const renderBusinessReport = () => {
             map.set(r.asin, { asin: r.asin, title: r.title, sessions: 0, units: 0, sales: 0 });
         }
         const entry = map.get(r.asin);
-        entry.sessions += r.sessions;
-        entry.units += r.units;
-        entry.sales += r.sales;
-        if (r.title && r.title.length > entry.title.length) entry.title = r.title; // keep longest title
+        entry.sessions += r.sessions || 0; // Fix: Ensure number
+        entry.units += r.units || 0; // Fix: Ensure number
+        entry.sales += r.sales || 0; // Fix: Ensure number
+        if (r.title && r.title.length > (entry.title || "").length) entry.title = r.title; // keep longest title
     }
     
     const aggregated = Array.from(map.values()).sort((a,b) => b.units - a.units);
     
     tbody.innerHTML = aggregated.map(r => {
-        const cvr = r.sessions > 0 ? r.units / r.sessions : 0;
-        const aov = r.units > 0 ? r.sales / r.units : 0;
+        // [Fix] Zero division protection
+        const cvr = (r.sessions > 0 && isFinite(r.sessions)) ? r.units / r.sessions : 0;
+        const aov = (r.units > 0 && isFinite(r.units)) ? r.sales / r.units : 0;
         
         return `
             <tr>
                 <td style="font-weight:600; color:var(--text);">${escapeHtml(r.asin)}</td>
-                <td title="${escapeHtml(r.title)}">${escapeHtml(r.title).slice(0, 80)}...</td>
+                <td title="${escapeHtml(r.title)}">${escapeHtml(r.title || "").slice(0, 80)}...</td>
                 <td>${fmtInt(r.sessions)}</td>
                 <td>${fmtInt(r.units)}</td>
                 <td style="font-weight:bold; color:var(--accent);">${fmtPct(cvr)}</td>
@@ -1636,6 +1658,93 @@ const groupBy = (rows, keyFn) => {
 };
 
 /** =========================
+ * Traffic Segmentation Logic
+ * ========================= */
+const renderTrafficSegmentation = () => {
+    const card = $("trafficSegCard");
+    const brandNameInput = $("brandNameInput").value.trim().toLowerCase();
+    // [Fix] Split by comma only to handle spaces in brand names correctly
+    const brandNames = brandNameInput.split(/[,，]+/).map(s => s.trim()).filter(Boolean);
+
+    // Only show if we have data
+    if (!VIEW.length) {
+        // Clear chart
+        if(trafficChart) { trafficChart.destroy(); trafficChart = null; }
+        return;
+    }
+
+    const segments = {
+        'Brand': { label: 'Brand (品牌词)', rows: [] },
+        'Competitor': { label: 'Competitor (ASIN/竞品)', rows: [] },
+        'Generic': { label: 'Generic (通用词)', rows: [] }
+    };
+
+    for (const r of VIEW) {
+        const term = (r.searchTerm || "").toLowerCase();
+        
+        if (isASINLike(term)) {
+            segments['Competitor'].rows.push(r);
+        } else if (brandNames.some(b => term.includes(b))) {
+            segments['Brand'].rows.push(r);
+        } else {
+            segments['Generic'].rows.push(r);
+        }
+    }
+
+    // Calculate metrics
+    const data = Object.keys(segments).map(k => {
+        const m = sumMetrics(segments[k].rows);
+        return { key: k, label: segments[k].label, ...m };
+    });
+
+    const totalSpend = sumMetrics(VIEW).spend || 1;
+
+    // Render Table
+    const tbody = $("trafficTable").querySelector("tbody");
+    tbody.innerHTML = data.map(d => {
+        const pct = (d.spend / totalSpend * 100).toFixed(1);
+        return `
+            <tr>
+                <td><span class="pill" style="font-weight:bold;">${d.key}</span></td>
+                <td>${fmtMoney(d.spend)}</td>
+                <td>${fmtMoney(d.sales)}</td>
+                <td>${d.roas.toFixed(2)}</td>
+                <td>
+                    <div class="bar-row">
+                        <div style="width:35px">${pct}%</div>
+                        <div class="bar-track"><div style="width:${pct}%;background:var(--accent)"></div></div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    // Render Chart
+    const ctx = $("trafficChart").getContext("2d");
+    if(trafficChart) trafficChart.destroy();
+    
+    trafficChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: [{
+                data: data.map(d => d.spend),
+                backgroundColor: ['#34c759', '#ff3b30', '#007aff'], // Green, Red, Blue
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                title: { display: true, text: '花费占比 (Spend Share)', font: { size: 13 } }
+            }
+        }
+    });
+};
+
+/** =========================
  * Word Frequency Builder
  * ========================= */
 const tokenCache = new Map();
@@ -1681,17 +1790,15 @@ const buildWordStats = () => {
     const m = sumMetrics(rows);
     if (rows.length < minFreq) continue;
     if (m.spend < minSpend) continue;
-    const action =
-      (m.spend >= 30 && m.orders === 0) ? "NEGATE" :
-      (m.orders >= 2 || m.roas >= 3) ? "KEEP" : "WATCH";
-    out.push({ word, freq: rows.length, ...m, action });
+    
+    out.push({ word, freq: rows.length, ...m });
   }
 
   const {key, dir} = wfSort;
   const mul = dir==="asc" ? 1 : -1;
   out.sort((a,b)=>{
-    const av = (key==="word"||key==="action") ? String(a[key]||"") : (a[key] ?? 0);
-    const bv = (key==="word"||key==="action") ? String(b[key]||"") : (b[key] ?? 0);
+    const av = (key==="word") ? String(a[key]||"") : (a[key] ?? 0);
+    const bv = (key==="word") ? String(b[key]||"") : (b[key] ?? 0);
     if (typeof av === "string" && typeof bv === "string") {
         return av.localeCompare(bv) * mul;
     }
@@ -1713,7 +1820,6 @@ const renderWordFreq = () => {
       <td>${fmtInt(r.orders)}</td>
       <td>${(r.roas ?? 0).toFixed(2)}</td>
       <td style="${r.acos > 0.4 ? 'color:#b42318;' : ''}">${fmtPct(r.acos)}</td>
-      <td>${actionTag(r.action)}</td>
     </tr>
   `).join("");
 };
@@ -1721,7 +1827,7 @@ const renderWordFreq = () => {
 const exportWordFreqCSV = () => {
     const rows = buildWordStats();
     if (!rows.length) { alert("当前词频列表为空。"); return; }
-    const csvData = [["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS", "Action"]];
+    const csvData = [["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS"]]; 
     rows.forEach(r => {
         csvData.push([
             r.word, 
@@ -1729,8 +1835,7 @@ const exportWordFreqCSV = () => {
             r.spend.toFixed(2), 
             r.orders, 
             r.roas.toFixed(2), 
-            (r.acos*100).toFixed(2)+"%", 
-            r.action
+            (r.acos*100).toFixed(2)+"%"
         ]);
     });
     const filename = `word_freq_${$("dateStart").value}_${getTs()}.csv`;
@@ -2304,15 +2409,16 @@ const exportRankCSV = () => {
  * ========================= */
 const renderKPIs = (total) => {
   const kpis = [
-    { label:"花费", value: fmtMoney(total.spend), meta: `点击成本 ${fmtMoney(total.cpc)} • 点击率 ${fmtPct(total.ctr)}` },
-    { label:"销售额 (7天)", value: fmtMoney(total.sales), meta: `ROAS ${total.roas.toFixed(2)} • ACOS ${fmtPct(total.acos)}` },
-    { label:"订单数 (7天)", value: fmtInt(total.orders), meta: `转化率 ${fmtPct(total.cvr)} • 点击量 ${fmtInt(total.clicks)}` },
-    { label:"展示量", value: fmtInt(total.impr), meta: `点击量 ${fmtInt(total.clicks)} • 点击率 ${fmtPct(total.ctr)}` },
-    { label:"ACOS", value: fmtPct(total.acos), meta: `花费/销售额` },
-    { label:"ROAS", value: total.roas.toFixed(2), meta: `销售额/花费` },
-    { label:"点击成本", value: fmtMoney(total.cpc), meta: `花费/点击量` },
-    { label:"转化率", value: fmtPct(total.cvr), meta: `订单数/点击量` },
+    { key: "spend", label:"花费", value: fmtMoney(total.spend), meta: `点击成本 ${fmtMoney(total.cpc)} • 点击率 ${fmtPct(total.ctr)}` },
+    { key: "sales", label:"销售额 (7天)", value: fmtMoney(total.sales), meta: `ROAS ${total.roas.toFixed(2)} • ACOS ${fmtPct(total.acos)}` },
+    { key: "orders", label:"订单数 (7天)", value: fmtInt(total.orders), meta: `转化率 ${fmtPct(total.cvr)} • 点击量 ${fmtInt(total.clicks)}` },
+    { key: "impr", label:"展示量", value: fmtInt(total.impr), meta: `点击量 ${fmtInt(total.clicks)} • 点击率 ${fmtPct(total.ctr)}` },
+    { key: "acos", label:"ACOS", value: fmtPct(total.acos), meta: `花费/销售额` },
+    { key: "roas", label:"ROAS", value: total.roas.toFixed(2), meta: `销售额/花费` },
+    { key: "cpc", label:"点击成本", value: fmtMoney(total.cpc), meta: `花费/点击量` },
+    { key: "cvr", label:"转化率", value: fmtPct(total.cvr), meta: `订单数/点击量` },
   ];
+  
   $("kpiGrid").innerHTML = kpis.map(k => `
     <div class="card kpi">
       <div class="label"><span>${k.label}</span><span class="pill">KPI</span></div>
@@ -2466,89 +2572,96 @@ const renderActionLists = () => {
  * Apply Filters
  * ========================= */
 const applyFilters = (initial=false) => {
-  if (!ALL.length && !BUSINESS_ROWS.length) {
-    setSubtitle("未导入数据。请导入同类报表（支持多文件）。");
-    $("kpiGrid").innerHTML = "";
-    if (trendChart) { trendChart.destroy(); trendChart = null; }
-    $("rankTable").querySelector("tbody").innerHTML = "";
-    renderActionLists();
-    renderWordFreq();
-    renderLongTailMining();
-    renderWeekdayAnalysis();
-    renderCPCDistribution();
-    renderLengthAnalysis();
-      
-    renderMatchTypeAnalysis();
-    renderConflictAnalysis();
-    renderBusinessReport();
-    return;
-  }
+  try {
+      if (!ALL.length && !BUSINESS_ROWS.length) {
+        setSubtitle("未导入数据。请导入同类报表（支持多文件）。");
+        $("kpiGrid").innerHTML = "";
+        if (trendChart) { trendChart.destroy(); trendChart = null; }
+        if (trafficChart) { trafficChart.destroy(); trafficChart = null; }
+        $("rankTable").querySelector("tbody").innerHTML = "";
+        renderActionLists();
+        renderWordFreq();
+        renderLongTailMining();
+        renderWeekdayAnalysis();
+        renderCPCDistribution();
+        renderLengthAnalysis();
+          
+        renderMatchTypeAnalysis();
+        renderConflictAnalysis();
+        renderBusinessReport();
+        renderTrafficSegmentation();
+        return;
+      }
 
-  const filters = {
-    dateStart: $("dateStart").value, dateEnd: $("dateEnd").value,
-    filterSource: $("filterSource").value, filterPortfolio: $("filterPortfolio").value,
-    filterCampaign: $("filterCampaign").value, filterAdGroup: $("filterAdGroup").value,
-    filterTargeting: $("filterTargeting").value, filterMatchType: $("filterMatchType").value,
-    filterAdType: $("filterAdType").value, 
-    filterSearchTerm: $("filterSearchTerm").value.trim(),
-    filterSearchExact: $("filterSearchExact").checked 
-  };
+      const filters = {
+        dateStart: $("dateStart").value, dateEnd: $("dateEnd").value,
+        filterSource: $("filterSource").value, filterPortfolio: $("filterPortfolio").value,
+        filterCampaign: $("filterCampaign").value, filterAdGroup: $("filterAdGroup").value,
+        filterTargeting: $("filterTargeting").value, filterMatchType: $("filterMatchType").value,
+        filterAdType: $("filterAdType").value, 
+        filterSearchTerm: $("filterSearchTerm").value.trim(),
+        filterSearchExact: $("filterSearchExact").checked 
+      };
 
-  VIEW = ALL.filter(r => {
-    if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false;
-    if (filters.filterSource && r.sourceFile !== filters.filterSource) return false;
-    if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) return false;
-    if (filters.filterCampaign && r.campaign !== filters.filterCampaign) return false;
-    if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) return false;
-    if (filters.filterTargeting && r.targeting !== filters.filterTargeting) return false;
-    if (filters.filterMatchType && r.matchType !== filters.filterMatchType) return false;
+      VIEW = ALL.filter(r => {
+        if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false;
+        if (filters.filterSource && r.sourceFile !== filters.filterSource) return false;
+        if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) return false;
+        if (filters.filterCampaign && r.campaign !== filters.filterCampaign) return false;
+        if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) return false;
+        if (filters.filterTargeting && r.targeting !== filters.filterTargeting) return false;
+        if (filters.filterMatchType && r.matchType !== filters.filterMatchType) return false;
 
-    if (filters.filterAdType) {
-        const lowerMatch = (r.matchType || "").toLowerCase();
-        const isManual = ["broad", "phrase", "exact"].includes(lowerMatch) || lowerMatch.includes("product") || lowerMatch.includes("targeting");
-        
-        if (filters.filterAdType === "manual" && !isManual) return false;
-        if (filters.filterAdType === "auto" && isManual) return false;
-    }
-
-    if (filters.filterSearchTerm) {
-        const term = filters.filterSearchTerm.toLowerCase();
-        if (filters.filterSearchExact) {
-            if (r.searchTermLower !== term) return false;
-        } else {
-            if (!r.searchTermLower.includes(term)) return false;
+        if (filters.filterAdType) {
+            const lowerMatch = (r.matchType || "").toLowerCase();
+            const isManual = ["broad", "phrase", "exact"].includes(lowerMatch) || lowerMatch.includes("product") || lowerMatch.includes("targeting");
+            
+            if (filters.filterAdType === "manual" && !isManual) return false;
+            if (filters.filterAdType === "auto" && isManual) return false;
         }
-    }
 
-    return true;
-  });
+        if (filters.filterSearchTerm) {
+            const term = filters.filterSearchTerm.toLowerCase();
+            if (filters.filterSearchExact) {
+                if (r.searchTermLower !== term) return false;
+            } else {
+                if (!r.searchTermLower.includes(term)) return false;
+            }
+        }
 
-  const total = sumMetrics(VIEW);
-  
-  if (ALL.length > 0) {
-      setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads Rows=${ALL.length.toLocaleString()}；Business Rows=${BUSINESS_ROWS.length.toLocaleString()}；日期范围 ${filters.dateStart} → ${filters.dateEnd}`);
-  } else {
-      setSubtitle(`已导入 Business Report；Row=${BUSINESS_ROWS.length.toLocaleString()}`);
-  }
+        return true;
+      });
 
-  renderKPIs(total);
-  renderTrend(VIEW);
-  renderRankTable();
-  renderActionLists();
-  renderWordFreq();
-  renderLongTailMining(); 
-  renderWeekdayAnalysis(); 
-  renderCPCDistribution(); 
-  renderAutoManual();
-  renderLengthAnalysis();
-   
-  renderMatchTypeAnalysis();
-  renderConflictAnalysis(); 
-  renderBusinessReport(); // New Render
+      const total = sumMetrics(VIEW);
+      
+      if (ALL.length > 0) {
+          setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads Rows=${ALL.length.toLocaleString()}；Business Rows=${BUSINESS_ROWS.length.toLocaleString()}；日期范围 ${filters.dateStart} → ${filters.dateEnd}`);
+      } else {
+          setSubtitle(`已导入 Business Report；Row=${BUSINESS_ROWS.length.toLocaleString()}`);
+      }
 
-  if (initial) {
-    document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
-    document.querySelector('.chipBtn[data-range="all"]')?.classList.add("active");
+      renderKPIs(total); 
+      renderTrend(VIEW);
+      renderRankTable();
+      renderActionLists();
+      renderWordFreq();
+      renderLongTailMining(); 
+      renderWeekdayAnalysis(); 
+      renderCPCDistribution(); 
+      renderAutoManual();
+      renderLengthAnalysis();
+       
+      renderMatchTypeAnalysis();
+      renderConflictAnalysis(); 
+      renderBusinessReport(); 
+      renderTrafficSegmentation(); 
+
+      if (initial) {
+        document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
+        document.querySelector('.chipBtn[data-range="all"]')?.classList.add("active");
+      }
+  } catch (e) {
+      console.error("Critical Error in applyFilters:", e);
   }
 };
 const autoApply = debounce(applyFilters, 200);
@@ -2581,7 +2694,7 @@ const applyQuickRange = (type) => {
 };
 
 /** =========================
- * AI Integration Logic (Updated V5.11 - Strict 2.5 Flash)
+ * AI Integration Logic (Updated V5.17 - Audited)
  * ========================= */
 const aiModal = $('aiModal');
 const geminiKeyInput = $('geminiKeyInput');
@@ -2626,8 +2739,8 @@ const callGemini = async (prompt) => {
   let baseUrl = (apiBaseUrlInput.value || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
   localStorage.setItem("gemini_api_base", baseUrl);
 
-  // STRICT USER REQUIREMENT: Gemini 2.5 Flash ONLY. No fallbacks.
-  const model = "gemini-2.5-flash";
+  // STRICT REQUIREMENT: Only one model.
+  const model = "gemini-2.0-flash"; 
 
   try {
     aiLoadingStatus.textContent = `正在连接模型: ${model}...`;
@@ -2643,7 +2756,7 @@ const callGemini = async (prompt) => {
       const errMsg = errJson.error?.message || `HTTP ${response.status}`;
       if (response.status === 400 || response.status === 401 || response.status === 403) throw new Error(errMsg);
       
-      // If 404 (model not found), we throw it directly as per strict instructions
+      // Strict failure. No fallbacks.
       throw new Error(`模型调用失败 (${model}): ${errMsg}`);
     }
 
@@ -2652,8 +2765,9 @@ const callGemini = async (prompt) => {
     return data.candidates[0].content.parts[0].text;
 
   } catch (e) {
+    // Pass specific auth errors up
     if (e.message.includes("API Key") || e.message.includes("权限")) throw e;
-    throw e; // Rethrow directly
+    throw e; 
   }
 };
 
@@ -3034,12 +3148,13 @@ $("fileInput").addEventListener("change", async (e)=>{
   const files = Array.from(e.target.files || []);
   if (files.length) { log("文件选择事件触发（change）"); await importMultipleFiles(files); e.target.value = ""; }
 });
-const filterIds = ["dateStart","dateEnd","filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","bidSpend","bidOrders","bidRoas","bidIntensity","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType"];
+const filterIds = ["dateStart","dateEnd","filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","bidSpend","bidOrders","bidRoas","bidIntensity","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "brandNameInput"];
 filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280));
+$("brandNameInput").addEventListener("input", debounce(applyFilters, 400)); // Debounce brand input
 $("btnClearSearch").addEventListener("click", () => { $("filterSearchTerm").value = ""; $("filterSearchExact").checked = false; $("filterSearchTerm").focus(); applyFilters(); });
 $("btnReset").addEventListener("click", () => {
-  ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = ""));
+  ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType", "brandNameInput"].forEach(id => ($(id).value = ""));
   $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" };
   populateDropdowns(); applyFilters();
 });
