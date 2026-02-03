@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v5.6 - Stable)</title>
+  <title>Ads Dashboard (Compact Pro v5.11 - Gemini 2.5 Flash Only)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1081,7 +1081,7 @@
 <div id="aiModal" class="modal-overlay">
   <div class="modal-card">
     <div class="modal-header">
-      <div class="modal-title">✨ Gemini 智能诊断 (Beta 5.6 - Stable)</div>
+      <div class="modal-title">✨ Gemini 智能诊断 (Beta 5.11 - Strict 2.5 Flash)</div>
       <button class="btn" id="btnCloseAI" style="padding:4px 10px;">✕</button>
     </div>
     <div class="modal-body">
@@ -1117,6 +1117,7 @@
           </div>
 
           <textarea id="aiQuestionInput" class="api-key-input" style="height:80px; resize:vertical; font-family:inherit;" placeholder="例如：为什么上周 ACOS 升高了？"></textarea>
+          <input type="text" id="aiProductContext" class="api-key-input" style="display:none; margin-top:5px;" placeholder="请输入产品名称/核心词 (例如: Blue Light Glasses)..." />
       </div>
 
       <div id="aiLoading" style="display:none; text-align:center; padding:40px;">
@@ -1290,40 +1291,44 @@ const extractMagnification = (s) => [...String(s || "").matchAll(/\b([1-4](?:\.\
 /** =========================
  * Column mapping
  * ========================= */
+// [NEW] Helper to strip whitespace/BOM for robust matching
+const cleanHeader = (h) => String(h).replace(/^\uFEFF/, '').replace(/\s+/g, '').toLowerCase();
+
 const COL_MAP_ALIASES = {
-  date: ["日期","Date","Day","Report Date"],
-  portfolio: ["广告组合名称","Portfolio name","Portfolio","Portfolio Name"],
-  campaign: ["广告活动名称","Campaign name","Campaign","Campaign Name"],
-  adGroup: ["广告组名称","Ad group name","Ad group","Ad Group","Ad Group Name"],
-  targeting: ["投放","Targeting","Keyword or Product Targeting"],
-  matchType: ["匹配类型","Match type","Match Type"],
-  searchTerm: ["客户搜索词","Customer search term","Search term","Search Term"],
+  date: ["日期","Date","Day","ReportDate"],
+  portfolio: ["广告组合名称","Portfolioname","Portfolio","PortfolioName"],
+  campaign: ["广告活动名称","Campaignname","Campaign","CampaignName"],
+  adGroup: ["广告组名称","Adgroupname","Adgroup","AdGroup","AdGroupName"],
+  targeting: ["投放","Targeting","KeywordorProductTargeting"],
+  matchType: ["匹配类型","Matchtype","MatchType"],
+  searchTerm: ["客户搜索词","Customersearchterm","Searchterm","SearchTerm"],
   impr: ["展示量","Impressions","Impr"],
   clicks: ["点击量","Clicks"],
   spend: ["花费","Spend","Cost"],
-  sales7d: ["7天总销售额","7 Day Total Sales","7-day total sales","7 day total sales","Total Sales","Est. Total Sales"],
-  orders7d: ["7天总订单数","7天总订单数 (#)","7天总订单数(#)","7天总订单数（#）","7 Day Total Orders (#)","7-day total orders","7 day total orders","Total Orders","Est. Total Orders"],
+  sales7d: ["7天总销售额","7DayTotalSales","7-daytotalsales","7daytotalsales","TotalSales","Est.TotalSales"],
+  orders7d: ["7天总订单数","7天总订单数(#)","7天总订单数（#）","7DayTotalOrders(#)","7-daytotalorders","7daytotalorders","TotalOrders","Est.TotalOrders"],
   ctr: ["点击率","CTR"],
-  cpc: ["每次点击费用","CPC","Cost per click","Cost per click (CPC)"],
-  cvr: ["7天的转化率","7 Day Conversion Rate","7-day conversion rate","7 day conversion rate"],
+  cpc: ["每次点击费用","CPC","Costperclick","Costperclick(CPC)"],
+  cvr: ["7天的转化率","7DayConversionRate","7-dayconversionrate","7dayconversionrate"],
   acos: ["ACOS","Acos"],
   roas: ["ROAS","Roas"],
 };
 
 const BR_MAP_ALIASES = {
-    asin: ["（父）ASIN", "(Parent) ASIN", "ASIN"],
-    title: ["标题", "Title", "Product Name"],
-    sessions: ["会话数 - 总计", "Sessions - Total", "Sessions"],
-    units: ["已订购商品数量", "Units Ordered", "Units Ordered - Total"],
-    sales: ["已订购商品销售额", "Ordered Product Sales", "Ordered Product Sales - Total"],
+    asin: ["（子）ASIN", "(Child)ASIN", "ChildASIN", "（父）ASIN", "(Parent)ASIN", "ASIN", "子商品ASIN"],
+    title: ["标题", "Title", "ProductName", "商品名称"],
+    sessions: ["会话数-总计", "Sessions-Total", "Sessions", "买家访问次数"],
+    units: ["已订购商品数量", "UnitsOrdered", "UnitsOrdered-Total", "销量"],
+    sales: ["已订购商品销售额", "OrderedProductSales", "OrderedProductSales-Total", "销售额"],
     // Optional
-    cvr: ["商品会话百分比", "Unit Session Percentage", "转化率 - 总计"]
+    cvr: ["商品会话百分比", "UnitSessionPercentage", "转化率-总计", "转化率"]
 };
 
 const pickCol = (header, aliases) => {
-  const normHeader = header.map(h => String(h).trim().toLowerCase());
+  // Normalize file headers once
+  const normHeader = header.map(cleanHeader);
   for (const a of aliases) {
-    const target = String(a).trim().toLowerCase();
+    const target = cleanHeader(a);
     const idx = normHeader.indexOf(target);
     if (idx >= 0) return header[idx];
   }
@@ -1334,7 +1339,7 @@ const buildMap = (rows) => {
   const header = rows.length ? Object.keys(rows[0]) : [];
   const map = {};
   for (const key in COL_MAP_ALIASES) map[key] = pickCol(header, COL_MAP_ALIASES[key]);
-  if (!map.date) throw new Error("未识别到日期列（Date/日期）。可能是业务报告？");
+  if (!map.date) throw new Error("Ads Report: 未找到日期列 (Date).");
   return map;
 };
 
@@ -1384,7 +1389,7 @@ const normalizeBrRow = (raw, map, sourceFile) => {
         sessions,
         units,
         sales,
-        cvr: calculatedCvr,
+        cvr: isFinite(calculatedCvr) ? calculatedCvr : 0,
         aov: units > 0 ? sales / units : 0
     };
 };
@@ -1482,7 +1487,7 @@ const importMultipleFiles = async (files) => {
              log(`追加广告数据：${name} → ${normalized.length.toLocaleString()} 行`, "good");
              ALL = ALL.concat(normalized); 
          } catch (e) {
-             log(`跳过：${name} - ${e.message}`, "bad");
+             log(`跳过：${name} - 无法识别为广告报表或业务报告 (${e.message})`, "bad");
          }
       }
 
@@ -2576,7 +2581,7 @@ const applyQuickRange = (type) => {
 };
 
 /** =========================
- * AI Integration Logic (Updated V5.5 - Fixes & Robust)
+ * AI Integration Logic (Updated V5.11 - Strict 2.5 Flash)
  * ========================= */
 const aiModal = $('aiModal');
 const geminiKeyInput = $('geminiKeyInput');
@@ -2590,6 +2595,7 @@ const btnToggleSettings = $('btnToggleSettings');
 const settingsBox = $('settingsBox');
 const apiBaseUrlInput = $('apiBaseUrl');
 const aiQuestionInput = $('aiQuestionInput'); 
+const aiProductContext = $('aiProductContext');
 
 const loadGeminiKey = () => localStorage.getItem("gemini_key") || "";
 const loadApiBase = () => localStorage.getItem("gemini_api_base") || "https://generativelanguage.googleapis.com";
@@ -2620,38 +2626,35 @@ const callGemini = async (prompt) => {
   let baseUrl = (apiBaseUrlInput.value || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
   localStorage.setItem("gemini_api_base", baseUrl);
 
-  const models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash-exp"];
-  let lastError = null;
+  // STRICT USER REQUIREMENT: Gemini 2.5 Flash ONLY. No fallbacks.
+  const model = "gemini-2.5-flash";
 
-  for (const model of models) {
-    try {
-      aiLoadingStatus.textContent = `正在连接模型: ${model}...`;
-      const url = `${baseUrl}/v1beta/models/${model}:generateContent?key=${key}`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-      });
+  try {
+    aiLoadingStatus.textContent = `正在连接模型: ${model}...`;
+    const url = `${baseUrl}/v1beta/models/${model}:generateContent?key=${key}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
 
-      if (!response.ok) {
-        const errJson = await response.json().catch(()=>({}));
-        const errMsg = errJson.error?.message || `HTTP ${response.status}`;
-        if (response.status === 400 || response.status === 401 || response.status === 403) throw new Error(errMsg);
-        console.warn(`模型 ${model} 失败: ${errMsg}`);
-        lastError = new Error(errMsg);
-        continue;
-      }
-
-      const data = await response.json();
-      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("API 返回空数据");
-      return data.candidates[0].content.parts[0].text;
-
-    } catch (e) {
-      lastError = e;
-      if (e.message.includes("API Key") || e.message.includes("权限")) throw e;
+    if (!response.ok) {
+      const errJson = await response.json().catch(()=>({}));
+      const errMsg = errJson.error?.message || `HTTP ${response.status}`;
+      if (response.status === 400 || response.status === 401 || response.status === 403) throw new Error(errMsg);
+      
+      // If 404 (model not found), we throw it directly as per strict instructions
+      throw new Error(`模型调用失败 (${model}): ${errMsg}`);
     }
+
+    const data = await response.json();
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("API 返回空数据");
+    return data.candidates[0].content.parts[0].text;
+
+  } catch (e) {
+    if (e.message.includes("API Key") || e.message.includes("权限")) throw e;
+    throw e; // Rethrow directly
   }
-  throw lastError || new Error("AI 服务不可用");
 };
 
 let currentAIMode = 'chat';
@@ -2670,6 +2673,8 @@ const setAIMode = (mode) => {
 
     const hint = $('aiToolHint');
     const input = $('aiQuestionInput');
+    const ctxInput = $('aiProductContext');
+    ctxInput.style.display = 'none'; // Default hidden
     
     if (mode === 'chat') {
         hint.textContent = "默认模式：生成诊断报告。建议提问：“如何降低 ACOS？”";
@@ -2689,8 +2694,10 @@ const setAIMode = (mode) => {
         hint.textContent = "功能：将 Top 100 搜索词按意图归类。";
         input.style.display = 'none';
     } else if (mode === 'audit') {
-        hint.textContent = "功能：严格审计亏损词的相关性。";
+        hint.textContent = "功能：严格审计亏损词的相关性（请在下方输入产品名称以获得准确结果）。";
         input.style.display = 'none';
+        ctxInput.style.display = 'block'; // Show context input
+        ctxInput.placeholder = "请输入产品核心词 (例如: Blue Light Glasses)...";
     }
 };
 
@@ -2879,8 +2886,28 @@ const buildClusterPrompt = () => {
 };
 
 const buildAuditPrompt = () => {
-    const bleeders = VIEW.filter(r => r.spend > 20 && r.roas < 1).map(r => `${r.searchTerm} ($${r.spend.toFixed(0)})`).join("\n");
-    return `审计亏损词相关性。输入:\n${bleeders}\n返回 JSON: [{ "term": "x", "score": 1-5, "action": "Negate/Keep" }]`;
+    const product = $('aiProductContext').value || "Eyewear"; 
+    const bleeders = VIEW.filter(r => r.spend > 20 && r.roas < 1)
+        .sort((a,b) => b.spend - a.spend)
+        .slice(0, 30);
+    
+    const bleederList = bleeders.map(r => `${r.searchTerm} (Spend:$${r.spend.toFixed(0)}, Orders:${r.orders})`).join("\n");
+
+    return `
+    角色：亚马逊广告审计员。你的目标是省钱。
+    我的产品：${product}
+     
+    请审查以下“亏损词” (Bleeders)，判断其与我产品的相关性。
+     
+    列表:
+    ${bleederList}
+
+    请返回 JSON 数组（不要 Markdown）：
+    [
+      { "term": "词", "spend": 50, "relevance_score": 1, "reason": "完全不相关，这是太阳镜而你是近视镜", "action": "立即否定" }
+    ]
+    评分标准：1分(完全无关) -> 5分(非常相关但可能竞价过高)。
+    `;
 };
 
 const buildDefaultChatPrompt = () => {
@@ -2928,9 +2955,59 @@ const renderJSONResult = (text, mode) => {
         });
         html += `</ul>`;
     }
-    else if (mode === 'cluster' || mode === 'audit') {
-        // Reuse simple JSON dump or previous renderers for brevity
-        html = `<pre style="white-space:pre-wrap; font-size:12px;">${JSON.stringify(data, null, 2)}</pre>`;
+    else if (mode === 'cluster') {
+        // [修复] 强制转换为数组格式以便统一渲染
+        let clusters = [];
+        if (Array.isArray(data)) {
+            clusters = data.map(item => ({
+                name: item.cluster_name || item.name || "Group",
+                terms: item.terms || [],
+                insight: item.insight || item.reason || "",
+                negs: item.potential_negatives || item.negatives || []
+            }));
+        } else {
+            clusters = Object.entries(data).map(([k,v]) => ({
+                name: k,
+                terms: v.terms || [],
+                insight: v.insight || "",
+                negs: v.potential_negatives || []
+            }));
+        }
+
+        html = `<h3>🧩 语义聚类 & 否定机会</h3><div class="grid" style="grid-template-columns:1fr 1fr; gap:10px; align-items: start;">`;
+        clusters.forEach(c => {
+            // Limit terms display
+            const termDisplay = c.terms.slice(0, 15).join(", ") + (c.terms.length > 15 ? "..." : "");
+            html += `<div class="card" style="padding:10px; break-inside: avoid;">
+                <div style="font-weight:bold; color:var(--accent); margin-bottom:4px;">${c.name}</div>
+                <div style="font-size:11.5px; color:var(--muted); margin-bottom:6px;">${c.insight}</div>
+                <div style="font-size:12px; color:var(--text); margin-bottom:6px; word-break: break-word;">${termDisplay}</div>
+                ${c.negs && c.negs.length ? `<div style="font-size:11px; color:var(--bad); border-top:1px solid var(--line); padding-top:4px;">疑似否定: ${c.negs.join(", ")}</div>` : ''}
+            </div>`;
+        });
+        html += `</div>`;
+    }
+    else if (mode === 'audit') {
+        html = `<h3>⚖️ 亏损词相关性审计</h3>
+        <table style="width:100%; text-align:left; font-size:12px; border-collapse:collapse;">
+        <thead style="background:var(--hover-bg);"><tr style="border-bottom:1px solid var(--line);">
+            <th style="padding:8px;">搜索词</th><th style="padding:8px;">花费</th><th style="padding:8px;">相关性</th><th style="padding:8px;">建议</th>
+        </tr></thead><tbody>`;
+        
+        // 修复：确保 safeList 存在且为数组
+        const auditList = Array.isArray(data) ? data : [];
+        auditList.forEach(item => {
+            const score = item.relevance_score || 3;
+            const scoreColor = score <= 2 ? 'color:var(--bad); font-weight:bold;' : 'color:var(--good);';
+            html += `
+            <tr style="border-bottom:1px solid var(--line);">
+                <td style="padding:8px;">${item.term}</td>
+                <td style="padding:8px;">$${item.spend}</td>
+                <td style="padding:8px; ${scoreColor}">${score}/5</td>
+                <td style="padding:8px; color:var(--muted);">${item.reason} <span style="font-weight:bold; color:var(--text)">[${item.action||"关注"}]</span></td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
     }
     
     aiResult.innerHTML = html;
