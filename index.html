@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v5.18 - AI Context Aware)</title>
+  <title>Ads Dashboard (Compact Pro v5.22 - Stable & Polished)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -449,23 +449,145 @@
     .search-clear-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 0 8px; font-size: 16px; display: flex; align-items: center; border-radius: 8px; }
     .search-clear-btn:hover { color: var(--bad); background: var(--hover-bg); }
 
-    /* ================= AI Modal Styles ================= */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-    .modal-overlay.active { display: flex; }
-    .modal-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); width: 90%; max-width: 650px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
-    .modal-header { padding: 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
-    .modal-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .modal-body { padding: 20px; overflow-y: auto; line-height: 1.6; font-size: 13.5px; color: var(--text); }
+    /* ================= AI Modal Styles (Glassmorphism & Enhanced) ================= */
+    .modal-overlay { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: rgba(0, 0, 0, 0.3); /* 降低背景遮罩透明度 */
+      backdrop-filter: blur(8px); /* 背景毛玻璃模糊 */
+      z-index: 9999; /* Fix: 确保覆盖所有 sticky 元素 */
+      display: none; 
+      justify-content: center; 
+      align-items: center; 
+      transition: opacity 0.3s ease; 
+      opacity: 0;
+    }
+    .modal-overlay.active { 
+      display: flex; 
+      opacity: 1;
+    }
+    
+    .modal-card { 
+      background: var(--card); 
+      border: 1px solid var(--line); 
+      border-radius: 24px; 
+      width: 90%; max-width: 700px; max-height: 85vh; 
+      display: flex; flex-direction: column; 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
+      transform: scale(0.95) translateY(10px); 
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+      overflow: hidden; 
+    }
+    .modal-overlay.active .modal-card {
+      transform: scale(1) translateY(0); 
+    }
+
+    .modal-header { 
+      padding: 18px 24px; 
+      border-bottom: 1px solid var(--line); 
+      display: flex; justify-content: space-between; align-items: center; 
+      background: linear-gradient(to right, rgba(255,255,255,0.8), rgba(255,255,255,0.5));
+      backdrop-filter: blur(10px);
+    }
+    [data-theme="dark"] .modal-header {
+      background: linear-gradient(to right, rgba(36,36,38,0.9), rgba(36,36,38,0.6));
+    }
+
+    .modal-title { 
+      font-size: 17px; 
+      font-weight: 700; 
+      display: flex; align-items: center; gap: 8px; 
+      background: linear-gradient(135deg, #0071e3 0%, #a259ff 100%); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+    }
+    
+    .modal-body { 
+      padding: 24px; 
+      overflow-y: auto; 
+      line-height: 1.6; 
+      font-size: 14px; 
+      color: var(--text);
+      background: var(--bg);
+    }
+    [data-theme="dark"] .modal-body { background: #1c1c1e; }
+
+    /* AI 内容排版优化 */
+    .ai-content h3 { margin-top: 0; font-size: 16px; color: var(--text); border-left: 3px solid var(--accent); padding-left: 10px; margin-bottom: 16px; }
+    .ai-content p { margin-bottom: 12px; color: var(--text); opacity: 0.9; }
+    .ai-content ul { padding-left: 20px; background: var(--card); border-radius: 12px; padding: 12px 12px 12px 32px; border: 1px solid var(--line); }
+    .ai-content li { margin-bottom: 8px; }
+    .ai-content table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); margin-bottom: 12px; }
+    .ai-content th { background: var(--hover-bg); font-weight: 600; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+    .ai-content td { padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--card); }
+    .ai-content tr:last-child td { border-bottom: none; }
+
+    /* AI Enhanced Styles */
+    .ai-action { cursor: pointer; color: var(--accent); border-bottom: 1px dashed var(--accent); transition: background 0.2s; }
+    .ai-action:hover { background: var(--hover-bg); }
+    .ai-content ins { background: var(--softGood); color: var(--good); text-decoration: none; padding: 0 4px; border-radius: 4px; }
+    .ai-content del { background: var(--softBad); color: var(--bad); text-decoration: line-through; padding: 0 4px; border-radius: 4px; }
       
-    .ai-content h1, .ai-content h2, .ai-content h3 { margin-top: 1em; margin-bottom: 0.5em; color: var(--text); }
-    .ai-content ul { padding-left: 20px; }
-    .ai-content li { margin-bottom: 6px; }
-    .ai-content strong { color: var(--text); font-weight: 700; }
-    .ai-content p { margin-bottom: 1em; }
-      
-    .api-key-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--input-bg); color: var(--text); }
-    .modal-footer { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; background: var(--hover-bg); border-radius: 0 0 var(--radius) var(--radius); }
+    /* 输入框美化 */
+    .api-key-input { 
+      width: 100%; padding: 12px 14px; margin-bottom: 12px; 
+      border: 1px solid var(--line); border-radius: 12px; 
+      background: var(--card); color: var(--text); 
+      transition: all 0.2s;
+      font-size: 13.5px;
+    }
+    .api-key-input:focus { 
+      border-color: var(--accent); 
+      box-shadow: 0 0 0 4px rgba(0,113,227,0.15); 
+      transform: translateY(-1px);
+    }
+
+    /* 工具箱 Chips 美化 */
+    .modal-body .chips { gap: 8px; margin-bottom: 16px; }
+    .modal-body .chipBtn {
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 12.5px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+    .modal-body .chipBtn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+    .modal-body .chipBtn.active {
+      background: linear-gradient(135deg, var(--accent) 0%, #5e5ce6 100%);
+      color: white; border: none;
+      box-shadow: 0 4px 12px rgba(94, 92, 230, 0.3);
+    }
+
+    .modal-footer { 
+      padding: 16px 24px; 
+      border-top: 1px solid var(--line); 
+      display: flex; justify-content: space-between; align-items: center; 
+      background: var(--card); 
+      border-radius: 0 0 24px 24px;
+    }
     .settings-toggle { font-size: 11px; color: var(--muted); cursor: pointer; text-decoration: underline; }
+
+    /* 加载动画美化 */
+    #aiLoading { padding: 50px; }
+    #aiLoading div:first-child { 
+      font-size: 32px; 
+      animation: bounce 1.5s infinite; 
+      margin-bottom: 16px; 
+    }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* 滚动条美化 */
+    .modal-body::-webkit-scrollbar { width: 6px; }
+    .modal-body::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.1); border-radius: 99px; }
+    .modal-body::-webkit-scrollbar-track { background: transparent; }
+
+    #settingsBox {
+        border: 1px solid var(--line);
+        background: var(--bg);
+        border-radius: 12px;
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.03);
+    }
 
     @media (max-width: 1400px){ .app{ max-width: 100vw; } }
     @media (max-width: 1100px){ .app{ grid-template-columns:1fr; max-width:100vw; } .sidebar{ position:relative; height:auto; } .kpi{ grid-column: span 6; } .chartCard{ grid-column: span 12; } }
@@ -849,7 +971,7 @@
           </table>
         </div>
         <div class="small" style="margin-top:10px;">
-           洞察：通常 3-5 个词的“中长尾”转化率更高。如果 1-2 个词花费巨大且 ROAS 低，考虑将其设为精确匹配或否定。
+            洞察：通常 3-5 个词的“中长尾”转化率更高。如果 1-2 个词花费巨大且 ROAS 低，考虑将其设为精确匹配或否定。
         </div>
       </div>
 
@@ -1101,7 +1223,7 @@
 <div id="aiModal" class="modal-overlay">
   <div class="modal-card">
     <div class="modal-header">
-      <div class="modal-title">✨ Gemini 智能诊断 (Beta 5.18 - Context Aware)</div>
+      <div class="modal-title">✨ Gemini 智能诊断 (Compact Pro v5.22 - Stable & Polished)</div>
       <button class="btn" id="btnCloseAI" style="padding:4px 10px;">✕</button>
     </div>
     <div class="modal-body">
@@ -1111,12 +1233,20 @@
         <input type="password" id="geminiKeyInput" class="api-key-input" placeholder="输入 API Key (以 AIza 开头...)" />
         
         <div style="margin-top:10px;">
-            <span id="btnToggleSettings" class="settings-toggle">⚙️ 高级设置 (自定义 API 地址)</span>
+            <span id="btnToggleSettings" class="settings-toggle">⚙️ 高级设置 (自定义 API & 策略)</span>
         </div>
         <div id="settingsBox" style="display:none; margin-top:10px; padding:10px; background:var(--hover-bg); border-radius:8px;">
             <label style="display:block; margin-bottom:4px;">API Base URL (可选)</label>
-            <input type="text" id="apiBaseUrl" class="api-key-input" style="margin-bottom:0;" value="https://generativelanguage.googleapis.com" placeholder="例如: https://my-proxy.com" />
-            <div style="font-size:11px; color:var(--muted); margin-top:4px;">默认: https://generativelanguage.googleapis.com</div>
+            <input type="text" id="apiBaseUrl" class="api-key-input" style="margin-bottom:8px;" value="https://generativelanguage.googleapis.com" placeholder="例如: https://my-proxy.com" />
+            
+            <label style="display:block; margin-bottom:4px; font-weight:600; color:var(--text);">🎯 运营策略选择</label>
+            <select id="aiStrategy" class="api-key-input" style="margin-bottom:0;">
+                <option value="balanced" selected>⚖️ 平衡发展 (默认 - 兼顾ACOS与规模)</option>
+                <option value="launch">🚀 新品推量 (忽略 ACOS，重展示/点击)</option>
+                <option value="profit">💰 利润优先 (严控 ACOS，重转化)</option>
+                <option value="audit">🛡️ 风险审计 (寻找浪费和漏洞)</option>
+            </select>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">AI 将根据此策略调整建议风格。</div>
         </div>
       </div>
 
@@ -1127,6 +1257,11 @@
             <button class="chipBtn active" id="aiModeChat" onclick="setAIMode('chat')">💬 自由对话</button>
             <button class="chipBtn" id="aiModeGap" onclick="setAIMode('gap')">🔍 埋词差距</button>
             <button class="chipBtn" id="aiModeFunnel" onclick="setAIMode('funnel')">🩺 流量漏斗</button>
+            <button class="chipBtn" id="aiModeRecon" onclick="setAIMode('recon')">⚔️ 竞品侦察</button>
+            <button class="chipBtn" id="aiModeBid" onclick="setAIMode('bid')">🩺 竞价医生</button>
+            <button class="chipBtn" id="aiModePop" onclick="setAIMode('pop')">📈 环比分析</button>
+            <button class="chipBtn" id="aiModeIntent" onclick="setAIMode('intent')">🧠 意图分层</button>
+            <button class="chipBtn" id="aiModeRoot" onclick="setAIMode('root')">🛑 否词根源</button>
             <button class="chipBtn" id="aiModeExpand" onclick="setAIMode('expand')">🚀 智能拓词</button>
             <button class="chipBtn" id="aiModeCluster" onclick="setAIMode('cluster')">🧩 语义聚类</button>
             <button class="chipBtn" id="aiModeAudit" onclick="setAIMode('audit')">⚖️ 相关性审计</button>
@@ -1180,11 +1315,14 @@ const safeNum = (x) => {
 const toISODate = (d) => {
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
   if (typeof d === "number" && isFinite(d)) {
+    // Excel Serial Date
     const dateObj = new Date((d - 25569) * 86400000 + 43200000);
     return dateObj.toISOString().slice(0,10);
   }
   const s = String(d || "").trim();
   if (!s) return "";
+  
+  // Try ISO first
   const matchISO = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
   if (matchISO) {
     const y = parseInt(matchISO[1], 10);
@@ -1193,9 +1331,13 @@ const toISODate = (d) => {
     const dt = new Date(y, m - 1, day, 12, 0, 0); 
     return dt.toISOString().slice(0,10);
   }
+  
+  // Try US/Excel standard MM/DD/YYYY or DD/MM/YYYY fallback logic
+  // Simple check: new Date() handles many formats, but let's be safe for slashes
   const dt = new Date(s);
-  if (isNaN(dt.getTime())) return "";
-  return dt.toISOString().slice(0,10); 
+  if (!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
+  
+  return ""; 
 };
 
 const getTs = () => {
@@ -1400,7 +1542,7 @@ const normalizeBrRow = (raw, map, sourceFile) => {
     const sales = safeNum(raw[map.sales]);
     // Calculate CVR manually to ensure accuracy
     const calculatedCvr = sessions > 0 ? units / sessions : 0;
-     
+      
     return {
         sourceFile,
         asin: String(raw[map.asin] ?? "").trim(),
@@ -1521,7 +1663,7 @@ const importMultipleFiles = async (files) => {
       ALL = dedupeRows(ALL); 
       log(`Ads 数据去重完成：${before.toLocaleString()} → ${ALL.length.toLocaleString()}`, "good"); 
   }
-   
+    
   if (ALL.length > 0) {
       const dates = ALL.map(r => r.date).filter(Boolean).sort();
       $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length - 1];
@@ -1551,14 +1693,14 @@ const renderFileList = () => {
 const renderBusinessReport = () => {
     const card = $("businessReportCard");
     const tbody = $("businessReportTable").querySelector("tbody");
-     
+      
     if (!BUSINESS_ROWS || BUSINESS_ROWS.length === 0) {
         card.style.display = "none";
         return;
     }
-     
+      
     card.style.display = "block";
-     
+      
     const map = new Map();
     for (const r of BUSINESS_ROWS) {
         if (!map.has(r.asin)) {
@@ -1570,9 +1712,9 @@ const renderBusinessReport = () => {
         entry.sales += r.sales || 0; 
         if (r.title && r.title.length > (entry.title || "").length) entry.title = r.title; 
     }
-     
+      
     const aggregated = Array.from(map.values()).sort((a,b) => b.units - a.units);
-     
+      
     tbody.innerHTML = aggregated.map(r => {
         const cvr = (r.sessions > 0 && isFinite(r.sessions)) ? r.units / r.sessions : 0;
         const aov = (r.units > 0 && isFinite(r.units)) ? r.sales / r.units : 0;
@@ -2419,6 +2561,7 @@ const renderKPIs = (total) => {
 };
 
 const renderTrend = (rows) => {
+  if (!rows || rows.length === 0) return;
   const byDate = groupBy(rows, r=>r.date);
   const series = [...byDate.keys()].sort().map(d=>({ date:d, ...sumMetrics(byDate.get(d)) }));
   const dataMap = (key, transform = v => v) => series.map(s => transform(s[key]));
@@ -2441,18 +2584,20 @@ const renderTrend = (rows) => {
   const canvas = $("trendChart");
   if (canvas) {
       const ctx = canvas.getContext("2d");
-      trendChart = new Chart(ctx, {
-        type:"line", 
-        data:{ labels:series.map(s=>s.date), datasets },
-        options:{
-          responsive:true, maintainAspectRatio:false, interaction:{ mode:"index", intersect:false },
-          scales:{
-            y:{ beginAtZero:true, grid:{ color: gridColor } },
-            y1:{ beginAtZero:true, position:"right", grid:{ drawOnChartArea:false } },
-            x:{ grid:{ display:false } }
-          }
-        }
-      });
+      try {
+          trendChart = new Chart(ctx, {
+            type:"line", 
+            data:{ labels:series.map(s=>s.date), datasets },
+            options:{
+              responsive:true, maintainAspectRatio:false, interaction:{ mode:"index", intersect:false },
+              scales:{
+                y:{ beginAtZero:true, grid:{ color: gridColor } },
+                y1:{ beginAtZero:true, position:"right", grid:{ drawOnChartArea:false } },
+                x:{ grid:{ display:false } }
+              }
+            }
+          });
+      } catch(e) { console.error("Chart Error", e); }
   }
 };
 
@@ -2684,7 +2829,7 @@ const applyQuickRange = (type) => {
 };
 
 /** =========================
- * AI Integration Logic (Updated V5.18 - Security & Robustness)
+ * AI Integration Logic (Updated V5.22 - Stable & Polished)
  * ========================= */
 const aiModal = $('aiModal');
 const geminiKeyInput = $('geminiKeyInput');
@@ -2761,12 +2906,13 @@ let currentAIMode = 'chat';
 
 const setAIMode = (mode) => {
     currentAIMode = mode;
-    const btns = ['aiModeChat', 'aiModeGap', 'aiModeFunnel', 'aiModeExpand', 'aiModeCluster', 'aiModeAudit'];
+    const btns = ['aiModeChat', 'aiModeGap', 'aiModeFunnel', 'aiModeExpand', 'aiModeRecon', 'aiModeCluster', 'aiModeAudit', 'aiModeBid', 'aiModePop', 'aiModeIntent', 'aiModeRoot'];
     btns.forEach(id => $(id)?.classList.remove('active'));
     
     const map = {
         'chat': 'aiModeChat', 'gap': 'aiModeGap', 'funnel': 'aiModeFunnel', 
-        'expand': 'aiModeExpand', 'cluster': 'aiModeCluster', 'audit': 'aiModeAudit'
+        'expand': 'aiModeExpand', 'recon': 'aiModeRecon', 'cluster': 'aiModeCluster', 'audit': 'aiModeAudit',
+        'bid': 'aiModeBid', 'pop': 'aiModePop', 'intent': 'aiModeIntent', 'root': 'aiModeRoot'
     };
     if ($(map[mode])) $(map[mode]).classList.add('active');
 
@@ -2774,6 +2920,7 @@ const setAIMode = (mode) => {
     const input = $('aiQuestionInput');
     const ctxInput = $('aiProductContext');
     ctxInput.style.display = 'none'; 
+    input.style.display = 'none'; // Default hidden unless chat
     
     if (mode === 'chat') {
         hint.textContent = "默认模式：生成诊断报告。建议提问：“如何降低 ACOS？”";
@@ -2781,22 +2928,27 @@ const setAIMode = (mode) => {
         input.placeholder = "例如：分析一下昨天的销量...";
         input.value = "";
     } else if (mode === 'gap') {
-        hint.textContent = "功能：对比“高出单搜索词”与“ASIN 标题”，找出标题缺失的关键词。";
-        input.style.display = 'none';
+        hint.textContent = "功能：对比“高出单搜索词”与“ASIN 标题”，AI 将提供修改建议（红色删除，绿色新增）。";
     } else if (mode === 'funnel') {
         hint.textContent = "功能：分析 Business Report 的 Sessions vs CVR，诊断流量利用率。";
-        input.style.display = 'none';
     } else if (mode === 'expand') {
         hint.textContent = "功能：基于你的高表现词，AI 联想推荐相关的长尾词。";
-        input.style.display = 'none';
+    } else if (mode === 'recon') {
+        hint.textContent = "功能：侦察高花费/高 ROAS 的竞品 ASIN，分析其优劣势。";
     } else if (mode === 'cluster') {
         hint.textContent = "功能：将 Top 100 搜索词按意图归类。";
-        input.style.display = 'none';
     } else if (mode === 'audit') {
         hint.textContent = "功能：严格审计亏损词的相关性（请在下方输入产品名称以获得准确结果）。";
-        input.style.display = 'none';
         ctxInput.style.display = 'block'; 
         ctxInput.placeholder = "请输入产品核心词 (例如: Blue Light Glasses)...";
+    } else if (mode === 'bid') {
+        hint.textContent = "功能：AI 竞价医生。基于 AOV 和 转化率，计算实现 25% ACOS 的理论出价。";
+    } else if (mode === 'pop') {
+        hint.textContent = "功能：环比增长分析。自动对比当前日期范围的前半段 vs 后半段，找出变化原因。";
+    } else if (mode === 'intent') {
+        hint.textContent = "功能：搜索意图分层。识别流量是偏向“泛词(Awareness)”还是“购买(Purchase)”。";
+    } else if (mode === 'root') {
+        hint.textContent = "功能：否词根源挖掘。找出导致亏损的共同单词根。";
     }
 };
 
@@ -2819,22 +2971,48 @@ const generateReport = async () => {
 
     try {
         let prompt = "";
-        if (currentAIMode === 'gap') prompt = buildGapPrompt();
-        else if (currentAIMode === 'funnel') prompt = buildFunnelPrompt();
-        else if (currentAIMode === 'expand') prompt = buildExpandPrompt();
-        else if (currentAIMode === 'cluster') prompt = buildClusterPrompt();
-        else if (currentAIMode === 'audit') prompt = buildAuditPrompt();
-        else prompt = buildDefaultChatPrompt();
+        
+        // --- Strategy Injection ---
+        const strategyMode = $('aiStrategy').value;
+        let strategyPrompt = "";
+        switch(strategyMode) {
+            case 'launch':
+                strategyPrompt = "STRATEGY: The user is in LAUNCH PHASE. Ignore high ACOS. Prioritize Impressions, CTR, and Keywords discovery. Do not suggest negating high-spend keywords if they bring traffic.";
+                break;
+            case 'profit':
+                strategyPrompt = "STRATEGY: The user is in MATURE PHASE (PROFIT FOCUSED). Ruthlessly suggest negating keywords with ACOS > 30% or Spend > $15 without sales. Focus on cutting waste.";
+                break;
+            case 'audit':
+                strategyPrompt = "STRATEGY: You are an External Auditor. Find anomalies, wasted spend, and cannibalization. Be critical and direct.";
+                break;
+            default:
+                strategyPrompt = "STRATEGY: Balance growth and profitability.";
+        }
+        
+        const baseSystemPrompt = `You are an Amazon PPC Expert. ${strategyPrompt}
+        IMPORTANT INTERACTION RULE: When you mention specific keywords or ASINs that the user should take action on (filter, negate, or examine), you MUST wrap them in a special HTML span tag like this:
+        <span class="ai-action" data-type="filter" data-val="YOUR_KEYWORD_HERE">YOUR_KEYWORD_HERE</span>
+        This allows the user to click the keyword to instantly filter the dashboard. Use this for ALL specific terms in your advice.`;
+
+        if (currentAIMode === 'gap') prompt = buildGapPrompt(baseSystemPrompt);
+        else if (currentAIMode === 'funnel') prompt = buildFunnelPrompt(baseSystemPrompt);
+        else if (currentAIMode === 'expand') prompt = buildExpandPrompt(baseSystemPrompt);
+        else if (currentAIMode === 'recon') prompt = buildReconPrompt(baseSystemPrompt);
+        else if (currentAIMode === 'cluster') prompt = buildClusterPrompt(baseSystemPrompt);
+        else if (currentAIMode === 'audit') prompt = buildAuditPrompt(baseSystemPrompt);
+        else if (currentAIMode === 'bid') prompt = buildBidPrompt(baseSystemPrompt);
+        else if (currentAIMode === 'pop') prompt = buildPopPrompt(baseSystemPrompt);
+        else if (currentAIMode === 'intent') prompt = buildIntentPrompt(baseSystemPrompt);
+        else if (currentAIMode === 'root') prompt = buildRootPrompt(baseSystemPrompt);
+        else prompt = buildDefaultChatPrompt(baseSystemPrompt);
 
         aiLoadingStatus.textContent = "正在思考...";
         const responseText = await callGemini(prompt);
         
-        // Safety: Check for DOMPurify
+        // Safety: Check for DOMPurify or simple Marked usage
         const mdParse = (typeof marked !== 'undefined' && typeof marked.parse === 'function') ? marked.parse : (t)=>t;
 
         if (currentAIMode === 'chat') {
-            // Enhanced Security: In a real app, use DOMPurify.sanitize(mdParse(responseText))
-            // Here we use a basic filter if DOMPurify isn't present, or trust Marked default sanitization if enabled
             aiResult.innerHTML = mdParse(responseText);
         } else {
             renderJSONResult(responseText, currentAIMode);
@@ -2851,26 +3029,30 @@ const generateReport = async () => {
     }
 };
 
-// [Optimized] Improved JSON extraction strategy using Stack
+// [Optimized] Robust JSON extraction strategy
 const extractJSON = (text) => {
     if (!text) return null;
-    let cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    // 1. Remove Markdown code blocks first
+    let cleanText = text.replace(/```json/gi, "").replace(/```/g, "").trim();
     
-    // Find first [ or {
+    // 2. Find first [ or {
     const firstOpen = cleanText.search(/[\{\[]/);
     if (firstOpen === -1) return null;
 
-    // Find last ] or }
-    const lastClose = cleanText.search(/[\]\}](?!.*[\]\}])/); // Find last occurence
+    // 3. Find last ] or }
+    const lastClose = cleanText.search(/[\]\}](?!.*[\]\}])/); 
     if (lastClose === -1 || lastClose < firstOpen) return null;
 
     try {
         const potentialJson = cleanText.substring(firstOpen, lastClose + 1);
+        // 4. Pre-process to remove Markdown bolding inside JSON strings if Gemini does it
+        // Regex: Replace **text** with text inside strings is hard, but let's try basic cleanup
+        // A safer way is to assume Gemini returns valid JSON if we strip the markdown outside.
         return JSON.parse(potentialJson);
     } catch (e) {
         console.warn("JSON Parse Failed, trying loose regex match...");
-        // Fallback: Try strict regex if the substring method failed due to embedded braces
         try {
+             // Fallback: Try regex match if substring included garbage
              const match = cleanText.match(/\[.*\]|\{.*\}/s);
              if(match) return JSON.parse(match[0]);
         } catch(e2) {
@@ -2881,33 +3063,139 @@ const extractJSON = (text) => {
 };
 
 // --- Prompt Builders ---
-// [Kept exactly as previous version to maintain functionality]
-const buildGapPrompt = () => {
+const buildGapPrompt = (systemPrompt) => {
     const goodTerms = VIEW.filter(r => r.orders >= 1).map(r => r.searchTerm).slice(0, 50).join(", ");
     const titles = BUSINESS_ROWS.slice(0, 10).map(r => `ASIN: ${r.asin} | Title: ${r.title}`).join("\n");
-    return `角色：亚马逊 SEO 专家。任务：关键词埋词差距分析。数据：1.高出单词: [${goodTerms}] 2.产品标题: ${titles}。请分析：哪些高出单的词没有出现在标题中？返回JSON格式: [{ "asin": "...", "missing_keywords": ["..."], "seo_suggestion": "..." }]`;
+    return `${systemPrompt}
+    Task: Keyword Gap Analysis & Title Optimization.
+    Data: 
+    1. High Converting Terms: [${goodTerms}]
+    2. Current Titles: ${titles}
+    
+    Instruction: Analyze which high-converting terms are missing from the titles.
+    Return JSON format: [{ "asin": "...", "missing_keywords": ["..."], "seo_suggestion": "HTML string showing the improved title with <ins>added words</ins> and <del>removed words</del>" }]`;
 };
-const buildFunnelPrompt = () => {
+const buildFunnelPrompt = (systemPrompt) => {
     const report = BUSINESS_ROWS.slice(0, 20).map(r => `ASIN: ${r.asin}, Sessions: ${r.sessions}, Units: ${r.units}, CVR: ${(r.cvr*100).toFixed(2)}%`).join("\n");
-    return `角色：流量漏斗诊断专家。任务：分析流量利用率。数据: ${report}。分类：明星款, 潜力款, 流量浪费, 滞销款。返回JSON: [{ "asin": "...", "category": "...", "reason": "...", "action": "..." }]`;
+    return `${systemPrompt}
+    Task: Funnel Diagnostic.
+    Data: ${report}
+    Classify ASINs into: Star (High traffic/High CVR), Potential (High traffic/Low CVR), Wasted (High traffic/No Sales), Dead (Low traffic).
+    Return JSON: [{ "asin": "...", "category": "...", "reason": "...", "action": "..." }]`;
 };
-const buildExpandPrompt = () => {
+const buildExpandPrompt = (systemPrompt) => {
     const topTerms = VIEW.filter(r => r.orders >= 2).sort((a,b)=>b.orders-a.orders).slice(0, 20).map(r=>r.searchTerm).join(", ");
-    return `角色：拓词助手。成功词: [${topTerms}]。推荐 10 个相关但不同的长尾词。返回JSON: [{ "keyword": "...", "reason": "..." }]`;
+    return `${systemPrompt}
+    Task: Keyword Expansion.
+    Context: These are my winning terms: [${topTerms}].
+    Suggest 10 NEW long-tail keywords that are relevant but NOT in the list.
+    Return JSON: [{ "keyword": "...", "reason": "..." }]`;
 };
-const buildClusterPrompt = () => {
+const buildReconPrompt = (systemPrompt) => {
+    const asins = VIEW.filter(r => isASINLike(r.searchTerm));
+    if(!asins.length) return "Tell the user there are no Competitor ASINs found in the current view.";
+    
+    const asinStats = [...groupBy(asins, r=>r.searchTerm).entries()].map(([a, list]) => ({ asin: a, ...sumMetrics(list) }));
+    const badAsins = asinStats.filter(x => x.orders===0 && x.spend > 5).sort((a,b)=>b.spend-a.spend).slice(0,5);
+    const goodAsins = asinStats.filter(x => x.orders>0).sort((a,b)=>b.roas-a.roas).slice(0,5);
+    
+    const dataStr = `High Spend (0 Sales): ${badAsins.map(x=>`${x.asin}($${x.spend})`).join(", ")}. High ROAS: ${goodAsins.map(x=>`${x.asin}(ROAS ${x.roas.toFixed(1)})`).join(", ")}`;
+
+    return `${systemPrompt}
+    Task: Competitor Recon.
+    Data: ${dataStr}
+    Analyze:
+    1. For High Spend ASINs: Why might we be losing? (Price? Review?)
+    2. For High ROAS ASINs: Suggest aggressive actions.
+    Return JSON: [{ "asin": "...", "type": "High Spend/High ROAS", "analysis": "...", "action": "..." }]`;
+};
+const buildClusterPrompt = (systemPrompt) => {
     const topTerms = [...groupBy(VIEW, r => r.searchTerm).entries()].map(([t, list]) => `${t} ($${sumMetrics(list).spend.toFixed(0)})`).sort((a,b) => parseFloat(b.split('$')[1]) - parseFloat(a.split('$')[1])).slice(0, 100).join(", ");
-    return `语义聚类。输入: [${topTerms}]。返回JSON: [{ "name": "ClusterName", "terms": ["..."], "insight": "...", "potential_negatives": ["..."] }]`; // Optimized JSON structure expectation
+    return `${systemPrompt}
+    Task: Semantic Clustering.
+    Input: [${topTerms}].
+    Group these into intent clusters.
+    Return JSON: [{ "name": "ClusterName", "terms": ["..."], "insight": "...", "potential_negatives": ["..."] }]`;
 };
-const buildAuditPrompt = () => {
+const buildAuditPrompt = (systemPrompt) => {
     const product = $('aiProductContext').value || "Eyewear"; 
     const bleeders = VIEW.filter(r => r.spend > 20 && r.roas < 1).sort((a,b) => b.spend - a.spend).slice(0, 30);
     const bleederList = bleeders.map(r => `${r.searchTerm} (Spend:$${r.spend.toFixed(0)}, Orders:${r.orders})`).join("\n");
-    return `角色：广告审计员。产品：${product}。审查亏损词: ${bleederList}。评分 1-5。返回JSON: [{ "term": "...", "spend": 123, "relevance_score": 1, "reason": "...", "action": "..." }]`;
+    return `${systemPrompt}
+    Task: Relevance Audit.
+    Product Context: ${product}
+    Bleeding Keywords: ${bleederList}
+    Score relevance 1-5 (1=Irrelevant, 5=Highly Relevant).
+    Return JSON: [{ "term": "...", "spend": 123, "relevance_score": 1, "reason": "...", "action": "..." }]`;
 };
-const buildDefaultChatPrompt = () => {
+const buildBidPrompt = (systemPrompt) => {
+    const topTerms = VIEW.sort((a,b)=>b.spend-a.spend).slice(0, 20);
+    const dataStr = topTerms.map(r => {
+        const aov = r.orders > 0 ? (r.sales / r.orders).toFixed(2) : "N/A";
+        const curCpc = r.cpc.toFixed(2);
+        const curCvr = (r.cvr * 100).toFixed(2);
+        return `Term: "${r.searchTerm}", Spend: $${r.spend}, Orders: ${r.orders}, CVR: ${curCvr}%, AOV: $${aov}, CPC: $${curCpc}`;
+    }).join("\n");
+    
+    return `${systemPrompt}
+    Task: Bid Doctor.
+    Target ACOS: 25% (Assume this is the goal).
+    Formula Reference: Max Bid = AOV * Target ACOS * CVR.
+    Data:
+    ${dataStr}
+    
+    Instruction: Calculate the ideal Max Bid for each term to hit 25% ACOS.
+    If Orders = 0, suggest a defensive bid drop (e.g. -20%).
+    Return JSON: [{ "term": "...", "current_cpc": 1.2, "suggested_bid": 0.9, "reason": "CVR 5% needs lower bid to hit 25% ACOS" }]`;
+};
+const buildPopPrompt = (systemPrompt) => {
+    const dates = VIEW.map(r => r.date).sort();
+    if (dates.length < 2) return "Tell user: Date range too short for PoP analysis.";
+    
+    const start = new Date(dates[0]);
+    const end = new Date(dates[dates.length-1]);
+    const mid = new Date(start.getTime() + (end.getTime() - start.getTime()) / 2);
+    
+    // Safety check for invalid dates
+    if (isNaN(mid.getTime())) return "Tell user: Date range invalid.";
+
+    const midIso = toISODate(mid);
+    const p1 = VIEW.filter(r => r.date < midIso);
+    const p2 = VIEW.filter(r => r.date >= midIso);
+    
+    const m1 = sumMetrics(p1);
+    const m2 = sumMetrics(p2);
+    
+    return `${systemPrompt}
+    Task: Period-Over-Period (PoP) Analysis.
+    Period 1 (Past): Sales $${m1.sales.toFixed(2)}, Spend $${m1.spend.toFixed(2)}, ACOS ${(m1.acos*100).toFixed(2)}%, CVR ${(m1.cvr*100).toFixed(2)}%.
+    Period 2 (Current): Sales $${m2.sales.toFixed(2)}, Spend $${m2.spend.toFixed(2)}, ACOS ${(m2.acos*100).toFixed(2)}%, CVR ${(m2.cvr*100).toFixed(2)}%.
+    
+    Instruction: Compare P1 vs P2. Identify the main trend (Growth/Decline). Analyze if the change is due to Traffic (Spend/Clicks) or Efficiency (CVR/ACOS).
+    Return JSON: { "trend": "Growth/Decline", "key_factor": "...", "analysis": "...", "actionable_advice": "..." }`;
+};
+const buildIntentPrompt = (systemPrompt) => {
+    const uniqueTerms = [...new Set(VIEW.map(r=>r.searchTerm))].slice(0, 50).join(", ");
+    return `${systemPrompt}
+    Task: Search Intent Classification.
+    Terms: [${uniqueTerms}]
+    Classes: 'Awareness' (Broad/Generic), 'Consideration' (Specific features), 'Purchase' (Long-tail/High intent).
+    Return JSON: [{ "term": "...", "stage": "Awareness", "reason": "..." }]`;
+};
+const buildRootPrompt = (systemPrompt) => {
+    const bleeders = VIEW.filter(r => r.spend > 10 && r.orders === 0).map(r => r.searchTerm).slice(0, 50).join(", ");
+    return `${systemPrompt}
+    Task: Negative Root Finder.
+    Input (High Spend / Zero Orders Terms): [${bleeders}]
+    Instruction: Identify single words (roots) that appear frequently in this list and seem irrelevant or wasteful.
+    Context: User sells Eyewear.
+    Return JSON: [{ "root_word": "...", "frequency_in_list": 5, "reason": "Appears in multiple failed searches", "action": "NEGATE PHRASE" }]`;
+};
+const buildDefaultChatPrompt = (systemPrompt) => {
     const total = sumMetrics(VIEW);
-    return `我是亚马逊运营。当前花费 $${total.spend.toFixed(2)}，ROAS ${total.roas.toFixed(2)}。请给出 3 个优化建议。`;
+    return `${systemPrompt}
+    Current View Data: Spend $${total.spend.toFixed(2)}, ROAS ${total.roas.toFixed(2)}, Orders ${total.orders}.
+    User Question: ${(aiQuestionInput.value || "Give me 3 optimization suggestions based on current data.")}`;
 };
 
 const renderJSONResult = (text, mode) => {
@@ -2918,12 +3206,12 @@ const renderJSONResult = (text, mode) => {
     const safeList = Array.isArray(data) ? data : [];
 
     if (mode === 'gap') {
-        html = `<h3>🔍 埋词差距分析</h3><div class="grid" style="grid-template-columns:1fr; gap:10px;">`;
+        html = `<h3>🔍 埋词差距 & 标题模拟</h3><div class="grid" style="grid-template-columns:1fr; gap:10px;">`;
         safeList.forEach(item => {
             html += `<div class="card" style="padding:12px;">
                 <div style="font-weight:bold; color:var(--accent);">${item.asin}</div>
                 <div style="color:var(--bad); margin:4px 0;">缺失词: ${Array.isArray(item.missing_keywords) ? item.missing_keywords.join(", ") : item.missing_keywords}</div>
-                <div style="font-size:12px; color:var(--muted);">💡 ${item.seo_suggestion}</div>
+                <div style="font-size:13px; margin-top:6px; background:var(--bg); padding:8px; border-radius:6px;">${item.seo_suggestion}</div>
             </div>`;
         });
         html += `</div>`;
@@ -2932,7 +3220,7 @@ const renderJSONResult = (text, mode) => {
         html = `<h3>🩺 流量漏斗诊断</h3><table style="width:100%; border-collapse:collapse; font-size:12px;">
         <thead><tr style="border-bottom:1px solid var(--line); text-align:left;"><th style="padding:8px;">ASIN</th><th>诊断</th><th>建议</th></tr></thead><tbody>`;
         safeList.forEach(item => {
-            let color = (item.category || "").includes("明星") ? "var(--good)" : (item.category || "").includes("浪费") ? "var(--bad)" : "var(--warn)";
+            let color = (item.category || "").includes("Star") ? "var(--good)" : (item.category || "").includes("Wasted") ? "var(--bad)" : "var(--warn)";
             html += `<tr style="border-bottom:1px solid var(--line);">
                 <td style="padding:8px;">${item.asin}</td>
                 <td><span class="tag" style="color:${color}; background:var(--bg); border:1px solid ${color};">${item.category}</span><br><span style="font-size:11px;color:var(--muted)">${item.reason}</span></td>
@@ -2947,6 +3235,20 @@ const renderJSONResult = (text, mode) => {
             html += `<li style="margin-bottom:8px;"><strong>${item.keyword}</strong>: <span style="color:var(--muted);">${item.reason}</span></li>`;
         });
         html += `</ul>`;
+    }
+    else if (mode === 'recon') {
+        html = `<h3>⚔️ 竞品 ASIN 侦察</h3><table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <thead><tr style="border-bottom:1px solid var(--line); text-align:left;"><th style="padding:8px;">ASIN</th><th>类型</th><th>分析</th><th>建议</th></tr></thead><tbody>`;
+        safeList.forEach(item => {
+            const isGood = (item.type || "").toLowerCase().includes("roas");
+            html += `<tr style="border-bottom:1px solid var(--line);">
+                <td style="padding:8px;">${item.asin}</td>
+                <td><span class="tag ${isGood ? 'good' : 'bad'}">${item.type}</span></td>
+                <td style="padding:8px; color:var(--muted);">${item.analysis}</td>
+                <td style="padding:8px; font-weight:500;">${item.action}</td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
     }
     else if (mode === 'cluster') {
         let clusters = [];
@@ -2997,6 +3299,68 @@ const renderJSONResult = (text, mode) => {
         });
         html += `</tbody></table>`;
     }
+    else if (mode === 'bid') {
+        html = `<h3>🩺 智能竞价建议 (Target ACOS 25%)</h3>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <thead><tr style="background:var(--hover-bg);"><th style="padding:6px;text-align:left">Term</th><th style="text-align:left">Cur CPC</th><th style="text-align:left">Sugg Bid</th><th style="text-align:left">Reason</th></tr></thead><tbody>`;
+        safeList.forEach(item => {
+            const diff = item.suggested_bid - item.current_cpc;
+            const color = diff > 0 ? 'var(--good)' : 'var(--bad)';
+            html += `<tr style="border-bottom:1px solid var(--line);">
+                <td style="padding:6px;">${item.term}</td>
+                <td>$${item.current_cpc}</td>
+                <td style="font-weight:bold;color:${color}">$${item.suggested_bid}</td>
+                <td style="color:var(--muted)">${item.reason}</td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+    }
+    else if (mode === 'pop') {
+        // PoP usually returns a single object, not array
+        const obj = Array.isArray(safeList) ? safeList[0] : safeList;
+        html = `<h3>📈 环比增长分析</h3>
+        <div class="card" style="padding:15px;">
+            <div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Trend: ${obj.trend}</div>
+            <div style="margin-bottom:8px;"><strong>Key Factor:</strong> ${obj.key_factor}</div>
+            <p style="margin-bottom:8px;">${obj.analysis}</p>
+            <div style="background:var(--bg); padding:10px; border-radius:8px;">💡 <strong>建议:</strong> ${obj.actionable_advice}</div>
+        </div>`;
+    }
+    else if (mode === 'intent') {
+        const counts = { Awareness:0, Consideration:0, Purchase:0 };
+        safeList.forEach(i => counts[i.stage] = (counts[i.stage]||0) + 1);
+        const total = safeList.length;
+        
+        html = `<h3>🧠 搜索意图分布</h3><div style="margin-bottom:15px; display:flex; gap:5px; height:20px;">`;
+        Object.keys(counts).forEach(k => {
+            const pct = (counts[k]/total*100);
+            const color = k==='Purchase'?'var(--good)':(k==='Awareness'?'var(--accent)':'var(--warn)');
+            if(pct > 0) html += `<div style="width:${pct}%; background:${color};" title="${k}: ${Math.round(pct)}%"></div>`;
+        });
+        html += `</div>`;
+        
+        html += `<div class="fileList" style="max-height:300px;">`;
+        safeList.forEach(item => {
+            html += `<div style="padding:4px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between;">
+                <span>${item.term}</span>
+                <span class="tag" style="font-size:10px;">${item.stage}</span>
+            </div>`;
+        });
+        html += `</div>`;
+    }
+    else if (mode === 'root') {
+        html = `<h3>🛑 隐性否定词根挖掘</h3>
+        <table style="width:100%;font-size:12px; border-collapse:collapse;"><thead><tr style="background:var(--hover-bg);"><th style="padding:6px;text-align:left">Root</th><th style="text-align:left">Freq</th><th style="text-align:left">Reason</th></tr></thead><tbody>`;
+        safeList.forEach(item => {
+            html += `<tr style="border-bottom:1px solid var(--line);">
+                <td style="padding:6px;font-weight:bold;color:var(--bad);">${item.root_word}</td>
+                <td>${item.frequency_in_list}</td>
+                <td>${item.reason} <span class="ai-action" data-type="filter" data-val="${item.root_word}" style="cursor:pointer;text-decoration:underline;">[Filter]</span></td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+    }
+
     aiResult.innerHTML = html;
 };
 
@@ -3015,6 +3379,23 @@ btnToggleSettings.addEventListener('click', () => {
     const isHidden = settingsBox.style.display === 'none';
     settingsBox.style.display = isHidden ? 'block' : 'none';
 });
+
+// [Added] AI Action Click Listener (The Filter Bridge)
+$('aiResult').addEventListener('click', (e) => {
+    if (e.target.classList.contains('ai-action')) {
+        const val = e.target.dataset.val;
+        if (e.target.dataset.type === 'filter') {
+            const searchInput = $('filterSearchTerm');
+            searchInput.value = val;
+            $('filterSearchExact').checked = true; // Auto precise match
+            searchInput.focus();
+            applyFilters();
+            log(`🤖 AI 自动筛选: ${val}`, "good");
+            // Optional: Close modal if desired, but keeping open allows reading context
+        }
+    }
+});
+
 $("fileInput").addEventListener("change", async (e)=>{
   const files = Array.from(e.target.files || []);
   if (files.length) { log("文件选择事件触发（change）"); await importMultipleFiles(files); e.target.value = ""; }
