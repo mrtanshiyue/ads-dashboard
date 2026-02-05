@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v5.22 - Stable & Polished)</title>
+  <title>Ads Dashboard (Compact Pro v5.24 - Expert Audit)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -19,10 +19,9 @@
   </script>
 
   <style>
-    /* ================= UI 样式 (保持不变) ================= */
+    /* ================= UI 样式 (保持完全不变) ================= */
     :root{
       color-scheme: light; 
-        
       --bg:#f5f5f7;
       --card:#ffffff;
       --text:#1d1d1f;
@@ -43,11 +42,8 @@
       --th-bg: #ffffff;
       --chart-grid: rgba(229,229,234,.6);
     }
-
-    /* Dark Mode Variables */
     [data-theme="dark"] {
       color-scheme: dark;
-
       --bg: #151516;
       --card: #242426;
       --text: #f5f5f7;
@@ -67,7 +63,6 @@
       --th-bg: #242426;
       --chart-grid: rgba(255,255,255,.1);
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -80,13 +75,11 @@
       font-size: 12.8px;
       transition: background .3s ease, color .3s ease;
     }
-      
     input, select, button, textarea {
       font-weight: 500;
       font-family: inherit;
       font-size: 12.8px;
     }
-
     .app{
       display:grid;
       grid-template-columns: 360px 1fr;
@@ -109,7 +102,6 @@
       transition: background .3s ease, border-color .3s ease;
     }
     [data-theme="dark"] .sidebar { background: #242426; }
-
     .content{
       display:flex;
       flex-direction:column;
@@ -169,7 +161,6 @@
     }
     .btn:hover{ background:var(--hover-bg); border-color:var(--muted); }
     .btn:active{ transform:scale(.98); }
-      
     .btn.primary{
       border-color:rgba(0,113,227,.25);
       background:rgba(0,113,227,.08);
@@ -180,7 +171,6 @@
        color: #409cff;
        border-color: rgba(10, 132, 255, 0.3);
     }
-    
     .btn.ai-magic {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
@@ -191,7 +181,6 @@
         opacity: 0.9;
         transform: translateY(-1px);
     }
-
     .btn.danger{
       border-color:rgba(180,35,24,.22);
       background:rgba(180,35,24,.08);
@@ -202,7 +191,6 @@
        color: #ff453a;
        border-color: rgba(255, 69, 58, 0.3);
     }
-
     .grid{
       display:grid;
       grid-template-columns: repeat(12, 1fr);
@@ -218,12 +206,10 @@
       min-width:0;
       transition: background .3s ease, border-color .3s ease;
     }
-
     .kpi{ grid-column: span 3; user-select:none; }
     .kpi .label{ font-size:12.2px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; gap:10px; font-weight: 500; }
     .kpi .value{ margin-top:6px; font-size:22.5px; font-weight:800; letter-spacing:-.3px; color:var(--text); }
     .kpi .meta{ margin-top:4px; font-size:11.8px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap; font-weight: 500; }
-
     .pill{
       display:inline-flex;
       align-items:center;
@@ -237,10 +223,8 @@
       white-space:nowrap;
       font-weight: 500;
     }
-
     .chartCard{ grid-column: span 12; }
     .tableCard{ grid-column: span 12; }
-
     .cardTitle{
       display:flex;
       justify-content:space-between;
@@ -252,10 +236,8 @@
     .cardTitle h2{ margin:0; font-size:14.2px; letter-spacing:-.2px; font-weight: 700; color:var(--text); }
     .cardTitle .hint{ font-size:12.2px; color:var(--muted); font-weight: 500; }
     .cardTitle .rightTools{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-
     .chartWrap{ position:relative; width:100%; height:260px; }
     .chartWrap.tall{ height:320px; }
-
     .fieldGroup{
       display:flex;
       flex-direction:column;
@@ -266,7 +248,6 @@
     }
     .fieldGroup:last-child{ border-bottom:none; padding-bottom:0; margin-bottom:0; }
     .fieldRow{ display:flex; flex-direction:column; gap:6px; }
-
     label{ font-size:12.2px; color:var(--muted); font-weight: 500; }
     input[type="text"], input[type="date"], input[type="number"], select{
       width:100%;
@@ -287,7 +268,6 @@
     [data-theme="dark"] input[type="text"]:focus, [data-theme="dark"] input[type="date"]:focus, [data-theme="dark"] select:focus {
         box-shadow: 0 0 0 4px rgba(10,132,255,0.2);
     }
-
     .selectWrap{ position:relative; }
     .selectWrap:after{
       content:"▾";
@@ -300,11 +280,9 @@
       font-size:12.2px;
       font-weight: 700;
     }
-
     .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
     .small{ font-size:11.8px; color:var(--muted); line-height:1.35; font-weight: 500; }
-
     .chips{ display:flex; gap:8px; flex-wrap:wrap; }
     .chipBtn{
       border:1px solid var(--line);
@@ -325,7 +303,6 @@
         background: rgba(10,132,255,0.2);
         color: #409cff;
     }
-
     .fileList{
       border:1px solid var(--line);
       border-radius:14px;
@@ -334,7 +311,6 @@
       max-height:180px;
       overflow:auto;
     }
-
     .table-container{
       overflow:auto;
       max-height:620px;
@@ -342,7 +318,6 @@
       border-radius:14px;
       background:var(--card);
     }
-
     table{
       width:100%;
       border-collapse:separate;
@@ -379,10 +354,8 @@
         white-space: normal; 
         word-break: break-word;
     }
-      
     tbody tr:hover{ background:var(--hover-bg); }
     tbody tr:last-child td{ border-bottom:none; }
-
     .tag{
       display:inline-flex;
       align-items:center;
@@ -399,7 +372,6 @@
     .tag.bad{ color:var(--bad); background:var(--softBad); border-color:transparent; }
     .tag.warn{ color:var(--warn); background:var(--softWarn); border-color:transparent; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-
     .seg{
       display:inline-flex;
       border:1px solid var(--line);
@@ -425,10 +397,8 @@
     [data-theme="dark"] .segBtn.active {
         background: rgba(10,132,255,0.2);
     }
-
     .miniInput{ width:110px !important; padding:8px 10px !important; border-radius:999px !important; font-size:12.2px !important; }
     .miniSelect{ width:150px !important; padding:8px 10px !important; border-radius:999px !important; font-size:12.2px !important; }
-
     /* 对齐调整 */
     #autoManualTable th:last-child, #autoManualTable td:last-child,
     #longTailTable th:last-child, #longTailTable td:last-child,
@@ -442,19 +412,17 @@
     }
     .bar-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; font-size: 11.5px; width: 100%; max-width: 200px; }
     .bar-track { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: flex; }
-
     /* Search Action Icon Style */
     .action-icon { cursor: pointer; margin-left: 8px; opacity: 0.5; font-size: 14px; vertical-align: middle; transition: opacity 0.2s, transform 0.2s; display: inline-block; user-select: none; }
     .action-icon:hover { opacity: 1; transform: scale(1.2); }
     .search-clear-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 0 8px; font-size: 16px; display: flex; align-items: center; border-radius: 8px; }
     .search-clear-btn:hover { color: var(--bad); background: var(--hover-bg); }
-
     /* ================= AI Modal Styles (Glassmorphism & Enhanced) ================= */
     .modal-overlay { 
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: rgba(0, 0, 0, 0.3); /* 降低背景遮罩透明度 */
-      backdrop-filter: blur(8px); /* 背景毛玻璃模糊 */
-      z-index: 9999; /* Fix: 确保覆盖所有 sticky 元素 */
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
       display: none; 
       justify-content: center; 
       align-items: center; 
@@ -465,7 +433,6 @@
       display: flex; 
       opacity: 1;
     }
-    
     .modal-card { 
       background: var(--card); 
       border: 1px solid var(--line); 
@@ -480,7 +447,6 @@
     .modal-overlay.active .modal-card {
       transform: scale(1) translateY(0); 
     }
-
     .modal-header { 
       padding: 18px 24px; 
       border-bottom: 1px solid var(--line); 
@@ -491,7 +457,6 @@
     [data-theme="dark"] .modal-header {
       background: linear-gradient(to right, rgba(36,36,38,0.9), rgba(36,36,38,0.6));
     }
-
     .modal-title { 
       font-size: 17px; 
       font-weight: 700; 
@@ -500,7 +465,6 @@
       -webkit-background-clip: text; 
       -webkit-text-fill-color: transparent; 
     }
-    
     .modal-body { 
       padding: 24px; 
       overflow-y: auto; 
@@ -510,7 +474,6 @@
       background: var(--bg);
     }
     [data-theme="dark"] .modal-body { background: #1c1c1e; }
-
     /* AI 内容排版优化 */
     .ai-content h3 { margin-top: 0; font-size: 16px; color: var(--text); border-left: 3px solid var(--accent); padding-left: 10px; margin-bottom: 16px; }
     .ai-content p { margin-bottom: 12px; color: var(--text); opacity: 0.9; }
@@ -520,13 +483,11 @@
     .ai-content th { background: var(--hover-bg); font-weight: 600; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); }
     .ai-content td { padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--card); }
     .ai-content tr:last-child td { border-bottom: none; }
-
     /* AI Enhanced Styles */
     .ai-action { cursor: pointer; color: var(--accent); border-bottom: 1px dashed var(--accent); transition: background 0.2s; }
     .ai-action:hover { background: var(--hover-bg); }
     .ai-content ins { background: var(--softGood); color: var(--good); text-decoration: none; padding: 0 4px; border-radius: 4px; }
     .ai-content del { background: var(--softBad); color: var(--bad); text-decoration: line-through; padding: 0 4px; border-radius: 4px; }
-      
     /* 输入框美化 */
     .api-key-input { 
       width: 100%; padding: 12px 14px; margin-bottom: 12px; 
@@ -540,7 +501,6 @@
       box-shadow: 0 0 0 4px rgba(0,113,227,0.15); 
       transform: translateY(-1px);
     }
-
     /* 工具箱 Chips 美化 */
     .modal-body .chips { gap: 8px; margin-bottom: 16px; }
     .modal-body .chipBtn {
@@ -558,7 +518,6 @@
       color: white; border: none;
       box-shadow: 0 4px 12px rgba(94, 92, 230, 0.3);
     }
-
     .modal-footer { 
       padding: 16px 24px; 
       border-top: 1px solid var(--line); 
@@ -567,7 +526,6 @@
       border-radius: 0 0 24px 24px;
     }
     .settings-toggle { font-size: 11px; color: var(--muted); cursor: pointer; text-decoration: underline; }
-
     /* 加载动画美化 */
     #aiLoading { padding: 50px; }
     #aiLoading div:first-child { 
@@ -576,19 +534,16 @@
       margin-bottom: 16px; 
     }
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
     /* 滚动条美化 */
     .modal-body::-webkit-scrollbar { width: 6px; }
     .modal-body::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.1); border-radius: 99px; }
     .modal-body::-webkit-scrollbar-track { background: transparent; }
-
     #settingsBox {
         border: 1px solid var(--line);
         background: var(--bg);
         border-radius: 12px;
         box-shadow: inset 0 2px 6px rgba(0,0,0,0.03);
     }
-
     @media (max-width: 1400px){ .app{ max-width: 100vw; } }
     @media (max-width: 1100px){ .app{ grid-template-columns:1fr; max-width:100vw; } .sidebar{ position:relative; height:auto; } .kpi{ grid-column: span 6; } .chartCard{ grid-column: span 12; } }
     @media (max-width: 650px){ .kpi{ grid-column: span 12; } .actions{ justify-content:flex-start; } .row3{ grid-template-columns:1fr; } .miniInput, .miniSelect{ width:100% !important; border-radius:12px !important; } .pareto-item { flex-direction: column; align-items: flex-start; gap: 8px; } }
@@ -604,7 +559,6 @@
         <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" multiple />
         <div class="small">支持：Sponsored Products 广告报表 & Business Report (业务报告)</div>
       </div>
-
       <div class="row2">
         <div class="fieldRow">
           <label>合并模式</label>
@@ -625,12 +579,10 @@
           </div>
         </div>
       </div>
-
       <div class="fieldRow">
         <label>已导入文件</label>
         <div id="fileList" class="fileList"><div class="small">暂无</div></div>
       </div>
-
       <div class="row2">
         <div class="fieldRow">
           <label>日期开始</label>
@@ -641,7 +593,6 @@
           <input id="dateEnd" type="date" />
         </div>
       </div>
-
       <div class="chips">
         <button class="chipBtn" data-range="yesterday" type="button">昨天</button>
         <button class="chipBtn" data-range="7d" type="button">近7天</button>
@@ -658,7 +609,6 @@
           <div class="small">流量将分为: Brand / Competitor (ASIN) / Generic</div>
       </div>
     </div>
-
     <div class="fieldGroup">
       <div class="fieldRow">
         <label>来源文件（Source File）</label>
@@ -707,7 +657,6 @@
       </div>
       <div class="small">筛选改动将自动生效（无需点击应用）</div>
     </div>
-
     <div class="fieldGroup">
       <div class="fieldRow">
         <label>榜单聚合维度</label>
@@ -735,7 +684,6 @@
         </div>
       </div>
     </div>
-
     <div class="fieldGroup">
       <div class="fieldRow">
         <label>自动判定规则（可调）</label>
@@ -797,7 +745,6 @@
         导出限制：只有榜单维度为 Search Term / Root 时允许导出（避免导出 Campaign/AdGroup 之类的名字当否定词）
       </div>
     </div>
-
     <div class="fieldGroup">
       <div class="fieldRow">
         <label>操作</label>
@@ -812,7 +759,6 @@
       </div>
     </div>
   </aside>
-
   <main class="content">
     <section class="header">
       <div class="title">
@@ -825,7 +771,6 @@
         <button class="btn" id="btnCheck" type="button">依赖自检</button>
       </div>
     </section>
-
     <section class="grid" id="kpiGrid"></section>
     
     <div class="card tableCard" id="trafficSegCard" style="grid-column: span 12;">
@@ -837,8 +782,8 @@
           <div class="chartWrap" style="height:200px"><canvas id="trafficChart"></canvas></div>
           <div class="table-container" style="max-height:200px">
              <table id="trafficTable">
-                <thead><tr><th>类型</th><th>花费</th><th>销售额</th><th>ROAS</th><th>占比 (Spend)</th></tr></thead>
-                <tbody></tbody>
+               <thead><tr><th>类型</th><th>花费</th><th>销售额</th><th>ROAS</th><th>占比 (Spend)</th></tr></thead>
+               <tbody></tbody>
              </table>
           </div>
        </div>
@@ -869,7 +814,6 @@
           数据来源：Business Report (业务报告)。转化率 = 订单数 / 会话数 (Sessions)。
       </div>
     </div>
-
     <section class="grid">
       <div class="card chartCard">
         <div class="cardTitle">
@@ -878,7 +822,6 @@
         </div>
         <div class="chartWrap tall"><canvas id="trendChart"></canvas></div>
       </div>
-
       <div class="card tableCard">
         <div class="cardTitle">
           <h2>周维度分析 (Weekday Performance)</h2>
@@ -902,7 +845,6 @@
           </table>
         </div>
       </div>
-
       <div class="card tableCard" id="autoManualCard">
         <div class="cardTitle">
           <h2>自动/手动广告对比</h2>
@@ -922,7 +864,6 @@
           </table>
         </div>
       </div>
-
       <div class="card tableCard" id="matchTypeCard">
         <div class="cardTitle">
           <h2>匹配类型透视 (Match Type Deep Dive)</h2>
@@ -947,7 +888,6 @@
           </table>
         </div>
       </div>
-
       <div class="card tableCard" id="lengthCard">
         <div class="cardTitle">
           <h2>词长效能分析 (Keyword Length Analysis)</h2>
@@ -974,7 +914,6 @@
             洞察：通常 3-5 个词的“中长尾”转化率更高。如果 1-2 个词花费巨大且 ROAS 低，考虑将其设为精确匹配或否定。
         </div>
       </div>
-
       <div class="card tableCard">
         <div class="cardTitle">
           <h2>CPC 区间效能分析 (CPC Distribution)</h2>
@@ -1002,7 +941,6 @@
           说明：根据每个词的实际平均 CPC 归类。<b>订单占比</b>列展示了“成交出价占比”，帮助你找到转化最集中的出价区间。
         </div>
       </div>
-
       <div class="card tableCard">
         <div class="cardTitle">
           <h2>榜单</h2>
@@ -1040,7 +978,6 @@
           口径：ACOS=花费/销售额；ROAS=销售额/花费；CTR=点击量/展示量；CVR=订单数/点击量
         </div>
       </div>
-
       <div class="card tableCard" id="longTailCard">
         <div class="cardTitle">
           <h2>长尾词挖掘 (Long-Tail Keyword Mining)</h2>
@@ -1074,7 +1011,6 @@
           逻辑：筛选出非 ASIN、单词数达标、且有出单记录的精准长尾词。建议将高 ROAS 的长尾词投放 Exact (精准匹配)。
         </div>
       </div>
-
       <div class="card tableCard">
         <div class="cardTitle">
           <h2>词频分析（Word Frequency Analysis）</h2>
@@ -1089,9 +1025,7 @@
             <input id="wfMinFreq" class="miniInput" type="number" step="1" value="3" title="最小出现次数" />
             <span class="pill">Min Spend</span>
             <input id="wfMinSpend" class="miniInput" type="number" step="0.01" value="10" title="最小花费" />
-             
             <button class="btn primary" id="btnExportWf" type="button" style="padding: 6px 12px; font-size:11.8px;">导出词频 CSV</button>
-             
             <span class="hint">点击表头排序</span>
           </div>
         </div>
@@ -1111,10 +1045,9 @@
           </table>
         </div>
         <div class="small" style="margin-top:10px;">
-          建议：2-gram 更贴近“意图短语”，更适合做否词根/迁移 Exact；倍率用于判断 1.5/2.0/2.5 哪个更赚钱
+          注意：词频花费为“包含该词的所有搜索词总花费”，各行相加会超过总金额。2-gram 更贴近“意图短语”，适合做否词根/迁移 Exact。
         </div>
       </div>
-
       <div class="card tableCard" id="conflictCard">
         <div class="cardTitle">
           <h2>内部竞争/关键词冲突检测 (Conflict & Cannibalization)</h2>
@@ -1142,7 +1075,6 @@
           原理：列出在 2 个或以上不同广告组（Campaign+AdGroup）中消耗预算的词。如果该词在多个组表现差异巨大，建议将预算集中到表现最好的组，否定差的组。
         </div>
       </div>
-
       <div class="card tableCard">
         <div class="cardTitle">
           <h2>加价词 & 否定词清单（区分 Keyword / ASIN）</h2>
@@ -1165,7 +1097,6 @@
             <button class="btn primary" id="btnExportBidUp" type="button">导出加价词 CSV</button>
           </div>
         </div>
-
         <div class="grid" style="grid-template-columns: repeat(12, 1fr); gap:14px;">
           <div class="card" style="grid-column: span 6;">
             <div class="cardTitle" style="margin-bottom:8px;">
@@ -1190,7 +1121,6 @@
               建议用途：加价 / 提预算 / 迁移到精确（或单独广告组）
             </div>
           </div>
-
           <div class="card" style="grid-column: span 6;">
             <div class="cardTitle" style="margin-bottom:8px;">
               <h2>否定词（NEGATE）</h2>
@@ -1219,11 +1149,10 @@
     </section>
   </main>
 </div>
-
 <div id="aiModal" class="modal-overlay">
   <div class="modal-card">
     <div class="modal-header">
-      <div class="modal-title">✨ Gemini 智能诊断 (Compact Pro v5.22 - Stable & Polished)</div>
+      <div class="modal-title">✨ Gemini 智能诊断 (Compact Pro v5.24 - Expert Audit)</div>
       <button class="btn" id="btnCloseAI" style="padding:4px 10px;">✕</button>
     </div>
     <div class="modal-body">
@@ -1231,14 +1160,12 @@
         <p>请输入您的 Google Gemini API Key 以启用智能分析。</p>
         <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Key 仅保存在您的浏览器本地缓存中，不会上传至任何服务器。</p>
         <input type="password" id="geminiKeyInput" class="api-key-input" placeholder="输入 API Key (以 AIza 开头...)" />
-        
         <div style="margin-top:10px;">
             <span id="btnToggleSettings" class="settings-toggle">⚙️ 高级设置 (自定义 API & 策略)</span>
         </div>
         <div id="settingsBox" style="display:none; margin-top:10px; padding:10px; background:var(--hover-bg); border-radius:8px;">
             <label style="display:block; margin-bottom:4px;">API Base URL (可选)</label>
             <input type="text" id="apiBaseUrl" class="api-key-input" style="margin-bottom:8px;" value="https://generativelanguage.googleapis.com" placeholder="例如: https://my-proxy.com" />
-            
             <label style="display:block; margin-bottom:4px; font-weight:600; color:var(--text);">🎯 运营策略选择</label>
             <select id="aiStrategy" class="api-key-input" style="margin-bottom:0;">
                 <option value="balanced" selected>⚖️ 平衡发展 (默认 - 兼顾ACOS与规模)</option>
@@ -1249,10 +1176,8 @@
             <div style="font-size:11px; color:var(--muted); margin-top:4px;">AI 将根据此策略调整建议风格。</div>
         </div>
       </div>
-
       <div style="margin-top:12px; border-top:1px solid var(--line); padding-top:12px;">
           <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px;">🤖 AI 工具箱</label>
-          
           <div class="chips" style="margin-bottom:10px;">
             <button class="chipBtn active" id="aiModeChat" onclick="setAIMode('chat')">💬 自由对话</button>
             <button class="chipBtn" id="aiModeGap" onclick="setAIMode('gap')">🔍 埋词差距</button>
@@ -1266,15 +1191,12 @@
             <button class="chipBtn" id="aiModeCluster" onclick="setAIMode('cluster')">🧩 语义聚类</button>
             <button class="chipBtn" id="aiModeAudit" onclick="setAIMode('audit')">⚖️ 相关性审计</button>
           </div>
-
           <div id="aiToolHint" class="small" style="margin-bottom:6px; color:var(--accent);">
             默认模式：生成诊断报告，或回答关于数据的具体问题。
           </div>
-
           <textarea id="aiQuestionInput" class="api-key-input" style="height:80px; resize:vertical; font-family:inherit;" placeholder="例如：为什么上周 ACOS 升高了？"></textarea>
           <input type="text" id="aiProductContext" class="api-key-input" style="display:none; margin-top:5px;" placeholder="请输入产品名称/核心词 (例如: Blue Light Glasses)..." />
       </div>
-
       <div id="aiLoading" style="display:none; text-align:center; padding:40px;">
         <div style="font-size:24px; margin-bottom:10px;">🤖</div>
         <div>正在分析数据，请稍候...</div>
@@ -1290,17 +1212,14 @@
     </div>
   </div>
 </div>
-
 <script>
 /** =========================
  * Utils & Optimized Helpers
  * ========================= */
 const $ = (id) => document.getElementById(id);
-// Keep original format to respect "Don't change UI" (No dollar sign)
 const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(v) : "0"; 
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 const fmtPct = (v) => (isFinite(v) ? (v*100).toFixed(2)+"%" : "0.00%");
-
 const safeNum = (x) => {
   if (typeof x === "number") return isFinite(x) ? x : 0;
   if (!x) return 0;
@@ -1310,19 +1229,15 @@ const safeNum = (x) => {
   const n = parseFloat(clean); 
   return isFinite(n) ? n : 0;
 };
-
-// ... [Keep other Utils like toISODate, getTs unchanged] ...
 const toISODate = (d) => {
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
   if (typeof d === "number" && isFinite(d)) {
-    // Excel Serial Date
+    // Excel Serial Date Fix (Base: Dec 30, 1899)
     const dateObj = new Date((d - 25569) * 86400000 + 43200000);
     return dateObj.toISOString().slice(0,10);
   }
   const s = String(d || "").trim();
   if (!s) return "";
-  
-  // Try ISO first
   const matchISO = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
   if (matchISO) {
     const y = parseInt(matchISO[1], 10);
@@ -1331,15 +1246,10 @@ const toISODate = (d) => {
     const dt = new Date(y, m - 1, day, 12, 0, 0); 
     return dt.toISOString().slice(0,10);
   }
-  
-  // Try US/Excel standard MM/DD/YYYY or DD/MM/YYYY fallback logic
-  // Simple check: new Date() handles many formats, but let's be safe for slashes
   const dt = new Date(s);
   if (!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
-  
   return ""; 
 };
-
 const getTs = () => {
   const now = new Date();
   const YYYY = now.getFullYear();
@@ -1350,58 +1260,50 @@ const getTs = () => {
   const ss = String(now.getSeconds()).padStart(2, '0');
   return `${YYYY}${MM}${DD}_${HH}${mm}${ss}`;
 };
-
 const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]);
 const clamp = (v,min,max)=>Math.max(min, Math.min(max, v));
 const setSubtitle = (text)=>$("subtitle").textContent = text;
 const debounce = (fn, wait=250)=>{let t; return (...args)=>{clearTimeout(t); t=setTimeout(()=>fn(...args),wait);};};
-
 const logBox = $("logBox");
 const clearLog = ()=>logBox.innerHTML = "";
 const log = (msg, level="info")=>{
   const t = new Date(), stamp = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}:${String(t.getSeconds()).padStart(2,"0")}`;
   const line = document.createElement("div");
+  const colors = { bad: "#b42318", warn: "#b54708", good: "#1a7f37" };
   line.className = "small"; line.style.cssText = "padding:6px 6px;border-bottom:1px solid rgba(229,229,234,.7);";
-  if (level==="bad") line.style.color = "#b42318";
-  if (level==="warn") line.style.color = "#b54708";
-  if (level==="good") line.style.color = "#1a7f37";
+  if (colors[level]) line.style.color = colors[level];
   line.textContent = `[${stamp}] ${msg}`;
   logBox.prepend(line);
 };
-
 const libsCheck = () => {
   const missing = [];
   if (typeof Papa === "undefined") missing.push("PapaParse(Papa)");
   if (typeof XLSX === "undefined") missing.push("XLSX(xlsx)");
   if (typeof Chart === "undefined") missing.push("Chart.js(Chart)");
   if (typeof marked === "undefined") missing.push("marked");
-    
   if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn");
   else log("依赖库 OK", "good");
   return !missing.length;
 };
-
-const toCSV = (rows) => rows.map(r => r.map(v => {
+// [Enhanced CSV Export] Added BOM for Excel Chinese support + Robust Escaping
+const toCSV = (rows) => "\uFEFF" + rows.map(r => r.map(v => {
   let s = String(v ?? "");
-  if (/^[=+\-@]/.test(s)) {
-      s = "'" + s;
-  }
+  if (/^[=+\-@]/.test(s)) s = "'" + s; // Prevent Excel formula injection
   return /[",\n]/.test(s) ? `"${s.replaceAll('"','""')}"` : s;
 }).join(",")).join("\n");
-
 const downloadText = (filename, text) => {
-  const blob = new Blob(["\uFEFF"+text], {type:"text/plain;charset=utf-8"});
+  const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = filename;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(a.href);
 };
-
 /** =========================
  * Root Mining & Regex Optimization
  * ========================= */
-const STOP_WORDS = new Set("a,an,the,and,or,to,for,of,in,on,at,with,without,from,by,is,are,was,were,your,my,our,their,his,her,its,this,that,these,those,you,me,we,they,pack,set,pairs,pair,pcs,piece,pieces,new,best,top,sale,deal,gift,men,man,male,women,woman,female,unisex,adult,adults,kids,kid,glasses,glass,eyeglasses,eyewear".split(','));
+// [Expert Tune] Removed gender words from STOP_WORDS for Eyewear accuracy
+const STOP_WORDS = new Set("a,an,the,and,or,to,for,of,in,on,at,with,without,from,by,is,are,was,were,your,my,our,their,his,her,its,this,that,these,those,you,me,we,they,pack,set,pairs,pair,pcs,piece,pieces,new,best,top,sale,deal,gift,adult,adults,kids,kid".split(','));
 const SYNONYM_MAP = [
   { re: /\breaders?\b/g, to: "reading glasses" }, { re: /\bmagnification\b/g, to: "magnify" },
   { re: /\bmagnifying\b/g, to: "magnify" }, { re: /\bblue\-?light\b/g, to: "blue light" },
@@ -1412,21 +1314,16 @@ const SYNONYM_MAP = [
 ];
 const PHRASES = ["blue light", "cat eye", "spring hinge", "anti glare", "scratch resistant"];
 const MAG_RE = /\b([1-3](?:\.\d{1,2})?)\b/g;
-
-// Optimized: Pre-compile regexes
 const PHRASE_REGEXES = PHRASES.map(p => ({
   re: new RegExp("\\b" + p.replace(/\s+/g, "\\s+") + "\\b", "g"),
   to: p.replace(/\s+/g, "_")
 }));
-
-// Optimized: Reduced overhead in loop
 const normalizeTextBase = (s) => {
   let x = String(s ?? "").toLowerCase().replace(/[\u2010-\u2015]/g, "-");
   for(let i=0; i<SYNONYM_MAP.length; i++) x = x.replace(SYNONYM_MAP[i].re, SYNONYM_MAP[i].to);
   for(let i=0; i<PHRASE_REGEXES.length; i++) x = x.replace(PHRASE_REGEXES[i].re, PHRASE_REGEXES[i].to);
   return x.replace(/[^a-z0-9._\s]/g, " ").replace(/\s+/g, " ").trim();
 };
-
 const rootCache = new Map();
 const searchTermToRoot = (term) => {
   if (!term) return "(blank)";
@@ -1437,26 +1334,92 @@ const searchTermToRoot = (term) => {
   const kept = tokens.filter(t => !(/^\d+(\.\d+)?$/.test(t) || STOP_WORDS.has(t) || (t.length > 4 && t.endsWith("s") && (t=t.slice(0,-1)))));
   const root = [...new Set(kept), ...new Set(mags.map(v=>`+${v}`))].join(" | ").trim();
   const res = root || "(blank)";
-  if (rootCache.size < 100000) rootCache.set(term, res);
+  // [Cache Limit] Prevent memory leak
+  if (rootCache.size > 20000) rootCache.clear();
+  rootCache.set(term, res);
   return res;
 };
 const rootToPhrase = (root) => (String(root || "").trim() || "(blank)") === "(blank)" ? "" : root.split("|").map(x => x.trim()).filter(Boolean).map(p => p.startsWith("+") ? p.slice(1) : p).join(" ").replace(/\s+/g," ").trim();
-
 /** =========================
- * Word Frequency
+ * Word Frequency (Heavy Optimization)
  * ========================= */
 let WF_MODE = "token";
 let wfSort = { key: "spend", dir: "desc" };
-
-const tokenize = (s) => normalizeTextBase(s).split(" ").filter(t => t && !STOP_WORDS.has(t));
+// [Expert Feature] Singularization to merge "glass" and "glasses"
+const singularize = (word) => {
+  if (!word) return "";
+  if (word.endsWith("ies")) return word.slice(0, -3) + "y";
+  if (word.endsWith("sses")) return word.slice(0, -2);
+  if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
+  return word;
+};
+const tokenize = (s) => {
+  const base = normalizeTextBase(s);
+  return base.split(" ").filter(t => {
+    if (!t) return false;
+    if (STOP_WORDS.has(t)) return false;
+    if (/^\d+$/.test(t)) return false; 
+    return true;
+  }).map(t => singularize(t)); 
+};
 const ngrams = (tokens, n) => tokens.length < n ? [] : Array.from({length: tokens.length - n + 1}, (_, i) => tokens.slice(i, i + n).join(" "));
-const extractMagnification = (s) => [...String(s || "").matchAll(/\b([1-4](?:\.\d{1,2})?)\b/g)].map(m => m[1]);
-
+// [Expert Feature] Robust Magnification (0.00-6.00 + variants)
+const extractMagnification = (s) => {
+  return [...String(s || "").matchAll(/(?:\+|)\b([0-6](?:\.\d{1,2})?)[xX]?\b/g)]
+    .map(m => m[1])
+    .filter(v => !isNaN(parseFloat(v)) && parseFloat(v) > 0);
+};
+const tokenCache = new Map();
+const buildWordStats = () => {
+  const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3)));
+  const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10));
+  const mp = new Map();
+  // [Memory Safety]
+  if(tokenCache.size > 20000) tokenCache.clear();
+  for (const r of VIEW) {
+    const term = r.searchTerm || "";
+    if (!term) continue;
+    if (isASINLike(term)) continue;
+    let words;
+    const cacheKey = `${WF_MODE}:${term}`;
+    if (tokenCache.has(cacheKey)) {
+      words = tokenCache.get(cacheKey);
+    } else {
+      if (WF_MODE === "token") words = tokenize(term);
+      else if (WF_MODE === "bigram") words = ngrams(tokenize(term), 2);
+      else if (WF_MODE === "trigram") words = ngrams(tokenize(term), 3);
+      else if (WF_MODE === "mag") words = extractMagnification(term);
+      tokenCache.set(cacheKey, words);
+    }
+    // [Accuracy Fix] Dedupe to avoid double-counting same word in one query
+    const uniqueWords = new Set(words); 
+    for (const w of uniqueWords) {
+      if (!w) continue;
+      if (!mp.has(w)) mp.set(w, []);
+      mp.get(w).push(r);
+    }
+  }
+  let out = [];
+  for (const [word, rows] of mp.entries()) {
+    const m = sumMetrics(rows);
+    if (rows.length < minFreq) continue;
+    if (m.spend < minSpend) continue;
+    out.push({ word, freq: rows.length, ...m });
+  }
+  const {key, dir} = wfSort;
+  const mul = dir==="asc" ? 1 : -1;
+  out.sort((a,b)=>{
+    const av = (key==="word") ? String(a[key]||"") : (a[key] ?? 0);
+    const bv = (key==="word") ? String(b[key]||"") : (b[key] ?? 0);
+    if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * mul;
+    return (av > bv ? 1 : -1) * mul;
+  });
+  return out.slice(0, 100);
+};
 /** =========================
  * Column mapping
  * ========================= */
 const cleanHeader = (h) => String(h).replace(/^\uFEFF/, '').replace(/\s+/g, '').toLowerCase();
-
 const COL_MAP_ALIASES = {
   date: ["日期","Date","Day","ReportDate"],
   portfolio: ["广告组合名称","Portfolioname","Portfolio","PortfolioName"],
@@ -1476,16 +1439,14 @@ const COL_MAP_ALIASES = {
   acos: ["ACOS","Acos"],
   roas: ["ROAS","Roas"],
 };
-
 const BR_MAP_ALIASES = {
     asin: ["（子）ASIN", "(Child)ASIN", "ChildASIN", "（父）ASIN", "(Parent)ASIN", "ASIN", "子商品ASIN"],
     title: ["标题", "Title", "ProductName", "商品名称"],
-    sessions: ["会话数-总计", "Sessions-Total", "Sessions", "买家访问次数"],
+    sessions: ["会话数-总计", "Sessions-Total", "Sessions", "买家访问次数", "会话次数", "Sessions - Total"],
     units: ["已订购商品数量", "UnitsOrdered", "UnitsOrdered-Total", "销量"],
     sales: ["已订购商品销售额", "OrderedProductSales", "OrderedProductSales-Total", "销售额"],
     cvr: ["商品会话百分比", "UnitSessionPercentage", "转化率-总计", "转化率"]
 };
-
 const pickCol = (header, aliases) => {
   const normHeader = header.map(cleanHeader);
   for (const a of aliases) {
@@ -1495,7 +1456,6 @@ const pickCol = (header, aliases) => {
   }
   return null;
 };
-
 const buildMap = (rows) => {
   const header = rows.length ? Object.keys(rows[0]) : [];
   const map = {};
@@ -1503,22 +1463,18 @@ const buildMap = (rows) => {
   if (!map.date) throw new Error("Ads Report: 未找到日期列 (Date).");
   return map;
 };
-
 const buildBrMap = (rows) => {
     const header = rows.length ? Object.keys(rows[0]) : [];
     const map = {};
     for (const key in BR_MAP_ALIASES) map[key] = pickCol(header, BR_MAP_ALIASES[key]);
     return map;
 };
-
 const normalizeRow = (raw, map, sourceFile) => {
   if (!raw) return null;
-    
   const impr = safeNum(raw[map.impr]), clicks = safeNum(raw[map.clicks]), spend = safeNum(raw[map.spend]);
   const sales = safeNum(raw[map.sales7d]), orders = safeNum(raw[map.orders7d]);
-    
   const st = String(raw[map.searchTerm] ?? "").trim();
-
+  // [Safety] Division by zero protection
   return {
     sourceFile, date: toISODate(raw[map.date]),
     portfolio: String(raw[map.portfolio] ?? "").trim(), campaign: String(raw[map.campaign] ?? "").trim(),
@@ -1535,47 +1491,38 @@ const normalizeRow = (raw, map, sourceFile) => {
     roas: map.roas ? safeNum(raw[map.roas]) : (spend > 0 ? sales / spend : 0),
   };
 };
-
 const normalizeBrRow = (raw, map, sourceFile) => {
     const sessions = safeNum(raw[map.sessions]);
     const units = safeNum(raw[map.units]);
     const sales = safeNum(raw[map.sales]);
-    // Calculate CVR manually to ensure accuracy
+    // [Fix] Business Report often has 0 sessions but 1 unit (ghost orders). 
     const calculatedCvr = sessions > 0 ? units / sessions : 0;
-      
     return {
         sourceFile,
         asin: String(raw[map.asin] ?? "").trim(),
         title: String(raw[map.title] ?? "").trim(),
-        sessions,
-        units,
-        sales,
+        sessions, units, sales,
         cvr: isFinite(calculatedCvr) ? calculatedCvr : 0,
         aov: units > 0 ? sales / units : 0
     };
 };
-
 /** =========================
  * ASIN detector
  * ========================= */
 const ASIN_CANDIDATE_RE = /[A-Z0-9]{10}/ig;
 const ASIN_STRICT_RE = /^[B0-9][A-Z0-9]{9}$/i;
-
 const isASINLike = (s) => {
   const x = String(s || "").trim();
   if (!x) return false;
-  // Performance: fast check first
   if (x.length < 10) return false; 
   const candidates = x.match(ASIN_CANDIDATE_RE);
   if (!candidates) return false;
-    
   for (const c of candidates) {
       if (ASIN_STRICT_RE.test(c) && /\d/.test(c)) return true;
   }
   return /asin\s*=\s*[A-Z0-9]{10}/i.test(x) || /asin\s*:\s*[A-Z0-9]{10}/i.test(x);
 };
 const detectRowType = (name, rankBy) => (rankBy === "searchTerm" || rankBy === "searchTermRoot" || rankBy === "targeting") ? (isASINLike(name) ? "asin" : "keyword") : "other";
-
 /** =========================
  * State
  * ========================= */
@@ -1586,7 +1533,6 @@ let rankSort = { key: "spend", dir: "desc" };
 let RANK_ROWS = [], rankTypeFilter = "all";
 let actionTypeFilter = "all", BID_ROWS = [], NEG_ROWS = [];
 let LONG_TAIL_ROWS = [];
-
 /** =========================
  * Importers
  * ========================= */
@@ -1603,25 +1549,16 @@ const dedupeRows = (rows) => {
     if (!seen.has(key)) { seen.add(key); out.push(r); }
   } return out;
 };
-
 const importMultipleFiles = async (files) => {
   clearLog();
   if (!libsCheck()) return;
-
   const mergeMode = $("mergeMode").value, dedupeMode = $("dedupeMode").value;
   const maxRows = clamp(safeNum($("maxRows").value) || 250000, 10000, 2000000);
-
   log(`开始导入：${files.length} 个文件（merge=${mergeMode}, dedupe=${dedupeMode}, maxRows=${maxRows}）`);
   setSubtitle("正在导入文件…（请看左侧导入日志）");
-
   if (mergeMode === "replace") { 
-    ALL = []; 
-    BUSINESS_ROWS = [];
-    importedFiles = []; 
-    rootCache.clear(); 
-    log("Replace 模式：已清空历史数据与缓存", "warn"); 
+    ALL = []; BUSINESS_ROWS = []; importedFiles = []; rootCache.clear(); log("Replace 模式：已清空历史数据与缓存", "warn"); 
   }
-
   for (const file of files) {
     const name = file.name, lower = name.toLowerCase(); log(`读取文件：${name}`);
     try {
@@ -1629,11 +1566,9 @@ const importMultipleFiles = async (files) => {
       if (lower.endsWith(".csv")) { log(`解析 CSV：${name}`); rows = await parseCSV(file); }
       else if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) { log(`解析 XLSX/XLS：${name}`); rows = await parseXLSX(file); }
       else { log(`跳过：不支持的文件类型（${name}）`, "warn"); continue; }
-
       rows = rows.filter(r => r && Object.keys(r).length > 0);
       if (!rows.length) { log(`警告：${name} 解析后为空`, "warn"); continue; }
       if (rows.length > maxRows) { log(`警告：${name} 行数 ${rows.length.toLocaleString()} 超过 maxRows，将截断到 ${maxRows.toLocaleString()}`, "warn"); rows = rows.slice(0, maxRows); }
-
       log(`识别字段映射：${name}`); 
       const brMap = buildBrMap(rows);
       if (brMap.asin && brMap.sessions) {
@@ -1652,31 +1587,21 @@ const importMultipleFiles = async (files) => {
              log(`跳过：${name} - 无法识别为广告报表或业务报告 (${e.message})`, "bad");
          }
       }
-
       importedFiles.push({ name, rows: rows.length });
       await new Promise(r => setTimeout(r, 0));
     } catch (err) { log(`错误：${name} 导入失败：${err?.message || err}`, "bad"); }
   }
-
   if (dedupeMode === "on" && ALL.length) { 
-      const before = ALL.length; 
-      ALL = dedupeRows(ALL); 
-      log(`Ads 数据去重完成：${before.toLocaleString()} → ${ALL.length.toLocaleString()}`, "good"); 
+      const before = ALL.length; ALL = dedupeRows(ALL); log(`Ads 数据去重完成：${before.toLocaleString()} → ${ALL.length.toLocaleString()}`, "good"); 
   }
-    
   if (ALL.length > 0) {
       const dates = ALL.map(r => r.date).filter(Boolean).sort();
       $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length - 1];
   }
-
   log(`导入完成：文件 ${importedFiles.length} 个`, "good");
   setSubtitle(`导入完成：文件 ${importedFiles.length} 个；Ads Rows=${ALL.length.toLocaleString()}；Business Rows=${BUSINESS_ROWS.length.toLocaleString()}`);
-
-  renderFileList(); 
-  populateDropdowns(); 
-  applyFilters(true);
+  renderFileList(); populateDropdowns(); applyFilters(true);
 };
-
 const renderFileList = () => {
   const box = $("fileList");
   box.innerHTML = importedFiles.length ? importedFiles.map(f=>`
@@ -1686,39 +1611,25 @@ const renderFileList = () => {
     </div>
   `).join("") : `<div class="small">暂无</div>`;
 };
-
 /** =========================
  * Business Report Renderer
  * ========================= */
 const renderBusinessReport = () => {
     const card = $("businessReportCard");
     const tbody = $("businessReportTable").querySelector("tbody");
-      
-    if (!BUSINESS_ROWS || BUSINESS_ROWS.length === 0) {
-        card.style.display = "none";
-        return;
-    }
-      
+    if (!BUSINESS_ROWS || BUSINESS_ROWS.length === 0) { card.style.display = "none"; return; }
     card.style.display = "block";
-      
     const map = new Map();
     for (const r of BUSINESS_ROWS) {
-        if (!map.has(r.asin)) {
-            map.set(r.asin, { asin: r.asin, title: r.title, sessions: 0, units: 0, sales: 0 });
-        }
+        if (!map.has(r.asin)) { map.set(r.asin, { asin: r.asin, title: r.title, sessions: 0, units: 0, sales: 0 }); }
         const entry = map.get(r.asin);
-        entry.sessions += r.sessions || 0; 
-        entry.units += r.units || 0; 
-        entry.sales += r.sales || 0; 
+        entry.sessions += r.sessions || 0; entry.units += r.units || 0; entry.sales += r.sales || 0; 
         if (r.title && r.title.length > (entry.title || "").length) entry.title = r.title; 
     }
-      
     const aggregated = Array.from(map.values()).sort((a,b) => b.units - a.units);
-      
     tbody.innerHTML = aggregated.map(r => {
         const cvr = (r.sessions > 0 && isFinite(r.sessions)) ? r.units / r.sessions : 0;
         const aov = (r.units > 0 && isFinite(r.units)) ? r.sales / r.units : 0;
-        
         return `
             <tr>
                 <td style="font-weight:600; color:var(--text);">${escapeHtml(r.asin)}</td>
@@ -1732,7 +1643,6 @@ const renderBusinessReport = () => {
         `;
     }).join("");
 };
-
 /** =========================
  * Dropdowns
  * ========================= */
@@ -1753,7 +1663,6 @@ const populateDropdowns = () => {
   dropdowns.forEach(({ id, mapFn, allLabel }) => setSingleSelectOptions($(id), uniqSorted(ALL.map(mapFn)), allLabel));
   wireCascade();
 };
-
 const wireCascade = () => {
   const updateChildDropdowns = (currentFilterId, childFilterIds, mapFns) => {
     const filters = ["filterSource", "filterPortfolio", "filterCampaign"].reduce((acc, id) => ({ ...acc, [id]: $(id).value }), {});
@@ -1769,12 +1678,10 @@ const wireCascade = () => {
   $("filterPortfolio").onchange = () => updateChildDropdowns("filterPortfolio", ["filterCampaign", "filterAdGroup"], [r => r.campaign, r => r.adGroup]);
   $("filterCampaign").onchange = () => updateChildDropdowns("filterCampaign", ["filterAdGroup"], [r => r.adGroup]);
 };
-
 /** =========================
  * Aggregations
  * ========================= */
 const withinDate = (r, start, end) => (!start || r.date >= start) && (!end || r.date <= end);
-
 const sumMetrics = (rows) => {
   const sums = { impr:0, clicks:0, spend:0, sales:0, orders:0 };
   for (const r of rows) for (const k in sums) sums[k] += r[k];
@@ -1793,7 +1700,6 @@ const groupBy = (rows, keyFn) => {
   for (const r of rows) { const k = keyFn(r) || "(blank)"; (mp.has(k) ? mp : mp.set(k, [])).get(k).push(r); }
   return mp;
 };
-
 /** =========================
  * Traffic Segmentation Logic
  * ========================= */
@@ -1801,37 +1707,23 @@ const renderTrafficSegmentation = () => {
     const card = $("trafficSegCard");
     const brandNameInput = $("brandNameInput").value.trim().toLowerCase();
     const brandNames = brandNameInput.split(/[,，]+/).map(s => s.trim()).filter(Boolean);
-
-    if (!VIEW.length) {
-        if(trafficChart) { trafficChart.destroy(); trafficChart = null; }
-        return;
-    }
-
+    if (!VIEW.length) { if(trafficChart) { trafficChart.destroy(); trafficChart = null; } return; }
     const segments = {
         'Brand': { label: 'Brand (品牌词)', rows: [] },
         'Competitor': { label: 'Competitor (ASIN/竞品)', rows: [] },
         'Generic': { label: 'Generic (通用词)', rows: [] }
     };
-
     for (const r of VIEW) {
         const term = (r.searchTerm || "").toLowerCase();
-        
-        if (isASINLike(term)) {
-            segments['Competitor'].rows.push(r);
-        } else if (brandNames.some(b => term.includes(b))) {
-            segments['Brand'].rows.push(r);
-        } else {
-            segments['Generic'].rows.push(r);
-        }
+        if (isASINLike(term)) { segments['Competitor'].rows.push(r); } 
+        else if (brandNames.some(b => term.includes(b))) { segments['Brand'].rows.push(r); } 
+        else { segments['Generic'].rows.push(r); }
     }
-
     const data = Object.keys(segments).map(k => {
         const m = sumMetrics(segments[k].rows);
         return { key: k, label: segments[k].label, ...m };
     });
-
     const totalSpend = sumMetrics(VIEW).spend || 1;
-
     const tbody = $("trafficTable").querySelector("tbody");
     tbody.innerHTML = data.map(d => {
         const pct = (d.spend / totalSpend * 100).toFixed(1);
@@ -1850,10 +1742,8 @@ const renderTrafficSegmentation = () => {
             </tr>
         `;
     }).join("");
-
     const ctx = $("trafficChart").getContext("2d");
     if(trafficChart) trafficChart.destroy();
-    
     trafficChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -1865,8 +1755,7 @@ const renderTrafficSegmentation = () => {
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
                 title: { display: true, text: '花费占比 (Spend Share)', font: { size: 13 } }
@@ -1874,106 +1763,36 @@ const renderTrafficSegmentation = () => {
         }
     });
 };
-
-/** =========================
- * Word Frequency Builder
- * ========================= */
-const tokenCache = new Map();
-
-const buildWordStats = () => {
-  const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3)));
-  const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10));
-  const mp = new Map();
-
-  if(tokenCache.size > 20000) tokenCache.clear();
-
-  for (const r of VIEW) {
-    const term = r.searchTerm || "";
-    if (!term) continue;
-    if (isASINLike(term)) continue;
-
-    let words;
-    const cacheKey = `${WF_MODE}:${term}`;
-      
-    if (tokenCache.has(cacheKey)) {
-      words = tokenCache.get(cacheKey);
-    } else {
-      if (WF_MODE === "token") words = tokenize(term);
-      else if (WF_MODE === "bigram") words = ngrams(tokenize(term), 2);
-      else if (WF_MODE === "trigram") words = ngrams(tokenize(term), 3);
-      else if (WF_MODE === "mag") words = extractMagnification(term);
-      tokenCache.set(cacheKey, words);
-    }
-
-    const uniqueWords = new Set(words); 
-    for (const w of uniqueWords) {
-      if (!w) continue;
-      if (!mp.has(w)) mp.set(w, []);
-      mp.get(w).push(r);
-    }
-  }
-
-  let out = [];
-  for (const [word, rows] of mp.entries()) {
-    const m = sumMetrics(rows);
-    if (rows.length < minFreq) continue;
-    if (m.spend < minSpend) continue;
-    out.push({ word, freq: rows.length, ...m });
-  }
-
-  const {key, dir} = wfSort;
-  const mul = dir==="asc" ? 1 : -1;
-  out.sort((a,b)=>{
-    const av = (key==="word") ? String(a[key]||"") : (a[key] ?? 0);
-    const bv = (key==="word") ? String(b[key]||"") : (b[key] ?? 0);
-    if (typeof av === "string" && typeof bv === "string") {
-        return av.localeCompare(bv) * mul;
-    }
-    return (av > bv ? 1 : -1) * mul;
-  });
-  return out.slice(0, 100);
-};
-
 const renderWordFreq = () => {
   const tbody = $("wfTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
   const rows = buildWordStats();
-  
   tbody.innerHTML = rows.map(r => {
-    // 【修改点】在这里将下划线替换为空格用于显示
+    // [UI] Replace underscores with spaces for readability
     const displayWord = escapeHtml(r.word).replace(/_/g, " ");
-    
-    return `
-    <tr>
+    return `<tr>
       <td title="${displayWord}">${displayWord.slice(0, 180)}</td>
       <td>${fmtInt(r.freq)}</td>
       <td>${fmtMoney(r.spend)}</td>
       <td>${fmtInt(r.orders)}</td>
       <td>${(r.roas ?? 0).toFixed(2)}</td>
       <td style="${r.acos > 0.4 ? 'color:#b42318;' : ''}">${fmtPct(r.acos)}</td>
-    </tr>
-  `}).join("");
+    </tr>`}).join("");
 };
-
 const exportWordFreqCSV = () => {
     const rows = buildWordStats();
     if (!rows.length) { alert("当前词频列表为空。"); return; }
     const csvData = [["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS"]]; 
     rows.forEach(r => {
         csvData.push([
-            r.word.replace(/_/g, " "), // 【修改点】导出时也去掉下划线
-            r.freq, 
-            r.spend.toFixed(2), 
-            r.orders, 
-            r.roas.toFixed(2), 
-            (r.acos*100).toFixed(2)+"%"
+            r.word.replace(/_/g, " "),
+            r.freq, r.spend.toFixed(2), r.orders, r.roas.toFixed(2), (r.acos*100).toFixed(2)+"%"
         ]);
     });
     const filename = `word_freq_${$("dateStart").value}_${getTs()}.csv`;
     downloadText(filename, toCSV(csvData));
 };
-
 /** =========================
  * Long Tail Keyword Mining
  * ========================= */
@@ -1981,29 +1800,22 @@ const renderLongTailMining = () => {
   const tbody = $("longTailTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
-
   const minWords = Math.max(1, Math.floor(safeNum($("ltMinWords").value)));
   const minOrders = Math.max(0, Math.floor(safeNum($("ltMinOrders").value)));
   const minRoas = safeNum($("ltMinRoas").value);
-
   const groups = groupBy(VIEW, r => r.searchTerm);
   const candidates = [];
-
   for (const [term, rows] of groups.entries()) {
     if (isASINLike(term)) continue;
     const wordCount = (term || "").trim().split(/\s+/).filter(Boolean).length;
     if (wordCount < minWords) continue;
-
     const m = sumMetrics(rows);
     if (m.orders < minOrders) continue;
     if (m.roas < minRoas) continue;
-
     candidates.push({ term, wordCount, ...m });
   }
-
   candidates.sort((a,b) => b.sales - a.sales);
   LONG_TAIL_ROWS = candidates; 
-
   tbody.innerHTML = candidates.slice(0, 50).map(c => `
     <tr>
       <td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td>
@@ -2015,12 +1827,10 @@ const renderLongTailMining = () => {
       <td style="${c.acos > 0.4 ? 'color:#b42318;' : ''}">${fmtPct(c.acos)}</td>
     </tr>
   `).join("");
-
   if (candidates.length === 0) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">没有符合条件的长尾词（尝试降低“单词数”或“订单”门槛）</td></tr>`;
   }
 };
-
 const exportLongTailCSV = () => {
     if (!LONG_TAIL_ROWS.length) { alert("当前列表为空，无数据可导出。"); return; }
     const rows = [["Search Term", "Word Count", "Spend", "Sales", "Orders", "ROAS", "ACOS"]];
@@ -2032,7 +1842,6 @@ const exportLongTailCSV = () => {
     const filename = `long_tail_mining_${$("dateStart").value}_${getTs()}.csv`;
     downloadText(filename, toCSV(rows));
 };
-
 /** =========================
  * Weekday Analysis
  * ========================= */
@@ -2040,10 +1849,8 @@ const renderWeekdayAnalysis = () => {
   const tbody = $("weekdayTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
-
   const days = ["周日 (Sun)", "周一 (Mon)", "周二 (Tue)", "周三 (Wed)", "周四 (Thu)", "周五 (Fri)", "周六 (Sat)"];
   const bins = days.map(()=>[]);
-    
   for (const r of VIEW) {
     if(!r.date) continue;
     const parts = r.date.split("-");
@@ -2055,10 +1862,8 @@ const renderWeekdayAnalysis = () => {
        bins[localDate.getDay()].push(r);
     }
   }
-
   const result = bins.map((rows, i) => ({ day: days[i], ...sumMetrics(rows) }));
   const totalSales = sumMetrics(VIEW).sales || 1;
-
   tbody.innerHTML = result.map(row => {
     const salesPct = totalSales > 0 ? (row.sales / totalSales) : 0;
     const barHtml = `
@@ -2083,7 +1888,6 @@ const renderWeekdayAnalysis = () => {
     `;
   }).join("");
 };
-
 /** =========================
  * CPC Distribution
  * ========================= */
@@ -2091,46 +1895,27 @@ const renderCPCDistribution = () => {
   const tbody = $("cpcDistTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
-
-  const buckets = [
-      { label: "< 0.50", min:0, max:0.5, rows: [] }
-  ];
-
+  const buckets = [{ label: "< 0.50", min:0, max:0.5, rows: [] }];
   for (let i = 5; i < 15; i++) {
       const start = i / 10;
       const end = (i + 1) / 10;
-      buckets.push({
-          label: `${start.toFixed(2)} - ${end.toFixed(2)}`,
-          min: start,
-          max: end,
-          rows: []
-      });
+      buckets.push({ label: `${start.toFixed(2)} - ${end.toFixed(2)}`, min: start, max: end, rows: [] });
   }
-
-  buckets.push(
-      { label: "> 1.50", min:1.5, max:9999, rows: [] }
-  );
-
+  buckets.push({ label: "> 1.50", min:1.5, max:9999, rows: [] });
   for (const r of VIEW) {
       if (r.clicks <= 0) continue; 
       const rowCpc = r.spend / r.clicks;
       for(const b of buckets) {
-          if (rowCpc >= b.min && rowCpc < b.max) {
-              b.rows.push(r);
-              break;
-          }
+          if (rowCpc >= b.min && rowCpc < b.max) { b.rows.push(r); break; }
       }
   }
-
   const result = buckets.map(b => ({ ...b, metrics: sumMetrics(b.rows) }));
   const totalMetrics = sumMetrics(VIEW);
   const totalSales = totalMetrics.sales || 1;
   const totalOrders = totalMetrics.orders || 1; 
-
   tbody.innerHTML = result.map(b => {
     const m = b.metrics;
     if (m.impr === 0 && m.spend === 0) return ""; 
-      
     const salesPct = totalSales > 0 ? (m.sales / totalSales) : 0;
     const salesBarHtml = `
       <div class="bar-row">
@@ -2140,7 +1925,6 @@ const renderCPCDistribution = () => {
         </div>
       </div>
     `;
-
     const orderPct = totalOrders > 0 ? (m.orders / totalOrders) : 0;
     const orderBarHtml = `
       <div class="bar-row">
@@ -2150,7 +1934,6 @@ const renderCPCDistribution = () => {
         </div>
       </div>
     `;
-
     return `
       <tr>
         <td>${b.label}</td>
@@ -2166,7 +1949,6 @@ const renderCPCDistribution = () => {
     `;
   }).join("");
 };
-
 /** =========================
  * Length Analysis
  * ========================= */
@@ -2174,23 +1956,18 @@ const renderLengthAnalysis = () => {
   const tbody = $("lengthTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
-
   const buckets = Array.from({length:7}, (_,i)=>({ len:i+1, rows:[] })); 
-    
   for (const r of VIEW) {
     if(!r.searchTerm) continue;
     const len = r.searchTerm.trim().split(/\s+/).filter(Boolean).length;
     if(len >= 7) buckets[6].rows.push(r);
     else if(len >= 1) buckets[len-1].rows.push(r);
   }
-
   const result = buckets.map(b => ({ ...b, metrics: sumMetrics(b.rows) }));
   const totalSpend = sumMetrics(VIEW).spend || 1;
-
   tbody.innerHTML = result.map(b => {
     const m = b.metrics;
     if(m.spend === 0 && m.impr === 0) return "";
-
     const label = b.len === 7 ? "7+ Words" : `${b.len} Word${b.len>1?'s':''}`;
     const spendPct = totalSpend > 0 ? (m.spend / totalSpend) : 0;
     const barHtml = `
@@ -2201,7 +1978,6 @@ const renderLengthAnalysis = () => {
         </div>
       </div>
     `;
-
     return `
       <tr>
         <td>${label}</td>
@@ -2216,7 +1992,6 @@ const renderLengthAnalysis = () => {
     `;
   }).join("");
 };
-
 /** =========================
  * Match Type Analysis
  * ========================= */
@@ -2224,10 +1999,8 @@ const renderMatchTypeAnalysis = () => {
   const tbody = $("matchTypeTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
-
   const types = ["Exact", "Phrase", "Broad", "Auto", "Other"];
   const bins = { "Exact":[], "Phrase":[], "Broad":[], "Auto":[], "Other":[] };
-
   for (const r of VIEW) {
      const m = (r.matchType || "").toLowerCase();
      if(m.includes("exact")) bins["Exact"].push(r);
@@ -2236,10 +2009,8 @@ const renderMatchTypeAnalysis = () => {
      else if(m === "-" || m === "") bins["Auto"].push(r); 
      else bins["Auto"].push(r);
   }
-
   const result = types.map(t => ({ type:t, ...sumMetrics(bins[t]) }));
   const totalSpend = sumMetrics(VIEW).spend || 1;
-
   tbody.innerHTML = result.map(row => {
     if(row.spend === 0 && row.impr === 0) return "";
     const spendPct = totalSpend > 0 ? (row.spend / totalSpend) : 0;
@@ -2266,8 +2037,6 @@ const renderMatchTypeAnalysis = () => {
     `;
   }).join("");
 };
-
-
 /** =========================
  * Auto / Manual Comparison
  * ========================= */
@@ -2321,7 +2090,6 @@ const renderAutoManual = () => {
     row("转化率 (CVR)", sA.cvr, sM.cvr, fmtPct) +
     row("点击成本 (CPC)", sA.cpc, sM.cpc, fmtMoney);
 };
-
 /** =========================
  * Conflict Analysis
  * ========================= */
@@ -2329,55 +2097,32 @@ const renderConflictAnalysis = () => {
   const tbody = $("conflictTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
-
   const map = new Map();
-    
   for (const r of VIEW) {
     if (!r.searchTerm || isASINLike(r.searchTerm)) continue; 
-      
-    if (!map.has(r.searchTerm)) {
-        map.set(r.searchTerm, { 
-            locations: new Set(), 
-            spend: 0, 
-            orders: 0, 
-            sales: 0 
-        });
-    }
-      
+    if (!map.has(r.searchTerm)) { map.set(r.searchTerm, { locations: new Set(), spend: 0, orders: 0, sales: 0 }); }
     const entry = map.get(r.searchTerm);
     entry.locations.add(`${r.campaign} > ${r.adGroup}`);
-    entry.spend += r.spend;
-    entry.orders += r.orders;
-    entry.sales += r.sales;
+    entry.spend += r.spend; entry.orders += r.orders; entry.sales += r.sales;
   }
-
   const conflicts = [];
   for (const [term, data] of map.entries()) {
     if (data.locations.size > 1 && data.spend > 5) {
       conflicts.push({
-        term,
-        count: data.locations.size,
-        locs: Array.from(data.locations),
-        spend: data.spend,
-        orders: data.orders,
-        roas: data.spend > 0 ? data.sales / data.spend : 0
+        term, count: data.locations.size, locs: Array.from(data.locations),
+        spend: data.spend, orders: data.orders, roas: data.spend > 0 ? data.sales / data.spend : 0
       });
     }
   }
-
   conflicts.sort((a,b) => b.spend - a.spend);
-
   if (conflicts.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">未检测到明显的内部竞争（条件：不同广告组数 > 1 且 花费 > 5）</td></tr>`;
       return;
   }
-
   tbody.innerHTML = conflicts.slice(0, 50).map(c => {
     const displayLocs = c.locs.slice(0, 2).map(l => `<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(l)}</div>`).join("");
     const moreCount = c.locs.length > 2 ? `<div style="font-size:10px;color:var(--muted)">+${c.locs.length - 2} more...</div>` : "";
-      
     const fullLocs = c.locs.join("\n");
-
     return `
       <tr data-term="${escapeHtml(c.term)}" style="cursor:pointer" title="点击筛选该词">
         <td style="font-weight:600;color:var(--text)">${escapeHtml(c.term)}</td>
@@ -2390,15 +2135,12 @@ const renderConflictAnalysis = () => {
     `;
   }).join("");
 };
-
 $("conflictTable").addEventListener("click", (e) => {
   const tr = e.target.closest("tr");
   if (!tr || !tr.dataset.term) return;
   $("filterSearchTerm").value = tr.dataset.term;
   applyFilters();
 });
-
-
 /** =========================
  * Actions (自动判定)
  * ========================= */
@@ -2407,33 +2149,26 @@ const getRules = () => ({
   roasNeg: safeNum($("ruleRoasNeg").value), roasKeep: safeNum($("ruleRoasKeep").value),
   ordersKeep: Math.max(0, Math.floor(safeNum($("ruleOrdersKeep").value))), roasMigrateMin: safeNum($("ruleRoasMigrateMin").value)
 });
-
 const decideAction = (item, rankBy) => {
   const r = getRules(); const reasons = [];
   const condNeg1 = item.spend >= r.spendNeg && item.orders <= 0; if (condNeg1) reasons.push(`花费≥${r.spendNeg} & 订单数=0`);
   const condNeg2 = item.clicks >= r.clicksNeg && item.roas > 0 && item.roas < r.roasNeg; if (condNeg2) reasons.push(`点击量≥${r.clicksNeg} & ROAS<${r.roasNeg}`);
   const condNeg3 = item.clicks >= r.clicksNeg && item.sales <= 0 && item.spend >= r.spendNeg; if (condNeg3) reasons.push(`销售额=0 & 花费≥${r.spendNeg}`);
-
   if (condNeg1 || condNeg2 || condNeg3) return { action:"NEGATE", reason: reasons.join(" • "), suggestNeg: suggestNegative(item.name, rankBy) };
-    
   reasons.length = 0;
   const condKeep1 = item.roas >= r.roasKeep && item.spend > 0; if (condKeep1) reasons.push(`ROAS≥${r.roasKeep}`);
   const condKeep2 = item.orders >= r.ordersKeep; if (condKeep2) reasons.push(`订单数≥${r.ordersKeep}`);
   if (condKeep1 || condKeep2) return { action:"KEEP", reason: reasons.join(" • "), suggestNeg:"" };
-
   if (item.orders > 0 && item.roas >= r.roasMigrateMin && item.roas < r.roasKeep)
     return { action:"MIGRATE", reason: `订单数>0 & ROAS≥${r.roasMigrateMin} & <${r.roasKeep}`, suggestNeg:"" };
-
   return { action:"KEEP", reason:"无风险信号", suggestNeg:"" };
 };
-
 const suggestNegative = (name, rankBy) => {
   const negType = $("exportNegMatch")?.value || "phrase";
   const keyword = (rankBy === "searchTermRoot" ? rootToPhrase(name) : String(name || "").trim());
   return keyword && keyword !== "(blank)" ? `${negType.toUpperCase()}: ${keyword}` : "";
 };
 const actionTag = (action) => `<span class="tag ${action==="NEGATE"?"bad":action==="MIGRATE"?"warn":"good"}">${action}</span>`;
-
 /** =========================
  * BID UP
  * ========================= */
@@ -2442,14 +2177,12 @@ const decideBidUp = (item) => {
   const ordersBid = Math.max(0, Math.floor(safeNum($("bidOrders")?.value ?? 2)));
   const roasBid = safeNum($("bidRoas")?.value ?? 3.5);
   if (!(item.spend >= spendBid && item.orders >= ordersBid && item.roas >= roasBid)) return { bid:false, suggest:"" };
-
   let pct = 20;
   const intensity = $("bidIntensity")?.value;
   if (intensity !== "auto") pct = Number(intensity) || 20;
   else if (item.roas >= 6) pct = 30; else if (item.roas >= 4.5) pct = 20; else pct = 10;
   return { bid:true, suggest:`提高竞价 +${pct}%` };
 };
-
 /** =========================
  * Export (CSV Functions)
  * ========================= */
@@ -2457,7 +2190,6 @@ const exportNegativesCSV = () => {
   const rankBy = $("rankBy").value;
   if (!["searchTerm", "searchTermRoot"].includes(rankBy)) { log("导出失败：只有在榜单维度为 Search Term / Root 时才允许导出否定词", "bad"); alert("导出失败：请将“榜单聚合维度”切换为 Search Term 或 Search Term Root，再导出否定词。"); return; }
   if (!VIEW.length) { log("导出失败：当前视图为空", "bad"); alert("导出失败：当前视图为空。"); return; }
-
   const itemsToExport = $("exportScope").value === "rank" ? RANK_ROWS.slice() : (() => {
     const groups = groupBy(VIEW, getRankKey());
     return [...groups.entries()].map(([name, list]) => {
@@ -2466,36 +2198,40 @@ const exportNegativesCSV = () => {
       return { ...it, action:a.action, reason:a.reason, suggestNeg:a.suggestNeg };
     }).sort((a,b)=> (b.spend||0) - (a.spend||0));
   })();
-
   const rows = [["关键词","否定匹配","分组维度","理由","花费","销售额","订单数","ROAS","ACOS"]];
-  const seen = new Set(), negMatch = $("exportNegMatch").value.toUpperCase();
+  const seen = new Set();
+  const defaultNegMatch = $("exportNegMatch").value.toUpperCase();
 
   for (const it of itemsToExport) {
     if (it.action !== "NEGATE") continue;
-    const keyword = (rankBy === "searchTermRoot" ? rootToPhrase(it.name) : String(it.name || "").trim()).replace(/\s+/g," ").trim();
+    let keyword = (rankBy === "searchTermRoot" ? rootToPhrase(it.name) : String(it.name || "").trim()).replace(/\s+/g," ").trim();
     if (!keyword || keyword === "(blank)") continue;
-    const key = `${negMatch}:${keyword.toLowerCase()}`;
+    
+    // [Fix] ASIN Negation Logic for Expert Compliance
+    let finalMatchType = defaultNegMatch;
+    if (isASINLike(keyword)) {
+        finalMatchType = "NEGATIVE EXACT"; // Amazon strictly requires ASINs to be negative exact
+    }
+
+    const key = `${finalMatchType}:${keyword.toLowerCase()}`;
     if (!seen.has(key)) {
       seen.add(key);
       rows.push([
-        keyword, negMatch, (rankBy === "searchTerm" ? "客户搜索词" : "搜索词根"), it.reason || "",
+        keyword, finalMatchType, (rankBy === "searchTerm" ? "客户搜索词" : "搜索词根"), it.reason || "",
         (it.spend ?? 0).toFixed(2), (it.sales ?? 0).toFixed(2), String(it.orders ?? 0),
         (it.roas ?? 0).toFixed(2), ((it.acos ?? 0) * 100).toFixed(2) + "%"
       ]);
     }
   }
   if (rows.length === 1) { log("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）", "warn"); alert("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）。"); return; }
-    
-  const filename = `negatives_${rankBy}_${negMatch}_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
+  const filename = `negatives_${rankBy}_${defaultNegMatch}_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
   downloadText(filename, toCSV(rows));
   log(`已导出否定词 CSV：${filename}（${rows.length-1} 条）`, "good");
 };
-
 const exportBidUpCSV = () => {
   if (!VIEW.length) { log("导出失败：当前视图为空", "bad"); alert("导出失败：当前视图为空。"); return; }
   buildActionLists();
   if (!BID_ROWS.length) { log("未找到可导出的 BID UP 项（请调低阈值或扩大日期范围）", "warn"); alert("未找到可导出的 BID UP 项（请调低阈值或扩大日期范围）。"); return; }
-
   const rows = [["类型","名称","建议","花费","销售额","订单数","ROAS","ACOS"]];
   for (const it of BID_ROWS) {
     rows.push([
@@ -2508,34 +2244,21 @@ const exportBidUpCSV = () => {
   downloadText(filename, toCSV(rows));
   log(`已导出加价词 CSV：${filename}（${rows.length-1} 条）`, "good");
 };
-
 const exportRankCSV = () => {
     if (!RANK_ROWS.length) { alert("当前榜单为空，无数据可导出。"); return; }
     const headers = ["Name", "Spend", "Sales", "Orders", "Impressions", "Clicks", "CTR", "CPC", "CVR", "ACOS", "ROAS", "Action", "Reason"];
     const rows = [headers];
-
     for (const r of RANK_ROWS) {
          rows.push([
-            r.name,
-            (r.spend || 0).toFixed(2),
-            (r.sales || 0).toFixed(2),
-            r.orders,
-            r.impr,
-            r.clicks,
-            ((r.ctr || 0) * 100).toFixed(2) + "%",
-            (r.cpc || 0).toFixed(2),
-            ((r.cvr || 0) * 100).toFixed(2) + "%",
-            ((r.acos || 0) * 100).toFixed(2) + "%",
-            (r.roas || 0).toFixed(2),
-            r.action,
-            r.reason
+            r.name, (r.spend || 0).toFixed(2), (r.sales || 0).toFixed(2), r.orders, r.impr, r.clicks,
+            ((r.ctr || 0) * 100).toFixed(2) + "%", (r.cpc || 0).toFixed(2), ((r.cvr || 0) * 100).toFixed(2) + "%",
+            ((r.acos || 0) * 100).toFixed(2) + "%", (r.roas || 0).toFixed(2), r.action, r.reason
          ]);
     }
     const filename = `rank_list_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
     downloadText(filename, toCSV(rows));
     log(`已导出榜单 CSV：${filename}（${rows.length-1} 条）`, "good");
 };
-
 /** =========================
  * Rendering
  * ========================= */
@@ -2550,7 +2273,6 @@ const renderKPIs = (total) => {
     { key: "cpc", label:"点击成本", value: fmtMoney(total.cpc), meta: `花费/点击量` },
     { key: "cvr", label:"转化率", value: fmtPct(total.cvr), meta: `订单数/点击量` },
   ];
-  
   $("kpiGrid").innerHTML = kpis.map(k => `
     <div class="card kpi">
       <div class="label"><span>${k.label}</span><span class="pill">KPI</span></div>
@@ -2559,28 +2281,28 @@ const renderKPIs = (total) => {
     </div>
   `).join("");
 };
-
 const renderTrend = (rows) => {
   if (!rows || rows.length === 0) return;
   const byDate = groupBy(rows, r=>r.date);
   const series = [...byDate.keys()].sort().map(d=>({ date:d, ...sumMetrics(byDate.get(d)) }));
   const dataMap = (key, transform = v => v) => series.map(s => transform(s[key]));
-    
   const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || "rgba(229,229,234,.6)";
+  
+  // [Fix] Handle Infinite ACOS visual bug (Sales=0, Spend>0)
+  // Chart.js handles null as a gap. We map true infinity to null to avoid graph distortion
+  const acosData = series.map(s => {
+      if (s.sales <= 0 && s.spend > 0) return null; // Or use a cap like 500
+      return s.acos * 100;
+  });
 
   const datasets = [
     { label:"花费", data:dataMap("spend"), tension:.25, pointRadius:0, borderWidth:2 },
     { label:"销售额", data:dataMap("sales"), tension:.25, pointRadius:0, borderWidth:2 },
     { label:"订单数", data:dataMap("orders"), tension:.25, pointRadius:0, borderWidth:2 },
-    { label:"ACOS %", data:dataMap("acos", v => isFinite(v) ? v*100 : 0), tension:.25, pointRadius:0, borderWidth:2, yAxisID:"y1" },
+    { label:"ACOS %", data:acosData, tension:.25, pointRadius:0, borderWidth:2, yAxisID:"y1", spanGaps: true },
     { label:"ROAS", data:dataMap("roas", v => isFinite(v) ? v : 0), tension:.25, pointRadius:0, borderWidth:2, yAxisID:"y1" },
   ];
-    
-  if (trendChart) {
-      trendChart.destroy();
-      trendChart = null;
-  }
-    
+  if (trendChart) { trendChart.destroy(); trendChart = null; }
   const canvas = $("trendChart");
   if (canvas) {
       const ctx = canvas.getContext("2d");
@@ -2600,7 +2322,6 @@ const renderTrend = (rows) => {
       } catch(e) { console.error("Chart Error", e); }
   }
 };
-
 const getRankKey = () => {
   const mapping = {
     searchTerm: r => r.searchTerm || "(空白)",
@@ -2611,20 +2332,16 @@ const getRankKey = () => {
   };
   return mapping[$("rankBy").value];
 };
-
 const sortRank = (items) => {
   const {key, dir} = rankSort;
   const mul = dir==="asc" ? 1 : -1;
   items.sort((a,b)=>{
     const av = key==="name"||key==="action" ? String(a[key]||"") : (a[key] ?? 0);
     const bv = key==="name"||key==="action" ? String(b[key]||"") : (b[key] ?? 0);
-    if (typeof av === "string" && typeof bv === "string") {
-        return av.localeCompare(bv) * mul;
-    }
+    if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * mul;
     return (av > bv ? 1 : -1) * mul;
   });
 };
-
 const buildRankTable = (rows) => {
   const rankBy = $("rankBy").value, keyFn = getRankKey();
   let items = [...groupBy(rows, keyFn).entries()].map(([name, list]) => {
@@ -2636,12 +2353,9 @@ const buildRankTable = (rows) => {
   sortRank(items);
   RANK_ROWS = items.slice(0, clamp(safeNum($("rankTopN").value) || 30, 5, 500));
 };
-
 const renderRankTable = () => {
   buildRankTable(VIEW);
-    
   const searchBtnHtml = `<span class="action-icon search-btn" title="精准搜索">🔍</span>`;
-    
   $("rankTable").querySelector("tbody").innerHTML = RANK_ROWS.map(it => `
     <tr>
       <td title="${escapeHtml(it.name)}" data-name="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 160)}${searchBtnHtml}</td>
@@ -2658,7 +2372,6 @@ const renderRankTable = () => {
     </tr>
   `).join("");
 };
-
 const buildActionLists = () => {
   const rankBy = $("rankBy").value, keyFn = getRankKey();
   const allItems = [...groupBy(VIEW, keyFn).entries()].map(([name, list]) => ({ name, ...sumMetrics(list) }));
@@ -2677,12 +2390,9 @@ const buildActionLists = () => {
   BID_ROWS = filterAndSort(bidCandidates);
   NEG_ROWS = filterAndSort(negCandidates);
 };
-
 const renderActionLists = () => {
   buildActionLists();
-  const renderTable = (tableId, rows, getRowHtml) => {
-    $(tableId).querySelector("tbody").innerHTML = rows.map(getRowHtml).join("");
-  };
+  const renderTable = (tableId, rows, getRowHtml) => { $(tableId).querySelector("tbody").innerHTML = rows.map(getRowHtml).join(""); };
   renderTable("bidUpTable", BID_ROWS, it => `
     <tr>
       <td><span class="pill">${it.type.toUpperCase()}</span></td>
@@ -2702,7 +2412,6 @@ const renderActionLists = () => {
     </tr>
   `);
 };
-
 /** =========================
  * Apply Filters
  * ========================= */
@@ -2714,20 +2423,9 @@ const applyFilters = (initial=false) => {
         if (trendChart) { trendChart.destroy(); trendChart = null; }
         if (trafficChart) { trafficChart.destroy(); trafficChart = null; }
         $("rankTable").querySelector("tbody").innerHTML = "";
-        renderActionLists();
-        renderWordFreq();
-        renderLongTailMining();
-        renderWeekdayAnalysis();
-        renderCPCDistribution();
-        renderLengthAnalysis();
-          
-        renderMatchTypeAnalysis();
-        renderConflictAnalysis();
-        renderBusinessReport();
-        renderTrafficSegmentation();
+        renderActionLists(); renderWordFreq(); renderLongTailMining(); renderWeekdayAnalysis(); renderCPCDistribution(); renderLengthAnalysis(); renderMatchTypeAnalysis(); renderConflictAnalysis(); renderBusinessReport(); renderTrafficSegmentation(); 
         return;
       }
-
       const filters = {
         dateStart: $("dateStart").value, dateEnd: $("dateEnd").value,
         filterSource: $("filterSource").value, filterPortfolio: $("filterPortfolio").value,
@@ -2737,7 +2435,6 @@ const applyFilters = (initial=false) => {
         filterSearchTerm: $("filterSearchTerm").value.trim(),
         filterSearchExact: $("filterSearchExact").checked 
       };
-
       VIEW = ALL.filter(r => {
         if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false;
         if (filters.filterSource && r.sourceFile !== filters.filterSource) return false;
@@ -2746,15 +2443,12 @@ const applyFilters = (initial=false) => {
         if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) return false;
         if (filters.filterTargeting && r.targeting !== filters.filterTargeting) return false;
         if (filters.filterMatchType && r.matchType !== filters.filterMatchType) return false;
-
         if (filters.filterAdType) {
             const lowerMatch = (r.matchType || "").toLowerCase();
             const isManual = ["broad", "phrase", "exact"].includes(lowerMatch) || lowerMatch.includes("product") || lowerMatch.includes("targeting");
-            
             if (filters.filterAdType === "manual" && !isManual) return false;
             if (filters.filterAdType === "auto" && isManual) return false;
         }
-
         if (filters.filterSearchTerm) {
             const term = filters.filterSearchTerm.toLowerCase();
             if (filters.filterSearchExact) {
@@ -2763,73 +2457,55 @@ const applyFilters = (initial=false) => {
                 if (!r.searchTermLower.includes(term)) return false;
             }
         }
-
         return true;
       });
-
       const total = sumMetrics(VIEW);
-      
       if (ALL.length > 0) {
           setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads Rows=${ALL.length.toLocaleString()}；Business Rows=${BUSINESS_ROWS.length.toLocaleString()}；日期范围 ${filters.dateStart} → ${filters.dateEnd}`);
       } else {
           setSubtitle(`已导入 Business Report；Row=${BUSINESS_ROWS.length.toLocaleString()}`);
       }
-
-      renderKPIs(total); 
-      renderTrend(VIEW);
-      renderRankTable();
-      renderActionLists();
-      renderWordFreq();
-      renderLongTailMining(); 
-      renderWeekdayAnalysis(); 
-      renderCPCDistribution(); 
-      renderAutoManual();
-      renderLengthAnalysis();
-       
-      renderMatchTypeAnalysis();
-      renderConflictAnalysis(); 
-      renderBusinessReport(); 
-      renderTrafficSegmentation(); 
-
-      if (initial) {
-        document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
-        document.querySelector('.chipBtn[data-range="all"]')?.classList.add("active");
-      }
+      // [Perf] Use requestAnimationFrame to prevent UI locking during heavy rendering
+      requestAnimationFrame(() => {
+          renderKPIs(total); 
+          renderTrend(VIEW);
+          renderRankTable();
+          renderActionLists();
+          renderWordFreq();
+          renderLongTailMining(); 
+          renderWeekdayAnalysis(); 
+          renderCPCDistribution(); 
+          renderAutoManual();
+          renderLengthAnalysis();
+          renderMatchTypeAnalysis();
+          renderConflictAnalysis(); 
+          renderBusinessReport(); 
+          renderTrafficSegmentation(); 
+          if (initial) {
+            document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
+            document.querySelector('.chipBtn[data-range="all"]')?.classList.add("active");
+          }
+      });
   } catch (e) {
       console.error("Critical Error in applyFilters:", e);
   }
 };
 const autoApply = debounce(applyFilters, 200);
-
 const applyQuickRange = (type) => {
   if (!ALL.length) return;
   const dates = ALL.map(r=>r.date).filter(Boolean).sort();
   const [minD, maxD] = [dates[0], dates[dates.length-1]];
-
-  if (type === "all") {
-     $("dateStart").value = minD;
-     $("dateEnd").value = maxD;
-     return;
-  }
-
+  if (type === "all") { $("dateStart").value = minD; $("dateEnd").value = maxD; return; }
   const max = new Date(maxD);
   let start = new Date(max);
-  const rangeMap = {
-    yesterday: () => start.setDate(start.getDate()-1),
-    "7d": () => start.setDate(start.getDate()-6),
-    "30d": () => start.setDate(start.getDate()-29),
-    "mtd": () => start.setDate(1)
-  };
-   
+  const rangeMap = { yesterday: () => start.setDate(start.getDate()-1), "7d": () => start.setDate(start.getDate()-6), "30d": () => start.setDate(start.getDate()-29), "mtd": () => start.setDate(1) };
   if(rangeMap[type]) rangeMap[type]();
-
   const isoStart = toISODate(start);
   $("dateStart").value = isoStart < minD ? minD : isoStart;
   $("dateEnd").value = maxD;
 };
-
 /** =========================
- * AI Integration Logic (Updated V5.22 - Stable & Polished)
+ * AI Integration Logic
  * ========================= */
 const aiModal = $('aiModal');
 const geminiKeyInput = $('geminiKeyInput');
@@ -2844,10 +2520,8 @@ const settingsBox = $('settingsBox');
 const apiBaseUrlInput = $('apiBaseUrl');
 const aiQuestionInput = $('aiQuestionInput'); 
 const aiProductContext = $('aiProductContext');
-
 const loadGeminiKey = () => localStorage.getItem("gemini_key") || "";
 const loadApiBase = () => localStorage.getItem("gemini_api_base") || "https://generativelanguage.googleapis.com";
-
 const toggleAIModal = (show) => {
   aiModal.classList.toggle('active', show);
   if (show) {
@@ -2855,145 +2529,87 @@ const toggleAIModal = (show) => {
     const base = loadApiBase();
     apiBaseUrlInput.value = base; 
     if (key) {
-      geminiKeyInput.value = key;
-      geminiKeyInput.style.display = 'none'; 
+      geminiKeyInput.value = key; geminiKeyInput.style.display = 'none'; 
       $('aiKeySection').querySelector('p').textContent = "API Key 已加载。点击“开始分析”生成报告。";
       btnClearKey.style.display = 'block';
     } else {
-      geminiKeyInput.style.display = 'block';
-      aiKeySection.style.display = 'block';
-      btnClearKey.style.display = 'none';
+      geminiKeyInput.style.display = 'block'; aiKeySection.style.display = 'block'; btnClearKey.style.display = 'none';
     }
   }
 };
-
 const callGemini = async (prompt) => {
   const key = loadGeminiKey();
   if (!key) throw new Error("缺少 API Key");
-  
   let baseUrl = (apiBaseUrlInput.value || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
   localStorage.setItem("gemini_api_base", baseUrl);
-
   const model = "gemini-2.5-flash"; 
-
   try {
     aiLoadingStatus.textContent = `正在连接模型: ${model}...`;
     const url = `${baseUrl}/v1beta/models/${model}:generateContent?key=${key}`;
     const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
-
     if (!response.ok) {
       const errJson = await response.json().catch(()=>({}));
       const errMsg = errJson.error?.message || `HTTP ${response.status}`;
       if (response.status === 400 || response.status === 401 || response.status === 403) throw new Error(errMsg);
       throw new Error(`模型调用失败 (${model}): ${errMsg}`);
     }
-
     const data = await response.json();
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("API 返回空数据");
     return data.candidates[0].content.parts[0].text;
-
   } catch (e) {
     if (e.message.includes("API Key") || e.message.includes("权限")) throw e;
     throw e; 
   }
 };
-
 let currentAIMode = 'chat';
-
 const setAIMode = (mode) => {
     currentAIMode = mode;
     const btns = ['aiModeChat', 'aiModeGap', 'aiModeFunnel', 'aiModeExpand', 'aiModeRecon', 'aiModeCluster', 'aiModeAudit', 'aiModeBid', 'aiModePop', 'aiModeIntent', 'aiModeRoot'];
     btns.forEach(id => $(id)?.classList.remove('active'));
-    
     const map = {
-        'chat': 'aiModeChat', 'gap': 'aiModeGap', 'funnel': 'aiModeFunnel', 
-        'expand': 'aiModeExpand', 'recon': 'aiModeRecon', 'cluster': 'aiModeCluster', 'audit': 'aiModeAudit',
-        'bid': 'aiModeBid', 'pop': 'aiModePop', 'intent': 'aiModeIntent', 'root': 'aiModeRoot'
+        'chat': 'aiModeChat', 'gap': 'aiModeGap', 'funnel': 'aiModeFunnel', 'expand': 'aiModeExpand', 
+        'recon': 'aiModeRecon', 'cluster': 'aiModeCluster', 'audit': 'aiModeAudit', 'bid': 'aiModeBid', 
+        'pop': 'aiModePop', 'intent': 'aiModeIntent', 'root': 'aiModeRoot'
     };
     if ($(map[mode])) $(map[mode]).classList.add('active');
-
-    const hint = $('aiToolHint');
-    const input = $('aiQuestionInput');
-    const ctxInput = $('aiProductContext');
-    ctxInput.style.display = 'none'; 
-    input.style.display = 'none'; // Default hidden unless chat
-    
+    const hint = $('aiToolHint'); const input = $('aiQuestionInput'); const ctxInput = $('aiProductContext');
+    ctxInput.style.display = 'none'; input.style.display = 'none'; 
     if (mode === 'chat') {
         hint.textContent = "默认模式：生成诊断报告。建议提问：“如何降低 ACOS？”";
-        input.style.display = 'block';
-        input.placeholder = "例如：分析一下昨天的销量...";
-        input.value = "";
-    } else if (mode === 'gap') {
-        hint.textContent = "功能：对比“高出单搜索词”与“ASIN 标题”，AI 将提供修改建议（红色删除，绿色新增）。";
-    } else if (mode === 'funnel') {
-        hint.textContent = "功能：分析 Business Report 的 Sessions vs CVR，诊断流量利用率。";
-    } else if (mode === 'expand') {
-        hint.textContent = "功能：基于你的高表现词，AI 联想推荐相关的长尾词。";
-    } else if (mode === 'recon') {
-        hint.textContent = "功能：侦察高花费/高 ROAS 的竞品 ASIN，分析其优劣势。";
-    } else if (mode === 'cluster') {
-        hint.textContent = "功能：将 Top 100 搜索词按意图归类。";
-    } else if (mode === 'audit') {
-        hint.textContent = "功能：严格审计亏损词的相关性（请在下方输入产品名称以获得准确结果）。";
-        ctxInput.style.display = 'block'; 
-        ctxInput.placeholder = "请输入产品核心词 (例如: Blue Light Glasses)...";
-    } else if (mode === 'bid') {
-        hint.textContent = "功能：AI 竞价医生。基于 AOV 和 转化率，计算实现 25% ACOS 的理论出价。";
-    } else if (mode === 'pop') {
-        hint.textContent = "功能：环比增长分析。自动对比当前日期范围的前半段 vs 后半段，找出变化原因。";
-    } else if (mode === 'intent') {
-        hint.textContent = "功能：搜索意图分层。识别流量是偏向“泛词(Awareness)”还是“购买(Purchase)”。";
-    } else if (mode === 'root') {
-        hint.textContent = "功能：否词根源挖掘。找出导致亏损的共同单词根。";
-    }
+        input.style.display = 'block'; input.placeholder = "例如：分析一下昨天的销量..."; input.value = "";
+    } else if (mode === 'gap') { hint.textContent = "功能：对比“高出单搜索词”与“ASIN 标题”，AI 将提供修改建议。"; } 
+    else if (mode === 'funnel') { hint.textContent = "功能：分析 Business Report 的 Sessions vs CVR，诊断流量漏斗。"; } 
+    else if (mode === 'expand') { hint.textContent = "功能：基于你的高表现词，AI 联想推荐相关的长尾词。"; } 
+    else if (mode === 'recon') { hint.textContent = "功能：侦察高花费/高 ROAS 的竞品 ASIN，分析优劣势。"; } 
+    else if (mode === 'cluster') { hint.textContent = "功能：将 Top 100 搜索词按意图归类。"; } 
+    else if (mode === 'audit') { hint.textContent = "功能：严格审计亏损词的相关性。"; ctxInput.style.display = 'block'; ctxInput.placeholder = "请输入产品核心词 (例如: Blue Light Glasses)..."; } 
+    else if (mode === 'bid') { hint.textContent = "功能：AI 竞价医生。基于转化率计算 Target ACOS (25%) 的理论出价。"; } 
+    else if (mode === 'pop') { hint.textContent = "功能：环比增长分析。对比前半段 vs 后半段日期数据。"; } 
+    else if (mode === 'intent') { hint.textContent = "功能：搜索意图分层 (Awareness/Consideration/Purchase)。"; } 
+    else if (mode === 'root') { hint.textContent = "功能：否词根源挖掘。找出导致亏损的共同单词根。"; }
 };
-
 const generateReport = async () => {
     if (!VIEW.length && !BUSINESS_ROWS.length) { alert("无数据，无法分析。"); return; }
-    
-    if ((currentAIMode === 'gap' || currentAIMode === 'funnel') && BUSINESS_ROWS.length === 0) {
-        alert("此功能需要导入 Business Report (业务报告) 才能使用。");
-        return;
-    }
-
+    if ((currentAIMode === 'gap' || currentAIMode === 'funnel') && BUSINESS_ROWS.length === 0) { alert("此功能需要导入 Business Report (业务报告) 才能使用。"); return; }
     const key = geminiKeyInput.value.trim();
     if (key && !loadGeminiKey()) localStorage.setItem("gemini_key", key);
     if (!loadGeminiKey()) { alert("请输入 API Key"); return; }
-
-    aiKeySection.style.display = 'none';
-    aiLoading.style.display = 'block';
-    aiResult.innerHTML = "";
-    btnStartAnalyze.disabled = true;
-
+    aiKeySection.style.display = 'none'; aiLoading.style.display = 'block'; aiResult.innerHTML = ""; btnStartAnalyze.disabled = true;
     try {
         let prompt = "";
-        
-        // --- Strategy Injection ---
         const strategyMode = $('aiStrategy').value;
         let strategyPrompt = "";
         switch(strategyMode) {
-            case 'launch':
-                strategyPrompt = "STRATEGY: The user is in LAUNCH PHASE. Ignore high ACOS. Prioritize Impressions, CTR, and Keywords discovery. Do not suggest negating high-spend keywords if they bring traffic.";
-                break;
-            case 'profit':
-                strategyPrompt = "STRATEGY: The user is in MATURE PHASE (PROFIT FOCUSED). Ruthlessly suggest negating keywords with ACOS > 30% or Spend > $15 without sales. Focus on cutting waste.";
-                break;
-            case 'audit':
-                strategyPrompt = "STRATEGY: You are an External Auditor. Find anomalies, wasted spend, and cannibalization. Be critical and direct.";
-                break;
-            default:
-                strategyPrompt = "STRATEGY: Balance growth and profitability.";
+            case 'launch': strategyPrompt = "STRATEGY: LAUNCH PHASE. Ignore high ACOS. Prioritize Impressions/CTR."; break;
+            case 'profit': strategyPrompt = "STRATEGY: PROFIT FOCUSED. Ruthlessly negate keywords with ACOS > 30% or Spend > $15 w/o sales."; break;
+            case 'audit': strategyPrompt = "STRATEGY: External Auditor. Find anomalies, wasted spend, and cannibalization."; break;
+            default: strategyPrompt = "STRATEGY: Balance growth and profitability.";
         }
-        
         const baseSystemPrompt = `You are an Amazon PPC Expert. ${strategyPrompt}
-        IMPORTANT INTERACTION RULE: When you mention specific keywords or ASINs that the user should take action on (filter, negate, or examine), you MUST wrap them in a special HTML span tag like this:
-        <span class="ai-action" data-type="filter" data-val="YOUR_KEYWORD_HERE">YOUR_KEYWORD_HERE</span>
-        This allows the user to click the keyword to instantly filter the dashboard. Use this for ALL specific terms in your advice.`;
-
+        IMPORTANT: When mentioning keywords/ASINs to act on, wrap them like: <span class="ai-action" data-type="filter" data-val="KEYWORD">KEYWORD</span>`;
         if (currentAIMode === 'gap') prompt = buildGapPrompt(baseSystemPrompt);
         else if (currentAIMode === 'funnel') prompt = buildFunnelPrompt(baseSystemPrompt);
         else if (currentAIMode === 'expand') prompt = buildExpandPrompt(baseSystemPrompt);
@@ -3005,401 +2621,179 @@ const generateReport = async () => {
         else if (currentAIMode === 'intent') prompt = buildIntentPrompt(baseSystemPrompt);
         else if (currentAIMode === 'root') prompt = buildRootPrompt(baseSystemPrompt);
         else prompt = buildDefaultChatPrompt(baseSystemPrompt);
-
         aiLoadingStatus.textContent = "正在思考...";
         const responseText = await callGemini(prompt);
-        
-        // Safety: Check for DOMPurify or simple Marked usage
         const mdParse = (typeof marked !== 'undefined' && typeof marked.parse === 'function') ? marked.parse : (t)=>t;
-
-        if (currentAIMode === 'chat') {
-            aiResult.innerHTML = mdParse(responseText);
-        } else {
-            renderJSONResult(responseText, currentAIMode);
-        }
+        if (currentAIMode === 'chat') { aiResult.innerHTML = mdParse(responseText); } 
+        else { renderJSONResult(responseText, currentAIMode); }
         aiResult.style.display = 'block';
-
     } catch (e) {
-        aiResult.innerHTML = `<div style="color:#b42318; padding:10px; border:1px solid #b42318; border-radius:8px; background:var(--softBad);">
-        <strong>分析中断:</strong> ${e.message}<br><small>请检查 API Key 或网络。</small></div>`;
+        aiResult.innerHTML = `<div style="color:#b42318; padding:10px; border:1px solid #b42318; border-radius:8px; background:var(--softBad);"><strong>分析中断:</strong> ${e.message}<br><small>请检查 API Key 或网络。</small></div>`;
         aiResult.style.display = 'block';
-    } finally {
-        aiLoading.style.display = 'none';
-        btnStartAnalyze.disabled = false;
-    }
+    } finally { aiLoading.style.display = 'none'; btnStartAnalyze.disabled = false; }
 };
-
-// [Optimized] Robust JSON extraction strategy
 const extractJSON = (text) => {
     if (!text) return null;
-    // 1. Remove Markdown code blocks first
     let cleanText = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-    
-    // 2. Find first [ or {
     const firstOpen = cleanText.search(/[\{\[]/);
     if (firstOpen === -1) return null;
-
-    // 3. Find last ] or }
     const lastClose = cleanText.search(/[\]\}](?!.*[\]\}])/); 
     if (lastClose === -1 || lastClose < firstOpen) return null;
-
     try {
         const potentialJson = cleanText.substring(firstOpen, lastClose + 1);
-        // 4. Pre-process to remove Markdown bolding inside JSON strings if Gemini does it
-        // Regex: Replace **text** with text inside strings is hard, but let's try basic cleanup
-        // A safer way is to assume Gemini returns valid JSON if we strip the markdown outside.
         return JSON.parse(potentialJson);
     } catch (e) {
         console.warn("JSON Parse Failed, trying loose regex match...");
-        try {
-             // Fallback: Try regex match if substring included garbage
-             const match = cleanText.match(/\[.*\]|\{.*\}/s);
-             if(match) return JSON.parse(match[0]);
-        } catch(e2) {
-             return null;
-        }
+        try { const match = cleanText.match(/\[.*\]|\{.*\}/s); if(match) return JSON.parse(match[0]); } catch(e2) { return null; }
         return null;
     }
 };
-
-// --- Prompt Builders ---
+const getAIContextData = (rows) => {
+    const topSpend = rows.slice().sort((a,b)=>b.spend-a.spend).slice(0, 60);
+    const topOrders = rows.slice().filter(r => r.orders > 0).sort((a,b)=>b.orders-a.orders).slice(0, 30);
+    const bleeders = rows.slice().filter(r => r.spend > 10 && r.orders === 0).sort((a,b)=>b.spend-a.spend).slice(0, 30);
+    const combined = [...new Set([...topSpend, ...topOrders, ...bleeders])];
+    if (!combined.length) return "No significant data rows found.";
+    return combined.map(r => `"${r.searchTerm}" | Spend:$${r.spend.toFixed(1)} | Sales:$${r.sales.toFixed(1)} | Orders:${r.orders} | ROAS:${r.roas.toFixed(2)} | ACOS:${(r.acos*100).toFixed(1)}%`).join("\n");
+};
 const buildGapPrompt = (systemPrompt) => {
     const goodTerms = VIEW.filter(r => r.orders >= 1).map(r => r.searchTerm).slice(0, 50).join(", ");
     const titles = BUSINESS_ROWS.slice(0, 10).map(r => `ASIN: ${r.asin} | Title: ${r.title}`).join("\n");
-    return `${systemPrompt}
-    Task: Keyword Gap Analysis & Title Optimization.
-    Data: 
-    1. High Converting Terms: [${goodTerms}]
-    2. Current Titles: ${titles}
-    
-    Instruction: Analyze which high-converting terms are missing from the titles.
-    Return JSON format: [{ "asin": "...", "missing_keywords": ["..."], "seo_suggestion": "HTML string showing the improved title with <ins>added words</ins> and <del>removed words</del>" }]`;
+    return `${systemPrompt}\nTask: Keyword Gap Analysis.\nData:\n1. High Converting Terms: [${goodTerms}]\n2. Current Titles: ${titles}\nInstruction: Analyze missing terms.\nReturn JSON: [{ "asin": "...", "missing_keywords": ["..."], "seo_suggestion": "HTML string with <ins> and <del>" }]`;
 };
 const buildFunnelPrompt = (systemPrompt) => {
     const report = BUSINESS_ROWS.slice(0, 20).map(r => `ASIN: ${r.asin}, Sessions: ${r.sessions}, Units: ${r.units}, CVR: ${(r.cvr*100).toFixed(2)}%`).join("\n");
-    return `${systemPrompt}
-    Task: Funnel Diagnostic.
-    Data: ${report}
-    Classify ASINs into: Star (High traffic/High CVR), Potential (High traffic/Low CVR), Wasted (High traffic/No Sales), Dead (Low traffic).
-    Return JSON: [{ "asin": "...", "category": "...", "reason": "...", "action": "..." }]`;
+    return `${systemPrompt}\nTask: Funnel Diagnostic.\nData: ${report}\nClassify ASINs: Star, Potential, Wasted, Dead.\nReturn JSON: [{ "asin": "...", "category": "...", "reason": "...", "action": "..." }]`;
 };
 const buildExpandPrompt = (systemPrompt) => {
-    const topTerms = VIEW.filter(r => r.orders >= 2).sort((a,b)=>b.orders-a.orders).slice(0, 20).map(r=>r.searchTerm).join(", ");
-    return `${systemPrompt}
-    Task: Keyword Expansion.
-    Context: These are my winning terms: [${topTerms}].
-    Suggest 10 NEW long-tail keywords that are relevant but NOT in the list.
-    Return JSON: [{ "keyword": "...", "reason": "..." }]`;
+    const topTerms = VIEW.filter(r => r.orders >= 1).sort((a,b)=>b.orders-a.orders).slice(0, 50).map(r=>`${r.searchTerm} (Orders:${r.orders})`).join("\n");
+    return `${systemPrompt}\nTask: Keyword Expansion.\nWinning Terms:\n${topTerms}\nSuggest 10 NEW relevant long-tail keywords.\nReturn JSON: [{ "keyword": "...", "reason": "..." }]`;
 };
 const buildReconPrompt = (systemPrompt) => {
     const asins = VIEW.filter(r => isASINLike(r.searchTerm));
-    if(!asins.length) return "Tell the user there are no Competitor ASINs found in the current view.";
-    
+    if(!asins.length) return "Tell user: No Competitor ASINs found.";
     const asinStats = [...groupBy(asins, r=>r.searchTerm).entries()].map(([a, list]) => ({ asin: a, ...sumMetrics(list) }));
     const badAsins = asinStats.filter(x => x.orders===0 && x.spend > 5).sort((a,b)=>b.spend-a.spend).slice(0,5);
     const goodAsins = asinStats.filter(x => x.orders>0).sort((a,b)=>b.roas-a.roas).slice(0,5);
-    
     const dataStr = `High Spend (0 Sales): ${badAsins.map(x=>`${x.asin}($${x.spend})`).join(", ")}. High ROAS: ${goodAsins.map(x=>`${x.asin}(ROAS ${x.roas.toFixed(1)})`).join(", ")}`;
-
-    return `${systemPrompt}
-    Task: Competitor Recon.
-    Data: ${dataStr}
-    Analyze:
-    1. For High Spend ASINs: Why might we be losing? (Price? Review?)
-    2. For High ROAS ASINs: Suggest aggressive actions.
-    Return JSON: [{ "asin": "...", "type": "High Spend/High ROAS", "analysis": "...", "action": "..." }]`;
+    return `${systemPrompt}\nTask: Competitor Recon.\nData: ${dataStr}\nAnalyze High Spend vs High ROAS ASINs.\nReturn JSON: [{ "asin": "...", "type": "High Spend/High ROAS", "analysis": "...", "action": "..." }]`;
 };
 const buildClusterPrompt = (systemPrompt) => {
     const topTerms = [...groupBy(VIEW, r => r.searchTerm).entries()].map(([t, list]) => `${t} ($${sumMetrics(list).spend.toFixed(0)})`).sort((a,b) => parseFloat(b.split('$')[1]) - parseFloat(a.split('$')[1])).slice(0, 100).join(", ");
-    return `${systemPrompt}
-    Task: Semantic Clustering.
-    Input: [${topTerms}].
-    Group these into intent clusters.
-    Return JSON: [{ "name": "ClusterName", "terms": ["..."], "insight": "...", "potential_negatives": ["..."] }]`;
+    return `${systemPrompt}\nTask: Semantic Clustering.\nInput: [${topTerms}].\nGroup by intent.\nReturn JSON: [{ "name": "ClusterName", "terms": ["..."], "insight": "...", "potential_negatives": ["..."] }]`;
 };
 const buildAuditPrompt = (systemPrompt) => {
     const product = $('aiProductContext').value || "Eyewear"; 
     const bleeders = VIEW.filter(r => r.spend > 20 && r.roas < 1).sort((a,b) => b.spend - a.spend).slice(0, 30);
-    const bleederList = bleeders.map(r => `${r.searchTerm} (Spend:$${r.spend.toFixed(0)}, Orders:${r.orders})`).join("\n");
-    return `${systemPrompt}
-    Task: Relevance Audit.
-    Product Context: ${product}
-    Bleeding Keywords: ${bleederList}
-    Score relevance 1-5 (1=Irrelevant, 5=Highly Relevant).
-    Return JSON: [{ "term": "...", "spend": 123, "relevance_score": 1, "reason": "...", "action": "..." }]`;
+    const bleederList = bleeders.map(r => `${r.searchTerm} (Spend:$${r.spend.toFixed(0)})`).join("\n");
+    return `${systemPrompt}\nTask: Relevance Audit.\nProduct: ${product}\nBleeding Keywords: ${bleederList}\nScore relevance 1-5.\nReturn JSON: [{ "term": "...", "spend": 123, "relevance_score": 1, "reason": "...", "action": "..." }]`;
 };
 const buildBidPrompt = (systemPrompt) => {
     const topTerms = VIEW.sort((a,b)=>b.spend-a.spend).slice(0, 20);
     const dataStr = topTerms.map(r => {
         const aov = r.orders > 0 ? (r.sales / r.orders).toFixed(2) : "N/A";
-        const curCpc = r.cpc.toFixed(2);
         const curCvr = (r.cvr * 100).toFixed(2);
-        return `Term: "${r.searchTerm}", Spend: $${r.spend}, Orders: ${r.orders}, CVR: ${curCvr}%, AOV: $${aov}, CPC: $${curCpc}`;
+        return `Term: "${r.searchTerm}", Spend: $${r.spend}, CVR: ${curCvr}%, AOV: $${aov}, CPC: $${r.cpc.toFixed(2)}`;
     }).join("\n");
-    
-    return `${systemPrompt}
-    Task: Bid Doctor.
-    Target ACOS: 25% (Assume this is the goal).
-    Formula Reference: Max Bid = AOV * Target ACOS * CVR.
-    Data:
-    ${dataStr}
-    
-    Instruction: Calculate the ideal Max Bid for each term to hit 25% ACOS.
-    If Orders = 0, suggest a defensive bid drop (e.g. -20%).
-    Return JSON: [{ "term": "...", "current_cpc": 1.2, "suggested_bid": 0.9, "reason": "CVR 5% needs lower bid to hit 25% ACOS" }]`;
+    return `${systemPrompt}\nTask: Bid Doctor.\nTarget ACOS: 25%.\nFormula: Max Bid = AOV * Target ACOS * CVR.\nData:\n${dataStr}\nReturn JSON: [{ "term": "...", "current_cpc": 1.2, "suggested_bid": 0.9, "reason": "..." }]`;
 };
 const buildPopPrompt = (systemPrompt) => {
     const dates = VIEW.map(r => r.date).sort();
-    if (dates.length < 2) return "Tell user: Date range too short for PoP analysis.";
-    
-    const start = new Date(dates[0]);
-    const end = new Date(dates[dates.length-1]);
+    if (dates.length < 2) return "Tell user: Date range too short.";
+    const start = new Date(dates[0]); const end = new Date(dates[dates.length-1]);
     const mid = new Date(start.getTime() + (end.getTime() - start.getTime()) / 2);
-    
-    // Safety check for invalid dates
     if (isNaN(mid.getTime())) return "Tell user: Date range invalid.";
-
     const midIso = toISODate(mid);
-    const p1 = VIEW.filter(r => r.date < midIso);
-    const p2 = VIEW.filter(r => r.date >= midIso);
-    
-    const m1 = sumMetrics(p1);
-    const m2 = sumMetrics(p2);
-    
-    return `${systemPrompt}
-    Task: Period-Over-Period (PoP) Analysis.
-    Period 1 (Past): Sales $${m1.sales.toFixed(2)}, Spend $${m1.spend.toFixed(2)}, ACOS ${(m1.acos*100).toFixed(2)}%, CVR ${(m1.cvr*100).toFixed(2)}%.
-    Period 2 (Current): Sales $${m2.sales.toFixed(2)}, Spend $${m2.spend.toFixed(2)}, ACOS ${(m2.acos*100).toFixed(2)}%, CVR ${(m2.cvr*100).toFixed(2)}%.
-    
-    Instruction: Compare P1 vs P2. Identify the main trend (Growth/Decline). Analyze if the change is due to Traffic (Spend/Clicks) or Efficiency (CVR/ACOS).
-    Return JSON: { "trend": "Growth/Decline", "key_factor": "...", "analysis": "...", "actionable_advice": "..." }`;
+    const p1 = VIEW.filter(r => r.date < midIso); const p2 = VIEW.filter(r => r.date >= midIso);
+    const m1 = sumMetrics(p1); const m2 = sumMetrics(p2);
+    return `${systemPrompt}\nTask: PoP Analysis.\nP1 (Past): Sales $${m1.sales.toFixed(2)}, ACOS ${(m1.acos*100).toFixed(2)}%.\nP2 (Current): Sales $${m2.sales.toFixed(2)}, ACOS ${(m2.acos*100).toFixed(2)}%.\nIdentify trend.\nReturn JSON: { "trend": "...", "key_factor": "...", "analysis": "...", "actionable_advice": "..." }`;
 };
 const buildIntentPrompt = (systemPrompt) => {
     const uniqueTerms = [...new Set(VIEW.map(r=>r.searchTerm))].slice(0, 50).join(", ");
-    return `${systemPrompt}
-    Task: Search Intent Classification.
-    Terms: [${uniqueTerms}]
-    Classes: 'Awareness' (Broad/Generic), 'Consideration' (Specific features), 'Purchase' (Long-tail/High intent).
-    Return JSON: [{ "term": "...", "stage": "Awareness", "reason": "..." }]`;
+    return `${systemPrompt}\nTask: Intent Classification.\nTerms: [${uniqueTerms}]\nClasses: Awareness, Consideration, Purchase.\nReturn JSON: [{ "term": "...", "stage": "Awareness" }]`;
 };
 const buildRootPrompt = (systemPrompt) => {
     const bleeders = VIEW.filter(r => r.spend > 10 && r.orders === 0).map(r => r.searchTerm).slice(0, 50).join(", ");
-    return `${systemPrompt}
-    Task: Negative Root Finder.
-    Input (High Spend / Zero Orders Terms): [${bleeders}]
-    Instruction: Identify single words (roots) that appear frequently in this list and seem irrelevant or wasteful.
-    Context: User sells Eyewear.
-    Return JSON: [{ "root_word": "...", "frequency_in_list": 5, "reason": "Appears in multiple failed searches", "action": "NEGATE PHRASE" }]`;
+    return `${systemPrompt}\nTask: Negative Root Finder.\nHigh Spend/0 Orders: [${bleeders}]\nIdentify wasteful roots.\nReturn JSON: [{ "root_word": "...", "frequency_in_list": 5, "reason": "...", "action": "NEGATE PHRASE" }]`;
 };
 const buildDefaultChatPrompt = (systemPrompt) => {
     const total = sumMetrics(VIEW);
-    return `${systemPrompt}
-    Current View Data: Spend $${total.spend.toFixed(2)}, ROAS ${total.roas.toFixed(2)}, Orders ${total.orders}.
-    User Question: ${(aiQuestionInput.value || "Give me 3 optimization suggestions based on current data.")}`;
+    const rowData = getAIContextData(VIEW);
+    return `${systemPrompt}\nGlobal Metrics: Spend $${total.spend.toFixed(2)}, ROAS ${total.roas.toFixed(2)}.\nTop Data:\n${rowData}\nUser Question: ${(aiQuestionInput.value || "Give me optimization suggestions.")}`;
 };
-
 const renderJSONResult = (text, mode) => {
     const data = extractJSON(text);
     if (!data) return aiResult.innerHTML = `<div style="color:var(--warn);font-size:12px;">⚠️ 原始响应（解析失败），已回退到文本模式：</div>${marked.parse(text)}`;
-
-    let html = "";
-    const safeList = Array.isArray(data) ? data : [];
-
+    let html = ""; const safeList = Array.isArray(data) ? data : [];
     if (mode === 'gap') {
         html = `<h3>🔍 埋词差距 & 标题模拟</h3><div class="grid" style="grid-template-columns:1fr; gap:10px;">`;
         safeList.forEach(item => {
-            html += `<div class="card" style="padding:12px;">
-                <div style="font-weight:bold; color:var(--accent);">${item.asin}</div>
-                <div style="color:var(--bad); margin:4px 0;">缺失词: ${Array.isArray(item.missing_keywords) ? item.missing_keywords.join(", ") : item.missing_keywords}</div>
-                <div style="font-size:13px; margin-top:6px; background:var(--bg); padding:8px; border-radius:6px;">${item.seo_suggestion}</div>
-            </div>`;
-        });
-        html += `</div>`;
-    }
-    else if (mode === 'funnel') {
-        html = `<h3>🩺 流量漏斗诊断</h3><table style="width:100%; border-collapse:collapse; font-size:12px;">
-        <thead><tr style="border-bottom:1px solid var(--line); text-align:left;"><th style="padding:8px;">ASIN</th><th>诊断</th><th>建议</th></tr></thead><tbody>`;
+            html += `<div class="card" style="padding:12px;"><div style="font-weight:bold; color:var(--accent);">${item.asin}</div><div style="color:var(--bad); margin:4px 0;">缺失词: ${Array.isArray(item.missing_keywords) ? item.missing_keywords.join(", ") : item.missing_keywords}</div><div style="font-size:13px; margin-top:6px; background:var(--bg); padding:8px; border-radius:6px;">${item.seo_suggestion}</div></div>`;
+        }); html += `</div>`;
+    } else if (mode === 'funnel') {
+        html = `<h3>🩺 流量漏斗诊断</h3><table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="border-bottom:1px solid var(--line);"><th style="padding:8px;">ASIN</th><th>诊断</th><th>建议</th></tr></thead><tbody>`;
         safeList.forEach(item => {
             let color = (item.category || "").includes("Star") ? "var(--good)" : (item.category || "").includes("Wasted") ? "var(--bad)" : "var(--warn)";
-            html += `<tr style="border-bottom:1px solid var(--line);">
-                <td style="padding:8px;">${item.asin}</td>
-                <td><span class="tag" style="color:${color}; background:var(--bg); border:1px solid ${color};">${item.category}</span><br><span style="font-size:11px;color:var(--muted)">${item.reason}</span></td>
-                <td style="padding:8px;">${item.action}</td>
-            </tr>`;
-        });
-        html += `</tbody></table>`;
-    }
-    else if (mode === 'expand') {
+            html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;">${item.asin}</td><td><span class="tag" style="color:${color}; background:var(--bg); border:1px solid ${color};">${item.category}</span><br><span style="font-size:11px;color:var(--muted)">${item.reason}</span></td><td style="padding:8px;">${item.action}</td></tr>`;
+        }); html += `</tbody></table>`;
+    } else if (mode === 'expand') {
         html = `<h3>🚀 智能拓词推荐</h3><ul style="padding-left:20px;">`;
-        safeList.forEach(item => {
-            html += `<li style="margin-bottom:8px;"><strong>${item.keyword}</strong>: <span style="color:var(--muted);">${item.reason}</span></li>`;
-        });
+        safeList.forEach(item => { html += `<li style="margin-bottom:8px;"><strong>${item.keyword}</strong>: <span style="color:var(--muted);">${item.reason}</span></li>`; });
         html += `</ul>`;
-    }
-    else if (mode === 'recon') {
-        html = `<h3>⚔️ 竞品 ASIN 侦察</h3><table style="width:100%; border-collapse:collapse; font-size:12px;">
-        <thead><tr style="border-bottom:1px solid var(--line); text-align:left;"><th style="padding:8px;">ASIN</th><th>类型</th><th>分析</th><th>建议</th></tr></thead><tbody>`;
+    } else if (mode === 'recon') {
+        html = `<h3>⚔️ 竞品 ASIN 侦察</h3><table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="border-bottom:1px solid var(--line);"><th style="padding:8px;">ASIN</th><th>类型</th><th>分析</th><th>建议</th></tr></thead><tbody>`;
         safeList.forEach(item => {
             const isGood = (item.type || "").toLowerCase().includes("roas");
-            html += `<tr style="border-bottom:1px solid var(--line);">
-                <td style="padding:8px;">${item.asin}</td>
-                <td><span class="tag ${isGood ? 'good' : 'bad'}">${item.type}</span></td>
-                <td style="padding:8px; color:var(--muted);">${item.analysis}</td>
-                <td style="padding:8px; font-weight:500;">${item.action}</td>
-            </tr>`;
-        });
-        html += `</tbody></table>`;
-    }
-    else if (mode === 'cluster') {
-        let clusters = [];
-        if (Array.isArray(data)) {
-            clusters = data.map(item => ({
-                name: item.cluster_name || item.name || "Group",
-                terms: item.terms || [],
-                insight: item.insight || item.reason || "",
-                negs: item.potential_negatives || item.negatives || []
-            }));
-        } else {
-            clusters = Object.entries(data).map(([k,v]) => ({
-                name: k,
-                terms: v.terms || [],
-                insight: v.insight || "",
-                negs: v.potential_negatives || []
-            }));
-        }
+            html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;">${item.asin}</td><td><span class="tag ${isGood ? 'good' : 'bad'}">${item.type}</span></td><td style="padding:8px; color:var(--muted);">${item.analysis}</td><td style="padding:8px;">${item.action}</td></tr>`;
+        }); html += `</tbody></table>`;
+    } else if (mode === 'cluster') {
+        let clusters = Array.isArray(data) ? data.map(item => ({ name: item.cluster_name||item.name, terms: item.terms||[], insight: item.insight||item.reason, negs: item.potential_negatives||[] })) : Object.entries(data).map(([k,v]) => ({ name: k, terms: v.terms||[], insight: v.insight, negs: v.potential_negatives||[] }));
         html = `<h3>🧩 语义聚类 & 否定机会</h3><div class="grid" style="grid-template-columns:1fr 1fr; gap:10px; align-items: start;">`;
         clusters.forEach(c => {
-            const termDisplay = c.terms.slice(0, 15).join(", ") + (c.terms.length > 15 ? "..." : "");
-            html += `<div class="card" style="padding:10px; break-inside: avoid;">
-                <div style="font-weight:bold; color:var(--accent); margin-bottom:4px;">${c.name}</div>
-                <div style="font-size:11.5px; color:var(--muted); margin-bottom:6px;">${c.insight}</div>
-                <div style="font-size:12px; color:var(--text); margin-bottom:6px; word-break: break-word;">${termDisplay}</div>
-                ${c.negs && c.negs.length ? `<div style="font-size:11px; color:var(--bad); border-top:1px solid var(--line); padding-top:4px;">疑似否定: ${c.negs.join(", ")}</div>` : ''}
-            </div>`;
-        });
-        html += `</div>`;
-    }
-    else if (mode === 'audit') {
-        html = `<h3>⚖️ 亏损词相关性审计</h3>
-        <table style="width:100%; text-align:left; font-size:12px; border-collapse:collapse;">
-        <thead style="background:var(--hover-bg);"><tr style="border-bottom:1px solid var(--line);">
-            <th style="padding:8px;">搜索词</th><th style="padding:8px;">花费</th><th style="padding:8px;">相关性</th><th style="padding:8px;">建议</th>
-        </tr></thead><tbody>`;
-        const auditList = Array.isArray(data) ? data : [];
-        auditList.forEach(item => {
+            html += `<div class="card" style="padding:10px; break-inside: avoid;"><div style="font-weight:bold; color:var(--accent); margin-bottom:4px;">${c.name}</div><div style="font-size:11.5px; color:var(--muted); margin-bottom:6px;">${c.insight}</div><div style="font-size:12px; margin-bottom:6px;">${c.terms.slice(0,15).join(", ")}</div>${c.negs&&c.negs.length?`<div style="font-size:11px; color:var(--bad); border-top:1px solid var(--line); padding-top:4px;">疑似否定: ${c.negs.join(", ")}</div>`:''}</div>`;
+        }); html += `</div>`;
+    } else if (mode === 'audit') {
+        html = `<h3>⚖️ 亏损词相关性审计</h3><table style="width:100%; text-align:left; font-size:12px; border-collapse:collapse;"><thead style="background:var(--hover-bg);"><tr style="border-bottom:1px solid var(--line);"><th style="padding:8px;">搜索词</th><th>花费</th><th>相关性</th><th>建议</th></tr></thead><tbody>`;
+        safeList.forEach(item => {
             const score = item.relevance_score || 3;
             const scoreColor = score <= 2 ? 'color:var(--bad); font-weight:bold;' : 'color:var(--good);';
-            html += `
-            <tr style="border-bottom:1px solid var(--line);">
-                <td style="padding:8px;">${item.term}</td>
-                <td style="padding:8px;">$${item.spend}</td>
-                <td style="padding:8px; ${scoreColor}">${score}/5</td>
-                <td style="padding:8px; color:var(--muted);">${item.reason} <span style="font-weight:bold; color:var(--text)">[${item.action||"关注"}]</span></td>
-            </tr>`;
-        });
-        html += `</tbody></table>`;
-    }
-    else if (mode === 'bid') {
-        html = `<h3>🩺 智能竞价建议 (Target ACOS 25%)</h3>
-        <table style="width:100%;font-size:12px;border-collapse:collapse;">
-        <thead><tr style="background:var(--hover-bg);"><th style="padding:6px;text-align:left">Term</th><th style="text-align:left">Cur CPC</th><th style="text-align:left">Sugg Bid</th><th style="text-align:left">Reason</th></tr></thead><tbody>`;
+            html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;">${item.term}</td><td style="padding:8px;">$${item.spend}</td><td style="padding:8px; ${scoreColor}">${score}/5</td><td style="padding:8px; color:var(--muted);">${item.reason} <span style="font-weight:bold; color:var(--text)">[${item.action||"关注"}]</span></td></tr>`;
+        }); html += `</tbody></table>`;
+    } else if (mode === 'bid') {
+        html = `<h3>🩺 智能竞价建议 (Target ACOS 25%)</h3><table style="width:100%;font-size:12px;border-collapse:collapse;"><thead><tr style="background:var(--hover-bg);"><th style="padding:6px;text-align:left">Term</th><th>Cur CPC</th><th>Sugg Bid</th><th>Reason</th></tr></thead><tbody>`;
         safeList.forEach(item => {
-            const diff = item.suggested_bid - item.current_cpc;
-            const color = diff > 0 ? 'var(--good)' : 'var(--bad)';
-            html += `<tr style="border-bottom:1px solid var(--line);">
-                <td style="padding:6px;">${item.term}</td>
-                <td>$${item.current_cpc}</td>
-                <td style="font-weight:bold;color:${color}">$${item.suggested_bid}</td>
-                <td style="color:var(--muted)">${item.reason}</td>
-            </tr>`;
-        });
-        html += `</tbody></table>`;
-    }
-    else if (mode === 'pop') {
-        // PoP usually returns a single object, not array
+            const diff = item.suggested_bid - item.current_cpc; const color = diff > 0 ? 'var(--good)' : 'var(--bad)';
+            html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:6px;">${item.term}</td><td>$${item.current_cpc}</td><td style="font-weight:bold;color:${color}">$${item.suggested_bid}</td><td style="color:var(--muted)">${item.reason}</td></tr>`;
+        }); html += `</tbody></table>`;
+    } else if (mode === 'pop') {
         const obj = Array.isArray(safeList) ? safeList[0] : safeList;
-        html = `<h3>📈 环比增长分析</h3>
-        <div class="card" style="padding:15px;">
-            <div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Trend: ${obj.trend}</div>
-            <div style="margin-bottom:8px;"><strong>Key Factor:</strong> ${obj.key_factor}</div>
-            <p style="margin-bottom:8px;">${obj.analysis}</p>
-            <div style="background:var(--bg); padding:10px; border-radius:8px;">💡 <strong>建议:</strong> ${obj.actionable_advice}</div>
-        </div>`;
-    }
-    else if (mode === 'intent') {
-        const counts = { Awareness:0, Consideration:0, Purchase:0 };
-        safeList.forEach(i => counts[i.stage] = (counts[i.stage]||0) + 1);
-        const total = safeList.length;
-        
+        html = `<h3>📈 环比增长分析</h3><div class="card" style="padding:15px;"><div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Trend: ${obj.trend}</div><div style="margin-bottom:8px;"><strong>Key Factor:</strong> ${obj.key_factor}</div><p style="margin-bottom:8px;">${obj.analysis}</p><div style="background:var(--bg); padding:10px; border-radius:8px;">💡 <strong>建议:</strong> ${obj.actionable_advice}</div></div>`;
+    } else if (mode === 'intent') {
+        const counts = { Awareness:0, Consideration:0, Purchase:0 }; safeList.forEach(i => counts[i.stage] = (counts[i.stage]||0) + 1); const total = safeList.length;
         html = `<h3>🧠 搜索意图分布</h3><div style="margin-bottom:15px; display:flex; gap:5px; height:20px;">`;
-        Object.keys(counts).forEach(k => {
-            const pct = (counts[k]/total*100);
-            const color = k==='Purchase'?'var(--good)':(k==='Awareness'?'var(--accent)':'var(--warn)');
-            if(pct > 0) html += `<div style="width:${pct}%; background:${color};" title="${k}: ${Math.round(pct)}%"></div>`;
-        });
-        html += `</div>`;
-        
-        html += `<div class="fileList" style="max-height:300px;">`;
-        safeList.forEach(item => {
-            html += `<div style="padding:4px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between;">
-                <span>${item.term}</span>
-                <span class="tag" style="font-size:10px;">${item.stage}</span>
-            </div>`;
-        });
-        html += `</div>`;
+        Object.keys(counts).forEach(k => { const pct = (counts[k]/total*100); const color = k==='Purchase'?'var(--good)':(k==='Awareness'?'var(--accent)':'var(--warn)'); if(pct>0) html += `<div style="width:${pct}%; background:${color};" title="${k}: ${Math.round(pct)}%"></div>`; });
+        html += `</div><div class="fileList" style="max-height:300px;">`;
+        safeList.forEach(item => { html += `<div style="padding:4px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between;"><span>${item.term}</span><span class="tag" style="font-size:10px;">${item.stage}</span></div>`; }); html += `</div>`;
+    } else if (mode === 'root') {
+        html = `<h3>🛑 隐性否定词根挖掘</h3><table style="width:100%;font-size:12px; border-collapse:collapse;"><thead><tr style="background:var(--hover-bg);"><th style="padding:6px;text-align:left">Root</th><th>Freq</th><th>Reason</th></tr></thead><tbody>`;
+        safeList.forEach(item => { html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:6px;font-weight:bold;color:var(--bad);">${item.root_word}</td><td>${item.frequency_in_list}</td><td>${item.reason} <span class="ai-action" data-type="filter" data-val="${item.root_word}" style="cursor:pointer;text-decoration:underline;">[Filter]</span></td></tr>`; }); html += `</tbody></table>`;
     }
-    else if (mode === 'root') {
-        html = `<h3>🛑 隐性否定词根挖掘</h3>
-        <table style="width:100%;font-size:12px; border-collapse:collapse;"><thead><tr style="background:var(--hover-bg);"><th style="padding:6px;text-align:left">Root</th><th style="text-align:left">Freq</th><th style="text-align:left">Reason</th></tr></thead><tbody>`;
-        safeList.forEach(item => {
-            html += `<tr style="border-bottom:1px solid var(--line);">
-                <td style="padding:6px;font-weight:bold;color:var(--bad);">${item.root_word}</td>
-                <td>${item.frequency_in_list}</td>
-                <td>${item.reason} <span class="ai-action" data-type="filter" data-val="${item.root_word}" style="cursor:pointer;text-decoration:underline;">[Filter]</span></td>
-            </tr>`;
-        });
-        html += `</tbody></table>`;
-    }
-
     aiResult.innerHTML = html;
 };
-
-// Event Listeners (Kept same)
+// Event Listeners
 $('btnAI').addEventListener('click', () => toggleAIModal(true));
 $('btnCloseAI').addEventListener('click', () => toggleAIModal(false));
 $('btnStartAnalyze').addEventListener('click', generateReport);
-$('btnClearKey').addEventListener('click', () => {
-  localStorage.removeItem("gemini_key");
-  geminiKeyInput.value = "";
-  geminiKeyInput.style.display = 'block';
-  aiKeySection.style.display = 'block';
-  btnClearKey.style.display = 'none';
-});
-btnToggleSettings.addEventListener('click', () => {
-    const isHidden = settingsBox.style.display === 'none';
-    settingsBox.style.display = isHidden ? 'block' : 'none';
-});
-
-// [Added] AI Action Click Listener (The Filter Bridge)
+$('btnClearKey').addEventListener('click', () => { localStorage.removeItem("gemini_key"); geminiKeyInput.value = ""; geminiKeyInput.style.display = 'block'; aiKeySection.style.display = 'block'; btnClearKey.style.display = 'none'; });
+btnToggleSettings.addEventListener('click', () => { const isHidden = settingsBox.style.display === 'none'; settingsBox.style.display = isHidden ? 'block' : 'none'; });
 $('aiResult').addEventListener('click', (e) => {
-    if (e.target.classList.contains('ai-action')) {
+    if (e.target.classList.contains('ai-action') && e.target.dataset.type === 'filter') {
         const val = e.target.dataset.val;
-        if (e.target.dataset.type === 'filter') {
-            const searchInput = $('filterSearchTerm');
-            searchInput.value = val;
-            $('filterSearchExact').checked = true; // Auto precise match
-            searchInput.focus();
-            applyFilters();
-            log(`🤖 AI 自动筛选: ${val}`, "good");
-            // Optional: Close modal if desired, but keeping open allows reading context
-        }
+        const searchInput = $('filterSearchTerm'); searchInput.value = val; $('filterSearchExact').checked = true; searchInput.focus(); applyFilters();
+        log(`🤖 AI 自动筛选: ${val}`, "good");
     }
 });
-
-$("fileInput").addEventListener("change", async (e)=>{
-  const files = Array.from(e.target.files || []);
-  if (files.length) { log("文件选择事件触发（change）"); await importMultipleFiles(files); e.target.value = ""; }
-});
+$("fileInput").addEventListener("change", async (e)=>{ const files = Array.from(e.target.files || []); if (files.length) { log("文件选择事件触发"); await importMultipleFiles(files); e.target.value = ""; } });
 const filterIds = ["dateStart","dateEnd","filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","bidSpend","bidOrders","bidRoas","bidIntensity","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "brandNameInput"];
 filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280));
@@ -3407,31 +2801,13 @@ $("brandNameInput").addEventListener("input", debounce(applyFilters, 400));
 $("btnClearSearch").addEventListener("click", () => { $("filterSearchTerm").value = ""; $("filterSearchExact").checked = false; $("filterSearchTerm").focus(); applyFilters(); });
 $("btnReset").addEventListener("click", () => {
   ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType", "brandNameInput"].forEach(id => ($(id).value = ""));
-  $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" };
-  populateDropdowns(); applyFilters();
+  $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters();
 });
 $("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; importedFiles = []; renderFileList(); populateDropdowns(); applyFilters(true); });
-document.querySelectorAll(".chipBtn").forEach(btn => btn.addEventListener("click", () => {
-  if (btn.closest('#aiModal')) return; 
-  document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters();
-}));
-$("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => {
-  const key = th.dataset.sort; if (!key) return;
-  rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"};
-  renderRankTable(); renderActionLists(); renderWordFreq();
-}));
-$("rankTable").addEventListener("click", (e) => {
-    if (e.target.classList.contains("search-btn")) {
-        const td = e.target.closest("td"); const term = td.getAttribute("data-name"); 
-        if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); $(".sidebar").scrollTop = 0; }
-    }
-});
-$("wfTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => {
-  const key = th.dataset.sort; if(!key) return;
-  wfSort = (wfSort.key === key) ? {key, dir: (wfSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"};
-  renderWordFreq();
-}));
+document.querySelectorAll(".chipBtn").forEach(btn => btn.addEventListener("click", () => { if (btn.closest('#aiModal')) return; document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); }));
+$("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if (!key) return; rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderRankTable(); renderActionLists(); renderWordFreq(); }));
+$("rankTable").addEventListener("click", (e) => { if (e.target.classList.contains("search-btn")) { const td = e.target.closest("td"); const term = td.getAttribute("data-name"); if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); $(".sidebar").scrollTop = 0; } } });
+$("wfTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if(!key) return; wfSort = (wfSort.key === key) ? {key, dir: (wfSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderWordFreq(); }));
 document.addEventListener("click", (e) => {
   const btn = e.target.closest(".segBtn"); if (!btn) return;
   if (btn.dataset.type) setTypeFilter(btn.dataset.type);
@@ -3440,25 +2816,11 @@ document.addEventListener("click", (e) => {
 });
 const setTypeFilter = (t) => { rankTypeFilter = t; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.type === t)); renderRankTable(); renderActionLists(); renderWordFreq(); };
 const setActionTypeFilter = (t) => { actionTypeFilter = t; document.querySelectorAll('.seg[aria-label="Action Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.act === t)); renderActionLists(); renderWordFreq(); };
-$("btnExportWf").addEventListener("click", exportWordFreqCSV); 
-$("btnExportNeg").addEventListener("click", exportNegativesCSV);
-$("btnExportBidUp").addEventListener("click", exportBidUpCSV);
-$("btnExportLongTail").addEventListener("click", exportLongTailCSV);
-$("btnExportRank").addEventListener("click", exportRankCSV);
+$("btnExportWf").addEventListener("click", exportWordFreqCSV); $("btnExportNeg").addEventListener("click", exportNegativesCSV); $("btnExportBidUp").addEventListener("click", exportBidUpCSV); $("btnExportLongTail").addEventListener("click", exportLongTailCSV); $("btnExportRank").addEventListener("click", exportRankCSV);
 $("btnRuleReset").addEventListener("click", () => { $("ruleSpendNeg").value = 30; $("ruleClicksNeg").value = 20; $("ruleRoasNeg").value = 1.5; $("ruleRoasKeep").value = 3; $("ruleOrdersKeep").value = 2; $("ruleRoasMigrateMin").value = 2; applyFilters(); });
 $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert("所有依赖库加载正常！"); });
-
-const toggleTheme = () => {
-  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-  const newTheme = isDark ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", newTheme);
-  localStorage.setItem("theme", newTheme);
-  if (trendChart && typeof trendChart.update === 'function') {
-      if ((VIEW && VIEW.length) || (ALL && ALL.length)) renderTrend(VIEW || ALL);
-  }
-};
+const toggleTheme = () => { const isDark = document.documentElement.getAttribute("data-theme") === "dark"; const newTheme = isDark ? "light" : "dark"; document.documentElement.setAttribute("data-theme", newTheme); localStorage.setItem("theme", newTheme); if (trendChart && typeof trendChart.update === 'function') { if ((VIEW && VIEW.length) || (ALL && ALL.length)) renderTrend(VIEW || ALL); } };
 $("btnTheme").addEventListener("click", toggleTheme);
-
 renderFileList(); populateDropdowns(); applyFilters(true);
 </script>
 </body>
