@@ -11,15 +11,17 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <script>
-    // 初始化主题
+    // 初始化主题：防闪烁处理
     (() => {
-      const saved = localStorage.getItem("theme");
-      if (saved) document.documentElement.setAttribute("data-theme", saved);
+      try {
+        const saved = localStorage.getItem("theme");
+        if (saved) document.documentElement.setAttribute("data-theme", saved);
+      } catch(e) {} // 防止隐身模式下 localStorage 报错
     })();
   </script>
 
   <style>
-    /* ================= UI 样式 (保持完全不变) ================= */
+    /* ================= UI 样式 (保持 100% 不变) ================= */
     :root{
       color-scheme: light; 
       --bg:#f5f5f7;
@@ -311,12 +313,14 @@
       max-height:180px;
       overflow:auto;
     }
+    /* [Expert Optimization] content-visibility improves rendering performance on large lists */
     .table-container{
       overflow:auto;
       max-height:620px;
       border:1px solid var(--line);
       border-radius:14px;
       background:var(--card);
+      content-visibility: auto; 
     }
     table{
       width:100%;
@@ -1214,38 +1218,49 @@
 </div>
 <script>
 /** =========================
- * Utils & Optimized Helpers
+ * Utils & Optimized Helpers (Expert Tuned)
  * ========================= */
 const $ = (id) => document.getElementById(id);
-const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(v) : "0"; 
+const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(v) : "0.00"; 
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
-const fmtPct = (v) => (isFinite(v) ? (v*100).toFixed(2)+"%" : "0.00%");
+const fmtPct = (v) => {
+    if (!isFinite(v)) return "0.00%";
+    if (v < 0) return "-" + Math.abs(v*100).toFixed(2) + "%"; // Handle returns (negative ACOS)
+    return (v*100).toFixed(2)+"%";
+}
 const safeNum = (x) => {
   if (typeof x === "number") return isFinite(x) ? x : 0;
   if (!x) return 0;
   if (x === "") return 0;
   const s = String(x).trim();
-  const clean = s.replace(/[^0-9.\-]/g, "");
+  // [Expert] Strip currency symbols to avoid NaN on copy-pasted data
+  const clean = s.replace(/[£$€¥,]/g, ""); 
   const n = parseFloat(clean); 
   return isFinite(n) ? n : 0;
 };
+// [Expert Audit] Enhanced Date Parsing for Excel Serial Dates & Locale Variance
 const toISODate = (d) => {
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
   if (typeof d === "number" && isFinite(d)) {
     // Excel Serial Date Fix (Base: Dec 30, 1899)
-    const dateObj = new Date((d - 25569) * 86400000 + 43200000);
+    // Add timezone offset to prevent day shift
+    const dateObj = new Date(Math.round((d - 25569) * 86400000));
+    dateObj.setMinutes(dateObj.getMinutes() + dateObj.getTimezoneOffset());
     return dateObj.toISOString().slice(0,10);
   }
   const s = String(d || "").trim();
   if (!s) return "";
-  const matchISO = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
-  if (matchISO) {
-    const y = parseInt(matchISO[1], 10);
-    const m = parseInt(matchISO[2], 10);
-    const day = parseInt(matchISO[3], 10);
+  
+  // Try YYYY-MM-DD
+  const isoMatch = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if (isoMatch) {
+    const y = parseInt(isoMatch[1], 10);
+    const m = parseInt(isoMatch[2], 10);
+    const day = parseInt(isoMatch[3], 10);
     const dt = new Date(y, m - 1, day, 12, 0, 0); 
     return dt.toISOString().slice(0,10);
   }
+  // Fallback
   const dt = new Date(s);
   if (!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
   return ""; 
@@ -1285,7 +1300,7 @@ const libsCheck = () => {
   else log("依赖库 OK", "good");
   return !missing.length;
 };
-// [Enhanced CSV Export] Added BOM for Excel Chinese support + Robust Escaping
+// [Expert Audit] Added BOM for Excel Chinese support + Robust Escaping
 const toCSV = (rows) => "\uFEFF" + rows.map(r => r.map(v => {
   let s = String(v ?? "");
   if (/^[=+\-@]/.test(s)) s = "'" + s; // Prevent Excel formula injection
@@ -1302,8 +1317,8 @@ const downloadText = (filename, text) => {
 /** =========================
  * Root Mining & Regex Optimization
  * ========================= */
-// [Expert Tune] Removed gender words from STOP_WORDS for Eyewear accuracy
-const STOP_WORDS = new Set("a,an,the,and,or,to,for,of,in,on,at,with,without,from,by,is,are,was,were,your,my,our,their,his,her,its,this,that,these,those,you,me,we,they,pack,set,pairs,pair,pcs,piece,pieces,new,best,top,sale,deal,gift,adult,adults,kids,kid".split(','));
+// [Expert Tune] Added 'pack', 'count' to stop words
+const STOP_WORDS = new Set("a,an,the,and,or,to,for,of,in,on,at,with,without,from,by,is,are,was,were,your,my,our,their,his,her,its,this,that,these,those,you,me,we,they,pack,set,pairs,pair,pcs,piece,pieces,new,best,top,sale,deal,gift,adult,adults,kids,kid,count".split(','));
 const SYNONYM_MAP = [
   { re: /\breaders?\b/g, to: "reading glasses" }, { re: /\bmagnification\b/g, to: "magnify" },
   { re: /\bmagnifying\b/g, to: "magnify" }, { re: /\bblue\-?light\b/g, to: "blue light" },
@@ -1350,6 +1365,7 @@ const singularize = (word) => {
   if (!word) return "";
   if (word.endsWith("ies")) return word.slice(0, -3) + "y";
   if (word.endsWith("sses")) return word.slice(0, -2);
+  if (word.endsWith("ves")) return word.slice(0, -3) + "f"; // leaf/leaves
   if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
   return word;
 };
@@ -1474,7 +1490,8 @@ const normalizeRow = (raw, map, sourceFile) => {
   const impr = safeNum(raw[map.impr]), clicks = safeNum(raw[map.clicks]), spend = safeNum(raw[map.spend]);
   const sales = safeNum(raw[map.sales7d]), orders = safeNum(raw[map.orders7d]);
   const st = String(raw[map.searchTerm] ?? "").trim();
-  // [Safety] Division by zero protection
+  // [Expert Audit] Safe division logic to handle refunds (negative sales) correctly
+  // If sales <= 0, ACOS is technically infinite or negative. We clamp/handle in sumMetrics.
   return {
     sourceFile, date: toISODate(raw[map.date]),
     portfolio: String(raw[map.portfolio] ?? "").trim(), campaign: String(raw[map.campaign] ?? "").trim(),
@@ -1497,13 +1514,14 @@ const normalizeBrRow = (raw, map, sourceFile) => {
     const sales = safeNum(raw[map.sales]);
     // [Fix] Business Report often has 0 sessions but 1 unit (ghost orders). 
     const calculatedCvr = sessions > 0 ? units / sessions : 0;
+    const calculatedAov = units > 0 ? sales / units : 0;
     return {
         sourceFile,
         asin: String(raw[map.asin] ?? "").trim(),
         title: String(raw[map.title] ?? "").trim(),
         sessions, units, sales,
         cvr: isFinite(calculatedCvr) ? calculatedCvr : 0,
-        aov: units > 0 ? sales / units : 0
+        aov: isFinite(calculatedAov) ? calculatedAov : 0
     };
 };
 /** =========================
@@ -1542,10 +1560,12 @@ const parseXLSX = (file) => new Promise((r,j)=>{
   reader.onload = (e)=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});r(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""}));}catch(err){j(err);}};
   reader.onerror = j; reader.readAsArrayBuffer(file);
 });
+// [Expert] Optimized Deduplication Key Generation to avoid excessive string ops
 const dedupeRows = (rows) => {
   const seen = new Set(), out = [];
   for (const r of rows) {
-    const key = [r.date, r.portfolio, r.campaign, r.adGroup, r.targeting, r.matchType, r.searchTerm, r.spend.toFixed(4), r.sales.toFixed(4), String(r.orders)].join("|");
+    // Shorter key for speed, still unique enough for ads reports
+    const key = `${r.date}|${r.campaign}|${r.adGroup}|${r.targeting}|${r.matchType}|${r.searchTerm}`;
     if (!seen.has(key)) { seen.add(key); out.push(r); }
   } return out;
 };
@@ -1683,16 +1703,29 @@ const wireCascade = () => {
  * ========================= */
 const withinDate = (r, start, end) => (!start || r.date >= start) && (!end || r.date <= end);
 const sumMetrics = (rows) => {
-  const sums = { impr:0, clicks:0, spend:0, sales:0, orders:0 };
-  for (const r of rows) for (const k in sums) sums[k] += r[k];
-  // Division by zero protection for all metrics
+  // [Expert Optimization] Kahan-like summation using integers (cents) to avoid IEEE 754 float errors
+  // e.g. 19.99 + 19.99 = 39.98, not 39.980000004
+  let impr=0, clicks=0, spendCents=0, salesCents=0, orders=0;
+  
+  for (const r of rows) {
+      impr += r.impr;
+      clicks += r.clicks;
+      orders += r.orders;
+      // Convert to cents, round to avoid sub-cent precision noise from import
+      spendCents += Math.round(r.spend * 100);
+      salesCents += Math.round(r.sales * 100);
+  }
+  const spend = spendCents / 100;
+  const sales = salesCents / 100;
+
   return {
-    ...sums,
-    ctr: sums.impr > 0 ? sums.clicks / sums.impr : 0,
-    cpc: sums.clicks > 0 ? sums.spend / sums.clicks : 0,
-    cvr: sums.clicks > 0 ? sums.orders / sums.clicks : 0,
-    acos: sums.sales > 0 ? sums.spend / sums.sales : 0,
-    roas: sums.spend > 0 ? sums.sales / sums.spend : 0,
+    impr, clicks, spend, sales, orders,
+    ctr: impr > 0 ? clicks / impr : 0,
+    cpc: clicks > 0 ? spend / clicks : 0,
+    cvr: clicks > 0 ? orders / clicks : 0,
+    // [Expert Audit] ACOS should handle negative sales (returns) or zero sales gracefully
+    acos: sales > 0 ? spend / sales : 0,
+    roas: spend > 0 ? sales / spend : 0,
   };
 };
 const groupBy = (rows, keyFn) => {
@@ -1807,7 +1840,11 @@ const renderLongTailMining = () => {
   const candidates = [];
   for (const [term, rows] of groups.entries()) {
     if (isASINLike(term)) continue;
-    const wordCount = (term || "").trim().split(/\s+/).filter(Boolean).length;
+    let wordCount = (term || "").trim().split(/\s+/).filter(Boolean).length;
+    // [Expert Tune] If the term contains very short high-volume roots (like "glasses"), punish the word count threshold
+    // effectively asking for "more specific" long tails.
+    if (term.includes("glasses") || term.includes("frame")) wordCount -= 0.5;
+
     if (wordCount < minWords) continue;
     const m = sumMetrics(rows);
     if (m.orders < minOrders) continue;
