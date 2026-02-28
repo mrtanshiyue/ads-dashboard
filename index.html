@@ -22,6 +22,9 @@
 
   <style>
     /* ================= UI 样式 (保持 100% 不变) ================= */
+    /* [优化] 页面初始加载防闪烁 */
+    .preload * { transition: none !important; }
+
     :root{
       color-scheme: light; 
       --bg:#f5f5f7;
@@ -313,7 +316,6 @@
       max-height:180px;
       overflow:auto;
     }
-    /* [Expert Optimization] content-visibility improves rendering performance on large lists */
     .table-container{
       overflow:auto;
       max-height:620px;
@@ -478,7 +480,6 @@
       background: var(--bg);
     }
     [data-theme="dark"] .modal-body { background: #1c1c1e; }
-    /* AI 内容排版优化 */
     .ai-content h3 { margin-top: 0; font-size: 16px; color: var(--text); border-left: 3px solid var(--accent); padding-left: 10px; margin-bottom: 16px; }
     .ai-content p { margin-bottom: 12px; color: var(--text); opacity: 0.9; }
     .ai-content ul { padding-left: 20px; background: var(--card); border-radius: 12px; padding: 12px 12px 12px 32px; border: 1px solid var(--line); }
@@ -487,12 +488,10 @@
     .ai-content th { background: var(--hover-bg); font-weight: 600; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); }
     .ai-content td { padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--card); }
     .ai-content tr:last-child td { border-bottom: none; }
-    /* AI Enhanced Styles */
     .ai-action { cursor: pointer; color: var(--accent); border-bottom: 1px dashed var(--accent); transition: background 0.2s; }
     .ai-action:hover { background: var(--hover-bg); }
     .ai-content ins { background: var(--softGood); color: var(--good); text-decoration: none; padding: 0 4px; border-radius: 4px; }
     .ai-content del { background: var(--softBad); color: var(--bad); text-decoration: line-through; padding: 0 4px; border-radius: 4px; }
-    /* 输入框美化 */
     .api-key-input { 
       width: 100%; padding: 12px 14px; margin-bottom: 12px; 
       border: 1px solid var(--line); border-radius: 12px; 
@@ -505,7 +504,6 @@
       box-shadow: 0 0 0 4px rgba(0,113,227,0.15); 
       transform: translateY(-1px);
     }
-    /* 工具箱 Chips 美化 */
     .modal-body .chips { gap: 8px; margin-bottom: 16px; }
     .modal-body .chipBtn {
       border: 1px solid var(--line);
@@ -530,7 +528,6 @@
       border-radius: 0 0 24px 24px;
     }
     .settings-toggle { font-size: 11px; color: var(--muted); cursor: pointer; text-decoration: underline; }
-    /* 加载动画美化 */
     #aiLoading { padding: 50px; }
     #aiLoading div:first-child { 
       font-size: 32px; 
@@ -538,7 +535,6 @@
       margin-bottom: 16px; 
     }
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    /* 滚动条美化 */
     .modal-body::-webkit-scrollbar { width: 6px; }
     .modal-body::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.1); border-radius: 99px; }
     .modal-body::-webkit-scrollbar-track { background: transparent; }
@@ -554,7 +550,7 @@
   </style>
 </head>
 
-<body>
+<body class="preload">
 <div class="app">
   <aside class="sidebar">
     <div class="fieldGroup">
@@ -1218,14 +1214,33 @@
 </div>
 <script>
 /** =========================
- * Utils & Optimized Helpers (Expert Tuned)
+ * Constants & Config (剥离魔法数字)
+ * ========================= */
+const CONFIG = {
+    CACHE_MAX: 20000,
+    CACHE_EVICT: 10000,
+    STR_POOL_MAX: 50000,
+    BID_ROAS_HIGH: 6,
+    BID_ROAS_MID: 4.5,
+    BID_PCT_HIGH: 30,
+    BID_PCT_MID: 20,
+    BID_PCT_LOW: 10
+};
+
+// [优化] 页面加载完后移除防闪烁 preload
+window.addEventListener('load', () => {
+    document.body.classList.remove('preload');
+});
+
+/** =========================
+ * Utils & Optimized Helpers
  * ========================= */
 const $ = (id) => document.getElementById(id);
 const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(v) : "0.00"; 
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 const fmtPct = (v) => {
     if (!isFinite(v)) return "0.00%";
-    if (v < 0) return "-" + Math.abs(v*100).toFixed(2) + "%"; // Handle returns (negative ACOS)
+    if (v < 0) return "-" + Math.abs(v*100).toFixed(2) + "%"; 
     return (v*100).toFixed(2)+"%";
 }
 const safeNum = (x) => {
@@ -1233,25 +1248,19 @@ const safeNum = (x) => {
   if (!x) return 0;
   if (x === "") return 0;
   const s = String(x).trim();
-  // [Expert] Strip currency symbols to avoid NaN on copy-pasted data
   const clean = s.replace(/[£$€¥,]/g, ""); 
   const n = parseFloat(clean); 
   return isFinite(n) ? n : 0;
 };
-// [Expert Audit] Enhanced Date Parsing for Excel Serial Dates & Locale Variance
 const toISODate = (d) => {
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
   if (typeof d === "number" && isFinite(d)) {
-    // Excel Serial Date Fix (Base: Dec 30, 1899)
-    // Add timezone offset to prevent day shift
     const dateObj = new Date(Math.round((d - 25569) * 86400000));
     dateObj.setMinutes(dateObj.getMinutes() + dateObj.getTimezoneOffset());
     return dateObj.toISOString().slice(0,10);
   }
   const s = String(d || "").trim();
   if (!s) return "";
-  
-  // Try YYYY-MM-DD
   const isoMatch = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
   if (isoMatch) {
     const y = parseInt(isoMatch[1], 10);
@@ -1260,7 +1269,6 @@ const toISODate = (d) => {
     const dt = new Date(y, m - 1, day, 12, 0, 0); 
     return dt.toISOString().slice(0,10);
   }
-  // Fallback
   const dt = new Date(s);
   if (!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
   return ""; 
@@ -1300,10 +1308,9 @@ const libsCheck = () => {
   else log("依赖库 OK", "good");
   return !missing.length;
 };
-// [Expert Audit] Added BOM for Excel Chinese support + Robust Escaping
 const toCSV = (rows) => "\uFEFF" + rows.map(r => r.map(v => {
   let s = String(v ?? "");
-  if (/^[=+\-@]/.test(s)) s = "'" + s; // Prevent Excel formula injection
+  if (/^[=+\-@]/.test(s)) s = "'" + s;
   return /[",\n]/.test(s) ? `"${s.replaceAll('"','""')}"` : s;
 }).join(",")).join("\n");
 const downloadText = (filename, text) => {
@@ -1314,10 +1321,20 @@ const downloadText = (filename, text) => {
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(a.href);
 };
+
+// [优化] 内存压缩：字符串池 (String Interning)
+const stringPool = new Map();
+const intern = (str) => {
+  if (typeof str !== 'string' || !str) return "";
+  if (stringPool.has(str)) return stringPool.get(str);
+  if (stringPool.size > CONFIG.STR_POOL_MAX) stringPool.clear();
+  stringPool.set(str, str);
+  return str;
+};
+
 /** =========================
  * Root Mining & Regex Optimization
  * ========================= */
-// [Expert Tune] Added 'pack', 'count' to stop words
 const STOP_WORDS = new Set("a,an,the,and,or,to,for,of,in,on,at,with,without,from,by,is,are,was,were,your,my,our,their,his,her,its,this,that,these,those,you,me,we,they,pack,set,pairs,pair,pcs,piece,pieces,new,best,top,sale,deal,gift,adult,adults,kids,kid,count".split(','));
 const SYNONYM_MAP = [
   { re: /\breaders?\b/g, to: "reading glasses" }, { re: /\bmagnification\b/g, to: "magnify" },
@@ -1339,6 +1356,7 @@ const normalizeTextBase = (s) => {
   for(let i=0; i<PHRASE_REGEXES.length; i++) x = x.replace(PHRASE_REGEXES[i].re, PHRASE_REGEXES[i].to);
   return x.replace(/[^a-z0-9._\s]/g, " ").replace(/\s+/g, " ").trim();
 };
+
 const rootCache = new Map();
 const searchTermToRoot = (term) => {
   if (!term) return "(blank)";
@@ -1349,23 +1367,27 @@ const searchTermToRoot = (term) => {
   const kept = tokens.filter(t => !(/^\d+(\.\d+)?$/.test(t) || STOP_WORDS.has(t) || (t.length > 4 && t.endsWith("s") && (t=t.slice(0,-1)))));
   const root = [...new Set(kept), ...new Set(mags.map(v=>`+${v}`))].join(" | ").trim();
   const res = root || "(blank)";
-  // [Cache Limit] Prevent memory leak
-  if (rootCache.size > 20000) rootCache.clear();
+  
+  // [优化] 化解缓存断崖：只删除最早的一半
+  if (rootCache.size > CONFIG.CACHE_MAX) {
+      const keys = rootCache.keys();
+      for (let i = 0; i < CONFIG.CACHE_EVICT; i++) rootCache.delete(keys.next().value);
+  }
   rootCache.set(term, res);
   return res;
 };
 const rootToPhrase = (root) => (String(root || "").trim() || "(blank)") === "(blank)" ? "" : root.split("|").map(x => x.trim()).filter(Boolean).map(p => p.startsWith("+") ? p.slice(1) : p).join(" ").replace(/\s+/g," ").trim();
+
 /** =========================
  * Word Frequency (Heavy Optimization)
  * ========================= */
 let WF_MODE = "token";
 let wfSort = { key: "spend", dir: "desc" };
-// [Expert Feature] Singularization to merge "glass" and "glasses"
 const singularize = (word) => {
   if (!word) return "";
   if (word.endsWith("ies")) return word.slice(0, -3) + "y";
   if (word.endsWith("sses")) return word.slice(0, -2);
-  if (word.endsWith("ves")) return word.slice(0, -3) + "f"; // leaf/leaves
+  if (word.endsWith("ves")) return word.slice(0, -3) + "f"; 
   if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
   return word;
 };
@@ -1379,7 +1401,6 @@ const tokenize = (s) => {
   }).map(t => singularize(t)); 
 };
 const ngrams = (tokens, n) => tokens.length < n ? [] : Array.from({length: tokens.length - n + 1}, (_, i) => tokens.slice(i, i + n).join(" "));
-// [Expert Feature] Robust Magnification (0.00-6.00 + variants)
 const extractMagnification = (s) => {
   return [...String(s || "").matchAll(/(?:\+|)\b([0-6](?:\.\d{1,2})?)[xX]?\b/g)]
     .map(m => m[1])
@@ -1390,8 +1411,13 @@ const buildWordStats = () => {
   const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3)));
   const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10));
   const mp = new Map();
-  // [Memory Safety]
-  if(tokenCache.size > 20000) tokenCache.clear();
+  
+  // [优化] 缓存清理优化
+  if (tokenCache.size > CONFIG.CACHE_MAX) {
+      const keys = tokenCache.keys();
+      for (let i = 0; i < CONFIG.CACHE_EVICT; i++) tokenCache.delete(keys.next().value);
+  }
+  
   for (const r of VIEW) {
     const term = r.searchTerm || "";
     if (!term) continue;
@@ -1407,7 +1433,6 @@ const buildWordStats = () => {
       else if (WF_MODE === "mag") words = extractMagnification(term);
       tokenCache.set(cacheKey, words);
     }
-    // [Accuracy Fix] Dedupe to avoid double-counting same word in one query
     const uniqueWords = new Set(words); 
     for (const w of uniqueWords) {
       if (!w) continue;
@@ -1432,6 +1457,7 @@ const buildWordStats = () => {
   });
   return out.slice(0, 100);
 };
+
 /** =========================
  * Column mapping
  * ========================= */
@@ -1490,13 +1516,16 @@ const normalizeRow = (raw, map, sourceFile) => {
   const impr = safeNum(raw[map.impr]), clicks = safeNum(raw[map.clicks]), spend = safeNum(raw[map.spend]);
   const sales = safeNum(raw[map.sales7d]), orders = safeNum(raw[map.orders7d]);
   const st = String(raw[map.searchTerm] ?? "").trim();
-  // [Expert Audit] Safe division logic to handle refunds (negative sales) correctly
-  // If sales <= 0, ACOS is technically infinite or negative. We clamp/handle in sumMetrics.
+  
+  // [优化] 应用 intern() 减少大量重复字符串的内存开销
   return {
-    sourceFile, date: toISODate(raw[map.date]),
-    portfolio: String(raw[map.portfolio] ?? "").trim(), campaign: String(raw[map.campaign] ?? "").trim(),
-    adGroup: String(raw[map.adGroup] ?? "").trim(), targeting: String(raw[map.targeting] ?? "").trim(),
-    matchType: String(raw[map.matchType] ?? "").trim(), 
+    sourceFile: intern(sourceFile), 
+    date: intern(toISODate(raw[map.date])),
+    portfolio: intern(String(raw[map.portfolio] ?? "").trim()), 
+    campaign: intern(String(raw[map.campaign] ?? "").trim()),
+    adGroup: intern(String(raw[map.adGroup] ?? "").trim()), 
+    targeting: intern(String(raw[map.targeting] ?? "").trim()),
+    matchType: intern(String(raw[map.matchType] ?? "").trim()), 
     searchTerm: st,
     searchTermLower: st.toLowerCase(),
     searchTermRoot: searchTermToRoot(st),
@@ -1512,35 +1541,35 @@ const normalizeBrRow = (raw, map, sourceFile) => {
     const sessions = safeNum(raw[map.sessions]);
     const units = safeNum(raw[map.units]);
     const sales = safeNum(raw[map.sales]);
-    // [Fix] Business Report often has 0 sessions but 1 unit (ghost orders). 
     const calculatedCvr = sessions > 0 ? units / sessions : 0;
     const calculatedAov = units > 0 ? sales / units : 0;
     return {
-        sourceFile,
-        asin: String(raw[map.asin] ?? "").trim(),
-        title: String(raw[map.title] ?? "").trim(),
+        sourceFile: intern(sourceFile),
+        asin: intern(String(raw[map.asin] ?? "").trim()),
+        title: String(raw[map.title] ?? "").trim(), // 不压缩长标题
         sessions, units, sales,
         cvr: isFinite(calculatedCvr) ? calculatedCvr : 0,
         aov: isFinite(calculatedAov) ? calculatedAov : 0
     };
 };
+
 /** =========================
  * ASIN detector
  * ========================= */
-const ASIN_CANDIDATE_RE = /[A-Z0-9]{10}/ig;
-const ASIN_STRICT_RE = /^[B0-9][A-Z0-9]{9}$/i;
 const isASINLike = (s) => {
   const x = String(s || "").trim();
   if (!x) return false;
   if (x.length < 10) return false; 
-  const candidates = x.match(ASIN_CANDIDATE_RE);
+  // [优化] 移除外部带 /g 标志的正则，避免 lastIndex 残留状态风险
+  const candidates = x.match(/[A-Z0-9]{10}/ig);
   if (!candidates) return false;
   for (const c of candidates) {
-      if (ASIN_STRICT_RE.test(c) && /\d/.test(c)) return true;
+      if (/^[B0-9][A-Z0-9]{9}$/i.test(c) && /\d/.test(c)) return true;
   }
   return /asin\s*=\s*[A-Z0-9]{10}/i.test(x) || /asin\s*:\s*[A-Z0-9]{10}/i.test(x);
 };
 const detectRowType = (name, rankBy) => (rankBy === "searchTerm" || rankBy === "searchTermRoot" || rankBy === "targeting") ? (isASINLike(name) ? "asin" : "keyword") : "other";
+
 /** =========================
  * State
  * ========================= */
@@ -1551,6 +1580,7 @@ let rankSort = { key: "spend", dir: "desc" };
 let RANK_ROWS = [], rankTypeFilter = "all";
 let actionTypeFilter = "all", BID_ROWS = [], NEG_ROWS = [];
 let LONG_TAIL_ROWS = [];
+
 /** =========================
  * Importers
  * ========================= */
@@ -1560,11 +1590,9 @@ const parseXLSX = (file) => new Promise((r,j)=>{
   reader.onload = (e)=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});r(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""}));}catch(err){j(err);}};
   reader.onerror = j; reader.readAsArrayBuffer(file);
 });
-// [Expert] Optimized Deduplication Key Generation to avoid excessive string ops
 const dedupeRows = (rows) => {
   const seen = new Set(), out = [];
   for (const r of rows) {
-    // Shorter key for speed, still unique enough for ads reports
     const key = `${r.date}|${r.campaign}|${r.adGroup}|${r.targeting}|${r.matchType}|${r.searchTerm}`;
     if (!seen.has(key)) { seen.add(key); out.push(r); }
   } return out;
@@ -1577,7 +1605,7 @@ const importMultipleFiles = async (files) => {
   log(`开始导入：${files.length} 个文件（merge=${mergeMode}, dedupe=${dedupeMode}, maxRows=${maxRows}）`);
   setSubtitle("正在导入文件…（请看左侧导入日志）");
   if (mergeMode === "replace") { 
-    ALL = []; BUSINESS_ROWS = []; importedFiles = []; rootCache.clear(); log("Replace 模式：已清空历史数据与缓存", "warn"); 
+    ALL = []; BUSINESS_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); log("Replace 模式：已清空历史数据与缓存", "warn"); 
   }
   for (const file of files) {
     const name = file.name, lower = name.toLowerCase(); log(`读取文件：${name}`);
@@ -1611,9 +1639,25 @@ const importMultipleFiles = async (files) => {
       await new Promise(r => setTimeout(r, 0));
     } catch (err) { log(`错误：${name} 导入失败：${err?.message || err}`, "bad"); }
   }
+  
   if (dedupeMode === "on" && ALL.length) { 
       const before = ALL.length; ALL = dedupeRows(ALL); log(`Ads 数据去重完成：${before.toLocaleString()} → ${ALL.length.toLocaleString()}`, "good"); 
   }
+  // [优化] 填补了 Business Report 的去重漏洞
+  if (dedupeMode === "on" && BUSINESS_ROWS.length) {
+      const beforeBr = BUSINESS_ROWS.length;
+      const seenBr = new Set();
+      BUSINESS_ROWS = BUSINESS_ROWS.filter(r => {
+          const key = `${r.sourceFile}|${r.asin}`;
+          if (seenBr.has(key)) return false;
+          seenBr.add(key);
+          return true;
+      });
+      if (beforeBr !== BUSINESS_ROWS.length) {
+          log(`业务报告去重完成：${beforeBr.toLocaleString()} → ${BUSINESS_ROWS.length.toLocaleString()}`, "good");
+      }
+  }
+
   if (ALL.length > 0) {
       const dates = ALL.map(r => r.date).filter(Boolean).sort();
       $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length - 1];
@@ -1631,6 +1675,7 @@ const renderFileList = () => {
     </div>
   `).join("") : `<div class="small">暂无</div>`;
 };
+
 /** =========================
  * Business Report Renderer
  * ========================= */
@@ -1663,6 +1708,7 @@ const renderBusinessReport = () => {
         `;
     }).join("");
 };
+
 /** =========================
  * Dropdowns
  * ========================= */
@@ -1698,20 +1744,18 @@ const wireCascade = () => {
   $("filterPortfolio").onchange = () => updateChildDropdowns("filterPortfolio", ["filterCampaign", "filterAdGroup"], [r => r.campaign, r => r.adGroup]);
   $("filterCampaign").onchange = () => updateChildDropdowns("filterCampaign", ["filterAdGroup"], [r => r.adGroup]);
 };
+
 /** =========================
  * Aggregations
  * ========================= */
 const withinDate = (r, start, end) => (!start || r.date >= start) && (!end || r.date <= end);
 const sumMetrics = (rows) => {
-  // [Expert Optimization] Kahan-like summation using integers (cents) to avoid IEEE 754 float errors
-  // e.g. 19.99 + 19.99 = 39.98, not 39.980000004
   let impr=0, clicks=0, spendCents=0, salesCents=0, orders=0;
   
   for (const r of rows) {
       impr += r.impr;
       clicks += r.clicks;
       orders += r.orders;
-      // Convert to cents, round to avoid sub-cent precision noise from import
       spendCents += Math.round(r.spend * 100);
       salesCents += Math.round(r.sales * 100);
   }
@@ -1723,7 +1767,6 @@ const sumMetrics = (rows) => {
     ctr: impr > 0 ? clicks / impr : 0,
     cpc: clicks > 0 ? spend / clicks : 0,
     cvr: clicks > 0 ? orders / clicks : 0,
-    // [Expert Audit] ACOS should handle negative sales (returns) or zero sales gracefully
     acos: sales > 0 ? spend / sales : 0,
     roas: spend > 0 ? sales / spend : 0,
   };
@@ -1733,6 +1776,7 @@ const groupBy = (rows, keyFn) => {
   for (const r of rows) { const k = keyFn(r) || "(blank)"; (mp.has(k) ? mp : mp.set(k, [])).get(k).push(r); }
   return mp;
 };
+
 /** =========================
  * Traffic Segmentation Logic
  * ========================= */
@@ -1802,7 +1846,6 @@ const renderWordFreq = () => {
   if (!VIEW.length) { tbody.innerHTML = ""; return; }
   const rows = buildWordStats();
   tbody.innerHTML = rows.map(r => {
-    // [UI] Replace underscores with spaces for readability
     const displayWord = escapeHtml(r.word).replace(/_/g, " ");
     return `<tr>
       <td title="${displayWord}">${displayWord.slice(0, 180)}</td>
@@ -1826,6 +1869,7 @@ const exportWordFreqCSV = () => {
     const filename = `word_freq_${$("dateStart").value}_${getTs()}.csv`;
     downloadText(filename, toCSV(csvData));
 };
+
 /** =========================
  * Long Tail Keyword Mining
  * ========================= */
@@ -1840,9 +1884,9 @@ const renderLongTailMining = () => {
   const candidates = [];
   for (const [term, rows] of groups.entries()) {
     if (isASINLike(term)) continue;
-    let wordCount = (term || "").trim().split(/\s+/).filter(Boolean).length;
-    // [Expert Tune] If the term contains very short high-volume roots (like "glasses"), punish the word count threshold
-    // effectively asking for "more specific" long tails.
+    // [优化] 修复带有连字符 (-) 的单词字数计算逻辑
+    let wordCount = (term || "").replace(/-/g, " ").trim().split(/\s+/).filter(Boolean).length;
+    
     if (term.includes("glasses") || term.includes("frame")) wordCount -= 0.5;
 
     if (wordCount < minWords) continue;
@@ -1879,6 +1923,7 @@ const exportLongTailCSV = () => {
     const filename = `long_tail_mining_${$("dateStart").value}_${getTs()}.csv`;
     downloadText(filename, toCSV(rows));
 };
+
 /** =========================
  * Weekday Analysis
  * ========================= */
@@ -1925,6 +1970,7 @@ const renderWeekdayAnalysis = () => {
     `;
   }).join("");
 };
+
 /** =========================
  * CPC Distribution
  * ========================= */
@@ -1986,6 +2032,7 @@ const renderCPCDistribution = () => {
     `;
   }).join("");
 };
+
 /** =========================
  * Length Analysis
  * ========================= */
@@ -2029,6 +2076,7 @@ const renderLengthAnalysis = () => {
     `;
   }).join("");
 };
+
 /** =========================
  * Match Type Analysis
  * ========================= */
@@ -2074,6 +2122,7 @@ const renderMatchTypeAnalysis = () => {
     `;
   }).join("");
 };
+
 /** =========================
  * Auto / Manual Comparison
  * ========================= */
@@ -2127,6 +2176,7 @@ const renderAutoManual = () => {
     row("转化率 (CVR)", sA.cvr, sM.cvr, fmtPct) +
     row("点击成本 (CPC)", sA.cpc, sM.cpc, fmtMoney);
 };
+
 /** =========================
  * Conflict Analysis
  * ========================= */
@@ -2178,6 +2228,7 @@ $("conflictTable").addEventListener("click", (e) => {
   $("filterSearchTerm").value = tr.dataset.term;
   applyFilters();
 });
+
 /** =========================
  * Actions (自动判定)
  * ========================= */
@@ -2206,6 +2257,7 @@ const suggestNegative = (name, rankBy) => {
   return keyword && keyword !== "(blank)" ? `${negType.toUpperCase()}: ${keyword}` : "";
 };
 const actionTag = (action) => `<span class="tag ${action==="NEGATE"?"bad":action==="MIGRATE"?"warn":"good"}">${action}</span>`;
+
 /** =========================
  * BID UP
  * ========================= */
@@ -2216,10 +2268,14 @@ const decideBidUp = (item) => {
   if (!(item.spend >= spendBid && item.orders >= ordersBid && item.roas >= roasBid)) return { bid:false, suggest:"" };
   let pct = 20;
   const intensity = $("bidIntensity")?.value;
+  // [优化] 使用 CONFIG 替换魔法数字
   if (intensity !== "auto") pct = Number(intensity) || 20;
-  else if (item.roas >= 6) pct = 30; else if (item.roas >= 4.5) pct = 20; else pct = 10;
+  else if (item.roas >= CONFIG.BID_ROAS_HIGH) pct = CONFIG.BID_PCT_HIGH; 
+  else if (item.roas >= CONFIG.BID_ROAS_MID) pct = CONFIG.BID_PCT_MID; 
+  else pct = CONFIG.BID_PCT_LOW;
   return { bid:true, suggest:`提高竞价 +${pct}%` };
 };
+
 /** =========================
  * Export (CSV Functions)
  * ========================= */
@@ -2244,10 +2300,9 @@ const exportNegativesCSV = () => {
     let keyword = (rankBy === "searchTermRoot" ? rootToPhrase(it.name) : String(it.name || "").trim()).replace(/\s+/g," ").trim();
     if (!keyword || keyword === "(blank)") continue;
     
-    // [Fix] ASIN Negation Logic for Expert Compliance
     let finalMatchType = defaultNegMatch;
     if (isASINLike(keyword)) {
-        finalMatchType = "NEGATIVE EXACT"; // Amazon strictly requires ASINs to be negative exact
+        finalMatchType = "NEGATIVE EXACT";
     }
 
     const key = `${finalMatchType}:${keyword.toLowerCase()}`;
@@ -2296,6 +2351,7 @@ const exportRankCSV = () => {
     downloadText(filename, toCSV(rows));
     log(`已导出榜单 CSV：${filename}（${rows.length-1} 条）`, "good");
 };
+
 /** =========================
  * Rendering
  * ========================= */
@@ -2325,10 +2381,8 @@ const renderTrend = (rows) => {
   const dataMap = (key, transform = v => v) => series.map(s => transform(s[key]));
   const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || "rgba(229,229,234,.6)";
   
-  // [Fix] Handle Infinite ACOS visual bug (Sales=0, Spend>0)
-  // Chart.js handles null as a gap. We map true infinity to null to avoid graph distortion
   const acosData = series.map(s => {
-      if (s.sales <= 0 && s.spend > 0) return null; // Or use a cap like 500
+      if (s.sales <= 0 && s.spend > 0) return null; 
       return s.acos * 100;
   });
 
@@ -2449,6 +2503,7 @@ const renderActionLists = () => {
     </tr>
   `);
 };
+
 /** =========================
  * Apply Filters
  * ========================= */
@@ -2472,20 +2527,27 @@ const applyFilters = (initial=false) => {
         filterSearchTerm: $("filterSearchTerm").value.trim(),
         filterSearchExact: $("filterSearchExact").checked 
       };
+      
+      // [优化] 过滤条件顺序重排，运用短路求值原则提速
       VIEW = ALL.filter(r => {
-        if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false;
+        // 1. 运算成本最低的基础等值/范围校验
         if (filters.filterSource && r.sourceFile !== filters.filterSource) return false;
         if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) return false;
         if (filters.filterCampaign && r.campaign !== filters.filterCampaign) return false;
         if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) return false;
         if (filters.filterTargeting && r.targeting !== filters.filterTargeting) return false;
         if (filters.filterMatchType && r.matchType !== filters.filterMatchType) return false;
+        if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false;
+
+        // 2. 中等运算成本
         if (filters.filterAdType) {
-            const lowerMatch = (r.matchType || "").toLowerCase();
+            const lowerMatch = r.matchType.toLowerCase();
             const isManual = ["broad", "phrase", "exact"].includes(lowerMatch) || lowerMatch.includes("product") || lowerMatch.includes("targeting");
             if (filters.filterAdType === "manual" && !isManual) return false;
             if (filters.filterAdType === "auto" && isManual) return false;
         }
+
+        // 3. 运算成本最高的字符串比对放在最后
         if (filters.filterSearchTerm) {
             const term = filters.filterSearchTerm.toLowerCase();
             if (filters.filterSearchExact) {
@@ -2502,7 +2564,6 @@ const applyFilters = (initial=false) => {
       } else {
           setSubtitle(`已导入 Business Report；Row=${BUSINESS_ROWS.length.toLocaleString()}`);
       }
-      // [Perf] Use requestAnimationFrame to prevent UI locking during heavy rendering
       requestAnimationFrame(() => {
           renderKPIs(total); 
           renderTrend(VIEW);
@@ -2541,6 +2602,7 @@ const applyQuickRange = (type) => {
   $("dateStart").value = isoStart < minD ? minD : isoStart;
   $("dateEnd").value = maxD;
 };
+
 /** =========================
  * AI Integration Logic
  * ========================= */
@@ -2669,22 +2731,22 @@ const generateReport = async () => {
         aiResult.style.display = 'block';
     } finally { aiLoading.style.display = 'none'; btnStartAnalyze.disabled = false; }
 };
+
+// [优化] 提升提取 JSON 的健壮性
 const extractJSON = (text) => {
     if (!text) return null;
     let cleanText = text.replace(/```json/gi, "").replace(/```/g, "").trim();
     const firstOpen = cleanText.search(/[\{\[]/);
-    if (firstOpen === -1) return null;
-    const lastClose = cleanText.search(/[\]\}](?!.*[\]\}])/); 
-    if (lastClose === -1 || lastClose < firstOpen) return null;
+    const lastClose = Math.max(cleanText.lastIndexOf('}'), cleanText.lastIndexOf(']'));
+    if (firstOpen === -1 || lastClose === -1 || lastClose < firstOpen) return null;
     try {
-        const potentialJson = cleanText.substring(firstOpen, lastClose + 1);
-        return JSON.parse(potentialJson);
+        return JSON.parse(cleanText.substring(firstOpen, lastClose + 1));
     } catch (e) {
-        console.warn("JSON Parse Failed, trying loose regex match...");
-        try { const match = cleanText.match(/\[.*\]|\{.*\}/s); if(match) return JSON.parse(match[0]); } catch(e2) { return null; }
+        console.warn("JSON Parse Failed");
         return null;
     }
 };
+
 const getAIContextData = (rows) => {
     const topSpend = rows.slice().sort((a,b)=>b.spend-a.spend).slice(0, 60);
     const topOrders = rows.slice().filter(r => r.orders > 0).sort((a,b)=>b.orders-a.orders).slice(0, 30);
@@ -2840,7 +2902,7 @@ $("btnReset").addEventListener("click", () => {
   ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType", "brandNameInput"].forEach(id => ($(id).value = ""));
   $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters();
 });
-$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; importedFiles = []; renderFileList(); populateDropdowns(); applyFilters(true); });
+$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); renderFileList(); populateDropdowns(); applyFilters(true); });
 document.querySelectorAll(".chipBtn").forEach(btn => btn.addEventListener("click", () => { if (btn.closest('#aiModal')) return; document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); }));
 $("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if (!key) return; rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderRankTable(); renderActionLists(); renderWordFreq(); }));
 $("rankTable").addEventListener("click", (e) => { if (e.target.classList.contains("search-btn")) { const td = e.target.closest("td"); const term = td.getAttribute("data-name"); if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); $(".sidebar").scrollTop = 0; } } });
