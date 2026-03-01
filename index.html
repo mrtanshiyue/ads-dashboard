@@ -176,16 +176,6 @@
        color: #409cff;
        border-color: rgba(10, 132, 255, 0.3);
     }
-    .btn.ai-magic {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
-    }
-    .btn.ai-magic:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-    }
     .btn.danger{
       border-color:rgba(180,35,24,.22);
       background:rgba(180,35,24,.08);
@@ -423,127 +413,32 @@
     .action-icon:hover { opacity: 1; transform: scale(1.2); }
     .search-clear-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 0 8px; font-size: 16px; display: flex; align-items: center; border-radius: 8px; }
     .search-clear-btn:hover { color: var(--bad); background: var(--hover-bg); }
-    /* ================= AI Modal Styles (Glassmorphism & Enhanced) ================= */
-    .modal-overlay { 
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(8px);
-      z-index: 9999;
-      display: none; 
-      justify-content: center; 
-      align-items: center; 
-      transition: opacity 0.3s ease; 
-      opacity: 0;
-    }
-    .modal-overlay.active { 
-      display: flex; 
-      opacity: 1;
-    }
-    .modal-card { 
-      background: var(--card); 
-      border: 1px solid var(--line); 
-      border-radius: 24px; 
-      width: 90%; max-width: 700px; max-height: 85vh; 
-      display: flex; flex-direction: column; 
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
-      transform: scale(0.95) translateY(10px); 
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
-      overflow: hidden; 
-    }
-    .modal-overlay.active .modal-card {
-      transform: scale(1) translateY(0); 
-    }
-    .modal-header { 
-      padding: 18px 24px; 
-      border-bottom: 1px solid var(--line); 
-      display: flex; justify-content: space-between; align-items: center; 
-      background: linear-gradient(to right, rgba(255,255,255,0.8), rgba(255,255,255,0.5));
-      backdrop-filter: blur(10px);
-    }
-    [data-theme="dark"] .modal-header {
-      background: linear-gradient(to right, rgba(36,36,38,0.9), rgba(36,36,38,0.6));
-    }
-    .modal-title { 
-      font-size: 17px; 
-      font-weight: 700; 
-      display: flex; align-items: center; gap: 8px; 
-      background: linear-gradient(135deg, #0071e3 0%, #a259ff 100%); 
-      -webkit-background-clip: text; 
-      -webkit-text-fill-color: transparent; 
-    }
-    .modal-body { 
-      padding: 24px; 
-      overflow-y: auto; 
-      line-height: 1.6; 
-      font-size: 14px; 
-      color: var(--text);
-      background: var(--bg);
-    }
-    [data-theme="dark"] .modal-body { background: #1c1c1e; }
-    .ai-content h3 { margin-top: 0; font-size: 16px; color: var(--text); border-left: 3px solid var(--accent); padding-left: 10px; margin-bottom: 16px; }
-    .ai-content p { margin-bottom: 12px; color: var(--text); opacity: 0.9; }
-    .ai-content ul { padding-left: 20px; background: var(--card); border-radius: 12px; padding: 12px 12px 12px 32px; border: 1px solid var(--line); }
-    .ai-content li { margin-bottom: 8px; }
-    .ai-content table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); margin-bottom: 12px; }
-    .ai-content th { background: var(--hover-bg); font-weight: 600; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); }
-    .ai-content td { padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--card); }
-    .ai-content tr:last-child td { border-bottom: none; }
-    .ai-action { cursor: pointer; color: var(--accent); border-bottom: 1px dashed var(--accent); transition: background 0.2s; }
-    .ai-action:hover { background: var(--hover-bg); }
-    .ai-content ins { background: var(--softGood); color: var(--good); text-decoration: none; padding: 0 4px; border-radius: 4px; }
-    .ai-content del { background: var(--softBad); color: var(--bad); text-decoration: line-through; padding: 0 4px; border-radius: 4px; }
-    .api-key-input { 
-      width: 100%; padding: 12px 14px; margin-bottom: 12px; 
-      border: 1px solid var(--line); border-radius: 12px; 
-      background: var(--card); color: var(--text); 
-      transition: all 0.2s;
-      font-size: 13.5px;
-    }
-    .api-key-input:focus { 
-      border-color: var(--accent); 
-      box-shadow: 0 0 0 4px rgba(0,113,227,0.15); 
-      transform: translateY(-1px);
-    }
-    .modal-body .chips { gap: 8px; margin-bottom: 16px; }
-    .modal-body .chipBtn {
-      border: 1px solid var(--line);
-      background: var(--card);
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 12.5px;
-      transition: all 0.2s;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-    }
-    .modal-body .chipBtn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
-    .modal-body .chipBtn.active {
-      background: linear-gradient(135deg, var(--accent) 0%, #5e5ce6 100%);
-      color: white; border: none;
-      box-shadow: 0 4px 12px rgba(94, 92, 230, 0.3);
-    }
-    .modal-footer { 
-      padding: 16px 24px; 
-      border-top: 1px solid var(--line); 
-      display: flex; justify-content: space-between; align-items: center; 
-      background: var(--card); 
-      border-radius: 0 0 24px 24px;
-    }
-    .settings-toggle { font-size: 11px; color: var(--muted); cursor: pointer; text-decoration: underline; }
-    #aiLoading { padding: 50px; }
-    #aiLoading div:first-child { 
-      font-size: 32px; 
-      animation: bounce 1.5s infinite; 
-      margin-bottom: 16px; 
-    }
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    .modal-body::-webkit-scrollbar { width: 6px; }
-    .modal-body::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.1); border-radius: 99px; }
-    .modal-body::-webkit-scrollbar-track { background: transparent; }
-    #settingsBox {
-        border: 1px solid var(--line);
-        background: var(--bg);
+    
+    /* ================= 新增：预警横幅样式 ================= */
+    .alert-banner {
+        background: var(--softBad);
+        border: 1px solid rgba(180,35,24,.22);
+        color: var(--bad);
+        padding: 12px 16px;
         border-radius: 12px;
-        box-shadow: inset 0 2px 6px rgba(0,0,0,0.03);
+        font-size: 13px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: fadeInDown 0.3s ease forwards;
+        box-shadow: 0 4px 12px rgba(180,35,24,.05);
     }
+    [data-theme="dark"] .alert-banner { border-color: rgba(255, 69, 58, 0.3); box-shadow: none; }
+    .alert-banner.warn {
+        background: var(--softWarn);
+        border-color: rgba(181,71,8,.22);
+        color: var(--warn);
+        box-shadow: 0 4px 12px rgba(181,71,8,.05);
+    }
+    [data-theme="dark"] .alert-banner.warn { border-color: rgba(255, 159, 10, 0.3); }
+    .alert-icon { font-size: 18px; line-height: 1; }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
     @media (max-width: 1400px){ .app{ max-width: 100vw; } }
     @media (max-width: 1100px){ .app{ grid-template-columns:1fr; max-width:100vw; } .sidebar{ position:relative; height:auto; } .kpi{ grid-column: span 6; } .chartCard{ grid-column: span 12; } }
     @media (max-width: 650px){ .kpi{ grid-column: span 12; } .actions{ justify-content:flex-start; } .row3{ grid-template-columns:1fr; } .miniInput, .miniSelect{ width:100% !important; border-radius:12px !important; } .pareto-item { flex-direction: column; align-items: flex-start; gap: 8px; } }
@@ -766,11 +661,13 @@
         <div class="sub" id="subtitle">未导入数据。请导入同类报表（支持多文件）。</div>
       </div>
       <div class="actions">
-        <button class="btn ai-magic" id="btnAI" type="button">✨ AI 诊断</button>
         <button class="btn" id="btnTheme" type="button">🌗 深色/浅色</button>
         <button class="btn" id="btnCheck" type="button">依赖自检</button>
       </div>
     </section>
+    
+    <div id="anomalyAlerts" style="display:none; flex-direction:column; gap:8px; margin-bottom:4px;"></div>
+    
     <section class="grid" id="kpiGrid"></section>
     
     <div class="card tableCard" id="trafficSegCard" style="grid-column: span 12;">
@@ -1078,69 +975,6 @@
     </section>
   </main>
 </div>
-<div id="aiModal" class="modal-overlay">
-  <div class="modal-card">
-    <div class="modal-header">
-      <div class="modal-title">✨ Gemini 智能诊断 (Compact Pro v5.24 - Expert Audit)</div>
-      <button class="btn" id="btnCloseAI" style="padding:4px 10px;">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="aiKeySection">
-        <p>请输入您的 Google Gemini API Key 以启用智能分析。</p>
-        <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Key 仅保存在您的浏览器本地缓存中，不会上传至任何服务器。</p>
-        <input type="password" id="geminiKeyInput" class="api-key-input" placeholder="输入 API Key (以 AIza 开头...)" />
-        <div style="margin-top:10px;">
-            <span id="btnToggleSettings" class="settings-toggle">⚙️ 高级设置 (自定义 API & 策略)</span>
-        </div>
-        <div id="settingsBox" style="display:none; margin-top:10px; padding:10px; background:var(--hover-bg); border-radius:8px;">
-            <label style="display:block; margin-bottom:4px;">API Base URL (可选)</label>
-            <input type="text" id="apiBaseUrl" class="api-key-input" style="margin-bottom:8px;" value="https://generativelanguage.googleapis.com" placeholder="例如: https://my-proxy.com" />
-            <label style="display:block; margin-bottom:4px; font-weight:600; color:var(--text);">🎯 运营策略选择</label>
-            <select id="aiStrategy" class="api-key-input" style="margin-bottom:0;">
-                <option value="balanced" selected>⚖️ 平衡发展 (默认 - 兼顾ACOS与规模)</option>
-                <option value="launch">🚀 新品推量 (忽略 ACOS，重展示/点击)</option>
-                <option value="profit">💰 利润优先 (严控 ACOS，重转化)</option>
-                <option value="audit">🛡️ 风险审计 (寻找浪费和漏洞)</option>
-            </select>
-            <div style="font-size:11px; color:var(--muted); margin-top:4px;">AI 将根据此策略调整建议风格。</div>
-        </div>
-      </div>
-      <div style="margin-top:12px; border-top:1px solid var(--line); padding-top:12px;">
-          <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px;">🤖 AI 工具箱</label>
-          <div class="chips" style="margin-bottom:10px;">
-            <button class="chipBtn active" id="aiModeChat" onclick="setAIMode('chat')">💬 自由对话</button>
-            <button class="chipBtn" id="aiModeGap" onclick="setAIMode('gap')">🔍 埋词差距</button>
-            <button class="chipBtn" id="aiModeFunnel" onclick="setAIMode('funnel')">🩺 流量漏斗</button>
-            <button class="chipBtn" id="aiModeRecon" onclick="setAIMode('recon')">⚔️ 竞品侦察</button>
-            <button class="chipBtn" id="aiModeBid" onclick="setAIMode('bid')">🩺 竞价医生</button>
-            <button class="chipBtn" id="aiModePop" onclick="setAIMode('pop')">📈 环比分析</button>
-            <button class="chipBtn" id="aiModeIntent" onclick="setAIMode('intent')">🧠 意图分层</button>
-            <button class="chipBtn" id="aiModeRoot" onclick="setAIMode('root')">🛑 否词根源</button>
-            <button class="chipBtn" id="aiModeExpand" onclick="setAIMode('expand')">🚀 智能拓词</button>
-            <button class="chipBtn" id="aiModeCluster" onclick="setAIMode('cluster')">🧩 语义聚类</button>
-            <button class="chipBtn" id="aiModeAudit" onclick="setAIMode('audit')">⚖️ 相关性审计</button>
-          </div>
-          <div id="aiToolHint" class="small" style="margin-bottom:6px; color:var(--accent);">
-            默认模式：生成诊断报告，或回答关于数据的具体问题。
-          </div>
-          <textarea id="aiQuestionInput" class="api-key-input" style="height:80px; resize:vertical; font-family:inherit;" placeholder="例如：为什么上周 ACOS 升高了？"></textarea>
-          <input type="text" id="aiProductContext" class="api-key-input" style="display:none; margin-top:5px;" placeholder="请输入产品名称/核心词 (例如: Blue Light Glasses)..." />
-      </div>
-      <div id="aiLoading" style="display:none; text-align:center; padding:40px;">
-        <div style="font-size:24px; margin-bottom:10px;">🤖</div>
-        <div>正在分析数据，请稍候...</div>
-        <div id="aiLoadingStatus" style="font-size:12px; color:var(--muted); margin-top:8px;"></div>
-      </div>
-      <div id="aiResult" class="ai-content" style="display:none;"></div>
-    </div>
-    <div class="modal-footer">
-      <div>
-          <button class="btn" id="btnClearKey" style="display:none; font-size:12px;">清除 Key</button>
-      </div>
-      <button class="btn primary" id="btnStartAnalyze">开始分析 / 提问</button>
-    </div>
-  </div>
-</div>
 <script>
 /** =========================
  * Constants & Config (剥离魔法数字)
@@ -1230,7 +1064,6 @@ const libsCheck = () => {
   if (typeof Papa === "undefined") missing.push("PapaParse(Papa)");
   if (typeof XLSX === "undefined") missing.push("XLSX(xlsx)");
   if (typeof Chart === "undefined") missing.push("Chart.js(Chart)");
-  if (typeof marked === "undefined") missing.push("marked");
   if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn");
   else log("依赖库 OK", "good");
   return !missing.length;
@@ -1274,7 +1107,6 @@ const SYNONYM_MAP = [
 const PHRASES = ["blue light", "cat eye", "spring hinge", "anti glare", "scratch resistant"];
 const MAG_RE = /\b([1-3](?:\.\d{1,2})?)\b/g;
 
-// [优化] 防御型正则转义，阻止 ReDoS (正则灾难回溯)
 const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const PHRASE_REGEXES = PHRASES.map(p => ({
   re: new RegExp("\\b" + escapeRegExp(p).replace(/\s+/g, "\\s+") + "\\b", "g"),
@@ -1702,6 +1534,76 @@ const groupBy = (rows, keyFn) => {
   const mp = new Map();
   for (const r of rows) { const k = keyFn(r) || "(blank)"; (mp.has(k) ? mp : mp.set(k, [])).get(k).push(r); }
   return mp;
+};
+
+/** =========================
+ * Anomaly Detection (New Feature)
+ * ========================= */
+const detectAnomalies = (rows) => {
+    const container = $("anomalyAlerts");
+    if (!container) return;
+    if (!rows || rows.length === 0) {
+        container.style.display = "none";
+        container.innerHTML = "";
+        return;
+    }
+
+    const alerts = [];
+    
+    // Rule 1: Keyword Bleeding Anomaly (in current view)
+    const groups = CURRENT_RANK_GROUPS || groupBy(rows, r => r.searchTerm);
+    let topBleeder = null;
+    let maxWasted = 0;
+    for (const [term, list] of groups.entries()) {
+        if (isASINLike(term)) continue;
+        let spend = 0, orders = 0;
+        for (const r of list) { spend += r.spend; orders += r.orders; }
+        if (orders === 0 && spend > maxWasted) {
+            maxWasted = spend;
+            topBleeder = term;
+        }
+    }
+    // threshold: 30 dollars without a single order
+    if (maxWasted > 30) {
+        alerts.push({ type: 'bad', msg: `<strong>🚨 极端浪费预警：</strong> 核心词 <code>${escapeHtml(topBleeder)}</code> 在当前时间段内花费高达 <strong>$${maxWasted.toFixed(2)}</strong> 且 0 转化，建议立即排查相关性或加入否定！` });
+    }
+
+    // Rule 2: Trend Anomaly (Recent 2 days vs Previous 2 days)
+    const dates = [...new Set(rows.map(r=>r.date).filter(Boolean))].sort();
+    if (dates.length >= 4) {
+        const recentDates = dates.slice(-2);
+        const prevDates = dates.slice(-4, -2);
+        
+        const recentRows = rows.filter(r => recentDates.includes(r.date));
+        const prevRows = rows.filter(r => prevDates.includes(r.date));
+        
+        const mR = sumMetrics(recentRows);
+        const mP = sumMetrics(prevRows);
+        
+        if (mP.clicks > 10 && mR.clicks > 10) {
+            // Spend surge > 100%
+            if (mR.spend > mP.spend * 2 && mR.spend > 20) {
+                alerts.push({ type: 'warn', msg: `<strong>⚠️ 花费飙升预警：</strong> 近 2 天 (${recentDates.join(",")}) 广告花费 ($${mR.spend.toFixed(2)}) 相比前 2 天 ($${mP.spend.toFixed(2)}) 暴涨超过 100%，请警惕预算失控或恶意点击。` });
+            }
+            // CVR Drop > 50%
+            if (mP.cvr > 0.05 && mR.cvr < mP.cvr * 0.5) {
+                alerts.push({ type: 'warn', msg: `<strong>⚠️ 转化断崖预警：</strong> 近 2 天转化率 (${fmtPct(mR.cvr)}) 相比前 2 天 (${fmtPct(mP.cvr)}) 出现腰斩，请检查链接是否断货、被跟卖或收到差评。` });
+            }
+        }
+    }
+
+    if (alerts.length > 0) {
+        container.innerHTML = alerts.map(a => `
+            <div class="alert-banner ${a.type === 'warn' ? 'warn' : ''}">
+                <span class="alert-icon">${a.type === 'warn' ? '⚠️' : '🚨'}</span>
+                <div>${a.msg}</div>
+            </div>
+        `).join("");
+        container.style.display = "flex";
+    } else {
+        container.style.display = "none";
+        container.innerHTML = "";
+    }
 };
 
 /** =========================
@@ -2179,7 +2081,6 @@ const decideAction = (item, rankBy) => {
   return { action:"KEEP", reason:"无风险信号" };
 };
 
-
 /** =========================
  * Export (CSV Functions)
  * ========================= */
@@ -2188,7 +2089,6 @@ const exportNegativesCSV = () => {
   if (!["searchTerm", "searchTermRoot"].includes(rankBy)) { log("导出失败：只有在榜单维度为 Search Term / Root 时才允许导出否定词", "bad"); alert("导出失败：请将“榜单聚合维度”切换为 Search Term 或 Search Term Root，再导出否定词。"); return; }
   if (!VIEW.length) { log("导出失败：当前视图为空", "bad"); alert("导出失败：当前视图为空。"); return; }
   
-  // [优化] 复用已有的降维缓存，避免导出时重新执行巨大的 groupBy 循环
   const itemsToExport = $("exportScope").value === "rank" ? RANK_ROWS.slice() : (() => {
     return [...(CURRENT_RANK_GROUPS || new Map()).entries()].map(([name, list]) => {
       const it = { name, ...sumMetrics(list) };
@@ -2326,7 +2226,6 @@ const sortRank = (items) => {
 };
 const buildRankTable = () => {
   const rankBy = $("rankBy").value;
-  // [优化] 直接使用顶层的缓存字典，省去 25 万次大循环
   let items = [...(CURRENT_RANK_GROUPS || new Map()).entries()].map(([name, list]) => {
     const base = { name, ...sumMetrics(list) };
     const {action, reason} = decideAction(base, rankBy);
@@ -2366,11 +2265,11 @@ const applyFilters = (initial=false) => {
     if (trendChart) { trendChart.destroy(); trendChart = null; }
     if (trafficChart) { trafficChart.destroy(); trafficChart = null; }
     $("rankTable").querySelector("tbody").innerHTML = "";
+    $("anomalyAlerts").style.display = "none";
     renderRankTable(); renderWordFreq(); renderLongTailMining(); renderWeekdayAnalysis(); renderCPCDistribution(); renderLengthAnalysis(); renderMatchTypeAnalysis(); renderConflictAnalysis(); renderBusinessReport(); renderTrafficSegmentation(); 
     return;
   }
   
-  // [优化] UI 防卡死：先行挂载加载文字，向浏览器让出线程
   setSubtitle("🔄 正在深度分析与聚合数据，请稍候...");
   
   setTimeout(() => {
@@ -2414,7 +2313,6 @@ const applyFilters = (initial=false) => {
           
           const total = sumMetrics(VIEW);
           
-          // [优化] 计算并缓存在全局作用域，免除后续表格和导出功能的巨大遍历开销
           CURRENT_RANK_GROUPS = groupBy(VIEW, getRankKey());
 
           if (ALL.length > 0) {
@@ -2425,6 +2323,7 @@ const applyFilters = (initial=false) => {
           
           requestAnimationFrame(() => {
               renderKPIs(total); 
+              detectAnomalies(VIEW); 
               renderTrend(VIEW);
               renderRankTable();
               renderWordFreq();
@@ -2445,7 +2344,7 @@ const applyFilters = (initial=false) => {
       } catch (e) {
           console.error("Critical Error in applyFilters:", e);
       }
-  }, 20); // 给浏览器留出20ms重绘UI
+  }, 20); 
 };
 
 const autoApply = debounce(applyFilters, 200);
@@ -2463,295 +2362,7 @@ const applyQuickRange = (type) => {
   $("dateEnd").value = maxD;
 };
 
-/** =========================
- * AI Integration Logic
- * ========================= */
-const aiModal = $('aiModal');
-const geminiKeyInput = $('geminiKeyInput');
-const btnStartAnalyze = $('btnStartAnalyze');
-const aiResult = $('aiResult');
-const aiLoading = $('aiLoading');
-const aiLoadingStatus = $('aiLoadingStatus');
-const aiKeySection = $('aiKeySection');
-const btnClearKey = $('btnClearKey');
-const btnToggleSettings = $('btnToggleSettings');
-const settingsBox = $('settingsBox');
-const apiBaseUrlInput = $('apiBaseUrl');
-const aiQuestionInput = $('aiQuestionInput'); 
-const aiProductContext = $('aiProductContext');
-const loadGeminiKey = () => localStorage.getItem("gemini_key") || "";
-const loadApiBase = () => localStorage.getItem("gemini_api_base") || "https://generativelanguage.googleapis.com";
-const toggleAIModal = (show) => {
-  aiModal.classList.toggle('active', show);
-  if (show) {
-    const key = loadGeminiKey();
-    const base = loadApiBase();
-    apiBaseUrlInput.value = base; 
-    if (key) {
-      geminiKeyInput.value = key; geminiKeyInput.style.display = 'none'; 
-      $('aiKeySection').querySelector('p').textContent = "API Key 已加载。点击“开始分析”生成报告。";
-      btnClearKey.style.display = 'block';
-    } else {
-      geminiKeyInput.style.display = 'block'; aiKeySection.style.display = 'block'; btnClearKey.style.display = 'none';
-    }
-  }
-};
-const callGemini = async (prompt) => {
-  const key = loadGeminiKey();
-  if (!key) throw new Error("缺少 API Key");
-  let baseUrl = (apiBaseUrlInput.value || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
-  localStorage.setItem("gemini_api_base", baseUrl);
-  const model = "gemini-2.5-flash"; 
-  try {
-    aiLoadingStatus.textContent = `正在连接模型: ${model}...`;
-    const url = `${baseUrl}/v1beta/models/${model}:generateContent?key=${key}`;
-    const response = await fetch(url, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    if (!response.ok) {
-      const errJson = await response.json().catch(()=>({}));
-      const errMsg = errJson.error?.message || `HTTP ${response.status}`;
-      if (response.status === 400 || response.status === 401 || response.status === 403) throw new Error(errMsg);
-      throw new Error(`模型调用失败 (${model}): ${errMsg}`);
-    }
-    const data = await response.json();
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("API 返回空数据");
-    return data.candidates[0].content.parts[0].text;
-  } catch (e) {
-    if (e.message.includes("API Key") || e.message.includes("权限")) throw e;
-    throw e; 
-  }
-};
-let currentAIMode = 'chat';
-const setAIMode = (mode) => {
-    currentAIMode = mode;
-    const btns = ['aiModeChat', 'aiModeGap', 'aiModeFunnel', 'aiModeExpand', 'aiModeRecon', 'aiModeCluster', 'aiModeAudit', 'aiModeBid', 'aiModePop', 'aiModeIntent', 'aiModeRoot'];
-    btns.forEach(id => $(id)?.classList.remove('active'));
-    const map = {
-        'chat': 'aiModeChat', 'gap': 'aiModeGap', 'funnel': 'aiModeFunnel', 'expand': 'aiModeExpand', 
-        'recon': 'aiModeRecon', 'cluster': 'aiModeCluster', 'audit': 'aiModeAudit', 'bid': 'aiModeBid', 
-        'pop': 'aiModePop', 'intent': 'aiModeIntent', 'root': 'aiModeRoot'
-    };
-    if ($(map[mode])) $(map[mode]).classList.add('active');
-    const hint = $('aiToolHint'); const input = $('aiQuestionInput'); const ctxInput = $('aiProductContext');
-    ctxInput.style.display = 'none'; input.style.display = 'none'; 
-    if (mode === 'chat') {
-        hint.textContent = "默认模式：生成诊断报告。建议提问：“如何降低 ACOS？”";
-        input.style.display = 'block'; input.placeholder = "例如：分析一下昨天的销量..."; input.value = "";
-    } else if (mode === 'gap') { hint.textContent = "功能：对比“高出单搜索词”与“ASIN 标题”，AI 将提供修改建议。"; } 
-    else if (mode === 'funnel') { hint.textContent = "功能：分析 Business Report 的 Sessions vs CVR，诊断流量漏斗。"; } 
-    else if (mode === 'expand') { hint.textContent = "功能：基于你的高表现词，AI 联想推荐相关的长尾词。"; } 
-    else if (mode === 'recon') { hint.textContent = "功能：侦察高花费/高 ROAS 的竞品 ASIN，分析优劣势。"; } 
-    else if (mode === 'cluster') { hint.textContent = "功能：将 Top 100 搜索词按意图归类。"; } 
-    else if (mode === 'audit') { hint.textContent = "功能：严格审计亏损词的相关性。"; ctxInput.style.display = 'block'; ctxInput.placeholder = "请输入产品核心词 (例如: Blue Light Glasses)..."; } 
-    else if (mode === 'bid') { hint.textContent = "功能：AI 竞价医生。基于转化率计算 Target ACOS (25%) 的理论出价。"; } 
-    else if (mode === 'pop') { hint.textContent = "功能：环比增长分析。对比前半段 vs 后半段日期数据。"; } 
-    else if (mode === 'intent') { hint.textContent = "功能：搜索意图分层 (Awareness/Consideration/Purchase)。"; } 
-    else if (mode === 'root') { hint.textContent = "功能：否词根源挖掘。找出导致亏损的共同单词根。"; }
-};
-const generateReport = async () => {
-    if (!VIEW.length && !BUSINESS_ROWS.length) { alert("无数据，无法分析。"); return; }
-    if ((currentAIMode === 'gap' || currentAIMode === 'funnel') && BUSINESS_ROWS.length === 0) { alert("此功能需要导入 Business Report (业务报告) 才能使用。"); return; }
-    const key = geminiKeyInput.value.trim();
-    if (key && !loadGeminiKey()) localStorage.setItem("gemini_key", key);
-    if (!loadGeminiKey()) { alert("请输入 API Key"); return; }
-    aiKeySection.style.display = 'none'; aiLoading.style.display = 'block'; aiResult.innerHTML = ""; btnStartAnalyze.disabled = true;
-    try {
-        let prompt = "";
-        const strategyMode = $('aiStrategy').value;
-        let strategyPrompt = "";
-        switch(strategyMode) {
-            case 'launch': strategyPrompt = "STRATEGY: LAUNCH PHASE. Ignore high ACOS. Prioritize Impressions/CTR."; break;
-            case 'profit': strategyPrompt = "STRATEGY: PROFIT FOCUSED. Ruthlessly negate keywords with ACOS > 30% or Spend > $15 w/o sales."; break;
-            case 'audit': strategyPrompt = "STRATEGY: External Auditor. Find anomalies, wasted spend, and cannibalization."; break;
-            default: strategyPrompt = "STRATEGY: Balance growth and profitability.";
-        }
-        const baseSystemPrompt = `You are an Amazon PPC Expert. ${strategyPrompt}
-        IMPORTANT: When mentioning keywords/ASINs to act on, wrap them like: <span class="ai-action" data-type="filter" data-val="KEYWORD">KEYWORD</span>`;
-        if (currentAIMode === 'gap') prompt = buildGapPrompt(baseSystemPrompt);
-        else if (currentAIMode === 'funnel') prompt = buildFunnelPrompt(baseSystemPrompt);
-        else if (currentAIMode === 'expand') prompt = buildExpandPrompt(baseSystemPrompt);
-        else if (currentAIMode === 'recon') prompt = buildReconPrompt(baseSystemPrompt);
-        else if (currentAIMode === 'cluster') prompt = buildClusterPrompt(baseSystemPrompt);
-        else if (currentAIMode === 'audit') prompt = buildAuditPrompt(baseSystemPrompt);
-        else if (currentAIMode === 'bid') prompt = buildBidPrompt(baseSystemPrompt);
-        else if (currentAIMode === 'pop') prompt = buildPopPrompt(baseSystemPrompt);
-        else if (currentAIMode === 'intent') prompt = buildIntentPrompt(baseSystemPrompt);
-        else if (currentAIMode === 'root') prompt = buildRootPrompt(baseSystemPrompt);
-        else prompt = buildDefaultChatPrompt(baseSystemPrompt);
-        aiLoadingStatus.textContent = "正在思考...";
-        const responseText = await callGemini(prompt);
-        const mdParse = (typeof marked !== 'undefined' && typeof marked.parse === 'function') ? marked.parse : (t)=>t;
-        if (currentAIMode === 'chat') { aiResult.innerHTML = mdParse(responseText); } 
-        else { renderJSONResult(responseText, currentAIMode); }
-        aiResult.style.display = 'block';
-    } catch (e) {
-        aiResult.innerHTML = `<div style="color:#b42318; padding:10px; border:1px solid #b42318; border-radius:8px; background:var(--softBad);"><strong>分析中断:</strong> ${e.message}<br><small>请检查 API Key 或网络。</small></div>`;
-        aiResult.style.display = 'block';
-    } finally { aiLoading.style.display = 'none'; btnStartAnalyze.disabled = false; }
-};
-
-const extractJSON = (text) => {
-    if (!text) return null;
-    let cleanText = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-    const firstOpen = cleanText.search(/[\{\[]/);
-    const lastClose = Math.max(cleanText.lastIndexOf('}'), cleanText.lastIndexOf(']'));
-    if (firstOpen === -1 || lastClose === -1 || lastClose < firstOpen) return null;
-    try {
-        return JSON.parse(cleanText.substring(firstOpen, lastClose + 1));
-    } catch (e) {
-        console.warn("JSON Parse Failed");
-        return null;
-    }
-};
-
-const getAIContextData = (rows) => {
-    const topSpend = rows.slice().sort((a,b)=>b.spend-a.spend).slice(0, 60);
-    const topOrders = rows.slice().filter(r => r.orders > 0).sort((a,b)=>b.orders-a.orders).slice(0, 30);
-    const bleeders = rows.slice().filter(r => r.spend > 10 && r.orders === 0).sort((a,b)=>b.spend-a.spend).slice(0, 30);
-    const combined = [...new Set([...topSpend, ...topOrders, ...bleeders])];
-    if (!combined.length) return "No significant data rows found.";
-    return combined.map(r => `"${r.searchTerm}" | Spend:$${r.spend.toFixed(1)} | Sales:$${r.sales.toFixed(1)} | Orders:${r.orders} | ROAS:${r.roas.toFixed(2)} | ACOS:${(r.acos*100).toFixed(1)}%`).join("\n");
-};
-const buildGapPrompt = (systemPrompt) => {
-    const goodTerms = VIEW.filter(r => r.orders >= 1).map(r => r.searchTerm).slice(0, 50).join(", ");
-    const titles = BUSINESS_ROWS.slice(0, 10).map(r => `ASIN: ${r.asin} | Title: ${r.title}`).join("\n");
-    return `${systemPrompt}\nTask: Keyword Gap Analysis.\nData:\n1. High Converting Terms: [${goodTerms}]\n2. Current Titles: ${titles}\nInstruction: Analyze missing terms.\nReturn JSON: [{ "asin": "...", "missing_keywords": ["..."], "seo_suggestion": "HTML string with <ins> and <del>" }]`;
-};
-const buildFunnelPrompt = (systemPrompt) => {
-    const report = BUSINESS_ROWS.slice(0, 20).map(r => `ASIN: ${r.asin}, Sessions: ${r.sessions}, Units: ${r.units}, CVR: ${(r.cvr*100).toFixed(2)}%`).join("\n");
-    return `${systemPrompt}\nTask: Funnel Diagnostic.\nData: ${report}\nClassify ASINs: Star, Potential, Wasted, Dead.\nReturn JSON: [{ "asin": "...", "category": "...", "reason": "...", "action": "..." }]`;
-};
-const buildExpandPrompt = (systemPrompt) => {
-    const topTerms = VIEW.filter(r => r.orders >= 1).sort((a,b)=>b.orders-a.orders).slice(0, 50).map(r=>`${r.searchTerm} (Orders:${r.orders})`).join("\n");
-    return `${systemPrompt}\nTask: Keyword Expansion.\nWinning Terms:\n${topTerms}\nSuggest 10 NEW relevant long-tail keywords.\nReturn JSON: [{ "keyword": "...", "reason": "..." }]`;
-};
-const buildReconPrompt = (systemPrompt) => {
-    const asins = VIEW.filter(r => isASINLike(r.searchTerm));
-    if(!asins.length) return "Tell user: No Competitor ASINs found.";
-    const asinStats = [...groupBy(asins, r=>r.searchTerm).entries()].map(([a, list]) => ({ asin: a, ...sumMetrics(list) }));
-    const badAsins = asinStats.filter(x => x.orders===0 && x.spend > 5).sort((a,b)=>b.spend-a.spend).slice(0,5);
-    const goodAsins = asinStats.filter(x => x.orders>0).sort((a,b)=>b.roas-a.roas).slice(0,5);
-    const dataStr = `High Spend (0 Sales): ${badAsins.map(x=>`${x.asin}($${x.spend})`).join(", ")}. High ROAS: ${goodAsins.map(x=>`${x.asin}(ROAS ${x.roas.toFixed(1)})`).join(", ")}`;
-    return `${systemPrompt}\nTask: Competitor Recon.\nData: ${dataStr}\nAnalyze High Spend vs High ROAS ASINs.\nReturn JSON: [{ "asin": "...", "type": "High Spend/High ROAS", "analysis": "...", "action": "..." }]`;
-};
-const buildClusterPrompt = (systemPrompt) => {
-    const topTerms = [...groupBy(VIEW, r => r.searchTerm).entries()].map(([t, list]) => `${t} ($${sumMetrics(list).spend.toFixed(0)})`).sort((a,b) => parseFloat(b.split('$')[1]) - parseFloat(a.split('$')[1])).slice(0, 100).join(", ");
-    return `${systemPrompt}\nTask: Semantic Clustering.\nInput: [${topTerms}].\nGroup by intent.\nReturn JSON: [{ "name": "ClusterName", "terms": ["..."], "insight": "...", "potential_negatives": ["..."] }]`;
-};
-const buildAuditPrompt = (systemPrompt) => {
-    const product = $('aiProductContext').value || "Eyewear"; 
-    const bleeders = VIEW.filter(r => r.spend > 20 && r.roas < 1).sort((a,b) => b.spend - a.spend).slice(0, 30);
-    const bleederList = bleeders.map(r => `${r.searchTerm} (Spend:$${r.spend.toFixed(0)})`).join("\n");
-    return `${systemPrompt}\nTask: Relevance Audit.\nProduct: ${product}\nBleeding Keywords: ${bleederList}\nScore relevance 1-5.\nReturn JSON: [{ "term": "...", "spend": 123, "relevance_score": 1, "reason": "...", "action": "..." }]`;
-};
-const buildBidPrompt = (systemPrompt) => {
-    const topTerms = VIEW.sort((a,b)=>b.spend-a.spend).slice(0, 20);
-    const dataStr = topTerms.map(r => {
-        const aov = r.orders > 0 ? (r.sales / r.orders).toFixed(2) : "N/A";
-        const curCvr = (r.cvr * 100).toFixed(2);
-        return `Term: "${r.searchTerm}", Spend: $${r.spend}, CVR: ${curCvr}%, AOV: $${aov}, CPC: $${r.cpc.toFixed(2)}`;
-    }).join("\n");
-    return `${systemPrompt}\nTask: Bid Doctor.\nTarget ACOS: 25%.\nFormula: Max Bid = AOV * Target ACOS * CVR.\nData:\n${dataStr}\nReturn JSON: [{ "term": "...", "current_cpc": 1.2, "suggested_bid": 0.9, "reason": "..." }]`;
-};
-const buildPopPrompt = (systemPrompt) => {
-    const dates = VIEW.map(r => r.date).sort();
-    if (dates.length < 2) return "Tell user: Date range too short.";
-    const start = new Date(dates[0]); const end = new Date(dates[dates.length-1]);
-    const mid = new Date(start.getTime() + (end.getTime() - start.getTime()) / 2);
-    if (isNaN(mid.getTime())) return "Tell user: Date range invalid.";
-    const midIso = toISODate(mid);
-    const p1 = VIEW.filter(r => r.date < midIso); const p2 = VIEW.filter(r => r.date >= midIso);
-    const m1 = sumMetrics(p1); const m2 = sumMetrics(p2);
-    return `${systemPrompt}\nTask: PoP Analysis.\nP1 (Past): Sales $${m1.sales.toFixed(2)}, ACOS ${(m1.acos*100).toFixed(2)}%.\nP2 (Current): Sales $${m2.sales.toFixed(2)}, ACOS ${(m2.acos*100).toFixed(2)}%.\nIdentify trend.\nReturn JSON: { "trend": "...", "key_factor": "...", "analysis": "...", "actionable_advice": "..." }`;
-};
-const buildIntentPrompt = (systemPrompt) => {
-    const uniqueTerms = [...new Set(VIEW.map(r=>r.searchTerm))].slice(0, 50).join(", ");
-    return `${systemPrompt}\nTask: Intent Classification.\nTerms: [${uniqueTerms}]\nClasses: Awareness, Consideration, Purchase.\nReturn JSON: [{ "term": "...", "stage": "Awareness" }]`;
-};
-const buildRootPrompt = (systemPrompt) => {
-    const bleeders = VIEW.filter(r => r.spend > 10 && r.orders === 0).map(r => r.searchTerm).slice(0, 50).join(", ");
-    return `${systemPrompt}\nTask: Negative Root Finder.\nHigh Spend/0 Orders: [${bleeders}]\nIdentify wasteful roots.\nReturn JSON: [{ "root_word": "...", "frequency_in_list": 5, "reason": "...", "action": "NEGATE PHRASE" }]`;
-};
-const buildDefaultChatPrompt = (systemPrompt) => {
-    const total = sumMetrics(VIEW);
-    const rowData = getAIContextData(VIEW);
-    return `${systemPrompt}\nGlobal Metrics: Spend $${total.spend.toFixed(2)}, ROAS ${total.roas.toFixed(2)}.\nTop Data:\n${rowData}\nUser Question: ${(aiQuestionInput.value || "Give me optimization suggestions.")}`;
-};
-const renderJSONResult = (text, mode) => {
-    const data = extractJSON(text);
-    if (!data) return aiResult.innerHTML = `<div style="color:var(--warn);font-size:12px;">⚠️ 原始响应（解析失败），已回退到文本模式：</div>${marked.parse(text)}`;
-    let html = ""; const safeList = Array.isArray(data) ? data : [];
-    if (mode === 'gap') {
-        html = `<h3>🔍 埋词差距 & 标题模拟</h3><div class="grid" style="grid-template-columns:1fr; gap:10px;">`;
-        safeList.forEach(item => {
-            html += `<div class="card" style="padding:12px;"><div style="font-weight:bold; color:var(--accent);">${item.asin}</div><div style="color:var(--bad); margin:4px 0;">缺失词: ${Array.isArray(item.missing_keywords) ? item.missing_keywords.join(", ") : item.missing_keywords}</div><div style="font-size:13px; margin-top:6px; background:var(--bg); padding:8px; border-radius:6px;">${item.seo_suggestion}</div></div>`;
-        }); html += `</div>`;
-    } else if (mode === 'funnel') {
-        html = `<h3>🩺 流量漏斗诊断</h3><table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="border-bottom:1px solid var(--line);"><th style="padding:8px;">ASIN</th><th>诊断</th><th>建议</th></tr></thead><tbody>`;
-        safeList.forEach(item => {
-            let color = (item.category || "").includes("Star") ? "var(--good)" : (item.category || "").includes("Wasted") ? "var(--bad)" : "var(--warn)";
-            html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;">${item.asin}</td><td><span class="tag" style="color:${color}; background:var(--bg); border:1px solid ${color};">${item.category}</span><br><span style="font-size:11px;color:var(--muted)">${item.reason}</span></td><td style="padding:8px;">${item.action}</td></tr>`;
-        }); html += `</tbody></table>`;
-    } else if (mode === 'expand') {
-        html = `<h3>🚀 智能拓词推荐</h3><ul style="padding-left:20px;">`;
-        safeList.forEach(item => { html += `<li style="margin-bottom:8px;"><strong>${item.keyword}</strong>: <span style="color:var(--muted);">${item.reason}</span></li>`; });
-        html += `</ul>`;
-    } else if (mode === 'recon') {
-        html = `<h3>⚔️ 竞品 ASIN 侦察</h3><table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="border-bottom:1px solid var(--line);"><th style="padding:8px;">ASIN</th><th>类型</th><th>分析</th><th>建议</th></tr></thead><tbody>`;
-        safeList.forEach(item => {
-            const isGood = (item.type || "").toLowerCase().includes("roas");
-            html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;">${item.asin}</td><td><span class="tag ${isGood ? 'good' : 'bad'}">${item.type}</span></td><td style="padding:8px; color:var(--muted);">${item.analysis}</td><td style="padding:8px;">${item.action}</td></tr>`;
-        }); html += `</tbody></table>`;
-    } else if (mode === 'cluster') {
-        let clusters = Array.isArray(data) ? data.map(item => ({ name: item.cluster_name||item.name, terms: item.terms||[], insight: item.insight||item.reason, negs: item.potential_negatives||[] })) : Object.entries(data).map(([k,v]) => ({ name: k, terms: v.terms||[], insight: v.insight, negs: v.potential_negatives||[] }));
-        html = `<h3>🧩 语义聚类 & 否定机会</h3><div class="grid" style="grid-template-columns:1fr 1fr; gap:10px; align-items: start;">`;
-        clusters.forEach(c => {
-            html += `<div class="card" style="padding:10px; break-inside: avoid;"><div style="font-weight:bold; color:var(--accent); margin-bottom:4px;">${c.name}</div><div style="font-size:11.5px; color:var(--muted); margin-bottom:6px;">${c.insight}</div><div style="font-size:12px; margin-bottom:6px;">${c.terms.slice(0,15).join(", ")}</div>${c.negs&&c.negs.length?`<div style="font-size:11px; color:var(--bad); border-top:1px solid var(--line); padding-top:4px;">疑似否定: ${c.negs.join(", ")}</div>`:''}</div>`;
-        }); html += `</div>`;
-    } else if (mode === 'audit') {
-        html = `<h3>⚖️ 亏损词相关性审计</h3><table style="width:100%; text-align:left; font-size:12px; border-collapse:collapse;"><thead style="background:var(--hover-bg);"><tr style="border-bottom:1px solid var(--line);"><th style="padding:8px;">搜索词</th><th>花费</th><th>相关性</th><th>建议</th></tr></thead><tbody>`;
-        safeList.forEach(item => {
-            const score = item.relevance_score || 3;
-            const scoreColor = score <= 2 ? 'color:var(--bad); font-weight:bold;' : 'color:var(--good);';
-            html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;">${item.term}</td><td style="padding:8px;">$${item.spend}</td><td style="padding:8px; ${scoreColor}">${score}/5</td><td style="padding:8px; color:var(--muted);">${item.reason} <span style="font-weight:bold; color:var(--text)">[${item.action||"关注"}]</span></td></tr>`;
-        }); html += `</tbody></table>`;
-    } else if (mode === 'bid') {
-        html = `<h3>🩺 智能竞价建议 (Target ACOS 25%)</h3><table style="width:100%;font-size:12px;border-collapse:collapse;"><thead><tr style="background:var(--hover-bg);"><th style="padding:6px;text-align:left">Term</th><th>Cur CPC</th><th>Sugg Bid</th><th>Reason</th></tr></thead><tbody>`;
-        safeList.forEach(item => {
-            const diff = item.suggested_bid - item.current_cpc; const color = diff > 0 ? 'var(--good)' : 'var(--bad)';
-            html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:6px;">${item.term}</td><td>$${item.current_cpc}</td><td style="font-weight:bold;color:${color}">$${item.suggested_bid}</td><td style="color:var(--muted)">${item.reason}</td></tr>`;
-        }); html += `</tbody></table>`;
-    } else if (mode === 'pop') {
-        // [修复容错Bug] 应对大模型可能返回单一Object而非Array的情况
-        const obj = Array.isArray(data) ? data[0] : (data || {});
-        html = `<h3>📈 环比增长分析</h3><div class="card" style="padding:15px;"><div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Trend: ${obj.trend || 'N/A'}</div><div style="margin-bottom:8px;"><strong>Key Factor:</strong> ${obj.key_factor || 'N/A'}</div><p style="margin-bottom:8px;">${obj.analysis || 'N/A'}</p><div style="background:var(--bg); padding:10px; border-radius:8px;">💡 <strong>建议:</strong> ${obj.actionable_advice || 'N/A'}</div></div>`;
-    } else if (mode === 'intent') {
-        const counts = { Awareness:0, Consideration:0, Purchase:0 }; safeList.forEach(i => counts[i.stage] = (counts[i.stage]||0) + 1); const total = safeList.length;
-        html = `<h3>🧠 搜索意图分布</h3><div style="margin-bottom:15px; display:flex; gap:5px; height:20px;">`;
-        Object.keys(counts).forEach(k => { const pct = (counts[k]/total*100); const color = k==='Purchase'?'var(--good)':(k==='Awareness'?'var(--accent)':'var(--warn)'); if(pct>0) html += `<div style="width:${pct}%; background:${color};" title="${k}: ${Math.round(pct)}%"></div>`; });
-        html += `</div><div class="fileList" style="max-height:300px;">`;
-        safeList.forEach(item => { html += `<div style="padding:4px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between;"><span>${item.term}</span><span class="tag" style="font-size:10px;">${item.stage}</span></div>`; }); html += `</div>`;
-    } else if (mode === 'root') {
-        html = `<h3>🛑 隐性否定词根挖掘</h3><table style="width:100%;font-size:12px; border-collapse:collapse;"><thead><tr style="background:var(--hover-bg);"><th style="padding:6px;text-align:left">Root</th><th>Freq</th><th>Reason</th></tr></thead><tbody>`;
-        safeList.forEach(item => { html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:6px;font-weight:bold;color:var(--bad);">${item.root_word}</td><td>${item.frequency_in_list}</td><td>${item.reason} <span class="ai-action" data-type="filter" data-val="${item.root_word}" style="cursor:pointer;text-decoration:underline;">[Filter]</span></td></tr>`; }); html += `</tbody></table>`;
-    }
-    aiResult.innerHTML = html;
-};
 // Event Listeners
-$('btnAI').addEventListener('click', () => toggleAIModal(true));
-$('btnCloseAI').addEventListener('click', () => toggleAIModal(false));
-$('btnStartAnalyze').addEventListener('click', generateReport);
-$('btnClearKey').addEventListener('click', () => { localStorage.removeItem("gemini_key"); geminiKeyInput.value = ""; geminiKeyInput.style.display = 'block'; aiKeySection.style.display = 'block'; btnClearKey.style.display = 'none'; });
-btnToggleSettings.addEventListener('click', () => { const isHidden = settingsBox.style.display === 'none'; settingsBox.style.display = isHidden ? 'block' : 'none'; });
-$('aiResult').addEventListener('click', (e) => {
-    if (e.target.classList.contains('ai-action') && e.target.dataset.type === 'filter') {
-        const val = e.target.dataset.val;
-        const searchInput = $('filterSearchTerm'); searchInput.value = val; $('filterSearchExact').checked = true; searchInput.focus(); applyFilters();
-        log(`🤖 AI 自动筛选: ${val}`, "good");
-    }
-});
 $("fileInput").addEventListener("change", async (e)=>{ const files = Array.from(e.target.files || []); if (files.length) { log("文件选择事件触发"); await importMultipleFiles(files); e.target.value = ""; } });
 const filterIds = ["dateStart","dateEnd","filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "brandNameInput"];
 filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
@@ -2763,8 +2374,14 @@ $("btnReset").addEventListener("click", () => {
   $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters();
 });
 $("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; renderFileList(); populateDropdowns(); applyFilters(true); });
-document.querySelectorAll(".chipBtn").forEach(btn => btn.addEventListener("click", () => { if (btn.closest('#aiModal')) return; document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); }));
-// [优化] 去除了榜单表头点击时多余的 renderWordFreq() 调用
+
+document.querySelectorAll(".chipBtn").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  applyQuickRange(btn.dataset.range);
+  applyFilters();
+}));
+
 $("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if (!key) return; rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderRankTable(); }));
 $("rankTable").addEventListener("click", (e) => { if (e.target.classList.contains("search-btn")) { const td = e.target.closest("td"); const term = td.getAttribute("data-name"); if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); $(".sidebar").scrollTop = 0; } } });
 $("wfTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if(!key) return; wfSort = (wfSort.key === key) ? {key, dir: (wfSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderWordFreq(); }));
@@ -2773,13 +2390,14 @@ document.addEventListener("click", (e) => {
   if (btn.dataset.type) setTypeFilter(btn.dataset.type);
   if (btn.dataset.wf) { WF_MODE = btn.dataset.wf; document.querySelectorAll('.seg[aria-label="Word Frequency Mode"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.wf === WF_MODE)); renderWordFreq(); }
 });
-// [优化] 去除了切换榜单类型时多余的 renderWordFreq() 调用
+
 const setTypeFilter = (t) => { rankTypeFilter = t; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.type === t)); renderRankTable(); };
 $("btnExportWf").addEventListener("click", exportWordFreqCSV); $("btnExportNeg").addEventListener("click", exportNegativesCSV); $("btnExportLongTail").addEventListener("click", exportLongTailCSV); $("btnExportRank").addEventListener("click", exportRankCSV);
 $("btnRuleReset").addEventListener("click", () => { $("ruleSpendNeg").value = 30; $("ruleClicksNeg").value = 20; $("ruleRoasNeg").value = 1.5; $("ruleRoasKeep").value = 3; $("ruleOrdersKeep").value = 2; $("ruleRoasMigrateMin").value = 2; applyFilters(); });
 $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert("所有依赖库加载正常！"); });
 const toggleTheme = () => { const isDark = document.documentElement.getAttribute("data-theme") === "dark"; const newTheme = isDark ? "light" : "dark"; document.documentElement.setAttribute("data-theme", newTheme); localStorage.setItem("theme", newTheme); if (trendChart && typeof trendChart.update === 'function') { if ((VIEW && VIEW.length) || (ALL && ALL.length)) renderTrend(VIEW || ALL); } };
 $("btnTheme").addEventListener("click", toggleTheme);
+
 renderFileList(); populateDropdowns(); applyFilters(true);
 </script>
 </body>
