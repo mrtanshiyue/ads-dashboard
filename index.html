@@ -8,8 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
   <script>
     // 初始化主题：防闪烁处理
     (() => {
@@ -22,7 +20,6 @@
 
   <style>
     /* ================= UI 样式 (保持 100% 不变) ================= */
-    /* [优化] 页面初始加载防闪烁 */
     .preload * { transition: none !important; }
 
     :root{
@@ -395,7 +392,6 @@
     }
     .miniInput{ width:110px !important; padding:8px 10px !important; border-radius:999px !important; font-size:12.2px !important; }
     .miniSelect{ width:150px !important; padding:8px 10px !important; border-radius:999px !important; font-size:12.2px !important; }
-    /* 对齐调整 */
     #autoManualTable th:last-child, #autoManualTable td:last-child,
     #longTailTable th:last-child, #longTailTable td:last-child,
     #weekdayTable th:last-child, #weekdayTable td:last-child,
@@ -409,13 +405,11 @@
     }
     .bar-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; font-size: 11.5px; width: 100%; max-width: 200px; }
     .bar-track { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: flex; }
-    /* Search Action Icon Style */
     .action-icon { cursor: pointer; margin-left: 8px; opacity: 0.5; font-size: 14px; vertical-align: middle; transition: opacity 0.2s, transform 0.2s; display: inline-block; user-select: none; }
     .action-icon:hover { opacity: 1; transform: scale(1.2); }
     .search-clear-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 0 8px; font-size: 16px; display: flex; align-items: center; border-radius: 8px; }
     .search-clear-btn:hover { color: var(--bad); background: var(--hover-bg); }
     
-    /* ================= 新增：预警横幅样式 ================= */
     .alert-banner {
         background: var(--softBad);
         border: 1px solid rgba(180,35,24,.22);
@@ -1015,14 +1009,13 @@
  * ========================= */
 const CONFIG = {
     CACHE_MAX: 20000,
-    CACHE_EVICT: 10000,
     STR_POOL_MAX: 50000
 };
 
 // 全局降维聚合缓存，避免多次计算
 let CURRENT_RANK_GROUPS = null;
 
-// [优化] 页面加载完后移除防闪烁 preload
+// 页面加载完后移除防闪烁 preload
 window.addEventListener('load', () => {
     document.body.classList.remove('preload');
 });
@@ -1050,8 +1043,8 @@ const safeNum = (x) => {
 const toISODate = (d) => {
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
   if (typeof d === "number" && isFinite(d)) {
+    // [优化] Excel 天数转日期，彻底切断与本地时区 (Timezone) 的关联，直接采用安全的 UTC 截取。
     const dateObj = new Date(Math.round((d - 25569) * 86400000));
-    dateObj.setMinutes(dateObj.getMinutes() + dateObj.getTimezoneOffset());
     return dateObj.toISOString().slice(0,10);
   }
   const s = String(d || "").trim();
@@ -1061,7 +1054,7 @@ const toISODate = (d) => {
     const y = parseInt(isoMatch[1], 10);
     const m = parseInt(isoMatch[2], 10);
     const day = parseInt(isoMatch[3], 10);
-    const dt = new Date(y, m - 1, day, 12, 0, 0); 
+    const dt = new Date(Date.UTC(y, m - 1, day, 12, 0, 0)); // 同样使用 UTC 确保不受本地时区偏移影响
     return dt.toISOString().slice(0,10);
   }
   const dt = new Date(s);
@@ -1093,12 +1086,13 @@ const log = (msg, level="info")=>{
   line.textContent = `[${stamp}] ${msg}`;
   logBox.prepend(line);
 };
+
+// [优化] 由于已移除 marked.js，从依赖库健康检查中剥离该项
 const libsCheck = () => {
   const missing = [];
   if (typeof Papa === "undefined") missing.push("PapaParse(Papa)");
   if (typeof XLSX === "undefined") missing.push("XLSX(xlsx)");
   if (typeof Chart === "undefined") missing.push("Chart.js(Chart)");
-  if (typeof marked === "undefined") missing.push("marked");
   if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn");
   else log("依赖库 OK", "good");
   return !missing.length;
@@ -1117,7 +1111,19 @@ const downloadText = (filename, text) => {
   URL.revokeObjectURL(a.href);
 };
 
-// [优化] 内存压缩：字符串池 (String Interning)
+// [优化] 分片处理器：使用异步挂起防止浏览器在处理巨大数组时页面白屏或未响应卡死
+const processInChunks = async (items, processFn, chunkSize = 10000) => {
+  const results = [];
+  for (let i = 0; i < items.length; i += chunkSize) {
+    const chunk = items.slice(i, i + chunkSize);
+    results.push(...chunk.map(processFn));
+    // 让出主线程进行绘制，以保证 UI 响应性
+    await new Promise(r => setTimeout(r, 0)); 
+  }
+  return results;
+};
+
+// 内存压缩：字符串池 (String Interning)
 const stringPool = new Map();
 const intern = (str) => {
   if (typeof str !== 'string' || !str) return "";
@@ -1166,9 +1172,9 @@ const searchTermToRoot = (term) => {
   const root = [...new Set(kept), ...new Set(mags.map(v=>`+${v}`))].join(" | ").trim();
   const res = root || "(blank)";
   
+  // [优化] 满载时直接清空缓存，避免使用删除操作导致的哈希表重建（Rehashing），这大大减少了内存抖动和 CPU 开销
   if (rootCache.size > CONFIG.CACHE_MAX) {
-      const keys = rootCache.keys();
-      for (let i = 0; i < CONFIG.CACHE_EVICT; i++) rootCache.delete(keys.next().value);
+      rootCache.clear(); 
   }
   rootCache.set(term, res);
   return res;
@@ -1209,9 +1215,9 @@ const buildWordStats = () => {
   const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10));
   const mp = new Map();
   
+  // [优化] 同步修改为更健康的清空策略
   if (tokenCache.size > CONFIG.CACHE_MAX) {
-      const keys = tokenCache.keys();
-      for (let i = 0; i < CONFIG.CACHE_EVICT; i++) tokenCache.delete(keys.next().value);
+      tokenCache.clear(); 
   }
   
   for (const r of VIEW) {
@@ -1286,7 +1292,6 @@ const BR_MAP_ALIASES = {
     cvr: ["商品会话百分比", "UnitSessionPercentage", "转化率-总计", "转化率"]
 };
 
-// ================= 新增：广告位报告映射 =================
 const PLACEMENT_MAP_ALIASES = {
     date: ["开始日期","Date","Day","StartDate"],
     campaign: ["广告活动名称","Campaignname","Campaign","CampaignName"],
@@ -1376,7 +1381,6 @@ const normalizePlacementRow = (raw, map, sourceFile) => {
     const sales = Math.max(0, safeNum(raw[map.sales])), orders = safeNum(raw[map.orders]);
     let placement = String(raw[map.placement] ?? "").trim();
 
-    // 归一化三大核心位置
     if (placement.includes("顶部") || placement.toLowerCase().includes("top of search")) placement = "Top of Search (首页首行)";
     else if (placement.includes("商品页面") || placement.toLowerCase().includes("product pages")) placement = "Product Pages (商品页面)";
     else if (placement.includes("其余位置") || placement.toLowerCase().includes("rest of search")) placement = "Rest of Search (其余位置)";
@@ -1412,7 +1416,7 @@ const detectRowType = (name, rankBy) => (rankBy === "searchTerm" || rankBy === "
 let ALL = [], VIEW = [], importedFiles = [], trendChart = null;
 let trafficChart = null;
 let BUSINESS_ROWS = []; 
-let PLACEMENT_ROWS = []; // 新增：广告位数据池
+let PLACEMENT_ROWS = [];
 let rankSort = { key: "spend", dir: "desc" };
 let RANK_ROWS = [], rankTypeFilter = "all";
 let LONG_TAIL_ROWS = [];
@@ -1469,20 +1473,24 @@ const importMultipleFiles = async (files) => {
       if (hasAsin && hasSessions) {
          log(`>> 检测到业务报告 (Business Report) 格式`, "good");
          const brMap = buildBrMap(rows);
-         const norm = rows.map(r => normalizeBrRow(r, brMap, name)).filter(r => r.asin);
+         // [优化] 分块映射防止卡顿
+         const mappedRows = await processInChunks(rows, r => normalizeBrRow(r, brMap, name));
+         const norm = mappedRows.filter(r => r.asin);
          BUSINESS_ROWS = BUSINESS_ROWS.concat(norm);
          log(`导入业务报告：${name} → ${norm.length.toLocaleString()} 行`, "good");
-      } else if (hasPlacement && !hasSearchTerm) { // 新增：广告位报告识别拦截
+      } else if (hasPlacement && !hasSearchTerm) { 
          log(`>> 检测到广告位报告 (Placement Report) 格式`, "good");
          const plMap = buildPlacementMap(rows);
-         const norm = rows.map(r => normalizePlacementRow(r, plMap, name)).filter(r => r.placement);
+         const mappedRows = await processInChunks(rows, r => normalizePlacementRow(r, plMap, name));
+         const norm = mappedRows.filter(r => r.placement);
          PLACEMENT_ROWS = PLACEMENT_ROWS.concat(norm);
          log(`导入广告位报告：${name} → ${norm.length.toLocaleString()} 行`, "good");
       } else {
          try {
              const map = buildMap(rows);
              log(`标准化字段 + 生成 Root：${name}`); 
-             const normalized = rows.map(r => normalizeRow(r, map, name)).filter(r => r && r.date);
+             const mappedRows = await processInChunks(rows, r => normalizeRow(r, map, name));
+             const normalized = mappedRows.filter(r => r && r.date);
              log(`追加广告数据：${name} → ${normalized.length.toLocaleString()} 行`, "good");
              ALL = ALL.concat(normalized); 
          } catch (e) {
@@ -1490,7 +1498,6 @@ const importMultipleFiles = async (files) => {
          }
       }
       importedFiles.push({ name, rows: rows.length });
-      await new Promise(r => setTimeout(r, 0));
     } catch (err) { log(`错误：${name} 导入失败：${err?.message || err}`, "bad"); }
   }
   
@@ -1510,7 +1517,6 @@ const importMultipleFiles = async (files) => {
           log(`业务报告去重完成：${beforeBr.toLocaleString()} → ${BUSINESS_ROWS.length.toLocaleString()}`, "good");
       }
   }
-  // 新增：广告位报告去重
   if (dedupeMode === "on" && PLACEMENT_ROWS.length) {
       const beforePl = PLACEMENT_ROWS.length;
       const seenPl = new Set();
@@ -1577,7 +1583,7 @@ const renderBusinessReport = () => {
 };
 
 /** =========================
- * Placement Report Renderer (New)
+ * Placement Report Renderer
  * ========================= */
 const renderPlacementAnalysis = () => {
     const card = $("placementCard");
@@ -1589,7 +1595,6 @@ const renderPlacementAnalysis = () => {
     }
     if(card) card.style.display = "block";
 
-    // 同步左侧的主筛选器：仅日期和广告活动在 Placement Report 中适用
     const filters = {
         dateStart: $("dateStart").value, 
         dateEnd: $("dateEnd").value,
@@ -1615,8 +1620,6 @@ const renderPlacementAnalysis = () => {
     });
 
     const totalSpend = sumMetrics(filtered).spend || 1;
-
-    // 按花费降序
     data.sort((a, b) => b.spend - a.spend);
 
     tbody.innerHTML = data.map(d => {
@@ -1716,7 +1719,7 @@ const groupBy = (rows, keyFn) => {
 };
 
 /** =========================
- * Anomaly Detection (New Feature)
+ * Anomaly Detection
  * ========================= */
 const detectAnomalies = (rows) => {
     const container = $("anomalyAlerts");
@@ -2524,7 +2527,6 @@ const applyFilters = (initial=false) => {
 
 const autoApply = debounce(applyFilters, 200);
 const applyQuickRange = (type) => {
-  // If Ads is empty but placement exists, try to get dates from there
   const datesData = ALL.length > 0 ? ALL : PLACEMENT_ROWS;
   if (!datesData.length) return;
   const dates = datesData.map(r=>r.date).filter(Boolean).sort();
