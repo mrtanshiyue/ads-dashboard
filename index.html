@@ -356,7 +356,7 @@
       text-overflow: ellipsis;
       white-space: nowrap; 
     }
-    #rankTable td:first-child, #negListTable td:nth-child(2), #bidUpTable td:nth-child(2), #businessReportTable td:nth-child(2) {
+    #rankTable td:first-child, #businessReportTable td:nth-child(2) {
         white-space: normal; 
         word-break: break-word;
     }
@@ -605,7 +605,7 @@
     <div class="fieldGroup">
       <div class="fieldRow">
           <label>品牌词识别 (Brand Name)</label>
-          <input id="brandNameInput" type="text" value="YTDBNS, EYEURL" placeholder="输入品牌名 (区分大小写)" />
+          <input id="brandNameInput" type="text" value="YTDBNS, EYEURL" placeholder="例如: BrandA, BrandB" />
           <div class="small">流量将分为: Brand / Competitor (ASIN) / Generic</div>
       </div>
     </div>
@@ -1075,77 +1075,6 @@
           原理：列出在 2 个或以上不同广告组（Campaign+AdGroup）中消耗预算的词。如果该词在多个组表现差异巨大，建议将预算集中到表现最好的组，否定差的组。
         </div>
       </div>
-      <div class="card tableCard">
-        <div class="cardTitle">
-          <h2>加价词 & 否定词清单（区分 Keyword / ASIN）</h2>
-          <div class="rightTools">
-            <div class="seg" role="tablist" aria-label="Action Type Filter">
-              <button class="segBtn active" id="btnActAll" data-act="all" type="button">全部</button>
-              <button class="segBtn" id="btnActKw" data-act="keyword" type="button">关键词</button>
-              <button class="segBtn" id="btnActAsin" data-act="asin" type="button">ASIN</button>
-            </div>
-            <span class="pill">加价</span>
-            <input id="bidSpend" class="miniInput" type="number" step="0.01" value="20" title="BID UP Spend ≥" />
-            <input id="bidOrders" class="miniInput" type="number" step="1" value="2" title="BID UP Orders ≥" />
-            <input id="bidRoas" class="miniInput" type="number" step="0.1" value="3.5" title="BID UP ROAS ≥" />
-            <select id="bidIntensity" class="miniSelect" title="加价建议强度">
-              <option value="auto" selected>自动 (ROAS 分层)</option>
-              <option value="10">统一 +10%</option>
-              <option value="20">统一 +20%</option>
-              <option value="30">统一 +30%</option>
-            </select>
-            <button class="btn primary" id="btnExportBidUp" type="button">导出加价词 CSV</button>
-          </div>
-        </div>
-        <div class="grid" style="grid-template-columns: repeat(12, 1fr); gap:14px;">
-          <div class="card" style="grid-column: span 6;">
-            <div class="cardTitle" style="margin-bottom:8px;">
-              <h2>加价词（BID UP）</h2>
-              <div class="hint">满足 花费/订单数/ROAS 阈值才入选（随筛选自动刷新）</div>
-            </div>
-            <div class="table-container" style="max-height: 420px;">
-              <table id="bidUpTable">
-                <thead>
-                  <tr>
-                    <th>类型</th>
-                    <th>名称</th>
-                    <th>花费</th>
-                    <th>订单数</th>
-                    <th>ROAS</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <div class="small" style="margin-top:10px;">
-              建议用途：加价 / 提预算 / 迁移到精确（或单独广告组）
-            </div>
-          </div>
-          <div class="card" style="grid-column: span 6;">
-            <div class="cardTitle" style="margin-bottom:8px;">
-              <h2>否定词（NEGATE）</h2>
-              <div class="hint">仅当维度为 搜索词 / 词根 时生成否定建议</div>
-            </div>
-            <div class="table-container" style="max-height: 420px;">
-              <table id="negListTable">
-                <thead>
-                  <tr>
-                    <th>类型</th>
-                    <th>名称</th>
-                    <th>花费</th>
-                    <th>订单数</th>
-                    <th>ROAS</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <div class="small" style="margin-top:10px;">
-              提醒：导出否定词仍以左侧“导出否定词 CSV（仅 NEGATE）”为准
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
   </main>
 </div>
@@ -1219,13 +1148,11 @@
 const CONFIG = {
     CACHE_MAX: 20000,
     CACHE_EVICT: 10000,
-    STR_POOL_MAX: 50000,
-    BID_ROAS_HIGH: 6,
-    BID_ROAS_MID: 4.5,
-    BID_PCT_HIGH: 30,
-    BID_PCT_MID: 20,
-    BID_PCT_LOW: 10
+    STR_POOL_MAX: 50000
 };
+
+// 全局降维聚合缓存，避免多次计算
+let CURRENT_RANK_GROUPS = null;
 
 // [优化] 页面加载完后移除防闪烁 preload
 window.addEventListener('load', () => {
@@ -1293,8 +1220,8 @@ const log = (msg, level="info")=>{
   const t = new Date(), stamp = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}:${String(t.getSeconds()).padStart(2,"0")}`;
   const line = document.createElement("div");
   const colors = { bad: "#b42318", warn: "#b54708", good: "#1a7f37" };
-  line.className = "small"; line.style.cssText = "padding:6px 6px;border-bottom:1px solid rgba(229,229,234,.7);";
   if (colors[level]) line.style.color = colors[level];
+  line.className = "small"; line.style.cssText = "padding:6px 6px;border-bottom:1px solid rgba(229,229,234,.7);";
   line.textContent = `[${stamp}] ${msg}`;
   logBox.prepend(line);
 };
@@ -1346,10 +1273,14 @@ const SYNONYM_MAP = [
 ];
 const PHRASES = ["blue light", "cat eye", "spring hinge", "anti glare", "scratch resistant"];
 const MAG_RE = /\b([1-3](?:\.\d{1,2})?)\b/g;
+
+// [优化] 防御型正则转义，阻止 ReDoS (正则灾难回溯)
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const PHRASE_REGEXES = PHRASES.map(p => ({
-  re: new RegExp("\\b" + p.replace(/\s+/g, "\\s+") + "\\b", "g"),
+  re: new RegExp("\\b" + escapeRegExp(p).replace(/\s+/g, "\\s+") + "\\b", "g"),
   to: p.replace(/\s+/g, "_")
 }));
+
 const normalizeTextBase = (s) => {
   let x = String(s ?? "").toLowerCase().replace(/[\u2010-\u2015]/g, "-");
   for(let i=0; i<SYNONYM_MAP.length; i++) x = x.replace(SYNONYM_MAP[i].re, SYNONYM_MAP[i].to);
@@ -1368,7 +1299,6 @@ const searchTermToRoot = (term) => {
   const root = [...new Set(kept), ...new Set(mags.map(v=>`+${v}`))].join(" | ").trim();
   const res = root || "(blank)";
   
-  // [优化] 化解缓存断崖：只删除最早的一半
   if (rootCache.size > CONFIG.CACHE_MAX) {
       const keys = rootCache.keys();
       for (let i = 0; i < CONFIG.CACHE_EVICT; i++) rootCache.delete(keys.next().value);
@@ -1412,7 +1342,6 @@ const buildWordStats = () => {
   const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10));
   const mp = new Map();
   
-  // [优化] 缓存清理优化
   if (tokenCache.size > CONFIG.CACHE_MAX) {
       const keys = tokenCache.keys();
       for (let i = 0; i < CONFIG.CACHE_EVICT; i++) tokenCache.delete(keys.next().value);
@@ -1517,7 +1446,6 @@ const normalizeRow = (raw, map, sourceFile) => {
   const sales = safeNum(raw[map.sales7d]), orders = safeNum(raw[map.orders7d]);
   const st = String(raw[map.searchTerm] ?? "").trim();
   
-  // [优化] 应用 intern() 减少大量重复字符串的内存开销
   return {
     sourceFile: intern(sourceFile), 
     date: intern(toISODate(raw[map.date])),
@@ -1529,12 +1457,14 @@ const normalizeRow = (raw, map, sourceFile) => {
     searchTerm: st,
     searchTermLower: st.toLowerCase(),
     searchTermRoot: searchTermToRoot(st),
-    impr, clicks, spend, sales, orders,
+    impr, clicks, spend, 
+    sales: Math.max(0, sales), 
+    orders,
     ctr: map.ctr ? safeNum(raw[map.ctr]) : (impr > 0 ? clicks / impr : 0),
     cpc: map.cpc ? safeNum(raw[map.cpc]) : (clicks > 0 ? spend / clicks : 0),
-    cvr: map.cvr ? safeNum(raw[map.cvr]) : (clicks > 0 ? orders / clicks : 0),
+    cvr: map.cvr ? safeNum(raw[map.cvr]) : (clicks > 0 ? Math.min(1, orders / clicks) : 0),
     acos: map.acos ? safeNum(raw[map.acos]) : (sales > 0 ? spend / sales : 0),
-    roas: map.roas ? safeNum(raw[map.roas]) : (spend > 0 ? sales / spend : 0),
+    roas: map.roas ? safeNum(raw[map.roas]) : (spend > 0 ? Math.max(0, sales) / spend : 0),
   };
 };
 const normalizeBrRow = (raw, map, sourceFile) => {
@@ -1547,7 +1477,7 @@ const normalizeBrRow = (raw, map, sourceFile) => {
         sourceFile: intern(sourceFile),
         asin: intern(String(raw[map.asin] ?? "").trim()),
         title: String(raw[map.title] ?? "").trim(), // 不压缩长标题
-        sessions, units, sales,
+        sessions, units, sales: Math.max(0, sales),
         cvr: isFinite(calculatedCvr) ? calculatedCvr : 0,
         aov: isFinite(calculatedAov) ? calculatedAov : 0
     };
@@ -1560,7 +1490,6 @@ const isASINLike = (s) => {
   const x = String(s || "").trim();
   if (!x) return false;
   if (x.length < 10) return false; 
-  // [优化] 移除外部带 /g 标志的正则，避免 lastIndex 残留状态风险
   const candidates = x.match(/[A-Z0-9]{10}/ig);
   if (!candidates) return false;
   for (const c of candidates) {
@@ -1578,7 +1507,6 @@ let trafficChart = null;
 let BUSINESS_ROWS = []; 
 let rankSort = { key: "spend", dir: "desc" };
 let RANK_ROWS = [], rankTypeFilter = "all";
-let actionTypeFilter = "all", BID_ROWS = [], NEG_ROWS = [];
 let LONG_TAIL_ROWS = [];
 
 /** =========================
@@ -1605,7 +1533,7 @@ const importMultipleFiles = async (files) => {
   log(`开始导入：${files.length} 个文件（merge=${mergeMode}, dedupe=${dedupeMode}, maxRows=${maxRows}）`);
   setSubtitle("正在导入文件…（请看左侧导入日志）");
   if (mergeMode === "replace") { 
-    ALL = []; BUSINESS_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); log("Replace 模式：已清空历史数据与缓存", "warn"); 
+    ALL = []; BUSINESS_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; log("Replace 模式：已清空历史数据与缓存", "warn"); 
   }
   for (const file of files) {
     const name = file.name, lower = name.toLowerCase(); log(`读取文件：${name}`);
@@ -1643,7 +1571,6 @@ const importMultipleFiles = async (files) => {
   if (dedupeMode === "on" && ALL.length) { 
       const before = ALL.length; ALL = dedupeRows(ALL); log(`Ads 数据去重完成：${before.toLocaleString()} → ${ALL.length.toLocaleString()}`, "good"); 
   }
-  // [优化] 填补了 Business Report 的去重漏洞
   if (dedupeMode === "on" && BUSINESS_ROWS.length) {
       const beforeBr = BUSINESS_ROWS.length;
       const seenBr = new Set();
@@ -1757,7 +1684,7 @@ const sumMetrics = (rows) => {
       clicks += r.clicks;
       orders += r.orders;
       spendCents += Math.round(r.spend * 100);
-      salesCents += Math.round(r.sales * 100);
+      salesCents += Math.max(0, Math.round(r.sales * 100));
   }
   const spend = spendCents / 100;
   const sales = salesCents / 100;
@@ -1766,9 +1693,9 @@ const sumMetrics = (rows) => {
     impr, clicks, spend, sales, orders,
     ctr: impr > 0 ? clicks / impr : 0,
     cpc: clicks > 0 ? spend / clicks : 0,
-    cvr: clicks > 0 ? orders / clicks : 0,
+    cvr: clicks > 0 ? Math.min(1, orders / clicks) : 0,
     acos: sales > 0 ? spend / sales : 0,
-    roas: spend > 0 ? sales / spend : 0,
+    roas: spend > 0 ? Math.max(0, sales) / spend : 0,
   };
 };
 const groupBy = (rows, keyFn) => {
@@ -1783,7 +1710,7 @@ const groupBy = (rows, keyFn) => {
 const renderTrafficSegmentation = () => {
     const card = $("trafficSegCard");
     const brandNameInput = $("brandNameInput").value.trim().toLowerCase();
-    const brandNames = brandNameInput.split(/[,，]+/).map(s => s.trim()).filter(Boolean);
+    const brandNames = brandNameInput.split(/[,，]+/).map(s => s.replace(/[^a-z0-9]/gi, '').toLowerCase()).filter(Boolean);
     if (!VIEW.length) { if(trafficChart) { trafficChart.destroy(); trafficChart = null; } return; }
     const segments = {
         'Brand': { label: 'Brand (品牌词)', rows: [] },
@@ -1792,8 +1719,9 @@ const renderTrafficSegmentation = () => {
     };
     for (const r of VIEW) {
         const term = (r.searchTerm || "").toLowerCase();
+        const cleanTerm = term.replace(/[^a-z0-9]/g, '');
         if (isASINLike(term)) { segments['Competitor'].rows.push(r); } 
-        else if (brandNames.some(b => term.includes(b))) { segments['Brand'].rows.push(r); } 
+        else if (brandNames.some(b => cleanTerm.includes(b))) { segments['Brand'].rows.push(r); } 
         else { segments['Generic'].rows.push(r); }
     }
     const data = Object.keys(segments).map(k => {
@@ -1884,7 +1812,6 @@ const renderLongTailMining = () => {
   const candidates = [];
   for (const [term, rows] of groups.entries()) {
     if (isASINLike(term)) continue;
-    // [优化] 修复带有连字符 (-) 的单词字数计算逻辑
     let wordCount = (term || "").replace(/-/g, " ").trim().split(/\s+/).filter(Boolean).length;
     
     if (term.includes("glasses") || term.includes("frame")) wordCount -= 0.5;
@@ -2242,39 +2169,16 @@ const decideAction = (item, rankBy) => {
   const condNeg1 = item.spend >= r.spendNeg && item.orders <= 0; if (condNeg1) reasons.push(`花费≥${r.spendNeg} & 订单数=0`);
   const condNeg2 = item.clicks >= r.clicksNeg && item.roas > 0 && item.roas < r.roasNeg; if (condNeg2) reasons.push(`点击量≥${r.clicksNeg} & ROAS<${r.roasNeg}`);
   const condNeg3 = item.clicks >= r.clicksNeg && item.sales <= 0 && item.spend >= r.spendNeg; if (condNeg3) reasons.push(`销售额=0 & 花费≥${r.spendNeg}`);
-  if (condNeg1 || condNeg2 || condNeg3) return { action:"NEGATE", reason: reasons.join(" • "), suggestNeg: suggestNegative(item.name, rankBy) };
+  if (condNeg1 || condNeg2 || condNeg3) return { action:"NEGATE", reason: reasons.join(" • ") };
   reasons.length = 0;
   const condKeep1 = item.roas >= r.roasKeep && item.spend > 0; if (condKeep1) reasons.push(`ROAS≥${r.roasKeep}`);
   const condKeep2 = item.orders >= r.ordersKeep; if (condKeep2) reasons.push(`订单数≥${r.ordersKeep}`);
-  if (condKeep1 || condKeep2) return { action:"KEEP", reason: reasons.join(" • "), suggestNeg:"" };
+  if (condKeep1 || condKeep2) return { action:"KEEP", reason: reasons.join(" • ") };
   if (item.orders > 0 && item.roas >= r.roasMigrateMin && item.roas < r.roasKeep)
-    return { action:"MIGRATE", reason: `订单数>0 & ROAS≥${r.roasMigrateMin} & <${r.roasKeep}`, suggestNeg:"" };
-  return { action:"KEEP", reason:"无风险信号", suggestNeg:"" };
+    return { action:"MIGRATE", reason: `订单数>0 & ROAS≥${r.roasMigrateMin} & <${r.roasKeep}` };
+  return { action:"KEEP", reason:"无风险信号" };
 };
-const suggestNegative = (name, rankBy) => {
-  const negType = $("exportNegMatch")?.value || "phrase";
-  const keyword = (rankBy === "searchTermRoot" ? rootToPhrase(name) : String(name || "").trim());
-  return keyword && keyword !== "(blank)" ? `${negType.toUpperCase()}: ${keyword}` : "";
-};
-const actionTag = (action) => `<span class="tag ${action==="NEGATE"?"bad":action==="MIGRATE"?"warn":"good"}">${action}</span>`;
 
-/** =========================
- * BID UP
- * ========================= */
-const decideBidUp = (item) => {
-  const spendBid = safeNum($("bidSpend")?.value ?? 20);
-  const ordersBid = Math.max(0, Math.floor(safeNum($("bidOrders")?.value ?? 2)));
-  const roasBid = safeNum($("bidRoas")?.value ?? 3.5);
-  if (!(item.spend >= spendBid && item.orders >= ordersBid && item.roas >= roasBid)) return { bid:false, suggest:"" };
-  let pct = 20;
-  const intensity = $("bidIntensity")?.value;
-  // [优化] 使用 CONFIG 替换魔法数字
-  if (intensity !== "auto") pct = Number(intensity) || 20;
-  else if (item.roas >= CONFIG.BID_ROAS_HIGH) pct = CONFIG.BID_PCT_HIGH; 
-  else if (item.roas >= CONFIG.BID_ROAS_MID) pct = CONFIG.BID_PCT_MID; 
-  else pct = CONFIG.BID_PCT_LOW;
-  return { bid:true, suggest:`提高竞价 +${pct}%` };
-};
 
 /** =========================
  * Export (CSV Functions)
@@ -2283,14 +2187,16 @@ const exportNegativesCSV = () => {
   const rankBy = $("rankBy").value;
   if (!["searchTerm", "searchTermRoot"].includes(rankBy)) { log("导出失败：只有在榜单维度为 Search Term / Root 时才允许导出否定词", "bad"); alert("导出失败：请将“榜单聚合维度”切换为 Search Term 或 Search Term Root，再导出否定词。"); return; }
   if (!VIEW.length) { log("导出失败：当前视图为空", "bad"); alert("导出失败：当前视图为空。"); return; }
+  
+  // [优化] 复用已有的降维缓存，避免导出时重新执行巨大的 groupBy 循环
   const itemsToExport = $("exportScope").value === "rank" ? RANK_ROWS.slice() : (() => {
-    const groups = groupBy(VIEW, getRankKey());
-    return [...groups.entries()].map(([name, list]) => {
+    return [...(CURRENT_RANK_GROUPS || new Map()).entries()].map(([name, list]) => {
       const it = { name, ...sumMetrics(list) };
       const a = decideAction(it, rankBy);
-      return { ...it, action:a.action, reason:a.reason, suggestNeg:a.suggestNeg };
+      return { ...it, action:a.action, reason:a.reason };
     }).sort((a,b)=> (b.spend||0) - (a.spend||0));
   })();
+  
   const rows = [["关键词","否定匹配","分组维度","理由","花费","销售额","订单数","ROAS","ACOS"]];
   const seen = new Set();
   const defaultNegMatch = $("exportNegMatch").value.toUpperCase();
@@ -2320,22 +2226,7 @@ const exportNegativesCSV = () => {
   downloadText(filename, toCSV(rows));
   log(`已导出否定词 CSV：${filename}（${rows.length-1} 条）`, "good");
 };
-const exportBidUpCSV = () => {
-  if (!VIEW.length) { log("导出失败：当前视图为空", "bad"); alert("导出失败：当前视图为空。"); return; }
-  buildActionLists();
-  if (!BID_ROWS.length) { log("未找到可导出的 BID UP 项（请调低阈值或扩大日期范围）", "warn"); alert("未找到可导出的 BID UP 项（请调低阈值或扩大日期范围）。"); return; }
-  const rows = [["类型","名称","建议","花费","销售额","订单数","ROAS","ACOS"]];
-  for (const it of BID_ROWS) {
-    rows.push([
-      (it.type || "").toUpperCase(), String(it.name || ""), String(it.suggest || ""),
-      (it.spend ?? 0).toFixed(2), (it.sales ?? 0).toFixed(2), String(it.orders ?? 0),
-      (it.roas ?? 0).toFixed(2), ((it.acos ?? 0) * 100).toFixed(2) + "%"
-    ]);
-  }
-  const filename = `bidup_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`;
-  downloadText(filename, toCSV(rows));
-  log(`已导出加价词 CSV：${filename}（${rows.length-1} 条）`, "good");
-};
+
 const exportRankCSV = () => {
     if (!RANK_ROWS.length) { alert("当前榜单为空，无数据可导出。"); return; }
     const headers = ["Name", "Spend", "Sales", "Orders", "Impressions", "Clicks", "CTR", "CPC", "CVR", "ACOS", "ROAS", "Action", "Reason"];
@@ -2433,19 +2324,20 @@ const sortRank = (items) => {
     return (av > bv ? 1 : -1) * mul;
   });
 };
-const buildRankTable = (rows) => {
-  const rankBy = $("rankBy").value, keyFn = getRankKey();
-  let items = [...groupBy(rows, keyFn).entries()].map(([name, list]) => {
+const buildRankTable = () => {
+  const rankBy = $("rankBy").value;
+  // [优化] 直接使用顶层的缓存字典，省去 25 万次大循环
+  let items = [...(CURRENT_RANK_GROUPS || new Map()).entries()].map(([name, list]) => {
     const base = { name, ...sumMetrics(list) };
-    const {action, reason, suggestNeg} = decideAction(base, rankBy);
-    return { ...base, action, reason, suggestNeg };
+    const {action, reason} = decideAction(base, rankBy);
+    return { ...base, action, reason };
   });
   if (rankTypeFilter !== "all") items = items.filter(it => detectRowType(it.name, rankBy) === rankTypeFilter);
   sortRank(items);
   RANK_ROWS = items.slice(0, clamp(safeNum($("rankTopN").value) || 30, 5, 500));
 };
 const renderRankTable = () => {
-  buildRankTable(VIEW);
+  buildRankTable();
   const searchBtnHtml = `<span class="action-icon search-btn" title="精准搜索">🔍</span>`;
   $("rankTable").querySelector("tbody").innerHTML = RANK_ROWS.map(it => `
     <tr>
@@ -2463,131 +2355,99 @@ const renderRankTable = () => {
     </tr>
   `).join("");
 };
-const buildActionLists = () => {
-  const rankBy = $("rankBy").value, keyFn = getRankKey();
-  const allItems = [...groupBy(VIEW, keyFn).entries()].map(([name, list]) => ({ name, ...sumMetrics(list) }));
-  let bidCandidates = [], negCandidates = [];
-  for (const base of allItems) {
-    const type = detectRowType(base.name, rankBy);
-    const {bid, suggest} = decideBidUp(base);
-    if (bid && (type === "keyword" || type === "asin")) bidCandidates.push({ ...base, type, suggest });
-    const {action} = decideAction(base, rankBy);
-    if (action === "NEGATE" && (type === "keyword" || type === "asin")) negCandidates.push({ ...base, type });
-  }
-  const filterAndSort = (items) => {
-    let filtered = actionTypeFilter === "all" ? items : items.filter(x => x.type === actionTypeFilter);
-    return filtered.sort((a,b)=> (b.spend||0) - (a.spend||0)).slice(0, clamp(safeNum($("rankTopN").value) || 30, 5, 500));
-  };
-  BID_ROWS = filterAndSort(bidCandidates);
-  NEG_ROWS = filterAndSort(negCandidates);
-};
-const renderActionLists = () => {
-  buildActionLists();
-  const renderTable = (tableId, rows, getRowHtml) => { $(tableId).querySelector("tbody").innerHTML = rows.map(getRowHtml).join(""); };
-  renderTable("bidUpTable", BID_ROWS, it => `
-    <tr>
-      <td><span class="pill">${it.type.toUpperCase()}</span></td>
-      <td title="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 140)}</td>
-      <td>${fmtMoney(it.spend)}</td>
-      <td>${fmtInt(it.orders)}</td>
-      <td>${(it.roas ?? 0).toFixed(2)}</td>
-      </tr>
-  `);
-  renderTable("negListTable", NEG_ROWS, it => `
-    <tr>
-      <td><span class="pill">${it.type.toUpperCase()}</span></td>
-      <td title="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 140)}</td>
-      <td>${fmtMoney(it.spend)}</td>
-      <td>${fmtInt(it.orders)}</td>
-      <td>${(it.roas ?? 0).toFixed(2)}</td>
-    </tr>
-  `);
-};
 
 /** =========================
- * Apply Filters
+ * Apply Filters (Async YIELD Optimized)
  * ========================= */
 const applyFilters = (initial=false) => {
-  try {
-      if (!ALL.length && !BUSINESS_ROWS.length) {
-        setSubtitle("未导入数据。请导入同类报表（支持多文件）。");
-        $("kpiGrid").innerHTML = "";
-        if (trendChart) { trendChart.destroy(); trendChart = null; }
-        if (trafficChart) { trafficChart.destroy(); trafficChart = null; }
-        $("rankTable").querySelector("tbody").innerHTML = "";
-        renderActionLists(); renderWordFreq(); renderLongTailMining(); renderWeekdayAnalysis(); renderCPCDistribution(); renderLengthAnalysis(); renderMatchTypeAnalysis(); renderConflictAnalysis(); renderBusinessReport(); renderTrafficSegmentation(); 
-        return;
-      }
-      const filters = {
-        dateStart: $("dateStart").value, dateEnd: $("dateEnd").value,
-        filterSource: $("filterSource").value, filterPortfolio: $("filterPortfolio").value,
-        filterCampaign: $("filterCampaign").value, filterAdGroup: $("filterAdGroup").value,
-        filterTargeting: $("filterTargeting").value, filterMatchType: $("filterMatchType").value,
-        filterAdType: $("filterAdType").value, 
-        filterSearchTerm: $("filterSearchTerm").value.trim(),
-        filterSearchExact: $("filterSearchExact").checked 
-      };
-      
-      // [优化] 过滤条件顺序重排，运用短路求值原则提速
-      VIEW = ALL.filter(r => {
-        // 1. 运算成本最低的基础等值/范围校验
-        if (filters.filterSource && r.sourceFile !== filters.filterSource) return false;
-        if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) return false;
-        if (filters.filterCampaign && r.campaign !== filters.filterCampaign) return false;
-        if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) return false;
-        if (filters.filterTargeting && r.targeting !== filters.filterTargeting) return false;
-        if (filters.filterMatchType && r.matchType !== filters.filterMatchType) return false;
-        if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false;
-
-        // 2. 中等运算成本
-        if (filters.filterAdType) {
-            const lowerMatch = r.matchType.toLowerCase();
-            const isManual = ["broad", "phrase", "exact"].includes(lowerMatch) || lowerMatch.includes("product") || lowerMatch.includes("targeting");
-            if (filters.filterAdType === "manual" && !isManual) return false;
-            if (filters.filterAdType === "auto" && isManual) return false;
-        }
-
-        // 3. 运算成本最高的字符串比对放在最后
-        if (filters.filterSearchTerm) {
-            const term = filters.filterSearchTerm.toLowerCase();
-            if (filters.filterSearchExact) {
-                if (r.searchTermLower !== term) return false;
-            } else {
-                if (!r.searchTermLower.includes(term)) return false;
-            }
-        }
-        return true;
-      });
-      const total = sumMetrics(VIEW);
-      if (ALL.length > 0) {
-          setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads Rows=${ALL.length.toLocaleString()}；Business Rows=${BUSINESS_ROWS.length.toLocaleString()}；日期范围 ${filters.dateStart} → ${filters.dateEnd}`);
-      } else {
-          setSubtitle(`已导入 Business Report；Row=${BUSINESS_ROWS.length.toLocaleString()}`);
-      }
-      requestAnimationFrame(() => {
-          renderKPIs(total); 
-          renderTrend(VIEW);
-          renderRankTable();
-          renderActionLists();
-          renderWordFreq();
-          renderLongTailMining(); 
-          renderWeekdayAnalysis(); 
-          renderCPCDistribution(); 
-          renderAutoManual();
-          renderLengthAnalysis();
-          renderMatchTypeAnalysis();
-          renderConflictAnalysis(); 
-          renderBusinessReport(); 
-          renderTrafficSegmentation(); 
-          if (initial) {
-            document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
-            document.querySelector('.chipBtn[data-range="all"]')?.classList.add("active");
-          }
-      });
-  } catch (e) {
-      console.error("Critical Error in applyFilters:", e);
+  if (!ALL.length && !BUSINESS_ROWS.length) {
+    setSubtitle("未导入数据。请导入同类报表（支持多文件）。");
+    $("kpiGrid").innerHTML = "";
+    if (trendChart) { trendChart.destroy(); trendChart = null; }
+    if (trafficChart) { trafficChart.destroy(); trafficChart = null; }
+    $("rankTable").querySelector("tbody").innerHTML = "";
+    renderRankTable(); renderWordFreq(); renderLongTailMining(); renderWeekdayAnalysis(); renderCPCDistribution(); renderLengthAnalysis(); renderMatchTypeAnalysis(); renderConflictAnalysis(); renderBusinessReport(); renderTrafficSegmentation(); 
+    return;
   }
+  
+  // [优化] UI 防卡死：先行挂载加载文字，向浏览器让出线程
+  setSubtitle("🔄 正在深度分析与聚合数据，请稍候...");
+  
+  setTimeout(() => {
+      try {
+          const filters = {
+            dateStart: $("dateStart").value, dateEnd: $("dateEnd").value,
+            filterSource: $("filterSource").value, filterPortfolio: $("filterPortfolio").value,
+            filterCampaign: $("filterCampaign").value, filterAdGroup: $("filterAdGroup").value,
+            filterTargeting: $("filterTargeting").value, filterMatchType: $("filterMatchType").value,
+            filterAdType: $("filterAdType").value, 
+            filterSearchTerm: $("filterSearchTerm").value.trim(),
+            filterSearchExact: $("filterSearchExact").checked 
+          };
+          
+          VIEW = ALL.filter(r => {
+            if (filters.filterSource && r.sourceFile !== filters.filterSource) return false;
+            if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) return false;
+            if (filters.filterCampaign && r.campaign !== filters.filterCampaign) return false;
+            if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) return false;
+            if (filters.filterTargeting && r.targeting !== filters.filterTargeting) return false;
+            if (filters.filterMatchType && r.matchType !== filters.filterMatchType) return false;
+            if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false;
+
+            if (filters.filterAdType) {
+                const lowerMatch = r.matchType.toLowerCase();
+                const isManual = ["broad", "phrase", "exact"].includes(lowerMatch) || lowerMatch.includes("product") || lowerMatch.includes("targeting");
+                if (filters.filterAdType === "manual" && !isManual) return false;
+                if (filters.filterAdType === "auto" && isManual) return false;
+            }
+
+            if (filters.filterSearchTerm) {
+                const term = filters.filterSearchTerm.toLowerCase();
+                if (filters.filterSearchExact) {
+                    if (r.searchTermLower !== term) return false;
+                } else {
+                    if (!r.searchTermLower.includes(term)) return false;
+                }
+            }
+            return true;
+          });
+          
+          const total = sumMetrics(VIEW);
+          
+          // [优化] 计算并缓存在全局作用域，免除后续表格和导出功能的巨大遍历开销
+          CURRENT_RANK_GROUPS = groupBy(VIEW, getRankKey());
+
+          if (ALL.length > 0) {
+              setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads Rows=${ALL.length.toLocaleString()}；Business Rows=${BUSINESS_ROWS.length.toLocaleString()}；日期范围 ${filters.dateStart} → ${filters.dateEnd}`);
+          } else {
+              setSubtitle(`已导入 Business Report；Row=${BUSINESS_ROWS.length.toLocaleString()}`);
+          }
+          
+          requestAnimationFrame(() => {
+              renderKPIs(total); 
+              renderTrend(VIEW);
+              renderRankTable();
+              renderWordFreq();
+              renderLongTailMining(); 
+              renderWeekdayAnalysis(); 
+              renderCPCDistribution(); 
+              renderAutoManual();
+              renderLengthAnalysis();
+              renderMatchTypeAnalysis();
+              renderConflictAnalysis(); 
+              renderBusinessReport(); 
+              renderTrafficSegmentation(); 
+              if (initial) {
+                document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active"));
+                document.querySelector('.chipBtn[data-range="all"]')?.classList.add("active");
+              }
+          });
+      } catch (e) {
+          console.error("Critical Error in applyFilters:", e);
+      }
+  }, 20); // 给浏览器留出20ms重绘UI
 };
+
 const autoApply = debounce(applyFilters, 200);
 const applyQuickRange = (type) => {
   if (!ALL.length) return;
@@ -2732,7 +2592,6 @@ const generateReport = async () => {
     } finally { aiLoading.style.display = 'none'; btnStartAnalyze.disabled = false; }
 };
 
-// [优化] 提升提取 JSON 的健壮性
 const extractJSON = (text) => {
     if (!text) return null;
     let cleanText = text.replace(/```json/gi, "").replace(/```/g, "").trim();
@@ -2865,8 +2724,9 @@ const renderJSONResult = (text, mode) => {
             html += `<tr style="border-bottom:1px solid var(--line);"><td style="padding:6px;">${item.term}</td><td>$${item.current_cpc}</td><td style="font-weight:bold;color:${color}">$${item.suggested_bid}</td><td style="color:var(--muted)">${item.reason}</td></tr>`;
         }); html += `</tbody></table>`;
     } else if (mode === 'pop') {
-        const obj = Array.isArray(safeList) ? safeList[0] : safeList;
-        html = `<h3>📈 环比增长分析</h3><div class="card" style="padding:15px;"><div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Trend: ${obj.trend}</div><div style="margin-bottom:8px;"><strong>Key Factor:</strong> ${obj.key_factor}</div><p style="margin-bottom:8px;">${obj.analysis}</p><div style="background:var(--bg); padding:10px; border-radius:8px;">💡 <strong>建议:</strong> ${obj.actionable_advice}</div></div>`;
+        // [修复容错Bug] 应对大模型可能返回单一Object而非Array的情况
+        const obj = Array.isArray(data) ? data[0] : (data || {});
+        html = `<h3>📈 环比增长分析</h3><div class="card" style="padding:15px;"><div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Trend: ${obj.trend || 'N/A'}</div><div style="margin-bottom:8px;"><strong>Key Factor:</strong> ${obj.key_factor || 'N/A'}</div><p style="margin-bottom:8px;">${obj.analysis || 'N/A'}</p><div style="background:var(--bg); padding:10px; border-radius:8px;">💡 <strong>建议:</strong> ${obj.actionable_advice || 'N/A'}</div></div>`;
     } else if (mode === 'intent') {
         const counts = { Awareness:0, Consideration:0, Purchase:0 }; safeList.forEach(i => counts[i.stage] = (counts[i.stage]||0) + 1); const total = safeList.length;
         html = `<h3>🧠 搜索意图分布</h3><div style="margin-bottom:15px; display:flex; gap:5px; height:20px;">`;
@@ -2893,7 +2753,7 @@ $('aiResult').addEventListener('click', (e) => {
     }
 });
 $("fileInput").addEventListener("change", async (e)=>{ const files = Array.from(e.target.files || []); if (files.length) { log("文件选择事件触发"); await importMultipleFiles(files); e.target.value = ""; } });
-const filterIds = ["dateStart","dateEnd","filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","bidSpend","bidOrders","bidRoas","bidIntensity","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "brandNameInput"];
+const filterIds = ["dateStart","dateEnd","filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "brandNameInput"];
 filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280));
 $("brandNameInput").addEventListener("input", debounce(applyFilters, 400)); 
@@ -2902,20 +2762,20 @@ $("btnReset").addEventListener("click", () => {
   ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType", "brandNameInput"].forEach(id => ($(id).value = ""));
   $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters();
 });
-$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); renderFileList(); populateDropdowns(); applyFilters(true); });
+$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; renderFileList(); populateDropdowns(); applyFilters(true); });
 document.querySelectorAll(".chipBtn").forEach(btn => btn.addEventListener("click", () => { if (btn.closest('#aiModal')) return; document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); }));
-$("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if (!key) return; rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderRankTable(); renderActionLists(); renderWordFreq(); }));
+// [优化] 去除了榜单表头点击时多余的 renderWordFreq() 调用
+$("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if (!key) return; rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderRankTable(); }));
 $("rankTable").addEventListener("click", (e) => { if (e.target.classList.contains("search-btn")) { const td = e.target.closest("td"); const term = td.getAttribute("data-name"); if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); $(".sidebar").scrollTop = 0; } } });
 $("wfTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if(!key) return; wfSort = (wfSort.key === key) ? {key, dir: (wfSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderWordFreq(); }));
 document.addEventListener("click", (e) => {
   const btn = e.target.closest(".segBtn"); if (!btn) return;
   if (btn.dataset.type) setTypeFilter(btn.dataset.type);
-  if (btn.dataset.act) setActionTypeFilter(btn.dataset.act);
   if (btn.dataset.wf) { WF_MODE = btn.dataset.wf; document.querySelectorAll('.seg[aria-label="Word Frequency Mode"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.wf === WF_MODE)); renderWordFreq(); }
 });
-const setTypeFilter = (t) => { rankTypeFilter = t; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.type === t)); renderRankTable(); renderActionLists(); renderWordFreq(); };
-const setActionTypeFilter = (t) => { actionTypeFilter = t; document.querySelectorAll('.seg[aria-label="Action Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.act === t)); renderActionLists(); renderWordFreq(); };
-$("btnExportWf").addEventListener("click", exportWordFreqCSV); $("btnExportNeg").addEventListener("click", exportNegativesCSV); $("btnExportBidUp").addEventListener("click", exportBidUpCSV); $("btnExportLongTail").addEventListener("click", exportLongTailCSV); $("btnExportRank").addEventListener("click", exportRankCSV);
+// [优化] 去除了切换榜单类型时多余的 renderWordFreq() 调用
+const setTypeFilter = (t) => { rankTypeFilter = t; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.type === t)); renderRankTable(); };
+$("btnExportWf").addEventListener("click", exportWordFreqCSV); $("btnExportNeg").addEventListener("click", exportNegativesCSV); $("btnExportLongTail").addEventListener("click", exportLongTailCSV); $("btnExportRank").addEventListener("click", exportRankCSV);
 $("btnRuleReset").addEventListener("click", () => { $("ruleSpendNeg").value = 30; $("ruleClicksNeg").value = 20; $("ruleRoasNeg").value = 1.5; $("ruleRoasKeep").value = 3; $("ruleOrdersKeep").value = 2; $("ruleRoasMigrateMin").value = 2; applyFilters(); });
 $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert("所有依赖库加载正常！"); });
 const toggleTheme = () => { const isDark = document.documentElement.getAttribute("data-theme") === "dark"; const newTheme = isDark ? "light" : "dark"; document.documentElement.setAttribute("data-theme", newTheme); localStorage.setItem("theme", newTheme); if (trendChart && typeof trendChart.update === 'function') { if ((VIEW && VIEW.length) || (ALL && ALL.length)) renderTrend(VIEW || ALL); } };
