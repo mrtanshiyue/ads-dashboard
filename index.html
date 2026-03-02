@@ -1146,7 +1146,8 @@ const SYNONYM_MAP = [
   { re: /\bprogressive\b/g, to: "progressive" }
 ];
 const PHRASES = ["blue light", "cat eye", "spring hinge", "anti glare", "scratch resistant"];
-const MAG_RE = /\b([1-3](?:\.\d{1,2})?)\b/g;
+// 【修复：统一了度数提取的正则范围为 0-6，兼容高倍率老花镜】
+const MAG_RE = /\b([0-6](?:\.\d{1,2})?)[xX]?\b/g;
 
 const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const PHRASE_REGEXES = PHRASES.map(p => ({
@@ -1166,13 +1167,13 @@ const searchTermToRoot = (term) => {
   if (!term) return "(blank)";
   if (rootCache.has(term)) return rootCache.get(term);
   const base = normalizeTextBase(term);
-  const mags = [...(base.match(MAG_RE) || [])].map(Number).filter(n => n >= 1 && n <= 4).map(String);
+  // 【修复：放宽 Root 过滤正则限制，同步到 0-6 倍率】
+  const mags = [...(base.match(MAG_RE) || [])].map(n => parseFloat(n.replace(/[xX]/g, ''))).filter(n => n > 0 && n <= 6).map(String);
   const tokens = base.split(" ").filter(Boolean);
   const kept = tokens.filter(t => !(/^\d+(\.\d+)?$/.test(t) || STOP_WORDS.has(t) || (t.length > 4 && t.endsWith("s") && (t=t.slice(0,-1)))));
   const root = [...new Set(kept), ...new Set(mags.map(v=>`+${v}`))].join(" | ").trim();
   const res = root || "(blank)";
   
-  // [优化] 满载时直接清空缓存，避免使用删除操作导致的哈希表重建（Rehashing），这大大减少了内存抖动和 CPU 开销
   if (rootCache.size > CONFIG.CACHE_MAX) {
       rootCache.clear(); 
   }
@@ -1188,6 +1189,8 @@ let WF_MODE = "token";
 let wfSort = { key: "spend", dir: "desc" };
 const singularize = (word) => {
   if (!word) return "";
+  // 【修复：防误伤眼镜类目核心词根】
+  if (word === "glasses" || word === "sunglasses") return word;
   if (word.endsWith("ies")) return word.slice(0, -3) + "y";
   if (word.endsWith("sses")) return word.slice(0, -2);
   if (word.endsWith("ves")) return word.slice(0, -3) + "f"; 
@@ -1215,7 +1218,6 @@ const buildWordStats = () => {
   const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10));
   const mp = new Map();
   
-  // [优化] 同步修改为更健康的清空策略
   if (tokenCache.size > CONFIG.CACHE_MAX) {
       tokenCache.clear(); 
   }
@@ -1363,7 +1365,8 @@ const normalizeBrRow = (raw, map, sourceFile) => {
     const sessions = safeNum(raw[map.sessions]);
     const units = safeNum(raw[map.units]);
     const sales = safeNum(raw[map.sales]);
-    const calculatedCvr = sessions > 0 ? units / sessions : 0;
+    // 【修复：将转化率（会话百分比）封顶处理，防止高客单价连带导致的 CVR 超过 100% 显示异常】
+    const calculatedCvr = sessions > 0 ? Math.min(1, units / sessions) : 0;
     const calculatedAov = units > 0 ? sales / units : 0;
     return {
         sourceFile: intern(sourceFile),
@@ -1566,7 +1569,7 @@ const renderBusinessReport = () => {
     }
     const aggregated = Array.from(map.values()).sort((a,b) => b.units - a.units);
     tbody.innerHTML = aggregated.map(r => {
-        const cvr = (r.sessions > 0 && isFinite(r.sessions)) ? r.units / r.sessions : 0;
+        const cvr = (r.sessions > 0 && isFinite(r.sessions)) ? Math.min(1, r.units / r.sessions) : 0;
         const aov = (r.units > 0 && isFinite(r.units)) ? r.sales / r.units : 0;
         return `
             <tr>
@@ -2245,14 +2248,19 @@ const getRules = () => ({
 });
 const decideAction = (item, rankBy) => {
   const r = getRules(); const reasons = [];
-  const condNeg1 = item.spend >= r.spendNeg && item.orders <= 0; if (condNeg1) reasons.push(`花费≥${r.spendNeg} & 订单数=0`);
-  const condNeg2 = item.clicks >= r.clicksNeg && item.roas > 0 && item.roas < r.roasNeg; if (condNeg2) reasons.push(`点击量≥${r.clicksNeg} & ROAS<${r.roasNeg}`);
-  const condNeg3 = item.clicks >= r.clicksNeg && item.sales <= 0 && item.spend >= r.spendNeg; if (condNeg3) reasons.push(`销售额=0 & 花费≥${r.spendNeg}`);
-  if (condNeg1 || condNeg2 || condNeg3) return { action:"NEGATE", reason: reasons.join(" • ") };
+  // 【修复：合并冗余逻辑】
+  const condNeg1 = item.spend >= r.spendNeg && item.orders <= 0; 
+  if (condNeg1) reasons.push(`无转化且花费≥${r.spendNeg}`);
+  const condNeg2 = item.clicks >= r.clicksNeg && item.roas > 0 && item.roas < r.roasNeg; 
+  if (condNeg2) reasons.push(`点击量≥${r.clicksNeg} & ROAS<${r.roasNeg}`);
+  
+  if (condNeg1 || condNeg2) return { action:"NEGATE", reason: reasons.join(" • ") };
   reasons.length = 0;
+  
   const condKeep1 = item.roas >= r.roasKeep && item.spend > 0; if (condKeep1) reasons.push(`ROAS≥${r.roasKeep}`);
   const condKeep2 = item.orders >= r.ordersKeep; if (condKeep2) reasons.push(`订单数≥${r.ordersKeep}`);
   if (condKeep1 || condKeep2) return { action:"KEEP", reason: reasons.join(" • ") };
+  
   if (item.orders > 0 && item.roas >= r.roasMigrateMin && item.roas < r.roasKeep)
     return { action:"MIGRATE", reason: `订单数>0 & ROAS≥${r.roasMigrateMin} & <${r.roasKeep}` };
   return { action:"KEEP", reason:"无风险信号" };
@@ -2283,9 +2291,10 @@ const exportNegativesCSV = () => {
     let keyword = (rankBy === "searchTermRoot" ? rootToPhrase(it.name) : String(it.name || "").trim()).replace(/\s+/g," ").trim();
     if (!keyword || keyword === "(blank)") continue;
     
+    // 【修复：ASIN 导出格式修正为 NEGATIVE TARGETING】
     let finalMatchType = defaultNegMatch;
     if (isASINLike(keyword)) {
-        finalMatchType = "NEGATIVE EXACT";
+        finalMatchType = "NEGATIVE TARGETING";
     }
 
     const key = `${finalMatchType}:${keyword.toLowerCase()}`;
