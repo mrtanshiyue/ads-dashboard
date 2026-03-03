@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v5.25 - Executive Audit)</title>
+  <title>Ads Dashboard (Compact Pro v5.26 - Cross-Table Audit)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -596,7 +596,6 @@ const $ = (id) => document.getElementById(id);
 const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(v) : "0.00"; 
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 
-// 核心修复 1：拦截 ACOS 中的 Infinity 无限大情况，避免显示报错
 const fmtPct = (v) => { 
     if (v === Infinity || v === null || v === undefined) return "∞";
     if (!isFinite(v)) return "0.00%"; 
@@ -680,8 +679,6 @@ const buildPlacementMap = (rows) => { const header = rows.length ? Object.keys(r
 
 const normalizeRow = (raw, map, sourceFile) => {
   if (!raw) return null; const impr = safeNum(raw[map.impr]), clicks = safeNum(raw[map.clicks]), spend = safeNum(raw[map.spend]); const sales = safeNum(raw[map.sales7d]), orders = safeNum(raw[map.orders7d]); const st = String(raw[map.searchTerm] ?? "").trim();
-  
-  // 核心修复 1: ACOS Infinity Trap（0单依然展现极高花费排名的计算补丁）
   const acosVal = sales > 0 ? spend / sales : (spend > 0 ? Infinity : 0);
 
   return {
@@ -796,8 +793,19 @@ const renderPlacementAnalysis = () => {
         tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:30px;">未检测到广告位数据。请在左侧导入包含“Placement”字段的【广告位报告】即可解锁此维度。</td></tr>`; 
         return; 
     }
+    
+    // 核心修复：建立数据桥接 (Data Bridging) - 解决广告位报告无法按 Ad Type 和 Match Type 过滤的底层断层
+    const validCampaigns = ALL.length > 0 ? new Set(VIEW.map(x => x.campaign)) : null;
+
     const filters = { dateStart: $("dateStart").value, dateEnd: $("dateEnd").value, filterSource: $("filterSource").value, filterCampaign: $("filterCampaign").value };
-    const filtered = PLACEMENT_ROWS.filter(r => { if (filters.filterSource && r.sourceFile !== filters.filterSource) return false; if (filters.filterCampaign && r.campaign !== filters.filterCampaign) return false; if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false; return true; });
+    const filtered = PLACEMENT_ROWS.filter(r => { 
+        if (filters.filterSource && r.sourceFile !== filters.filterSource) return false; 
+        if (filters.filterCampaign && r.campaign !== filters.filterCampaign) return false; 
+        if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false; 
+        if (validCampaigns && !validCampaigns.has(r.campaign)) return false; // 运用桥接过滤
+        return true; 
+    });
+
     if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:30px;">当前筛选条件下无广告位数据</td></tr>`; return; }
     const groups = groupBy(filtered, r => r.placement); const data = [...groups.entries()].map(([placement, rows]) => { return { placement, ...sumMetrics(rows) }; });
     const totalSpend = sumMetrics(filtered).spend || 1; data.sort((a, b) => b.spend - a.spend);
@@ -827,7 +835,6 @@ const sumMetrics = (rows) => {
   for (const r of rows) { impr += r.impr; clicks += r.clicks; orders += r.orders; spendCents += Math.round(r.spend * 100); salesCents += Math.max(0, Math.round(r.sales * 100)); }
   const spend = spendCents / 100; const sales = salesCents / 100;
   
-  // 同样拦截底层 ACOS，确保不会被 0 销售稀释成 "优秀"
   return { impr, clicks, spend, sales, orders, ctr: impr > 0 ? clicks / impr : 0, cpc: clicks > 0 ? spend / clicks : 0, cvr: clicks > 0 ? Math.min(1, orders / clicks) : 0, acos: sales > 0 ? spend / sales : (spend > 0 ? Infinity : 0), roas: spend > 0 ? Math.max(0, sales) / spend : 0 };
 };
 const groupBy = (rows, keyFn) => { const mp = new Map(); for (const r of rows) { const k = keyFn(r) || "(blank)"; (mp.has(k) ? mp : mp.set(k, [])).get(k).push(r); } return mp; };
@@ -867,7 +874,6 @@ const renderLongTailMining = () => {
   const exactTargets = new Set();
   for (const row of ALL) {
       if ((row.matchType || "").toLowerCase().includes("exact")) {
-          // 核心修复 2: 雷达单复数处理增强 (防假警报)
           const t = (row.targeting || "").toLowerCase().replace(/[^a-z0-9]/gi, '').replace(/s$/i, ''); 
           if (t) exactTargets.add(t);
       }
@@ -878,7 +884,6 @@ const renderLongTailMining = () => {
     if (term.includes("glasses") || term.includes("frame")) wordCount -= 0.5;
     if (wordCount < minWords) continue; const m = sumMetrics(rows); if (m.orders < minOrders) continue; if (m.roas < minRoas) continue; 
     
-    // 雷达词去噪增强
     const cleanTerm = (term || "").toLowerCase().replace(/[^a-z0-9]/gi, '').replace(/s$/i, '');
     const isNewRadar = !exactTargets.has(cleanTerm);
     candidates.push({ term, wordCount, newRadar: isNewRadar, ...m });
@@ -1085,7 +1090,6 @@ const renderRankTable = () => {
     }).join(""); 
 };
 
-/* 核心修复 3：多维面板的懒加载（Lazy Rendering） */
 const renderActiveDimTab = () => {
     const activeBtn = document.querySelector('.seg[aria-label="Dimension Filter"] .segBtn.active');
     if (!activeBtn) return;
@@ -1116,7 +1120,7 @@ const applyFilters = (initial=false) => {
           if (ALL.length > 0) { setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads=${ALL.length}；Business=${BUSINESS_ROWS.length}；Placement=${PLACEMENT_ROWS.length}；日期范围 ${filters.dateStart} → ${filters.dateEnd}`); } else { setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads=${ALL.length}；Business=${BUSINESS_ROWS.length}；Placement=${PLACEMENT_ROWS.length}`); }
           requestAnimationFrame(() => { 
               renderKPIs(total); detectAnomalies(VIEW); renderTrend(VIEW); renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); 
-              renderActiveDimTab(); // 按需懒加载 Tab
+              renderActiveDimTab(); 
               if (initial) { document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active")); document.querySelector('.chipBtn[data-range="all"]')?.classList.add("active"); } 
           });
       } catch (e) { console.error("Critical Error in applyFilters:", e); }
@@ -1153,7 +1157,7 @@ const setDimFilter = (dim) => {
     if(targetView) {
         targetView.style.display = 'block';
         $('dimHint').textContent = dimHints[dim] || "";
-        renderActiveDimTab(); // 触发对应模块懒加载渲染
+        renderActiveDimTab(); 
     }
 };
 
