@@ -477,32 +477,40 @@
     </div>
     
     <section class="grid">
-      <div class="card tableCard" id="lengthCard">
-        <div class="cardTitle">
-          <h2>词长效能分析 (Keyword Length Analysis)</h2>
-          <div class="hint">短尾(泛) vs 长尾(准) | 分析单词数量对 ROAS 的影响</div>
-        </div>
-        <div class="table-container">
-          <table id="lengthTable">
-            <thead><tr><th>单词数</th><th style="width:200px;">花费占比</th><th>花费</th><th>销售额</th><th>订单数</th><th>ROAS</th><th>ACOS</th><th>CVR</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="small" style="margin-top:10px;">洞察：通常 3-5 个词的“中长尾”转化率更高。如果 1-2 个词花费巨大且 ROAS 低，考虑将其设为精确匹配或否定。*(已在底层过滤 ASIN 以防数据倾斜)*</div>
-      </div>
       
-      <div class="card tableCard">
-        <div class="cardTitle">
-          <h2>CPC 区间效能分析 (CPC Distribution)</h2>
-          <div class="hint">发现 ROAS 最高的“甜点”出价区间 (Sweet Spot)</div>
+      <div class="card tableCard" id="stratCard">
+        <div class="cardTitle" style="align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 16px;">
+          <div style="display:flex; flex-direction:column; gap:4px;">
+              <h2 style="font-size: 16px;">细分效能探索 (Stratification Analysis)</h2>
+              <div class="hint" id="stratHint" style="color:var(--accent); font-weight:600;">短尾(泛) vs 长尾(准) | 分析单词数量对 ROAS 的影响</div>
+          </div>
+          <div class="rightTools">
+            <div class="seg" role="tablist" aria-label="Strat Filter">
+              <button class="segBtn active" data-strat="length" type="button">词长效能</button>
+              <button class="segBtn" data-strat="cpc" type="button">CPC 区间</button>
+            </div>
+          </div>
         </div>
-        <div class="table-container">
-          <table id="cpcDistTable">
-            <thead><tr><th>CPC 区间</th><th style="width:160px;">销售额占比</th><th style="width:160px;">订单占比 (成交出价)</th><th>花费</th><th>销售额</th><th>订单数</th><th>ROAS</th><th>ACOS</th><th>CVR</th></tr></thead>
-            <tbody></tbody>
-          </table>
+
+        <div id="view-length" class="dim-view" style="display:block;">
+          <div class="table-container">
+            <table id="lengthTable">
+              <thead><tr><th>单词数</th><th style="width:200px;">花费占比</th><th>花费</th><th>销售额</th><th>订单数</th><th>ROAS</th><th>ACOS</th><th>CVR</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="small" style="margin-top:10px;">洞察：通常 3-5 个词的“中长尾”转化率更高。如果 1-2 个词花费巨大且 ROAS 低，考虑将其设为精确匹配或否定。*(已在底层过滤 ASIN 以防数据倾斜)*</div>
         </div>
-        <div class="small" style="margin-top:10px;">说明：根据每个词的实际平均 CPC 归类。<b>订单占比</b>列展示了“成交出价占比”，帮助你找到转化最集中的出价区间。</div>
+
+        <div id="view-cpc" class="dim-view">
+          <div class="table-container">
+            <table id="cpcDistTable">
+              <thead><tr><th>CPC 区间</th><th style="width:160px;">销售额占比</th><th style="width:160px;">订单占比 (成交出价)</th><th>花费</th><th>销售额</th><th>订单数</th><th>ROAS</th><th>ACOS</th><th>CVR</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="small" style="margin-top:10px;">说明：根据每个词的实际平均 CPC 归类。<b>订单占比</b>列展示了“成交出价占比”，帮助你找到转化最集中的出价区间。</div>
+        </div>
       </div>
       
       <div class="card tableCard">
@@ -524,7 +532,7 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;">口径：ACOS=花费/销售额；ROAS=销售额/花费；CTR=点击量/展示量；CVR=订单数/点击量。<b>流量审计基于大盘均值判定：高CTR低CVR判为“页面缺陷”，低CPC高ROAS判为“潜力词”。</b></div>
+        <div class="small" style="margin-top:10px;">口径：ACOS=花费/销售额；ROAS=销售额/花费；CTR=点击量/展示量；CVR=订单数/点击量。<b>流量审计已内嵌贝叶斯平滑、边际收益探测器及匹配跑偏检测算法。</b></div>
       </div>
       
       <div class="card tableCard" id="longTailCard">
@@ -568,7 +576,7 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;">注意：词频花费为“包含该词的所有搜索词总花费”，各行相加会超过总金额。2-gram 更贴近“意图短语”，适合做否词根/迁移 Exact。</div>
+        <div class="small" style="margin-top:10px;">注意：词频花费为“包含该词的所有搜索词总花费”，各行相加会超过总金额。<b>导出 Excel 包含 N-Gram 级智能止损判定。</b></div>
       </div>
       
       <div class="card tableCard" id="conflictCard">
@@ -595,23 +603,22 @@
 const CONFIG = { CACHE_MAX: 20000, STR_POOL_MAX: 50000 };
 let CURRENT_RANK_GROUPS = null;
 
-// 隐形功能 4: IndexedDB 自动缓存恢复引擎 + Promise 防堵塞加固
-window.addEventListener('load', async () => { 
+// 🛡️ 加固版 IndexedDB 自动缓存恢复引擎
+window.addEventListener('load', () => { 
     document.body.classList.remove('preload'); 
-    try {
-        const data = await idbKeyval.get('dashboardData');
+    idbKeyval.get('dashboardData').then(data => {
         if (data && data.ALL && data.ALL.length > 0) {
             ALL = data.ALL;
             BUSINESS_ROWS = data.BUSINESS_ROWS || [];
             PLACEMENT_ROWS = data.PLACEMENT_ROWS || [];
             importedFiles = data.importedFiles || [];
             const logBox = $("logBox");
-            logBox.innerHTML = '<div class="small" style="color:var(--good);padding:6px;border-bottom:1px solid rgba(229,229,234,.7);">✅ 已从本地缓存光速恢复上一次的数据 (防丢失机制生效)。</div>';
+            if(logBox) logBox.innerHTML = '<div class="small" style="color:var(--good);padding:6px;border-bottom:1px solid rgba(229,229,234,.7);">✅ 已从本地缓存光速恢复上一次的数据 (防丢失机制生效)。</div>';
             renderFileList();
             populateDropdowns();
             applyFilters(true);
         }
-    } catch(e) { console.error("IndexedDB load error", e); }
+    }).catch(e => console.warn("IndexedDB load skipped or empty", e));
 });
 
 const $ = (id) => document.getElementById(id);
@@ -656,7 +663,6 @@ const logBox = $("logBox");
 const clearLog = ()=>logBox.innerHTML = "";
 const log = (msg, level="info")=>{ const t = new Date(), stamp = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}:${String(t.getSeconds()).padStart(2,"0")}`; const line = document.createElement("div"); const colors = { bad: "#b42318", warn: "#b54708", good: "#1a7f37" }; if (colors[level]) line.style.color = colors[level]; line.className = "small"; line.style.cssText = "padding:6px 6px;border-bottom:1px solid rgba(229,229,234,.7);"; line.textContent = `[${stamp}] ${msg}`; logBox.prepend(line); };
 
-// 隐形功能 1: 错别字聚合 (Levenshtein)
 const levenshtein = (a, b) => {
     if (!a || !b) return (a || b || "").length;
     if(a === b) return 0;
@@ -810,7 +816,7 @@ const importMultipleFiles = async (files) => {
 
   if (ALL.length > 0) { const dates = ALL.map(r => r.date).filter(Boolean).sort(); $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length - 1]; }
   
-  // 🚨 隐形功能加固: IndexedDB 异步拦截，防止阻塞渲染
+  // 🛡️ 加固: 异步捕获 IndexedDB 异常，且仅在导入时触发，防 I/O 拥堵
   idbKeyval.set('dashboardData', { ALL, BUSINESS_ROWS, PLACEMENT_ROWS, importedFiles })
       .then(() => log("✅ 数据已自动存入浏览器 IndexedDB 本地沙盒", "good"))
       .catch(e => log("IndexedDB 存储失败或容量超限", "warn"));
@@ -898,7 +904,6 @@ const sumMetrics = (rows) => {
   const spend = spendCents / 100; const sales = salesCents / 100;
   
   const cvr = clicks > 0 ? Math.min(1, orders / clicks) : 0;
-  // 隐形功能 2: 贝叶斯平滑 CVR 核心公式 (先验分布: 15个点击, 5%的转化率)
   const smoothCvr = clicks > 0 ? (orders + 15 * 0.05) / (clicks + 15) : 0;
   
   return { impr, clicks, spend, sales, orders, ctr: impr > 0 ? clicks / impr : 0, cpc: clicks > 0 ? spend / clicks : 0, cvr, smoothCvr, acos: sales > 0 ? spend / sales : (spend > 0 ? Infinity : 0), roas: spend > 0 ? Math.max(0, sales) / spend : 0 };
@@ -923,7 +928,6 @@ const detectAnomalies = (rows) => {
         }
     }
     
-    // 隐形功能 3：线性回归衰退预警 (Linear Regression Alert)
     if (dates.length >= 5) {
         const topTerms = [...groups.entries()].map(([term, list]) => ({term, list, spend: sumMetrics(list).spend})).sort((a,b)=>b.spend-a.spend).slice(0, 15);
         for (const {term, list} of topTerms) {
@@ -937,7 +941,7 @@ const detectAnomalies = (rows) => {
                 for(let i=0; i<n; i++) { sumX+=i; sumY+=y[i]; sumXY+=i*y[i]; sumXX+=i*i; }
                 const denominator = (n*sumXX - sumX*sumX);
                 
-                // 🚨 隐形底座加固: 防止除以 0 引发 NaN 崩溃
+                // 🛡️ 加固: 防御分母为 0 导致的 NaN
                 if (denominator !== 0) {
                     const slope = (n*sumXY - sumX*sumY) / denominator; 
                     if (slope <= -0.015 && sumMetrics(list).spend > 25) {
@@ -998,7 +1002,6 @@ const renderWeekdayAnalysis = () => {
     const salesPct = totalSales > 0 ? (row.sales / totalSales) : 0;
     const barHtml = `<div class="bar-row"><div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(salesPct*100).toFixed(1)}%</div><div class="bar-track"><div style="width:${salesPct*100}%;background:var(--accent)"></div></div></div>`;
     
-    // 分时调价基准率测算
     let bidSuggest = "";
     if (globalCvr > 0 && row.clicks > 15) { 
         const multiplier = (row.cvr / globalCvr) - 1;
@@ -1123,7 +1126,6 @@ const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report"
     workbook.creator = 'Ads Dashboard Pro';
     workbook.created = new Date();
     
-    // Excel 限制表名不超过 31 字符
     const safeSheetName = String(sheetName).slice(0, 30).replace(/[\\/?*[\]]/g, '');
     const sheet = workbook.addWorksheet(safeSheetName, { views: [{ state: 'frozen', ySplit: 1 }] });
 
@@ -1173,8 +1175,11 @@ const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report"
             if (val === '潜力词' || val === 'Yes' || val === 'KEEP') {
                 cell.font = { color: { argb: 'FF1A7F37' }, bold: true };
             }
-            if (val === '页面缺陷' || val === 'NEGATE' || val === 'No') {
+            if (val === '页面缺陷' || val === 'NEGATE' || val === 'No' || val === '匹配跑偏' || val === 'Add as Negative Phrase') {
                 cell.font = { color: { argb: 'FFB42318' }, bold: true };
+            }
+            if (val === '效益递减') {
+                cell.font = { color: { argb: 'FFB54708' }, bold: true };
             }
         });
     });
@@ -1227,7 +1232,7 @@ const exportRankExcel = () => {
     const headers = ["Name", "Audit", "Spend", "Sales", "Orders", "Impressions", "Clicks", "CTR", "CPC", "CVR", "ACOS", "ROAS", "Action", "Reason", "Suggested Bid"]; 
     const dataRows = RANK_ROWS.map(r => {
         const rpc = r.clicks > 0 ? (r.sales || 0) / r.clicks : 0;
-        const suggestedBid = rpc * 0.3; // 默认 30% Target ACOS
+        const suggestedBid = rpc * 0.3; 
         return [ 
             r.name, r.audit, r.spend || 0, r.sales || 0, r.orders, r.impr, r.clicks, 
             r.ctr || 0, r.cpc || 0, r.cvr || 0, r.acos === Infinity ? null : r.acos, r.roas || 0, r.action, r.reason, 
@@ -1241,9 +1246,13 @@ const exportRankExcel = () => {
 
 const exportWordFreqExcel = () => {
     const rows = buildWordStats(); if (!rows.length) { alert("当前词频列表为空。"); return; } 
-    const headers = ["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS"];
-    // 🚨 隐形底座加固: 限制最大导出3万行防崩溃
-    const dataRows = rows.slice(0, 30000).map(r => [ r.word.replace(/_/g, " "), r.freq, r.spend || 0, r.orders, r.roas || 0, r.acos === Infinity ? null : r.acos ]);
+    const ruleSpendNeg = safeNum($("ruleSpendNeg").value) || 30;
+    const headers = ["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS", "Action"];
+    // 🛡️ 加固: 限制最大导出3万行防OOM崩溃
+    const dataRows = rows.slice(0, 30000).map(r => {
+        const actionStr = (r.spend >= ruleSpendNeg && r.orders === 0) ? "Add as Negative Phrase" : "-";
+        return [ r.word.replace(/_/g, " "), r.freq, r.spend || 0, r.orders, r.roas || 0, r.acos === Infinity ? null : r.acos, actionStr ];
+    });
     log(`正在生成高定版 Excel 词频报告...`);
     const filename = `Executive_WordFreq_${$("dateStart").value}_${getTs()}.xlsx`; 
     exportRichExcel(headers, dataRows, filename, "Word Frequency").then(() => log(`已导出词频 Excel：${filename}`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
@@ -1252,7 +1261,7 @@ const exportWordFreqExcel = () => {
 const exportLongTailExcel = () => {
     if (!LONG_TAIL_ROWS.length) { alert("当前列表为空，无数据可导出。"); return; } 
     const headers = ["Search Term", "New Radar", "Word Count", "Spend", "Sales", "Orders", "ROAS", "ACOS"];
-    // 🚨 隐形底座加固: 限制最大导出3万行防崩溃
+    // 🛡️ 加固: 限制最大导出3万行防OOM崩溃
     const dataRows = LONG_TAIL_ROWS.slice(0, 30000).map(c => [ c.term, c.newRadar ? "Yes" : "No", c.wordCount, c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos ]);
     log(`正在生成高定版 Excel 长尾词...`);
     const filename = `Executive_LongTail_${$("dateStart").value}_${getTs()}.xlsx`; 
@@ -1299,10 +1308,46 @@ const buildRankTable = () => {
         const {action, reason} = decideAction(base, rankBy); 
         
         let audit = "-";
+        
         if (base.clicks >= 10 && base.ctr > avgCtr && base.smoothCvr < (avgCvr * 0.5)) {
             audit = "页面缺陷";
         } else if (base.cpc < avgCpc && base.roas > (avgRoas * 1.2) && base.smoothCvr > (avgCvr * 1.1) && base.orders >= 1) {
             audit = "潜力词";
+        }
+
+        if (audit === "-" && rankBy === "searchTerm" && !isASINLike(name)) {
+            const termTokens = new Set(tokenize(name));
+            let isDrift = false;
+            for (const r of list) {
+                if (r.matchType && (r.matchType.toLowerCase().includes("broad") || r.matchType.toLowerCase().includes("phrase"))) {
+                    if (!isASINLike(r.targeting)) {
+                        const targetTokens = tokenize(r.targeting);
+                        if (targetTokens.length > 0 && !targetTokens.some(t => termTokens.has(t))) {
+                            isDrift = true; break;
+                        }
+                    }
+                }
+            }
+            if (isDrift && base.clicks >= 5 && base.smoothCvr < avgCvr) {
+                audit = "匹配跑偏";
+            }
+        }
+
+        if (base.spend > 15 && list.length >= 4) {
+            const dates = [...new Set(list.map(r=>r.date))].sort();
+            if (dates.length >= 4) {
+                const recentD = dates.slice(-2);
+                const prevD = dates.slice(-4, -2);
+                const recentM = sumMetrics(list.filter(r => recentD.includes(r.date)));
+                const prevM = sumMetrics(list.filter(r => prevD.includes(r.date)));
+                if (prevM.spend > 0) {
+                    const spendGrowth = (recentM.spend - prevM.spend) / prevM.spend;
+                    const salesGrowth = prevM.sales > 0 ? (recentM.sales - prevM.sales) / prevM.sales : (recentM.sales > 0 ? 1 : 0);
+                    if (spendGrowth > 0.4 && salesGrowth < 0.1 && recentM.spend > 10) {
+                        audit = "效益递减"; 
+                    }
+                }
+            }
         }
         
         return { ...base, action, reason, audit }; 
@@ -1316,7 +1361,12 @@ const renderRankTable = () => {
     buildRankTable(); 
     const searchBtnHtml = `<span class="action-icon search-btn" title="精准搜索">🔍</span>`; 
     $("rankTable").querySelector("tbody").innerHTML = RANK_ROWS.map(it => {
-        const auditHtml = it.audit === '页面缺陷' ? '<span class="tag bad">页面缺陷</span>' : (it.audit === '潜力词' ? '<span class="tag good">潜力词</span>' : '<span style="color:var(--muted)">-</span>');
+        let auditHtml = '<span style="color:var(--muted)">-</span>';
+        if (it.audit === '页面缺陷') auditHtml = '<span class="tag bad">页面缺陷</span>';
+        else if (it.audit === '潜力词') auditHtml = '<span class="tag good">潜力词</span>';
+        else if (it.audit === '匹配跑偏') auditHtml = '<span class="tag bad" style="background:var(--softWarn); color:var(--warn); border:1px solid rgba(181,71,8,.2)">匹配跑偏</span>';
+        else if (it.audit === '效益递减') auditHtml = '<span class="tag warn">效益递减</span>';
+
         return ` <tr> <td title="${escapeHtml(it.name)}" data-name="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 160)}${searchBtnHtml}</td> <td>${auditHtml}</td> <td>${fmtMoney(it.spend)}</td> <td>${fmtMoney(it.sales)}</td> <td>${fmtInt(it.orders)}</td> <td>${fmtInt(it.impr)}</td> <td>${fmtInt(it.clicks)}</td> <td>${fmtPct(it.ctr)}</td> <td>${fmtMoney(it.cpc)}</td> <td>${fmtPct(it.cvr)}</td> <td style="${(it.acos > 0.4 || it.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(it.acos)}</td> <td>${it.roas.toFixed(2)}</td> </tr> `;
     }).join(""); 
 };
@@ -1370,7 +1420,10 @@ const applyFilters = (initial=false) => {
                           const master = masterRoots[i];
                           if (Math.abs(master.root.length - entry.root.length) <= 1) {
                               if (levenshtein(master.root, entry.root) <= 1) { 
-                                  master.rows.push(...entry.rows);
+                                  // 🛡️ 加固: 放弃扩展运算符(...), 改为极致性能的传统循环防调用栈溢出
+                                  for(let k = 0; k < entry.rows.length; k++){
+                                      master.rows.push(entry.rows[k]);
+                                  }
                                   merged = true; break;
                               }
                           }
@@ -1384,6 +1437,15 @@ const applyFilters = (initial=false) => {
           if (ALL.length > 0) { setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads=${ALL.length}；Business=${BUSINESS_ROWS.length}；Placement=${PLACEMENT_ROWS.length}；日期范围 ${filters.dateStart} → ${filters.dateEnd}`); } else { setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads=${ALL.length}；Business=${BUSINESS_ROWS.length}；Placement=${PLACEMENT_ROWS.length}`); }
           requestAnimationFrame(() => { 
               renderKPIs(total); detectAnomalies(VIEW); renderTrend(VIEW); renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); 
+              
+              const activeStrat = document.querySelector('.seg[aria-label="Strat Filter"] .segBtn.active');
+              if (activeStrat) {
+                  const strat = activeStrat.dataset.strat;
+                  document.querySelectorAll('#stratCard .dim-view').forEach(v => v.style.display = 'none');
+                  const targetView = $('view-' + strat);
+                  if (targetView) targetView.style.display = 'block';
+              }
+
               renderActiveDimTab(); 
               if (initial) { document.querySelectorAll(".chipBtn").forEach(b => b.classList.remove("active")); document.querySelector('.chipBtn[data-range="all"]')?.classList.add("active"); } 
           });
@@ -1414,6 +1476,10 @@ const dimHints = {
     matchtype: "Exact / Phrase / Broad / Auto / Product Targeting 效能对比",
     weekday: "发现一周中的最佳销售日/亏损日 (Mon-Sun)"
 };
+const stratHints = {
+    length: "短尾(泛) vs 长尾(准) | 分析单词数量对 ROAS 的影响",
+    cpc: "发现 ROAS 最高的“甜点”出价区间 (Sweet Spot)"
+};
 const setDimFilter = (dim) => {
     document.querySelectorAll('.seg[aria-label="Dimension Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.dim === dim));
     document.querySelectorAll('#multiDimCard .dim-view').forEach(v => v.style.display = 'none');
@@ -1429,6 +1495,15 @@ document.addEventListener("click", (e) => {
     const btn = e.target.closest(".segBtn"); 
     if (!btn) return; 
     if (btn.dataset.dim) setDimFilter(btn.dataset.dim); 
+    if (btn.dataset.strat) {
+        document.querySelectorAll('.seg[aria-label="Strat Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.strat === btn.dataset.strat));
+        document.querySelectorAll('#stratCard .dim-view').forEach(v => v.style.display = 'none');
+        const targetView = $('view-' + btn.dataset.strat);
+        if(targetView) {
+            targetView.style.display = 'block';
+            $('stratHint').textContent = stratHints[btn.dataset.strat] || "";
+        }
+    }
     if (btn.dataset.type) setTypeFilter(btn.dataset.type); 
     if (btn.dataset.wf) { WF_MODE = btn.dataset.wf; document.querySelectorAll('.seg[aria-label="Word Frequency Mode"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.wf === WF_MODE)); renderWordFreq(); } 
 });
