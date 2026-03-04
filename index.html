@@ -524,7 +524,7 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;">口径：ACOS=花费/销售额；ROAS=销售额/花费；CTR=点击量/展示量；CVR=订单数/点击量。<b>流量审计已植入“贝叶斯平滑模型”，自动过滤偶然出单的假象，精准识别真正高转化的“潜力词”。</b></div>
+        <div class="small" style="margin-top:10px;">口径：ACOS=花费/销售额；ROAS=销售额/花费；CTR=点击量/展示量；CVR=订单数/点击量。<b>流量审计基于大盘均值判定：高CTR低CVR判为“页面缺陷”，低CPC高ROAS判为“潜力词”。</b></div>
       </div>
       
       <div class="card tableCard" id="longTailCard">
@@ -595,7 +595,7 @@
 const CONFIG = { CACHE_MAX: 20000, STR_POOL_MAX: 50000 };
 let CURRENT_RANK_GROUPS = null;
 
-// 隐形功能 4: IndexedDB 自动缓存恢复引擎
+// 隐形功能 4: IndexedDB 自动缓存恢复引擎 + Promise 防堵塞加固
 window.addEventListener('load', async () => { 
     document.body.classList.remove('preload'); 
     try {
@@ -772,7 +772,11 @@ const importMultipleFiles = async (files) => {
   clearLog(); if (!libsCheck()) return; const mergeMode = $("mergeMode").value, dedupeMode = $("dedupeMode").value; const maxRows = clamp(safeNum($("maxRows").value) || 250000, 10000, 2000000);
   log(`开始导入：${files.length} 个文件（merge=${mergeMode}, dedupe=${dedupeMode}, maxRows=${maxRows}）`); setSubtitle("正在导入文件…（请看左侧导入日志）");
   
-  if (mergeMode === "replace") { ALL = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; try{idbKeyval.clear();}catch(e){} log("Replace 模式：已清空历史数据与缓存", "warn"); }
+  if (mergeMode === "replace") { 
+      ALL = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; 
+      try { await idbKeyval.clear(); } catch(e) {} 
+      log("Replace 模式：已清空历史数据与缓存", "warn"); 
+  }
   
   for (const file of files) {
     const name = file.name, lower = name.toLowerCase(); log(`读取文件：${name}`);
@@ -806,7 +810,10 @@ const importMultipleFiles = async (files) => {
 
   if (ALL.length > 0) { const dates = ALL.map(r => r.date).filter(Boolean).sort(); $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length - 1]; }
   
-  try { idbKeyval.set('dashboardData', { ALL, BUSINESS_ROWS, PLACEMENT_ROWS, importedFiles }); log("✅ 数据已自动存入浏览器 IndexedDB 本地沙盒", "good"); } catch(e) { log("IndexedDB 存储失败", "warn"); }
+  // 🚨 隐形功能加固: IndexedDB 异步拦截，防止阻塞渲染
+  idbKeyval.set('dashboardData', { ALL, BUSINESS_ROWS, PLACEMENT_ROWS, importedFiles })
+      .then(() => log("✅ 数据已自动存入浏览器 IndexedDB 本地沙盒", "good"))
+      .catch(e => log("IndexedDB 存储失败或容量超限", "warn"));
 
   log(`导入完成：文件 ${importedFiles.length} 个`, "good");
   setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads=${ALL.length}；Business=${BUSINESS_ROWS.length}；Placement=${PLACEMENT_ROWS.length}`);
@@ -891,7 +898,7 @@ const sumMetrics = (rows) => {
   const spend = spendCents / 100; const sales = salesCents / 100;
   
   const cvr = clicks > 0 ? Math.min(1, orders / clicks) : 0;
-  // 🚨 隐形功能 2: 贝叶斯平滑 CVR 核心公式 (假设先验分布: 15个点击, 5%的转化率)
+  // 隐形功能 2: 贝叶斯平滑 CVR 核心公式 (先验分布: 15个点击, 5%的转化率)
   const smoothCvr = clicks > 0 ? (orders + 15 * 0.05) / (clicks + 15) : 0;
   
   return { impr, clicks, spend, sales, orders, ctr: impr > 0 ? clicks / impr : 0, cpc: clicks > 0 ? spend / clicks : 0, cvr, smoothCvr, acos: sales > 0 ? spend / sales : (spend > 0 ? Infinity : 0), roas: spend > 0 ? Math.max(0, sales) / spend : 0 };
@@ -916,6 +923,7 @@ const detectAnomalies = (rows) => {
         }
     }
     
+    // 隐形功能 3：线性回归衰退预警 (Linear Regression Alert)
     if (dates.length >= 5) {
         const topTerms = [...groups.entries()].map(([term, list]) => ({term, list, spend: sumMetrics(list).spend})).sort((a,b)=>b.spend-a.spend).slice(0, 15);
         for (const {term, list} of topTerms) {
@@ -927,11 +935,15 @@ const detectAnomalies = (rows) => {
                 const n = y.length;
                 let sumX=0, sumY=0, sumXY=0, sumXX=0;
                 for(let i=0; i<n; i++) { sumX+=i; sumY+=y[i]; sumXY+=i*y[i]; sumXX+=i*i; }
-                const slope = (n*sumXY - sumX*sumY) / (n*sumXX - sumX*sumX); 
+                const denominator = (n*sumXX - sumX*sumX);
                 
-                if (slope <= -0.015 && sumMetrics(list).spend > 25) {
-                     alerts.push({ type: 'warn', msg: `<strong>📉 慢性衰退预警：</strong> 主力词 <code>${escapeHtml(term)}</code> 的转化率在近 ${n} 天呈持续阴跌趋势 (线性回归斜率 ${(slope*100).toFixed(1)}%)，警惕竞品抢占坑位！` });
-                     break; 
+                // 🚨 隐形底座加固: 防止除以 0 引发 NaN 崩溃
+                if (denominator !== 0) {
+                    const slope = (n*sumXY - sumX*sumY) / denominator; 
+                    if (slope <= -0.015 && sumMetrics(list).spend > 25) {
+                         alerts.push({ type: 'warn', msg: `<strong>📉 慢性衰退预警：</strong> 主力词 <code>${escapeHtml(term)}</code> 的转化率在近 ${n} 天呈持续阴跌趋势 (线性回归斜率 ${(slope*100).toFixed(1)}%)，警惕竞品抢占坑位！` });
+                         break; 
+                    }
                 }
             }
         }
@@ -978,7 +990,7 @@ const renderWeekdayAnalysis = () => {
   
   const totalMetrics = sumMetrics(VIEW);
   const totalSales = totalMetrics.sales || 1;
-  const globalCvr = totalMetrics.cvr || 0.05; // 用于分时测算基准
+  const globalCvr = totalMetrics.cvr || 0.05; 
 
   const result = bins.map((rows, i) => ({ day: days[i], ...sumMetrics(rows) })); 
   
@@ -986,7 +998,7 @@ const renderWeekdayAnalysis = () => {
     const salesPct = totalSales > 0 ? (row.sales / totalSales) : 0;
     const barHtml = `<div class="bar-row"><div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(salesPct*100).toFixed(1)}%</div><div class="bar-track"><div style="width:${salesPct*100}%;background:var(--accent)"></div></div></div>`;
     
-    // 🚨 隐形功能 3: 分时调价基准率测算 (Bid Multiplier)
+    // 分时调价基准率测算
     let bidSuggest = "";
     if (globalCvr > 0 && row.clicks > 15) { 
         const multiplier = (row.cvr / globalCvr) - 1;
@@ -1111,7 +1123,9 @@ const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report"
     workbook.creator = 'Ads Dashboard Pro';
     workbook.created = new Date();
     
-    const sheet = workbook.addWorksheet(sheetName, { views: [{ state: 'frozen', ySplit: 1 }] });
+    // Excel 限制表名不超过 31 字符
+    const safeSheetName = String(sheetName).slice(0, 30).replace(/[\\/?*[\]]/g, '');
+    const sheet = workbook.addWorksheet(safeSheetName, { views: [{ state: 'frozen', ySplit: 1 }] });
 
     const headerRow = sheet.addRow(headers);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
@@ -1228,7 +1242,8 @@ const exportRankExcel = () => {
 const exportWordFreqExcel = () => {
     const rows = buildWordStats(); if (!rows.length) { alert("当前词频列表为空。"); return; } 
     const headers = ["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS"];
-    const dataRows = rows.map(r => [ r.word.replace(/_/g, " "), r.freq, r.spend || 0, r.orders, r.roas || 0, r.acos === Infinity ? null : r.acos ]);
+    // 🚨 隐形底座加固: 限制最大导出3万行防崩溃
+    const dataRows = rows.slice(0, 30000).map(r => [ r.word.replace(/_/g, " "), r.freq, r.spend || 0, r.orders, r.roas || 0, r.acos === Infinity ? null : r.acos ]);
     log(`正在生成高定版 Excel 词频报告...`);
     const filename = `Executive_WordFreq_${$("dateStart").value}_${getTs()}.xlsx`; 
     exportRichExcel(headers, dataRows, filename, "Word Frequency").then(() => log(`已导出词频 Excel：${filename}`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
@@ -1237,14 +1252,14 @@ const exportWordFreqExcel = () => {
 const exportLongTailExcel = () => {
     if (!LONG_TAIL_ROWS.length) { alert("当前列表为空，无数据可导出。"); return; } 
     const headers = ["Search Term", "New Radar", "Word Count", "Spend", "Sales", "Orders", "ROAS", "ACOS"];
-    const dataRows = LONG_TAIL_ROWS.map(c => [ c.term, c.newRadar ? "Yes" : "No", c.wordCount, c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos ]);
+    // 🚨 隐形底座加固: 限制最大导出3万行防崩溃
+    const dataRows = LONG_TAIL_ROWS.slice(0, 30000).map(c => [ c.term, c.newRadar ? "Yes" : "No", c.wordCount, c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos ]);
     log(`正在生成高定版 Excel 长尾词...`);
     const filename = `Executive_LongTail_${$("dateStart").value}_${getTs()}.xlsx`; 
     exportRichExcel(headers, dataRows, filename, "Long Tail Mining").then(() => log(`已导出长尾词 Excel：${filename}`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
 };
 
 const renderKPIs = (total) => {
-  // 🚨 隐形功能 2: 全局 TACoS 幽灵桥接呈现
   const acosMetaText = total.bizSales > 0 ? `🔥 TACoS (全局真实占比): ${fmtPct(total.spend / total.bizSales)}` : `花费/销售额`;
   
   const kpis = [ { key: "spend", label:"花费", value: fmtMoney(total.spend), meta: `点击成本 ${fmtMoney(total.cpc)} • 点击率 ${fmtPct(total.ctr)}` }, { key: "sales", label:"销售额 (7天)", value: fmtMoney(total.sales), meta: `ROAS ${total.roas.toFixed(2)} • ACOS ${fmtPct(total.acos)}` }, { key: "orders", label:"订单数 (7天)", value: fmtInt(total.orders), meta: `转化率 ${fmtPct(total.cvr)} • 点击量 ${fmtInt(total.clicks)}` }, { key: "impr", label:"展示量", value: fmtInt(total.impr), meta: `点击量 ${fmtInt(total.clicks)} • 点击率 ${fmtPct(total.ctr)}` }, { key: "acos", label:"ACOS", value: fmtPct(total.acos), meta: acosMetaText }, { key: "roas", label:"ROAS", value: total.roas.toFixed(2), meta: `销售额/花费` }, { key: "cpc", label:"点击成本", value: fmtMoney(total.cpc), meta: `花费/点击量` }, { key: "cvr", label:"转化率", value: fmtPct(total.cvr), meta: `订单数/点击量` } ];
@@ -1284,7 +1299,6 @@ const buildRankTable = () => {
         const {action, reason} = decideAction(base, rankBy); 
         
         let audit = "-";
-        // 🚨 隐形功能 1: 基于贝叶斯平滑 CVR 杜绝幸存者偏差假象
         if (base.clicks >= 10 && base.ctr > avgCtr && base.smoothCvr < (avgCvr * 0.5)) {
             audit = "页面缺陷";
         } else if (base.cpc < avgCpc && base.roas > (avgRoas * 1.2) && base.smoothCvr > (avgCvr * 1.1) && base.orders >= 1) {
@@ -1336,14 +1350,12 @@ const applyFilters = (initial=false) => {
           
           const total = sumMetrics(VIEW); 
           
-          // 计算用于 TACoS 展现的业务全局销售额
           let bizSales = 0;
           for(let r of BUSINESS_ROWS) bizSales += r.sales;
           total.bizSales = bizSales;
 
           CURRENT_RANK_GROUPS = groupBy(VIEW, getRankKey());
 
-          // 隐形功能 1: 模糊匹配与错别字收敛 (Levenshtein)
           if ($("rankBy").value === "searchTermRoot" && CURRENT_RANK_GROUPS.size > 0) {
               const rootEntries = [...CURRENT_RANK_GROUPS.entries()].map(([root, rows]) => ({root, rows, count: rows.length}));
               rootEntries.sort((a,b) => b.count - a.count); 
