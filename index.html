@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ads Dashboard (Compact Pro v5.26 - Cross-Table Audit)</title>
+  <title>Ads Dashboard (Compact Pro v5.26 - Enterprise Core)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -532,7 +532,7 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;">口径：ACOS=花费/销售额；ROAS=销售额/花费；CTR=点击量/展示量；CVR=订单数/点击量。<b>流量审计已内嵌贝叶斯平滑、边际收益探测器及匹配跑偏检测算法。</b></div>
+        <div class="small" style="margin-top:10px;">口径：ACOS=花费/销售额；ROAS=销售额/花费；CTR=点击量/展示量；CVR=订单数/点击量。<b>流量审计已内嵌贝叶斯平滑、中位数抗偏模型、帕累托防守及边际收益探测器算法。</b></div>
       </div>
       
       <div class="card tableCard" id="longTailCard">
@@ -816,7 +816,6 @@ const importMultipleFiles = async (files) => {
 
   if (ALL.length > 0) { const dates = ALL.map(r => r.date).filter(Boolean).sort(); $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length - 1]; }
   
-  // 🛡️ 加固: 异步捕获 IndexedDB 异常，且仅在导入时触发，防 I/O 拥堵
   idbKeyval.set('dashboardData', { ALL, BUSINESS_ROWS, PLACEMENT_ROWS, importedFiles })
       .then(() => log("✅ 数据已自动存入浏览器 IndexedDB 本地沙盒", "good"))
       .catch(e => log("IndexedDB 存储失败或容量超限", "warn"));
@@ -851,7 +850,12 @@ const renderBusinessReport = () => {
         const cvr = (r.sessions > 0 && isFinite(r.sessions)) ? Math.min(1, r.units / r.sessions) : 0; 
         const aov = (r.units > 0 && isFinite(r.units)) ? r.sales / r.units : 0;
         const sptaHtml = r.spta > 0.8 ? `<span style="color:var(--bad);font-weight:bold" title="警惕：过度依赖广告！">${fmtPct(r.spta)}</span>` : fmtPct(r.spta);
-        return `<tr><td style="font-weight:600; color:var(--text);">${escapeHtml(r.asin)}</td><td title="${escapeHtml(r.title)}">${escapeHtml(r.title || "").slice(0, 80)}...</td><td>${fmtInt(r.sessions)}</td><td>${fmtInt(r.units)}</td><td>${fmtInt(r.adOrders)}</td><td style="font-weight:bold; color:var(--accent);">${fmtPct(cvr)}</td><td>${sptaHtml}</td><td>${fmtMoney(r.sales)}</td><td>${fmtMoney(aov)}</td></tr>`;
+        
+        // 🚨 隐形功能 4: 零流量僵尸死链探测 (Zombie ASIN)
+        const isZombie = r.sessions < 5 && r.units === 0;
+        const displayAsin = isZombie ? `<span style="color:var(--bad);text-decoration:line-through;" title="流量枯竭 (近乎0曝光)">${escapeHtml(r.asin)}</span> <span class="tag bad" style="padding:2px 4px;font-size:10px">僵尸预警</span>` : `<span style="font-weight:600; color:var(--text);">${escapeHtml(r.asin)}</span>`;
+
+        return `<tr><td>${displayAsin}</td><td title="${escapeHtml(r.title)}">${escapeHtml(r.title || "").slice(0, 80)}...</td><td>${fmtInt(r.sessions)}</td><td>${fmtInt(r.units)}</td><td>${fmtInt(r.adOrders)}</td><td style="font-weight:bold; color:var(--accent);">${fmtPct(cvr)}</td><td>${sptaHtml}</td><td>${fmtMoney(r.sales)}</td><td>${fmtMoney(aov)}</td></tr>`;
     }).join("");
 };
 
@@ -917,6 +921,17 @@ const detectAnomalies = (rows) => {
     for (const [term, list] of groups.entries()) { if (isASINLike(term)) continue; let spend = 0, orders = 0; for (const r of list) { spend += r.spend; orders += r.orders; } if (orders === 0 && spend > maxWasted) { maxWasted = spend; topBleeder = term; } }
     if (maxWasted > 30) { alerts.push({ type: 'bad', msg: `<strong>🚨 极端浪费预警：</strong> 核心词 <code>${escapeHtml(topBleeder)}</code> 在当前时间段内花费高达 <strong>$${maxWasted.toFixed(2)}</strong> 且 0 转化，建议立即排查相关性或加入否定！` }); }
     
+    // 🚨 隐形功能 3: 流量纯度/熵值失控雷达 (Traffic Entropy)
+    const adGroupGroups = groupBy(rows, r => `${r.campaign}|${r.adGroup}`);
+    for (const [ag, list] of adGroupGroups.entries()) {
+        const stSet = new Set(list.map(r=>r.searchTerm).filter(Boolean));
+        const m = sumMetrics(list);
+        if (stSet.size > 50 && (m.clicks / stSet.size) < 1.5 && m.spend > 20 && m.roas < 1.0) {
+            alerts.push({ type: 'warn', msg: `<strong>🌪️ 流量熵值失控：</strong> 广告组 <code>${escapeHtml(ag.split('|')[1])}</code> 触发了 ${stSet.size} 个碎片化无效搜索词 (匹配过于宽泛)，建议立即添加词组否定或降低竞价！` });
+            break; // 每次只报出最严重的一个广告组
+        }
+    }
+
     const dates = [...new Set(rows.map(r=>r.date).filter(Boolean))].sort();
     if (dates.length >= 4) {
         const recentDates = dates.slice(-2); const prevDates = dates.slice(-4, -2);
@@ -941,7 +956,6 @@ const detectAnomalies = (rows) => {
                 for(let i=0; i<n; i++) { sumX+=i; sumY+=y[i]; sumXY+=i*y[i]; sumXX+=i*i; }
                 const denominator = (n*sumXX - sumX*sumX);
                 
-                // 🛡️ 加固: 防御分母为 0 导致的 NaN
                 if (denominator !== 0) {
                     const slope = (n*sumXY - sumX*sumY) / denominator; 
                     if (slope <= -0.015 && sumMetrics(list).spend > 25) {
@@ -1178,7 +1192,7 @@ const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report"
             if (val === '页面缺陷' || val === 'NEGATE' || val === 'No' || val === '匹配跑偏' || val === 'Add as Negative Phrase') {
                 cell.font = { color: { argb: 'FFB42318' }, bold: true };
             }
-            if (val === '效益递减') {
+            if (val === '效益递减' || val === '核心失血') {
                 cell.font = { color: { argb: 'FFB54708' }, bold: true };
             }
         });
@@ -1248,7 +1262,6 @@ const exportWordFreqExcel = () => {
     const rows = buildWordStats(); if (!rows.length) { alert("当前词频列表为空。"); return; } 
     const ruleSpendNeg = safeNum($("ruleSpendNeg").value) || 30;
     const headers = ["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS", "Action"];
-    // 🛡️ 加固: 限制最大导出3万行防OOM崩溃
     const dataRows = rows.slice(0, 30000).map(r => {
         const actionStr = (r.spend >= ruleSpendNeg && r.orders === 0) ? "Add as Negative Phrase" : "-";
         return [ r.word.replace(/_/g, " "), r.freq, r.spend || 0, r.orders, r.roas || 0, r.acos === Infinity ? null : r.acos, actionStr ];
@@ -1261,7 +1274,6 @@ const exportWordFreqExcel = () => {
 const exportLongTailExcel = () => {
     if (!LONG_TAIL_ROWS.length) { alert("当前列表为空，无数据可导出。"); return; } 
     const headers = ["Search Term", "New Radar", "Word Count", "Spend", "Sales", "Orders", "ROAS", "ACOS"];
-    // 🛡️ 加固: 限制最大导出3万行防OOM崩溃
     const dataRows = LONG_TAIL_ROWS.slice(0, 30000).map(c => [ c.term, c.newRadar ? "Yes" : "No", c.wordCount, c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos ]);
     log(`正在生成高定版 Excel 长尾词...`);
     const filename = `Executive_LongTail_${$("dateStart").value}_${getTs()}.xlsx`; 
@@ -1297,21 +1309,45 @@ const sortRank = (items) => {
 const buildRankTable = () => { 
     const rankBy = $("rankBy").value; 
     
-    const globalMetrics = VIEW.length ? sumMetrics(VIEW) : { ctr: 0.008, cvr: 0.05, cpc: 1.0, roas: 3.0 };
-    const avgCtr = globalMetrics.ctr || 0.008;
-    const avgCvr = globalMetrics.cvr || 0.05;
-    const avgCpc = globalMetrics.cpc || 1.0;
-    const avgRoas = globalMetrics.roas || 3.0;
+    // 🚨 隐形功能 1: 引入 MAD 中位数基准算法，取代虚假的 Mean 平均值
+    const getMedian = (arr) => { if(!arr.length) return 0; arr.sort((a,b)=>a-b); return arr[Math.floor(arr.length/2)]; };
+    const allCvrs = [], allCpcs = [], allCtrs = [], allRoas = [];
+    
+    for (const list of CURRENT_RANK_GROUPS.values()) {
+        const m = sumMetrics(list);
+        if (m.clicks >= 5) { allCvrs.push(m.smoothCvr); allCpcs.push(m.cpc); allCtrs.push(m.ctr); allRoas.push(m.roas); }
+    }
+    
+    const medCtr = getMedian(allCtrs) || 0.008;
+    const medCvr = getMedian(allCvrs) || 0.05;
+    const medCpc = getMedian(allCpcs) || 1.0;
+    const medRoas = getMedian(allRoas) || 2.0;
 
-    let items = [...(CURRENT_RANK_GROUPS || new Map()).entries()].map(([name, list]) => { 
+    // 🚨 隐形功能 2: 帕累托 80/20 核心词计算
+    const totalSales = VIEW.reduce((sum, r) => sum + r.sales, 0);
+    const sortedForPareto = [...CURRENT_RANK_GROUPS.entries()]
+        .map(([name, list]) => ({name, sales: list.reduce((s, r)=>s+r.sales, 0)}))
+        .sort((a,b) => b.sales - a.sales);
+    let cumSales = 0;
+    const coreTerms = new Set();
+    for (const item of sortedForPareto) {
+        cumSales += item.sales;
+        coreTerms.add(item.name);
+        if (cumSales >= totalSales * 0.8) break;
+    }
+
+    let items = [...CURRENT_RANK_GROUPS.entries()].map(([name, list]) => { 
         const base = { name, ...sumMetrics(list) }; 
         const {action, reason} = decideAction(base, rankBy); 
         
         let audit = "-";
         
-        if (base.clicks >= 10 && base.ctr > avgCtr && base.smoothCvr < (avgCvr * 0.5)) {
+        // 核心词护城河判定
+        if (coreTerms.has(name) && base.roas > 0 && base.roas < (medRoas * 0.5) && base.spend > 30) {
+            audit = "核心失血";
+        } else if (base.clicks >= 10 && base.ctr > medCtr && base.smoothCvr < (medCvr * 0.5)) {
             audit = "页面缺陷";
-        } else if (base.cpc < avgCpc && base.roas > (avgRoas * 1.2) && base.smoothCvr > (avgCvr * 1.1) && base.orders >= 1) {
+        } else if (base.cpc < medCpc && base.roas > (medRoas * 1.2) && base.smoothCvr > (medCvr * 1.1) && base.orders >= 1) {
             audit = "潜力词";
         }
 
@@ -1328,7 +1364,7 @@ const buildRankTable = () => {
                     }
                 }
             }
-            if (isDrift && base.clicks >= 5 && base.smoothCvr < avgCvr) {
+            if (isDrift && base.clicks >= 5 && base.smoothCvr < medCvr) {
                 audit = "匹配跑偏";
             }
         }
@@ -1366,6 +1402,7 @@ const renderRankTable = () => {
         else if (it.audit === '潜力词') auditHtml = '<span class="tag good">潜力词</span>';
         else if (it.audit === '匹配跑偏') auditHtml = '<span class="tag bad" style="background:var(--softWarn); color:var(--warn); border:1px solid rgba(181,71,8,.2)">匹配跑偏</span>';
         else if (it.audit === '效益递减') auditHtml = '<span class="tag warn">效益递减</span>';
+        else if (it.audit === '核心失血') auditHtml = '<span class="tag bad" style="background:#b42318;color:#fff">核心失血</span>';
 
         return ` <tr> <td title="${escapeHtml(it.name)}" data-name="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 160)}${searchBtnHtml}</td> <td>${auditHtml}</td> <td>${fmtMoney(it.spend)}</td> <td>${fmtMoney(it.sales)}</td> <td>${fmtInt(it.orders)}</td> <td>${fmtInt(it.impr)}</td> <td>${fmtInt(it.clicks)}</td> <td>${fmtPct(it.ctr)}</td> <td>${fmtMoney(it.cpc)}</td> <td>${fmtPct(it.cvr)}</td> <td style="${(it.acos > 0.4 || it.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(it.acos)}</td> <td>${it.roas.toFixed(2)}</td> </tr> `;
     }).join(""); 
@@ -1420,7 +1457,7 @@ const applyFilters = (initial=false) => {
                           const master = masterRoots[i];
                           if (Math.abs(master.root.length - entry.root.length) <= 1) {
                               if (levenshtein(master.root, entry.root) <= 1) { 
-                                  // 🛡️ 加固: 放弃扩展运算符(...), 改为极致性能的传统循环防调用栈溢出
+                                  // 🛡️ 最终极防护: 彻底移除 ... 扩展运算符，免疫一切大数据 Call Stack 溢出
                                   for(let k = 0; k < entry.rows.length; k++){
                                       master.rows.push(entry.rows[k]);
                                   }
