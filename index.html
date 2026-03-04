@@ -8,6 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  
   <script>
     (() => {
       try {
@@ -347,7 +350,7 @@
         </div>
       </div>
       <div class="row2">
-        <button class="btn primary" id="btnExportNeg" type="button">导出否定词 CSV（仅 NEGATE）</button>
+        <button class="btn primary" id="btnExportNeg" type="button">导出否定词 Excel（仅 NEGATE）</button>
         <button class="btn" id="btnRuleReset" type="button">重置默认规则</button>
       </div>
       <div class="small">导出限制：只有榜单维度为 Search Term / Root 时允许导出（避免导出 Campaign/AdGroup 之类的名字当否定词）</div>
@@ -510,7 +513,7 @@
               <button id="btnTypeKw" class="segBtn" data-type="keyword" type="button">关键词</button>
               <button id="btnTypeAsin" class="segBtn" data-type="asin" type="button">ASIN</button>
             </div>
-            <button class="btn primary" id="btnExportRank" type="button" style="padding: 6px 12px; font-size:11.8px;">导出榜单 CSV</button>
+            <button class="btn primary" id="btnExportRank" type="button" style="padding: 6px 12px; font-size:11.8px;">导出榜单 Excel</button>
             <span class="hint">点击表头排序，点击🔍精准搜索</span>
           </div>
         </div>
@@ -530,7 +533,7 @@
               <span class="pill">单词数 ≥</span><input id="ltMinWords" class="miniInput" type="number" step="1" value="3" title="Search Term 包含的单词数" />
               <span class="pill">订单 ≥</span><input id="ltMinOrders" class="miniInput" type="number" step="1" value="2" title="至少产生订单数" />
               <span class="pill">ROAS ≥</span><input id="ltMinRoas" class="miniInput" type="number" step="0.1" value="2.0" title="ROAS 门槛" />
-              <button class="btn primary" id="btnExportLongTail" type="button">导出长尾词 CSV</button>
+              <button class="btn primary" id="btnExportLongTail" type="button">导出长尾词 Excel</button>
           </div>
         </div>
         <div class="table-container" style="max-height:480px;">
@@ -554,7 +557,7 @@
             </div>
             <span class="pill">Min Freq</span><input id="wfMinFreq" class="miniInput" type="number" step="1" value="3" title="最小出现次数" />
             <span class="pill">Min Spend</span><input id="wfMinSpend" class="miniInput" type="number" step="0.01" value="10" title="最小花费" />
-            <button class="btn primary" id="btnExportWf" type="button" style="padding: 6px 12px; font-size:11.8px;">导出词频 CSV</button>
+            <button class="btn primary" id="btnExportWf" type="button" style="padding: 6px 12px; font-size:11.8px;">导出词频 Excel</button>
             <span class="hint">点击表头排序</span>
           </div>
         </div>
@@ -604,6 +607,8 @@ const fmtPct = (v) => {
 }
 
 const safeNum = (x) => { if (typeof x === "number") return isFinite(x) ? x : 0; if (!x || x === "") return 0; const clean = String(x).trim().replace(/[£$€¥,]/g, ""); const n = parseFloat(clean); return isFinite(n) ? n : 0; };
+
+// 🚨 修复 1：增强版日期解析 (兼容欧洲站 DD/MM/YYYY)
 const toISODate = (d) => {
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
   if (typeof d === "number" && isFinite(d)) { const dateObj = new Date(Math.round((d - 25569) * 86400000)); return dateObj.toISOString().slice(0,10); }
@@ -611,9 +616,19 @@ const toISODate = (d) => {
   if (!s) return "";
   const isoMatch = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
   if (isoMatch) { const y = parseInt(isoMatch[1], 10), m = parseInt(isoMatch[2], 10), day = parseInt(isoMatch[3], 10); const dt = new Date(Date.UTC(y, m - 1, day, 12, 0, 0)); return dt.toISOString().slice(0,10); }
+  
+  const euMatch = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
+  if (euMatch) {
+      const p1 = parseInt(euMatch[1], 10), p2 = parseInt(euMatch[2], 10), y = parseInt(euMatch[3], 10);
+      let m = p1, day = p2;
+      if (p1 > 12) { day = p1; m = p2; }
+      const dt = new Date(Date.UTC(y, m - 1, day, 12, 0, 0)); return dt.toISOString().slice(0,10);
+  }
+  
   const dt = new Date(s); if (!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
   return ""; 
 };
+
 const getTs = () => { const now = new Date(); return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`; };
 const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]);
 const clamp = (v,min,max)=>Math.max(min, Math.min(max, v));
@@ -623,8 +638,7 @@ const logBox = $("logBox");
 const clearLog = ()=>logBox.innerHTML = "";
 const log = (msg, level="info")=>{ const t = new Date(), stamp = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}:${String(t.getSeconds()).padStart(2,"0")}`; const line = document.createElement("div"); const colors = { bad: "#b42318", warn: "#b54708", good: "#1a7f37" }; if (colors[level]) line.style.color = colors[level]; line.className = "small"; line.style.cssText = "padding:6px 6px;border-bottom:1px solid rgba(229,229,234,.7);"; line.textContent = `[${stamp}] ${msg}`; logBox.prepend(line); };
 
-const libsCheck = () => { const missing = []; if (typeof Papa === "undefined") missing.push("PapaParse(Papa)"); if (typeof XLSX === "undefined") missing.push("XLSX(xlsx)"); if (typeof Chart === "undefined") missing.push("Chart.js(Chart)"); if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn"); else log("依赖库 OK", "good"); return !missing.length; };
-const toCSV = (rows) => "\uFEFF" + rows.map(r => r.map(v => { let s = String(v ?? ""); if (/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n]/.test(s) ? `"${s.replaceAll('"','""')}"` : s; }).join(",")).join("\n");
+const libsCheck = () => { const missing = []; if (typeof Papa === "undefined") missing.push("PapaParse(Papa)"); if (typeof XLSX === "undefined") missing.push("XLSX(xlsx)"); if (typeof Chart === "undefined") missing.push("Chart.js(Chart)"); if (typeof ExcelJS === "undefined") missing.push("ExcelJS"); if (typeof saveAs === "undefined") missing.push("FileSaver"); if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn"); else log("依赖库 OK", "good"); return !missing.length; };
 const downloadText = (filename, text) => { const blob = new Blob([text], {type:"text/plain;charset=utf-8"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); };
 
 const processInChunks = async (items, processFn, chunkSize = 10000) => { const results = []; for (let i = 0; i < items.length; i += chunkSize) { const chunk = items.slice(i, i + chunkSize); results.push(...chunk.map(processFn)); await new Promise(r => setTimeout(r, 0)); } return results; };
@@ -712,7 +726,8 @@ const checkIsManual = (r) => {
 
 let ALL = [], VIEW = [], importedFiles = [], trendChart = null; let BUSINESS_ROWS = []; let PLACEMENT_ROWS = []; let rankSort = { key: "spend", dir: "desc" }; let RANK_ROWS = [], rankTypeFilter = "all"; let LONG_TAIL_ROWS = [];
 
-const parseCSV = (file) => new Promise((r,j)=>Papa.parse(file, {header:true, skipEmptyLines: 'greedy', complete:res=>r(res.data), error:j}));
+// 🚨 修复 2：开启 PapaParse 的 Web Worker 防止主线程卡死
+const parseCSV = (file) => new Promise((r,j)=>Papa.parse(file, {header:true, skipEmptyLines: 'greedy', worker: true, complete:res=>r(res.data), error:j}));
 const parseXLSX = (file) => new Promise((r,j)=>{ const reader = new FileReader(); reader.onload = (e)=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});r(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""}));}catch(err){j(err);}}; reader.onerror = j; reader.readAsArrayBuffer(file); });
 const dedupeRows = (rows) => { const seen = new Set(), out = []; for (const r of rows) { const key = `${r.date}|${r.campaign}|${r.adGroup}|${r.targeting}|${r.matchType}|${r.searchTerm}`; if (!seen.has(key)) { seen.add(key); out.push(r); } } return out; };
 const importMultipleFiles = async (files) => {
@@ -794,7 +809,6 @@ const renderPlacementAnalysis = () => {
         return; 
     }
     
-    // 核心修复：建立数据桥接 (Data Bridging) - 解决广告位报告无法按 Ad Type 和 Match Type 过滤的底层断层
     const validCampaigns = ALL.length > 0 ? new Set(VIEW.map(x => x.campaign)) : null;
 
     const filters = { dateStart: $("dateStart").value, dateEnd: $("dateEnd").value, filterSource: $("filterSource").value, filterCampaign: $("filterCampaign").value };
@@ -802,7 +816,7 @@ const renderPlacementAnalysis = () => {
         if (filters.filterSource && r.sourceFile !== filters.filterSource) return false; 
         if (filters.filterCampaign && r.campaign !== filters.filterCampaign) return false; 
         if (!withinDate(r, filters.dateStart, filters.dateEnd)) return false; 
-        if (validCampaigns && !validCampaigns.has(r.campaign)) return false; // 运用桥接过滤
+        if (validCampaigns && !validCampaigns.has(r.campaign)) return false;
         return true; 
     });
 
@@ -861,11 +875,6 @@ const renderWordFreq = () => {
   const tbody = $("wfTable")?.querySelector("tbody"); if (!tbody) return; if (!VIEW.length) { tbody.innerHTML = ""; return; } const rows = buildWordStats();
   tbody.innerHTML = rows.map(r => { const displayWord = escapeHtml(r.word).replace(/_/g, " "); return `<tr> <td title="${displayWord}">${displayWord.slice(0, 180)}</td> <td>${fmtInt(r.freq)}</td> <td>${fmtMoney(r.spend)}</td> <td>${fmtInt(r.orders)}</td> <td>${(r.roas ?? 0).toFixed(2)}</td> <td style="${(r.acos > 0.4 || r.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(r.acos)}</td> </tr>`}).join("");
 };
-const exportWordFreqCSV = () => {
-    const rows = buildWordStats(); if (!rows.length) { alert("当前词频列表为空。"); return; } const csvData = [["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS"]]; 
-    rows.forEach(r => { csvData.push([ r.word.replace(/_/g, " "), r.freq, r.spend.toFixed(2), r.orders, r.roas.toFixed(2), fmtPct(r.acos) ]); });
-    const filename = `word_freq_${$("dateStart").value}_${getTs()}.csv`; downloadText(filename, toCSV(csvData));
-};
 
 const renderLongTailMining = () => {
   const tbody = $("longTailTable")?.querySelector("tbody"); if (!tbody) return; if (!VIEW.length) { tbody.innerHTML = ""; return; }
@@ -891,11 +900,6 @@ const renderLongTailMining = () => {
   candidates.sort((a,b) => b.sales - a.sales); LONG_TAIL_ROWS = candidates; 
   tbody.innerHTML = candidates.slice(0, 50).map(c => `<tr><td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td><td>${c.newRadar ? '<span class="tag good">New Radar</span>' : '<span style="color:var(--muted)">-</span>'}</td><td>${c.wordCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtMoney(c.sales)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td><td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(c.acos)}</td></tr>`).join("");
   if (candidates.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">没有符合条件的长尾词（尝试降低“单词数”或“订单”门槛）</td></tr>`; }
-};
-const exportLongTailCSV = () => {
-    if (!LONG_TAIL_ROWS.length) { alert("当前列表为空，无数据可导出。"); return; } const rows = [["Search Term", "New Radar", "Word Count", "Spend", "Sales", "Orders", "ROAS", "ACOS"]];
-    for (const c of LONG_TAIL_ROWS) { rows.push([ c.term, c.newRadar ? "Yes" : "No", c.wordCount, c.spend.toFixed(2), c.sales.toFixed(2), c.orders, c.roas.toFixed(2), fmtPct(c.acos) ]); }
-    const filename = `long_tail_mining_${$("dateStart").value}_${getTs()}.csv`; downloadText(filename, toCSV(rows));
 };
 
 const renderWeekdayAnalysis = () => {
@@ -1017,19 +1021,145 @@ const decideAction = (item, rankBy) => {
   return { action:"KEEP", reason:"无风险信号" };
 };
 
-const exportNegativesCSV = () => {
-  const rankBy = $("rankBy").value; if (!["searchTerm", "searchTermRoot"].includes(rankBy)) { log("导出失败：只有在榜单维度为 Search Term / Root 时才允许导出否定词", "bad"); alert("导出失败：请将“榜单聚合维度”切换为 Search Term 或 Search Term Root，再导出否定词。"); return; } if (!VIEW.length) { log("导出失败：当前视图为空", "bad"); alert("导出失败：当前视图为空。"); return; }
-  const itemsToExport = $("exportScope").value === "rank" ? RANK_ROWS.slice() : (() => { return [...(CURRENT_RANK_GROUPS || new Map()).entries()].map(([name, list]) => { const it = { name, ...sumMetrics(list) }; const a = decideAction(it, rankBy); return { ...it, action:a.action, reason:a.reason }; }).sort((a,b)=> (b.spend||0) - (a.spend||0)); })();
-  const rows = [["关键词","否定匹配","分组维度","理由","花费","销售额","订单数","ROAS","ACOS"]]; const seen = new Set(); const defaultNegMatch = $("exportNegMatch").value.toUpperCase();
-  for (const it of itemsToExport) {
-    if (it.action !== "NEGATE") continue; let keyword = (rankBy === "searchTermRoot" ? rootToPhrase(it.name) : String(it.name || "").trim()).replace(/\s+/g," ").trim(); if (!keyword || keyword === "(blank)") continue;
-    let finalMatchType = defaultNegMatch; if (isASINLike(keyword)) { finalMatchType = "NEGATIVE TARGETING"; }
-    const key = `${finalMatchType}:${keyword.toLowerCase()}`; if (!seen.has(key)) { seen.add(key); rows.push([ keyword, finalMatchType, (rankBy === "searchTerm" ? "客户搜索词" : "搜索词根"), it.reason || "", (it.spend ?? 0).toFixed(2), (it.sales ?? 0).toFixed(2), String(it.orders ?? 0), (it.roas ?? 0).toFixed(2), fmtPct(it.acos) ]); }
-  }
-  if (rows.length === 1) { log("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）", "warn"); alert("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）。"); return; } const filename = `negatives_${rankBy}_${defaultNegMatch}_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`; downloadText(filename, toCSV(rows)); log(`已导出否定词 CSV：${filename}（${rows.length-1} 条）`, "good");
+// ============================================================================
+// 🏆 修复版：Executive-Ready Rich Excel Export Engine (无损侵入式升级)
+// ============================================================================
+const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report") => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Ads Dashboard Pro';
+    workbook.created = new Date();
+    
+    const sheet = workbook.addWorksheet(sheetName, { views: [{ state: 'frozen', ySplit: 1 }] });
+
+    const headerRow = sheet.addRow(headers);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2A2A2A' } };
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+    
+    sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
+
+    dataRows.forEach(rowData => {
+        const row = sheet.addRow(rowData);
+        
+        row.eachCell((cell, colNumber) => {
+            const headerName = String(headers[colNumber - 1]).toLowerCase();
+            const val = cell.value;
+
+            // 🚨 修复 2：正确处理 null 与 Infinity，并完美绑定 Excel 百分比与金额格式
+            if (val === null || val === undefined) {
+                cell.value = null; // 在 Excel 中显示为空白，防止 Infinity 变成 0.00%
+            } else if (typeof val === 'string' && val.endsWith('%')) {
+                const num = parseFloat(val) / 100;
+                if (!isNaN(num)) {
+                    cell.value = num;
+                    cell.numFmt = '0.00%';
+                }
+            } else if (typeof val === 'number') {
+                if (['acos', 'cvr', 'ctr', '转化率', '点击率'].some(k => headerName.includes(k))) {
+                    cell.numFmt = '0.00%';
+                } else if (['spend', 'sales', 'cpc', '花费', '销售额'].some(k => headerName.includes(k))) {
+                    cell.numFmt = '"$"#,##0.00';
+                } else if (!Number.isInteger(val) && !headerName.includes('roas')) {
+                    cell.numFmt = '0.00';
+                } else if (headerName.includes('roas')) {
+                    cell.numFmt = '0.00';
+                } else {
+                    cell.numFmt = '#,##0';
+                }
+            }
+
+            if ((headerName.includes('acos') || headerName === 'acos') && cell.value > 0.4) {
+                cell.font = { color: { argb: 'FFB42318' }, bold: true };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE4E2' } };
+            }
+            if ((headerName.includes('roas') || headerName === 'roas') && cell.value >= 3) {
+                cell.font = { color: { argb: 'FF1A7F37' }, bold: true };
+            }
+            if (val === '潜力词' || val === 'Yes' || val === 'KEEP') {
+                cell.font = { color: { argb: 'FF1A7F37' }, bold: true };
+            }
+            if (val === '页面缺陷' || val === 'NEGATE' || val === 'No') {
+                cell.font = { color: { argb: 'FFB42318' }, bold: true };
+            }
+        });
+    });
+
+    sheet.columns.forEach((column) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+            const columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) { maxLength = columnLength; }
+        });
+        column.width = Math.min(Math.max(12, maxLength + 2), 60);
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), filename);
 };
 
-const exportRankCSV = () => { if (!RANK_ROWS.length) { alert("当前榜单为空，无数据可导出。"); return; } const headers = ["Name", "Audit", "Spend", "Sales", "Orders", "Impressions", "Clicks", "CTR", "CPC", "CVR", "ACOS", "ROAS", "Action", "Reason"]; const rows = [headers]; for (const r of RANK_ROWS) { rows.push([ r.name, r.audit, (r.spend || 0).toFixed(2), (r.sales || 0).toFixed(2), r.orders, r.impr, r.clicks, ((r.ctr || 0) * 100).toFixed(2) + "%", (r.cpc || 0).toFixed(2), ((r.cvr || 0) * 100).toFixed(2) + "%", fmtPct(r.acos), (r.roas || 0).toFixed(2), r.action, r.reason ]); } const filename = `rank_list_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.csv`; downloadText(filename, toCSV(rows)); log(`已导出榜单 CSV：${filename}（${rows.length-1} 条）`, "good"); };
+// ----------------------------------------------------------------------------
+// 🚨 修复 3：重写四大导出函数，拦截 Infinity 误导数据
+// ----------------------------------------------------------------------------
+
+const exportNegativesExcel = () => {
+  const rankBy = $("rankBy").value; 
+  if (!["searchTerm", "searchTermRoot"].includes(rankBy)) { log("导出失败：只有在榜单维度为 Search Term / Root 时才允许导出否定词", "bad"); alert("导出失败：请将“榜单聚合维度”切换为 Search Term 或 Search Term Root，再导出否定词。"); return; } 
+  if (!VIEW.length) { log("导出失败：当前视图为空", "bad"); alert("导出失败：当前视图为空。"); return; }
+  
+  const itemsToExport = $("exportScope").value === "rank" ? RANK_ROWS.slice() : (() => { return [...(CURRENT_RANK_GROUPS || new Map()).entries()].map(([name, list]) => { const it = { name, ...sumMetrics(list) }; const a = decideAction(it, rankBy); return { ...it, action:a.action, reason:a.reason }; }).sort((a,b)=> (b.spend||0) - (a.spend||0)); })();
+  
+  const headers = ["关键词","否定匹配","分组维度","理由","花费","销售额","订单数","ROAS","ACOS"]; 
+  const dataRows = [];
+  const seen = new Set(); const defaultNegMatch = $("exportNegMatch").value.toUpperCase();
+  
+  for (const it of itemsToExport) {
+    if (it.action !== "NEGATE") continue; 
+    let keyword = (rankBy === "searchTermRoot" ? rootToPhrase(it.name) : String(it.name || "").trim()).replace(/\s+/g," ").trim(); 
+    if (!keyword || keyword === "(blank)") continue;
+    
+    let finalMatchType = defaultNegMatch; if (isASINLike(keyword)) { finalMatchType = "NEGATIVE TARGETING"; }
+    const key = `${finalMatchType}:${keyword.toLowerCase()}`; 
+    if (!seen.has(key)) { 
+      seen.add(key); 
+      dataRows.push([ keyword, finalMatchType, (rankBy === "searchTerm" ? "客户搜索词" : "搜索词根"), it.reason || "", it.spend || 0, it.sales || 0, it.orders || 0, it.roas || 0, it.acos === Infinity ? null : it.acos ]); 
+    }
+  }
+  if (dataRows.length === 0) { log("未找到可导出的 NEGATE 项", "warn"); alert("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）。"); return; } 
+  
+  log(`正在生成高定版 Excel 否定词库...`);
+  const filename = `Executive_Negatives_${rankBy}_${defaultNegMatch}_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.xlsx`; 
+  exportRichExcel(headers, dataRows, filename, "Negatives").then(() => log(`已导出否定词 Excel：${filename}（${dataRows.length} 条）`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
+};
+
+const exportRankExcel = () => { 
+    if (!RANK_ROWS.length) { alert("当前榜单为空，无数据可导出。"); return; } 
+    const headers = ["Name", "Audit", "Spend", "Sales", "Orders", "Impressions", "Clicks", "CTR", "CPC", "CVR", "ACOS", "ROAS", "Action", "Reason"]; 
+    const dataRows = RANK_ROWS.map(r => [ 
+        r.name, r.audit, r.spend || 0, r.sales || 0, r.orders, r.impr, r.clicks, 
+        r.ctr || 0, r.cpc || 0, r.cvr || 0, r.acos === Infinity ? null : r.acos, r.roas || 0, r.action, r.reason 
+    ]); 
+    log(`正在生成高定版 Excel 榜单...`);
+    const filename = `Executive_Rank_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.xlsx`; 
+    exportRichExcel(headers, dataRows, filename, "Performance Rank").then(() => log(`已导出榜单 Excel：${filename}（${dataRows.length} 条）`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
+};
+
+const exportWordFreqExcel = () => {
+    const rows = buildWordStats(); if (!rows.length) { alert("当前词频列表为空。"); return; } 
+    const headers = ["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS"];
+    const dataRows = rows.map(r => [ r.word.replace(/_/g, " "), r.freq, r.spend || 0, r.orders, r.roas || 0, r.acos === Infinity ? null : r.acos ]);
+    log(`正在生成高定版 Excel 词频报告...`);
+    const filename = `Executive_WordFreq_${$("dateStart").value}_${getTs()}.xlsx`; 
+    exportRichExcel(headers, dataRows, filename, "Word Frequency").then(() => log(`已导出词频 Excel：${filename}`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
+};
+
+const exportLongTailExcel = () => {
+    if (!LONG_TAIL_ROWS.length) { alert("当前列表为空，无数据可导出。"); return; } 
+    const headers = ["Search Term", "New Radar", "Word Count", "Spend", "Sales", "Orders", "ROAS", "ACOS"];
+    const dataRows = LONG_TAIL_ROWS.map(c => [ c.term, c.newRadar ? "Yes" : "No", c.wordCount, c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos ]);
+    log(`正在生成高定版 Excel 长尾词...`);
+    const filename = `Executive_LongTail_${$("dateStart").value}_${getTs()}.xlsx`; 
+    exportRichExcel(headers, dataRows, filename, "Long Tail Mining").then(() => log(`已导出长尾词 Excel：${filename}`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
+};
 
 const renderKPIs = (total) => {
   const kpis = [ { key: "spend", label:"花费", value: fmtMoney(total.spend), meta: `点击成本 ${fmtMoney(total.cpc)} • 点击率 ${fmtPct(total.ctr)}` }, { key: "sales", label:"销售额 (7天)", value: fmtMoney(total.sales), meta: `ROAS ${total.roas.toFixed(2)} • ACOS ${fmtPct(total.acos)}` }, { key: "orders", label:"订单数 (7天)", value: fmtInt(total.orders), meta: `转化率 ${fmtPct(total.cvr)} • 点击量 ${fmtInt(total.clicks)}` }, { key: "impr", label:"展示量", value: fmtInt(total.impr), meta: `点击量 ${fmtInt(total.clicks)} • 点击率 ${fmtPct(total.ctr)}` }, { key: "acos", label:"ACOS", value: fmtPct(total.acos), meta: `花费/销售额` }, { key: "roas", label:"ROAS", value: total.roas.toFixed(2), meta: `销售额/花费` }, { key: "cpc", label:"点击成本", value: fmtMoney(total.cpc), meta: `花费/点击量` }, { key: "cvr", label:"转化率", value: fmtPct(total.cvr), meta: `订单数/点击量` } ];
@@ -1170,7 +1300,13 @@ document.addEventListener("click", (e) => {
 });
 
 const setTypeFilter = (t) => { rankTypeFilter = t; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.type === t)); renderRankTable(); };
-$("btnExportWf").addEventListener("click", exportWordFreqCSV); $("btnExportNeg").addEventListener("click", exportNegativesCSV); $("btnExportLongTail").addEventListener("click", exportLongTailCSV); $("btnExportRank").addEventListener("click", exportRankCSV);
+
+// 绑定新版富样式导出事件
+$("btnExportWf").addEventListener("click", exportWordFreqExcel); 
+$("btnExportNeg").addEventListener("click", exportNegativesExcel); 
+$("btnExportLongTail").addEventListener("click", exportLongTailExcel); 
+$("btnExportRank").addEventListener("click", exportRankExcel);
+
 $("btnRuleReset").addEventListener("click", () => { $("ruleSpendNeg").value = 30; $("ruleClicksNeg").value = 20; $("ruleRoasNeg").value = 1.5; $("ruleRoasKeep").value = 3; $("ruleOrdersKeep").value = 2; $("ruleRoasMigrateMin").value = 2; applyFilters(); });
 $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert("所有依赖库加载正常！"); });
 
