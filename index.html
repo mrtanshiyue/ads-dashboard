@@ -10,6 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
   
   <script>
     (() => {
@@ -523,7 +524,7 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;">口径：ACOS=花费/销售额；ROAS=销售额/花费；CTR=点击量/展示量；CVR=订单数/点击量。<b>流量审计基于当前视图的大盘均值动态判定：高CTR低CVR判为“页面缺陷”，低CPC高ROAS判为“潜力词”。</b></div>
+        <div class="small" style="margin-top:10px;">口径：ACOS=花费/销售额；ROAS=销售额/花费；CTR=点击量/展示量；CVR=订单数/点击量。<b>流量审计已植入“贝叶斯平滑模型”，自动过滤偶然出单的假象，精准识别真正高转化的“潜力词”。</b></div>
       </div>
       
       <div class="card tableCard" id="longTailCard">
@@ -589,11 +590,29 @@
     </section>
   </main>
 </div>
+
 <script>
 const CONFIG = { CACHE_MAX: 20000, STR_POOL_MAX: 50000 };
 let CURRENT_RANK_GROUPS = null;
 
-window.addEventListener('load', () => { document.body.classList.remove('preload'); });
+// 隐形功能 4: IndexedDB 自动缓存恢复引擎
+window.addEventListener('load', async () => { 
+    document.body.classList.remove('preload'); 
+    try {
+        const data = await idbKeyval.get('dashboardData');
+        if (data && data.ALL && data.ALL.length > 0) {
+            ALL = data.ALL;
+            BUSINESS_ROWS = data.BUSINESS_ROWS || [];
+            PLACEMENT_ROWS = data.PLACEMENT_ROWS || [];
+            importedFiles = data.importedFiles || [];
+            const logBox = $("logBox");
+            logBox.innerHTML = '<div class="small" style="color:var(--good);padding:6px;border-bottom:1px solid rgba(229,229,234,.7);">✅ 已从本地缓存光速恢复上一次的数据 (防丢失机制生效)。</div>';
+            renderFileList();
+            populateDropdowns();
+            applyFilters(true);
+        }
+    } catch(e) { console.error("IndexedDB load error", e); }
+});
 
 const $ = (id) => document.getElementById(id);
 const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(v) : "0.00"; 
@@ -608,7 +627,6 @@ const fmtPct = (v) => {
 
 const safeNum = (x) => { if (typeof x === "number") return isFinite(x) ? x : 0; if (!x || x === "") return 0; const clean = String(x).trim().replace(/[£$€¥,]/g, ""); const n = parseFloat(clean); return isFinite(n) ? n : 0; };
 
-// 🚨 修复 1：增强版日期解析 (兼容欧洲站 DD/MM/YYYY)
 const toISODate = (d) => {
   if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
   if (typeof d === "number" && isFinite(d)) { const dateObj = new Date(Math.round((d - 25569) * 86400000)); return dateObj.toISOString().slice(0,10); }
@@ -638,7 +656,28 @@ const logBox = $("logBox");
 const clearLog = ()=>logBox.innerHTML = "";
 const log = (msg, level="info")=>{ const t = new Date(), stamp = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}:${String(t.getSeconds()).padStart(2,"0")}`; const line = document.createElement("div"); const colors = { bad: "#b42318", warn: "#b54708", good: "#1a7f37" }; if (colors[level]) line.style.color = colors[level]; line.className = "small"; line.style.cssText = "padding:6px 6px;border-bottom:1px solid rgba(229,229,234,.7);"; line.textContent = `[${stamp}] ${msg}`; logBox.prepend(line); };
 
-const libsCheck = () => { const missing = []; if (typeof Papa === "undefined") missing.push("PapaParse(Papa)"); if (typeof XLSX === "undefined") missing.push("XLSX(xlsx)"); if (typeof Chart === "undefined") missing.push("Chart.js(Chart)"); if (typeof ExcelJS === "undefined") missing.push("ExcelJS"); if (typeof saveAs === "undefined") missing.push("FileSaver"); if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn"); else log("依赖库 OK", "good"); return !missing.length; };
+// 隐形功能 1: 错别字聚合 (Levenshtein)
+const levenshtein = (a, b) => {
+    if (!a || !b) return (a || b || "").length;
+    if(a === b) return 0;
+    if(a.length === 0) return b.length;
+    if(b.length === 0) return a.length;
+    const matrix = [];
+    for(let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
+    for(let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
+    for(let i = 1; i <= b.length; i++) {
+        for(let j = 1; j <= a.length; j++) {
+            if(b.charAt(i-1) === a.charAt(j-1)) {
+                matrix[i][j] = matrix[i-1][j-1];
+            } else {
+                matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1));
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+};
+
+const libsCheck = () => { const missing = []; if (typeof Papa === "undefined") missing.push("PapaParse"); if (typeof XLSX === "undefined") missing.push("XLSX"); if (typeof Chart === "undefined") missing.push("Chart.js"); if (typeof ExcelJS === "undefined") missing.push("ExcelJS"); if (typeof saveAs === "undefined") missing.push("FileSaver"); if (typeof idbKeyval === "undefined") missing.push("idbKeyval"); if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn"); else log("依赖库 OK", "good"); return !missing.length; };
 const downloadText = (filename, text) => { const blob = new Blob([text], {type:"text/plain;charset=utf-8"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); };
 
 const processInChunks = async (items, processFn, chunkSize = 10000) => { const results = []; for (let i = 0; i < items.length; i += chunkSize) { const chunk = items.slice(i, i + chunkSize); results.push(...chunk.map(processFn)); await new Promise(r => setTimeout(r, 0)); } return results; };
@@ -726,7 +765,6 @@ const checkIsManual = (r) => {
 
 let ALL = [], VIEW = [], importedFiles = [], trendChart = null; let BUSINESS_ROWS = []; let PLACEMENT_ROWS = []; let rankSort = { key: "spend", dir: "desc" }; let RANK_ROWS = [], rankTypeFilter = "all"; let LONG_TAIL_ROWS = [];
 
-// 🚨 修复 2：开启 PapaParse 的 Web Worker 防止主线程卡死
 const parseCSV = (file) => new Promise((r,j)=>Papa.parse(file, {header:true, skipEmptyLines: 'greedy', worker: true, complete:res=>r(res.data), error:j}));
 const parseXLSX = (file) => new Promise((r,j)=>{ const reader = new FileReader(); reader.onload = (e)=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});r(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""}));}catch(err){j(err);}}; reader.onerror = j; reader.readAsArrayBuffer(file); });
 const dedupeRows = (rows) => { const seen = new Set(), out = []; for (const r of rows) { const key = `${r.date}|${r.campaign}|${r.adGroup}|${r.targeting}|${r.matchType}|${r.searchTerm}`; if (!seen.has(key)) { seen.add(key); out.push(r); } } return out; };
@@ -734,7 +772,7 @@ const importMultipleFiles = async (files) => {
   clearLog(); if (!libsCheck()) return; const mergeMode = $("mergeMode").value, dedupeMode = $("dedupeMode").value; const maxRows = clamp(safeNum($("maxRows").value) || 250000, 10000, 2000000);
   log(`开始导入：${files.length} 个文件（merge=${mergeMode}, dedupe=${dedupeMode}, maxRows=${maxRows}）`); setSubtitle("正在导入文件…（请看左侧导入日志）");
   
-  if (mergeMode === "replace") { ALL = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; log("Replace 模式：已清空历史数据与缓存", "warn"); }
+  if (mergeMode === "replace") { ALL = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; try{idbKeyval.clear();}catch(e){} log("Replace 模式：已清空历史数据与缓存", "warn"); }
   
   for (const file of files) {
     const name = file.name, lower = name.toLowerCase(); log(`读取文件：${name}`);
@@ -767,6 +805,9 @@ const importMultipleFiles = async (files) => {
   if (dedupeMode === "on" && PLACEMENT_ROWS.length) { const beforePl = PLACEMENT_ROWS.length; const seenPl = new Set(); PLACEMENT_ROWS = PLACEMENT_ROWS.filter(r => { const key = `${r.sourceFile}|${r.date}|${r.campaign}|${r.placement}`; if (seenPl.has(key)) return false; seenPl.add(key); return true; }); if (beforePl !== PLACEMENT_ROWS.length) { log(`广告位报告去重完成：${beforePl.toLocaleString()} → ${PLACEMENT_ROWS.length.toLocaleString()}`, "good"); } }
 
   if (ALL.length > 0) { const dates = ALL.map(r => r.date).filter(Boolean).sort(); $("dateStart").value = dates[0]; $("dateEnd").value = dates[dates.length - 1]; }
+  
+  try { idbKeyval.set('dashboardData', { ALL, BUSINESS_ROWS, PLACEMENT_ROWS, importedFiles }); log("✅ 数据已自动存入浏览器 IndexedDB 本地沙盒", "good"); } catch(e) { log("IndexedDB 存储失败", "warn"); }
+
   log(`导入完成：文件 ${importedFiles.length} 个`, "good");
   setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads=${ALL.length}；Business=${BUSINESS_ROWS.length}；Placement=${PLACEMENT_ROWS.length}`);
   renderFileList(); populateDropdowns(); applyFilters(true);
@@ -849,15 +890,21 @@ const sumMetrics = (rows) => {
   for (const r of rows) { impr += r.impr; clicks += r.clicks; orders += r.orders; spendCents += Math.round(r.spend * 100); salesCents += Math.max(0, Math.round(r.sales * 100)); }
   const spend = spendCents / 100; const sales = salesCents / 100;
   
-  return { impr, clicks, spend, sales, orders, ctr: impr > 0 ? clicks / impr : 0, cpc: clicks > 0 ? spend / clicks : 0, cvr: clicks > 0 ? Math.min(1, orders / clicks) : 0, acos: sales > 0 ? spend / sales : (spend > 0 ? Infinity : 0), roas: spend > 0 ? Math.max(0, sales) / spend : 0 };
+  const cvr = clicks > 0 ? Math.min(1, orders / clicks) : 0;
+  // 🚨 隐形功能 2: 贝叶斯平滑 CVR 核心公式 (假设先验分布: 15个点击, 5%的转化率)
+  const smoothCvr = clicks > 0 ? (orders + 15 * 0.05) / (clicks + 15) : 0;
+  
+  return { impr, clicks, spend, sales, orders, ctr: impr > 0 ? clicks / impr : 0, cpc: clicks > 0 ? spend / clicks : 0, cvr, smoothCvr, acos: sales > 0 ? spend / sales : (spend > 0 ? Infinity : 0), roas: spend > 0 ? Math.max(0, sales) / spend : 0 };
 };
 const groupBy = (rows, keyFn) => { const mp = new Map(); for (const r of rows) { const k = keyFn(r) || "(blank)"; (mp.has(k) ? mp : mp.set(k, [])).get(k).push(r); } return mp; };
 
 const detectAnomalies = (rows) => {
     const container = $("anomalyAlerts"); if (!container) return; if (!rows || rows.length === 0) { container.style.display = "none"; container.innerHTML = ""; return; }
     const alerts = []; const groups = CURRENT_RANK_GROUPS || groupBy(rows, r => r.searchTerm); let topBleeder = null; let maxWasted = 0;
+    
     for (const [term, list] of groups.entries()) { if (isASINLike(term)) continue; let spend = 0, orders = 0; for (const r of list) { spend += r.spend; orders += r.orders; } if (orders === 0 && spend > maxWasted) { maxWasted = spend; topBleeder = term; } }
     if (maxWasted > 30) { alerts.push({ type: 'bad', msg: `<strong>🚨 极端浪费预警：</strong> 核心词 <code>${escapeHtml(topBleeder)}</code> 在当前时间段内花费高达 <strong>$${maxWasted.toFixed(2)}</strong> 且 0 转化，建议立即排查相关性或加入否定！` }); }
+    
     const dates = [...new Set(rows.map(r=>r.date).filter(Boolean))].sort();
     if (dates.length >= 4) {
         const recentDates = dates.slice(-2); const prevDates = dates.slice(-4, -2);
@@ -868,6 +915,28 @@ const detectAnomalies = (rows) => {
             if (mP.cvr > 0.05 && mR.cvr < mP.cvr * 0.5) { alerts.push({ type: 'warn', msg: `<strong>⚠️ 转化断崖预警：</strong> 近 2 天转化率 (${fmtPct(mR.cvr)}) 相比前 2 天 (${fmtPct(mP.cvr)}) 出现腰斩，请检查链接是否断货、被跟卖或收到差评。` }); }
         }
     }
+    
+    if (dates.length >= 5) {
+        const topTerms = [...groups.entries()].map(([term, list]) => ({term, list, spend: sumMetrics(list).spend})).sort((a,b)=>b.spend-a.spend).slice(0, 15);
+        for (const {term, list} of topTerms) {
+            if (isASINLike(term) || list.length < 5) continue;
+            const dailyData = groupBy(list, r => r.date);
+            const sortedDates = [...dailyData.keys()].sort().slice(-7); 
+            if (sortedDates.length >= 5) {
+                const y = sortedDates.map(d => sumMetrics(dailyData.get(d)).cvr);
+                const n = y.length;
+                let sumX=0, sumY=0, sumXY=0, sumXX=0;
+                for(let i=0; i<n; i++) { sumX+=i; sumY+=y[i]; sumXY+=i*y[i]; sumXX+=i*i; }
+                const slope = (n*sumXY - sumX*sumY) / (n*sumXX - sumX*sumX); 
+                
+                if (slope <= -0.015 && sumMetrics(list).spend > 25) {
+                     alerts.push({ type: 'warn', msg: `<strong>📉 慢性衰退预警：</strong> 主力词 <code>${escapeHtml(term)}</code> 的转化率在近 ${n} 天呈持续阴跌趋势 (线性回归斜率 ${(slope*100).toFixed(1)}%)，警惕竞品抢占坑位！` });
+                     break; 
+                }
+            }
+        }
+    }
+    
     if (alerts.length > 0) { container.innerHTML = alerts.map(a => `<div class="alert-banner ${a.type === 'warn' ? 'warn' : ''}"> <span class="alert-icon">${a.type === 'warn' ? '⚠️' : '🚨'}</span> <div>${a.msg}</div> </div>`).join(""); container.style.display = "flex"; } else { container.style.display = "none"; container.innerHTML = ""; }
 };
 
@@ -906,11 +975,27 @@ const renderWeekdayAnalysis = () => {
   const tbody = $("weekdayTable")?.querySelector("tbody"); if (!tbody) return; if (!VIEW.length) { tbody.innerHTML = ""; return; }
   const days = ["周日 (Sun)", "周一 (Mon)", "周二 (Tue)", "周三 (Wed)", "周四 (Thu)", "周五 (Fri)", "周六 (Sat)"]; const bins = days.map(()=>[]);
   for (const r of VIEW) { if(!r.date) continue; const parts = r.date.split("-"); if(parts.length === 3) { const y = parseInt(parts[0], 10); const m = parseInt(parts[1], 10) - 1; const d = parseInt(parts[2], 10); const localDate = new Date(y, m, d, 12, 0, 0); bins[localDate.getDay()].push(r); } }
-  const result = bins.map((rows, i) => ({ day: days[i], ...sumMetrics(rows) })); const totalSales = sumMetrics(VIEW).sales || 1;
+  
+  const totalMetrics = sumMetrics(VIEW);
+  const totalSales = totalMetrics.sales || 1;
+  const globalCvr = totalMetrics.cvr || 0.05; // 用于分时测算基准
+
+  const result = bins.map((rows, i) => ({ day: days[i], ...sumMetrics(rows) })); 
+  
   tbody.innerHTML = result.map(row => {
     const salesPct = totalSales > 0 ? (row.sales / totalSales) : 0;
     const barHtml = `<div class="bar-row"><div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${(salesPct*100).toFixed(1)}%</div><div class="bar-track"><div style="width:${salesPct*100}%;background:var(--accent)"></div></div></div>`;
-    return `<tr><td>${row.day}</td><td>${barHtml}</td><td>${fmtMoney(row.spend)}</td><td>${fmtMoney(row.sales)}</td><td>${fmtInt(row.orders)}</td><td>${row.roas.toFixed(2)}</td><td style="${(row.acos > 0.4 || row.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(row.acos)}</td><td>${fmtMoney(row.cpc)}</td></tr>`;
+    
+    // 🚨 隐形功能 3: 分时调价基准率测算 (Bid Multiplier)
+    let bidSuggest = "";
+    if (globalCvr > 0 && row.clicks > 15) { 
+        const multiplier = (row.cvr / globalCvr) - 1;
+        if (multiplier > 0.1) bidSuggest = ` <span style="color:var(--good);font-size:11px;font-weight:bold;">[竞价 +${(multiplier*100).toFixed(0)}%]</span>`;
+        else if (multiplier < -0.1) bidSuggest = ` <span style="color:var(--bad);font-size:11px;font-weight:bold;">[竞价 ${(multiplier*100).toFixed(0)}%]</span>`;
+        else bidSuggest = ` <span style="color:var(--muted);font-size:11px;">[持平]</span>`;
+    }
+
+    return `<tr><td>${row.day}${bidSuggest}</td><td>${barHtml}</td><td>${fmtMoney(row.spend)}</td><td>${fmtMoney(row.sales)}</td><td>${fmtInt(row.orders)}</td><td>${row.roas.toFixed(2)}</td><td style="${(row.acos > 0.4 || row.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(row.acos)}</td><td>${fmtMoney(row.cpc)}</td></tr>`;
   }).join("");
 };
 
@@ -1021,9 +1106,6 @@ const decideAction = (item, rankBy) => {
   return { action:"KEEP", reason:"无风险信号" };
 };
 
-// ============================================================================
-// 🏆 修复版：Executive-Ready Rich Excel Export Engine (无损侵入式升级)
-// ============================================================================
 const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report") => {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Ads Dashboard Pro';
@@ -1045,9 +1127,8 @@ const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report"
             const headerName = String(headers[colNumber - 1]).toLowerCase();
             const val = cell.value;
 
-            // 🚨 修复 2：正确处理 null 与 Infinity，并完美绑定 Excel 百分比与金额格式
             if (val === null || val === undefined) {
-                cell.value = null; // 在 Excel 中显示为空白，防止 Infinity 变成 0.00%
+                cell.value = null; 
             } else if (typeof val === 'string' && val.endsWith('%')) {
                 const num = parseFloat(val) / 100;
                 if (!isNaN(num)) {
@@ -1057,7 +1138,7 @@ const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report"
             } else if (typeof val === 'number') {
                 if (['acos', 'cvr', 'ctr', '转化率', '点击率'].some(k => headerName.includes(k))) {
                     cell.numFmt = '0.00%';
-                } else if (['spend', 'sales', 'cpc', '花费', '销售额'].some(k => headerName.includes(k))) {
+                } else if (['spend', 'sales', 'cpc', 'bid', '花费', '销售额'].some(k => headerName.includes(k))) {
                     cell.numFmt = '"$"#,##0.00';
                 } else if (!Number.isInteger(val) && !headerName.includes('roas')) {
                     cell.numFmt = '0.00';
@@ -1097,10 +1178,6 @@ const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report"
     saveAs(new Blob([buffer], { type: 'application/octet-stream' }), filename);
 };
 
-// ----------------------------------------------------------------------------
-// 🚨 修复 3：重写四大导出函数，拦截 Infinity 误导数据
-// ----------------------------------------------------------------------------
-
 const exportNegativesExcel = () => {
   const rankBy = $("rankBy").value; 
   if (!["searchTerm", "searchTermRoot"].includes(rankBy)) { log("导出失败：只有在榜单维度为 Search Term / Root 时才允许导出否定词", "bad"); alert("导出失败：请将“榜单聚合维度”切换为 Search Term 或 Search Term Root，再导出否定词。"); return; } 
@@ -1133,11 +1210,16 @@ const exportNegativesExcel = () => {
 
 const exportRankExcel = () => { 
     if (!RANK_ROWS.length) { alert("当前榜单为空，无数据可导出。"); return; } 
-    const headers = ["Name", "Audit", "Spend", "Sales", "Orders", "Impressions", "Clicks", "CTR", "CPC", "CVR", "ACOS", "ROAS", "Action", "Reason"]; 
-    const dataRows = RANK_ROWS.map(r => [ 
-        r.name, r.audit, r.spend || 0, r.sales || 0, r.orders, r.impr, r.clicks, 
-        r.ctr || 0, r.cpc || 0, r.cvr || 0, r.acos === Infinity ? null : r.acos, r.roas || 0, r.action, r.reason 
-    ]); 
+    const headers = ["Name", "Audit", "Spend", "Sales", "Orders", "Impressions", "Clicks", "CTR", "CPC", "CVR", "ACOS", "ROAS", "Action", "Reason", "Suggested Bid"]; 
+    const dataRows = RANK_ROWS.map(r => {
+        const rpc = r.clicks > 0 ? (r.sales || 0) / r.clicks : 0;
+        const suggestedBid = rpc * 0.3; // 默认 30% Target ACOS
+        return [ 
+            r.name, r.audit, r.spend || 0, r.sales || 0, r.orders, r.impr, r.clicks, 
+            r.ctr || 0, r.cpc || 0, r.cvr || 0, r.acos === Infinity ? null : r.acos, r.roas || 0, r.action, r.reason, 
+            suggestedBid 
+        ];
+    }); 
     log(`正在生成高定版 Excel 榜单...`);
     const filename = `Executive_Rank_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.xlsx`; 
     exportRichExcel(headers, dataRows, filename, "Performance Rank").then(() => log(`已导出榜单 Excel：${filename}（${dataRows.length} 条）`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
@@ -1162,9 +1244,13 @@ const exportLongTailExcel = () => {
 };
 
 const renderKPIs = (total) => {
-  const kpis = [ { key: "spend", label:"花费", value: fmtMoney(total.spend), meta: `点击成本 ${fmtMoney(total.cpc)} • 点击率 ${fmtPct(total.ctr)}` }, { key: "sales", label:"销售额 (7天)", value: fmtMoney(total.sales), meta: `ROAS ${total.roas.toFixed(2)} • ACOS ${fmtPct(total.acos)}` }, { key: "orders", label:"订单数 (7天)", value: fmtInt(total.orders), meta: `转化率 ${fmtPct(total.cvr)} • 点击量 ${fmtInt(total.clicks)}` }, { key: "impr", label:"展示量", value: fmtInt(total.impr), meta: `点击量 ${fmtInt(total.clicks)} • 点击率 ${fmtPct(total.ctr)}` }, { key: "acos", label:"ACOS", value: fmtPct(total.acos), meta: `花费/销售额` }, { key: "roas", label:"ROAS", value: total.roas.toFixed(2), meta: `销售额/花费` }, { key: "cpc", label:"点击成本", value: fmtMoney(total.cpc), meta: `花费/点击量` }, { key: "cvr", label:"转化率", value: fmtPct(total.cvr), meta: `订单数/点击量` } ];
+  // 🚨 隐形功能 2: 全局 TACoS 幽灵桥接呈现
+  const acosMetaText = total.bizSales > 0 ? `🔥 TACoS (全局真实占比): ${fmtPct(total.spend / total.bizSales)}` : `花费/销售额`;
+  
+  const kpis = [ { key: "spend", label:"花费", value: fmtMoney(total.spend), meta: `点击成本 ${fmtMoney(total.cpc)} • 点击率 ${fmtPct(total.ctr)}` }, { key: "sales", label:"销售额 (7天)", value: fmtMoney(total.sales), meta: `ROAS ${total.roas.toFixed(2)} • ACOS ${fmtPct(total.acos)}` }, { key: "orders", label:"订单数 (7天)", value: fmtInt(total.orders), meta: `转化率 ${fmtPct(total.cvr)} • 点击量 ${fmtInt(total.clicks)}` }, { key: "impr", label:"展示量", value: fmtInt(total.impr), meta: `点击量 ${fmtInt(total.clicks)} • 点击率 ${fmtPct(total.ctr)}` }, { key: "acos", label:"ACOS", value: fmtPct(total.acos), meta: acosMetaText }, { key: "roas", label:"ROAS", value: total.roas.toFixed(2), meta: `销售额/花费` }, { key: "cpc", label:"点击成本", value: fmtMoney(total.cpc), meta: `花费/点击量` }, { key: "cvr", label:"转化率", value: fmtPct(total.cvr), meta: `订单数/点击量` } ];
   $("kpiGrid").innerHTML = kpis.map(k => ` <div class="card kpi"> <div class="label"><span>${k.label}</span><span class="pill">KPI</span></div> <div class="value">${k.value}</div> <div class="meta"><span>${k.meta}</span></div> </div> `).join("");
 };
+
 const renderTrend = (rows) => {
   if (!rows || rows.length === 0) return; const byDate = groupBy(rows, r=>r.date); const series = [...byDate.keys()].sort().map(d=>({ date:d, ...sumMetrics(byDate.get(d)) })); const dataMap = (key, transform = v => v) => series.map(s => transform(s[key])); const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || "rgba(229,229,234,.6)"; const acosData = series.map(s => { if (s.sales <= 0 && s.spend > 0) return null; return s.acos * 100; });
   const datasets = [ { label:"花费", data:dataMap("spend"), tension:.25, pointRadius:0, borderWidth:2 }, { label:"销售额", data:dataMap("sales"), tension:.25, pointRadius:0, borderWidth:2 }, { label:"订单数", data:dataMap("orders"), tension:.25, pointRadius:0, borderWidth:2 }, { label:"ACOS %", data:acosData, tension:.25, pointRadius:0, borderWidth:2, yAxisID:"y1", spanGaps: true }, { label:"ROAS", data:dataMap("roas", v => isFinite(v) ? v : 0), tension:.25, pointRadius:0, borderWidth:2, yAxisID:"y1" } ];
@@ -1198,9 +1284,10 @@ const buildRankTable = () => {
         const {action, reason} = decideAction(base, rankBy); 
         
         let audit = "-";
-        if (base.clicks >= 10 && base.ctr > avgCtr && base.cvr < (avgCvr * 0.5)) {
+        // 🚨 隐形功能 1: 基于贝叶斯平滑 CVR 杜绝幸存者偏差假象
+        if (base.clicks >= 10 && base.ctr > avgCtr && base.smoothCvr < (avgCvr * 0.5)) {
             audit = "页面缺陷";
-        } else if (base.cpc < avgCpc && base.roas > (avgRoas * 1.2) && base.orders >= 1) {
+        } else if (base.cpc < avgCpc && base.roas > (avgRoas * 1.2) && base.smoothCvr > (avgCvr * 1.1) && base.orders >= 1) {
             audit = "潜力词";
         }
         
@@ -1246,7 +1333,42 @@ const applyFilters = (initial=false) => {
             if (filters.filterSearchTerm) { const term = filters.filterSearchTerm.toLowerCase(); if (filters.filterSearchExact) { if (r.searchTermLower !== term) return false; } else { if (!r.searchTermLower.includes(term)) return false; } }
             return true;
           });
-          const total = sumMetrics(VIEW); CURRENT_RANK_GROUPS = groupBy(VIEW, getRankKey());
+          
+          const total = sumMetrics(VIEW); 
+          
+          // 计算用于 TACoS 展现的业务全局销售额
+          let bizSales = 0;
+          for(let r of BUSINESS_ROWS) bizSales += r.sales;
+          total.bizSales = bizSales;
+
+          CURRENT_RANK_GROUPS = groupBy(VIEW, getRankKey());
+
+          // 隐形功能 1: 模糊匹配与错别字收敛 (Levenshtein)
+          if ($("rankBy").value === "searchTermRoot" && CURRENT_RANK_GROUPS.size > 0) {
+              const rootEntries = [...CURRENT_RANK_GROUPS.entries()].map(([root, rows]) => ({root, rows, count: rows.length}));
+              rootEntries.sort((a,b) => b.count - a.count); 
+              const masterRoots = [];
+              const MAX_MASTERS = 200; 
+              
+              for (const entry of rootEntries) {
+                  let merged = false;
+                  if (entry.root.length >= 5) {
+                      const limit = Math.min(masterRoots.length, MAX_MASTERS);
+                      for (let i = 0; i < limit; i++) {
+                          const master = masterRoots[i];
+                          if (Math.abs(master.root.length - entry.root.length) <= 1) {
+                              if (levenshtein(master.root, entry.root) <= 1) { 
+                                  master.rows.push(...entry.rows);
+                                  merged = true; break;
+                              }
+                          }
+                      }
+                  }
+                  if (!merged) { masterRoots.push({root: entry.root, rows: [...entry.rows]}); }
+              }
+              CURRENT_RANK_GROUPS = new Map(masterRoots.map(m => [m.root, m.rows]));
+          }
+
           if (ALL.length > 0) { setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads=${ALL.length}；Business=${BUSINESS_ROWS.length}；Placement=${PLACEMENT_ROWS.length}；日期范围 ${filters.dateStart} → ${filters.dateEnd}`); } else { setSubtitle(`已导入 ${importedFiles.length} 个文件；Ads=${ALL.length}；Business=${BUSINESS_ROWS.length}；Placement=${PLACEMENT_ROWS.length}`); }
           requestAnimationFrame(() => { 
               renderKPIs(total); detectAnomalies(VIEW); renderTrend(VIEW); renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); 
@@ -1266,7 +1388,7 @@ filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280)); 
 $("btnClearSearch").addEventListener("click", () => { $("filterSearchTerm").value = ""; $("filterSearchExact").checked = false; $("filterSearchTerm").focus(); applyFilters(); });
 $("btnReset").addEventListener("click", () => { ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters(); });
-$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; renderFileList(); populateDropdowns(); applyFilters(true); });
+$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
 
 document.querySelectorAll(".chipBtn").forEach(btn => { btn.addEventListener("click", () => { document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); }); });
 $("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if (!key) return; rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderRankTable(); }));
@@ -1301,7 +1423,6 @@ document.addEventListener("click", (e) => {
 
 const setTypeFilter = (t) => { rankTypeFilter = t; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.type === t)); renderRankTable(); };
 
-// 绑定新版富样式导出事件
 $("btnExportWf").addEventListener("click", exportWordFreqExcel); 
 $("btnExportNeg").addEventListener("click", exportNegativesExcel); 
 $("btnExportLongTail").addEventListener("click", exportLongTailExcel); 
