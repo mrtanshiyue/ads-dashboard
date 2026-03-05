@@ -165,9 +165,9 @@
       border: 1px solid var(--line); 
       background: var(--card); 
       border-radius: 999px; 
-      padding: 9px 14px; /* 微调 padding 使其更饱满 */
+      padding: 9px 14px; 
       font-size: 12.7px; 
-      font-weight: 600; /* 加粗提升品质感 */
+      font-weight: 600; 
       cursor: pointer; 
       color: var(--text); 
       display: inline-flex; 
@@ -175,7 +175,6 @@
       gap: 8px; 
       user-select: none; 
       white-space: nowrap;
-      /* 果冻级光影与微交互动画 */
       box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 1px 0 rgba(255,255,255,0.8) inset;
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
@@ -185,14 +184,14 @@
     .btn:hover { 
       background: var(--hover-bg); 
       border-color: var(--muted); 
-      transform: translateY(-1px); /* 悬停上浮 */
+      transform: translateY(-1px); 
       box-shadow: 0 4px 8px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8) inset; 
     }
     [data-theme="dark"] .btn:hover, [data-theme="ocean"] .btn:hover, [data-theme="forest"] .btn:hover {
       box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.05) inset; 
     }
     .btn:active { 
-      transform: translateY(1px) scale(0.97); /* 真实下压反馈 */
+      transform: translateY(1px) scale(0.97); 
       box-shadow: 0 1px 2px rgba(0,0,0,0.05) inset; 
     }
     .btn:focus-visible {
@@ -200,7 +199,7 @@
       outline-offset: 2px;
     }
 
-    /* 💎 极致美化：主操作按钮 (Primary) - 动态取色果冻态 */
+    /* 💎 极致美化：主操作按钮 (Primary) */
     .btn.primary { 
       background: color-mix(in srgb, var(--accent) 12%, var(--card));
       border-color: color-mix(in srgb, var(--accent) 30%, transparent); 
@@ -213,7 +212,7 @@
       box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 25%, transparent), 0 1px 0 rgba(255,255,255,0.6) inset;
     }
 
-    /* 🩸 极致美化：危险操作按钮 (Danger) - 动态取色警告态 */
+    /* 🩸 极致美化：危险操作按钮 (Danger) */
     .btn.danger { 
       background: color-mix(in srgb, var(--bad) 10%, var(--card));
       border-color: color-mix(in srgb, var(--bad) 30%, transparent); 
@@ -258,12 +257,12 @@
     /* ================= 🚀 极致美化：分段选择器槽位与悬浮胶囊 (.seg & .segBtn) ================= */
     .seg { 
       display: inline-flex; 
-      background: color-mix(in srgb, var(--line) 30%, var(--input-bg)); /* 内凹槽底色 */
+      background: color-mix(in srgb, var(--line) 30%, var(--input-bg)); 
       border: 1px solid color-mix(in srgb, var(--line) 60%, transparent); 
       border-radius: 999px; 
-      padding: 3px; /* 产生槽位边缘 */
+      padding: 3px; 
       gap: 2px;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.04), 0 1px 0 rgba(255,255,255,0.7); /* 内凹阴影 */
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.04), 0 1px 0 rgba(255,255,255,0.7); 
     }
     [data-theme="dark"] .seg, [data-theme="ocean"] .seg, [data-theme="forest"] .seg {
       box-shadow: inset 0 2px 6px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05);
@@ -281,12 +280,12 @@
     }
     .segBtn:hover { color: var(--text); }
     .segBtn.active { 
-      background: var(--card); /* 悬浮胶囊 */
+      background: var(--card); 
       color: var(--accent); 
       box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 1px 1px rgba(0,0,0,0.05); 
     }
     [data-theme="dark"] .segBtn.active, [data-theme="ocean"] .segBtn.active, [data-theme="forest"] .segBtn.active { 
-      background: color-mix(in srgb, var(--card) 60%, var(--chip)); /* 适配暗色的悬浮胶囊 */
+      background: color-mix(in srgb, var(--card) 60%, var(--chip)); 
       box-shadow: 0 2px 8px rgba(0,0,0,0.4); 
     }
     .segBtn:focus-visible { outline: 2px solid var(--accent); }
@@ -426,7 +425,7 @@
       <div class="fieldRow">
         <label>客户搜索词（Search Term）</label>
         <div style="display: flex; gap: 6px;">
-            <input id="filterSearchTerm" type="text" placeholder="例如: blue light / magnification" style="flex:1" />
+            <input id="filterSearchTerm" type="text" placeholder="例: blue light / 支持 -排除 / regex:" style="flex:1" />
             <button id="btnClearSearch" class="search-clear-btn" type="button" title="清空搜索词">✕</button>
         </div>
         <div style="display:flex; align-items:center; gap:6px; margin-top:6px; padding-left:2px;">
@@ -706,7 +705,7 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;">注意：词频花费为“包含该词的所有搜索词总花费”，各行相加会超过总金额。<b>导出 Excel 包含 N-Gram 级智能止损判定。</b></div>
+        <div class="small" style="margin-top:10px;">注意：词频花费为“包含该词的所有搜索词总花费”，各行相加会超过总金额。<b>导出 Excel 包含 N-Gram 级智能止损判定。</b>鼠标悬停表格行可查看该词根引力与毒性审计。</div>
       </div>
       
       <div class="card tableCard" id="conflictCard">
@@ -735,20 +734,20 @@ let CURRENT_RANK_GROUPS = null;
 
 // 🛡️ 加固版 IndexedDB 自动缓存恢复引擎
 window.addEventListener('load', () => { 
-    document.body.classList.remove('preload'); 
-    idbKeyval.get('dashboardData').then(data => {
-        if (data && data.ALL && data.ALL.length > 0) {
-            ALL = data.ALL;
-            BUSINESS_ROWS = data.BUSINESS_ROWS || [];
-            PLACEMENT_ROWS = data.PLACEMENT_ROWS || [];
-            importedFiles = data.importedFiles || [];
-            const logBox = $("logBox");
-            if(logBox) logBox.innerHTML = '<div class="small" style="color:var(--good);padding:6px;border-bottom:1px solid rgba(229,229,234,.7);">✅ 已从本地缓存光速恢复上一次的数据 (防丢失机制生效)。</div>';
-            renderFileList();
-            populateDropdowns();
-            applyFilters(true);
-        }
-    }).catch(e => console.warn("IndexedDB load skipped or empty", e));
+  document.body.classList.remove('preload'); 
+  idbKeyval.get('dashboardData').then(data => {
+      if (data && data.ALL && data.ALL.length > 0) {
+          ALL = data.ALL;
+          BUSINESS_ROWS = data.BUSINESS_ROWS || [];
+          PLACEMENT_ROWS = data.PLACEMENT_ROWS || [];
+          importedFiles = data.importedFiles || [];
+          const logBox = $("logBox");
+          if(logBox) logBox.innerHTML = '<div class="small" style="color:var(--good);padding:6px;border-bottom:1px solid rgba(229,229,234,.7);">✅ 已从本地缓存光速恢复上一次的数据 (防丢失机制生效)。</div>';
+          renderFileList();
+          populateDropdowns();
+          applyFilters(true);
+      }
+  }).catch(e => console.warn("IndexedDB load skipped or empty", e));
 });
 
 const $ = (id) => document.getElementById(id);
@@ -756,10 +755,10 @@ const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFrac
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 
 const fmtPct = (v) => { 
-    if (v === Infinity || v === null || v === undefined) return "∞";
-    if (!isFinite(v)) return "0.00%"; 
-    if (v < 0) return "-" + Math.abs(v*100).toFixed(2) + "%"; 
-    return (v*100).toFixed(2)+"%"; 
+  if (v === Infinity || v === null || v === undefined) return "∞";
+  if (!isFinite(v)) return "0.00%"; 
+  if (v < 0) return "-" + Math.abs(v*100).toFixed(2) + "%"; 
+  return (v*100).toFixed(2)+"%"; 
 }
 
 const safeNum = (x) => { if (typeof x === "number") return isFinite(x) ? x : 0; if (!x || x === "") return 0; const clean = String(x).trim().replace(/[£$€¥,]/g, ""); const n = parseFloat(clean); return isFinite(n) ? n : 0; };
@@ -814,7 +813,6 @@ const levenshtein = (a, b) => {
 };
 
 const libsCheck = () => { const missing = []; if (typeof Papa === "undefined") missing.push("PapaParse"); if (typeof XLSX === "undefined") missing.push("XLSX"); if (typeof Chart === "undefined") missing.push("Chart.js"); if (typeof ExcelJS === "undefined") missing.push("ExcelJS"); if (typeof saveAs === "undefined") missing.push("FileSaver"); if (typeof idbKeyval === "undefined") missing.push("idbKeyval"); if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn"); else log("依赖库 OK", "good"); return !missing.length; };
-const downloadText = (filename, text) => { const blob = new Blob([text], {type:"text/plain;charset=utf-8"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); };
 
 const processInChunks = async (items, processFn, chunkSize = 10000) => { const results = []; for (let i = 0; i < items.length; i += chunkSize) { const chunk = items.slice(i, i + chunkSize); results.push(...chunk.map(processFn)); await new Promise(r => setTimeout(r, 0)); } return results; };
 
@@ -1060,6 +1058,21 @@ const detectAnomalies = (rows) => {
         }
     }
 
+    // 🚀 高阶注入：帕累托 80/20 预算耗散监控 (Pareto Dissipation)
+    const campGroups = groupBy(rows, r => r.campaign);
+    for (const [camp, list] of campGroups.entries()) {
+        const stMap = groupBy(list, r=>r.searchTerm);
+        const termStats = [...stMap.entries()].map(([t, rs])=>({t, spend:sumMetrics(rs).spend})).sort((a,b)=>b.spend-a.spend);
+        const totalCSpend = sumMetrics(list).spend;
+        if (termStats.length > 20 && totalCSpend > 50) {
+            const head20Spend = termStats.slice(0, Math.ceil(termStats.length * 0.2)).reduce((s, x)=>s+x.spend, 0);
+            if (head20Spend < totalCSpend * 0.4 && sumMetrics(list).roas < 1.0) {
+                 alerts.push({ type: 'warn', msg: `<strong>🌪️ 帕累托耗散预警：</strong> 计划 <code>${escapeHtml(camp)}</code> 核心词聚拢度极低，头部 20% 词仅占不到 40% 花费，长尾严重吸血且整体亏损，建议立刻收紧预算或调低基础出价！` });
+                 break; // 一次只报一个最严重的
+            }
+        }
+    }
+
     const dates = [...new Set(rows.map(r=>r.date).filter(Boolean))].sort();
     if (dates.length >= 4) {
         const recentDates = dates.slice(-2); const prevDates = dates.slice(-4, -2);
@@ -1098,15 +1111,56 @@ const detectAnomalies = (rows) => {
     if (alerts.length > 0) { container.innerHTML = alerts.map(a => `<div class="alert-banner ${a.type === 'warn' ? 'warn' : ''}"> <span class="alert-icon">${a.type === 'warn' ? '⚠️' : '🚨'}</span> <div>${a.msg}</div> </div>`).join(""); container.style.display = "flex"; } else { container.style.display = "none"; container.innerHTML = ""; }
 };
 
+// 🚀 高阶重构：词频流量毒性与引力判定渲染
 const renderWordFreq = () => {
-  const tbody = $("wfTable")?.querySelector("tbody"); if (!tbody) return; if (!VIEW.length) { tbody.innerHTML = ""; return; } const rows = buildWordStats();
-  tbody.innerHTML = rows.map(r => { const displayWord = escapeHtml(r.word).replace(/_/g, " "); return `<tr> <td title="${displayWord}">${displayWord.slice(0, 180)}</td> <td>${fmtInt(r.freq)}</td> <td>${fmtMoney(r.spend)}</td> <td>${fmtInt(r.orders)}</td> <td>${(r.roas ?? 0).toFixed(2)}</td> <td style="${(r.acos > 0.4 || r.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(r.acos)}</td> </tr>`}).join("");
+  const tbody = $("wfTable")?.querySelector("tbody"); if (!tbody) return; if (!VIEW.length) { tbody.innerHTML = ""; return; } 
+  const rows = buildWordStats();
+  
+  const globalMetrics = sumMetrics(VIEW);
+  const globalCvr = globalMetrics.cvr || 0.05;
+
+  tbody.innerHTML = rows.map(r => { 
+      const displayWord = escapeHtml(r.word).replace(/_/g, " "); 
+      
+      let rootTag = "中性词根 (Neutral)";
+      if (r.orders > 0 && r.cvr > globalCvr * 1.5 && r.roas >= 2.5) {
+          rootTag = "🌟 黄金词根 (高溢价强转化，建议单独拉计划拓词)";
+      } else if (r.clicks >= 15 && r.cvr < globalCvr * 0.5 && r.spend > 15) {
+          rootTag = "☠️ 剧毒词根 (点击涣散且极低转化，考虑词组否定)";
+      } else if (r.spend > 20 && r.orders === 0) {
+          rootTag = "🩸 纯消耗词根 (持续吸血，0产出)";
+      }
+
+      const hoverTooltip = `【 ${displayWord} 】深层流量审计\n` +
+                           `------------------------------------\n` +
+                           `定性诊断：${rootTag}\n` +
+                           `包含该词的搜索词数：${r.freq} 个\n` +
+                           `该词系总曝光：${fmtInt(r.impr)} 次\n` +
+                           `该词系总点击：${fmtInt(r.clicks)} 次\n` +
+                           `该词系点击率 (CTR)：${fmtPct(r.ctr)}\n` +
+                           `该词系转化率 (CVR)：${fmtPct(r.cvr)} (大盘均值: ${fmtPct(globalCvr)})\n` +
+                           `该词系平均 CPC：${fmtMoney(r.cpc)}`;
+
+      return `<tr title="${hoverTooltip}" style="cursor:help"> 
+          <td>${displayWord.slice(0, 180)}</td> 
+          <td>${fmtInt(r.freq)}</td> 
+          <td>${fmtMoney(r.spend)}</td> 
+          <td>${fmtInt(r.orders)}</td> 
+          <td style="${(r.roas >= 2.5) ? 'color:#1a7f37;font-weight:700' : ''}">${(r.roas ?? 0).toFixed(2)}</td> 
+          <td style="${(r.acos > 0.4 || r.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(r.acos)}</td> 
+      </tr>`;
+  }).join("");
 };
 
+// 🚀 高阶重构：长尾词深度商业洞察渲染
 const renderLongTailMining = () => {
   const tbody = $("longTailTable")?.querySelector("tbody"); if (!tbody) return; if (!VIEW.length) { tbody.innerHTML = ""; return; }
   const minWords = Math.max(1, Math.floor(safeNum($("ltMinWords").value))); const minOrders = Math.max(0, Math.floor(safeNum($("ltMinOrders").value))); const minRoas = safeNum($("ltMinRoas").value); const groups = groupBy(VIEW, r => r.searchTerm); const candidates = [];
   
+  const globalMetrics = sumMetrics(VIEW);
+  const globalCpc = globalMetrics.cpc || 1.0;
+  const globalCvr = globalMetrics.cvr || 0.05;
+
   const exactTargets = new Set();
   for (const row of ALL) {
       if ((row.matchType || "").toLowerCase().includes("exact")) {
@@ -1125,7 +1179,29 @@ const renderLongTailMining = () => {
     candidates.push({ term, wordCount, newRadar: isNewRadar, ...m });
   }
   candidates.sort((a,b) => b.sales - a.sales); LONG_TAIL_ROWS = candidates; 
-  tbody.innerHTML = candidates.slice(0, 50).map(c => `<tr><td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td><td>${c.newRadar ? '<span class="tag good">New Radar</span>' : '<span style="color:var(--muted)">-</span>'}</td><td>${c.wordCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtMoney(c.sales)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td><td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(c.acos)}</td></tr>`).join("");
+
+  tbody.innerHTML = candidates.slice(0, 50).map(c => {
+    let intentTag = "常规长尾 (Normal)";
+    if (c.cpc < globalCpc * 0.8 && c.cvr > globalCvr * 1.2) {
+        intentTag = "💎 蓝海词 (CPC低于均值，CVR高于均值，流量套利洼地)";
+    } else if (c.cvr > globalCvr * 2) {
+        intentTag = "🎯 极强意图 (转化率超大盘2倍以上，精准收割)";
+    }
+
+    const rpc = c.clicks > 0 ? c.sales / c.clicks : 0;
+    const suggestedBid = rpc > 0 ? rpc * 0.25 : c.cpc;
+
+    const tooltip = `【 ${escapeHtml(c.term)} 】深度长尾解析\n` +
+                    `------------------------------------\n` +
+                    `词性诊断：${intentTag}\n` +
+                    `该词点击成本 (CPC)：${fmtMoney(c.cpc)} (大盘均值: ${fmtMoney(globalCpc)})\n` +
+                    `该词转化率 (CVR)：${fmtPct(c.cvr)} (大盘均值: ${fmtPct(globalCvr)})\n` +
+                    `每次点击产出 (RPC)：${fmtMoney(rpc)}\n` +
+                    `精准匹配建议出价：${fmtMoney(suggestedBid)} (基于25%预期ACOS反推)`;
+
+    return `<tr title="${tooltip}" style="cursor:help"><td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td><td>${c.newRadar ? '<span class="tag good">New Radar</span>' : '<span style="color:var(--muted)">-</span>'}</td><td>${c.wordCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtMoney(c.sales)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td><td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(c.acos)}</td></tr>`;
+  }).join("");
+  
   if (candidates.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">没有符合条件的长尾词（尝试降低“单词数”或“订单”门槛）</td></tr>`; }
 };
 
@@ -1263,76 +1339,61 @@ const decideAction = (item, rankBy) => {
   return { action:"KEEP", reason:"无风险信号" };
 };
 
-const exportRichExcel = async (headers, dataRows, filename, sheetName = "Report") => {
+// 🚀 高阶重构：支持多 Sheet 导出的 RichExcel 函数
+const exportRichExcelMultiSheet = async (sheets, filename) => {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Ads Dashboard Pro';
     workbook.created = new Date();
     
-    const safeSheetName = String(sheetName).slice(0, 30).replace(/[\\/?*[\]]/g, '');
-    const sheet = workbook.addWorksheet(safeSheetName, { views: [{ state: 'frozen', ySplit: 1 }] });
+    sheets.forEach(({ sheetName, headers, dataRows, freezeRow = 1 }) => {
+        const safeSheetName = String(sheetName).slice(0, 30).replace(/[\\/?*[\]]/g, '');
+        const sheet = workbook.addWorksheet(safeSheetName, { views: [{ state: 'frozen', ySplit: freezeRow }] });
 
-    const headerRow = sheet.addRow(headers);
-    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2A2A2A' } };
-    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
-    
-    sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
-
-    dataRows.forEach(rowData => {
-        const row = sheet.addRow(rowData);
+        const headerRow = sheet.addRow(headers);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2A2A2A' } };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
         
-        row.eachCell((cell, colNumber) => {
-            const headerName = String(headers[colNumber - 1]).toLowerCase();
-            const val = cell.value;
+        sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
 
-            if (val === null || val === undefined) {
-                cell.value = null; 
-            } else if (typeof val === 'string' && val.endsWith('%')) {
-                const num = parseFloat(val) / 100;
-                if (!isNaN(num)) {
-                    cell.value = num;
-                    cell.numFmt = '0.00%';
+        dataRows.forEach(rowData => {
+            const row = sheet.addRow(rowData);
+            row.eachCell((cell, colNumber) => {
+                const headerName = String(headers[colNumber - 1]).toLowerCase();
+                const val = cell.value;
+
+                if (val === null || val === undefined || val === "") {
+                    cell.value = null; 
+                } else if (typeof val === 'string' && val.endsWith('%')) {
+                    const num = parseFloat(val) / 100;
+                    if (!isNaN(num)) { cell.value = num; cell.numFmt = '0.00%'; }
+                } else if (typeof val === 'number') {
+                    if (['acos', 'cvr', 'ctr', '转化率', '点击率'].some(k => headerName.includes(k))) { cell.numFmt = '0.00%'; } 
+                    else if (['spend', 'sales', 'cpc', 'bid', '花费', '销售额'].some(k => headerName.includes(k))) { cell.numFmt = '"$"#,##0.00'; } 
+                    else if (!Number.isInteger(val) && !headerName.includes('roas')) { cell.numFmt = '0.00'; } 
+                    else if (headerName.includes('roas')) { cell.numFmt = '0.00'; } 
+                    else { cell.numFmt = '#,##0'; }
                 }
-            } else if (typeof val === 'number') {
-                if (['acos', 'cvr', 'ctr', '转化率', '点击率'].some(k => headerName.includes(k))) {
-                    cell.numFmt = '0.00%';
-                } else if (['spend', 'sales', 'cpc', 'bid', '花费', '销售额'].some(k => headerName.includes(k))) {
-                    cell.numFmt = '"$"#,##0.00';
-                } else if (!Number.isInteger(val) && !headerName.includes('roas')) {
-                    cell.numFmt = '0.00';
-                } else if (headerName.includes('roas')) {
-                    cell.numFmt = '0.00';
-                } else {
-                    cell.numFmt = '#,##0';
+
+                if ((headerName.includes('acos') || headerName === 'acos') && cell.value > 0.4) {
+                    cell.font = { color: { argb: 'FFB42318' }, bold: true };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE4E2' } };
                 }
-            }
-
-            if ((headerName.includes('acos') || headerName === 'acos') && cell.value > 0.4) {
-                cell.font = { color: { argb: 'FFB42318' }, bold: true };
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE4E2' } };
-            }
-            if ((headerName.includes('roas') || headerName === 'roas') && cell.value >= 3) {
-                cell.font = { color: { argb: 'FF1A7F37' }, bold: true };
-            }
-            if (val === '潜力词' || val === 'Yes' || val === 'KEEP') {
-                cell.font = { color: { argb: 'FF1A7F37' }, bold: true };
-            }
-            if (val === '页面缺陷' || val === 'NEGATE' || val === 'No' || val === '匹配跑偏' || val === 'Add as Negative Phrase') {
-                cell.font = { color: { argb: 'FFB42318' }, bold: true };
-            }
-            if (val === '效益递减' || val === '核心失血') {
-                cell.font = { color: { argb: 'FFB54708' }, bold: true };
-            }
+                if ((headerName.includes('roas') || headerName === 'roas') && cell.value >= 3) { cell.font = { color: { argb: 'FF1A7F37' }, bold: true }; }
+                if (val === '潜力词' || val === 'Yes' || val === 'KEEP' || val.toString().includes('Golden') || val.toString().includes('Blue Ocean') || val.toString().includes('High Intent')) { cell.font = { color: { argb: 'FF1A7F37' }, bold: true }; }
+                if (val === '页面缺陷' || val === 'NEGATE' || val === 'No' || val === '匹配跑偏' || val === 'Add as Negative Phrase' || val.toString().includes('Toxic') || val.toString().includes('Bleeder')) { cell.font = { color: { argb: 'FFB42318' }, bold: true }; }
+                if (val === '效益递减' || val === '核心失血') { cell.font = { color: { argb: 'FFB54708' }, bold: true }; }
+            });
         });
-    });
 
-    sheet.columns.forEach((column) => {
-        let maxLength = 0;
-        column.eachCell({ includeEmpty: true }, (cell) => {
-            const columnLength = cell.value ? cell.value.toString().length : 10;
-            if (columnLength > maxLength) { maxLength = columnLength; }
+        sheet.columns.forEach((column) => {
+            let maxLength = 0;
+            column.eachCell({ includeEmpty: true }, (cell) => {
+                const columnLength = cell.value ? cell.value.toString().length : 10;
+                if (columnLength > maxLength) { maxLength = columnLength; }
+            });
+            column.width = Math.min(Math.max(12, maxLength + 2), 60);
         });
-        column.width = Math.min(Math.max(12, maxLength + 2), 60);
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -1344,12 +1405,16 @@ const exportNegativesExcel = () => {
   if (!["searchTerm", "searchTermRoot"].includes(rankBy)) { log("导出失败：只有在榜单维度为 Search Term / Root 时才允许导出否定词", "bad"); alert("导出失败：请将“榜单聚合维度”切换为 Search Term 或 Search Term Root，再导出否定词。"); return; } 
   if (!VIEW.length) { log("导出失败：当前视图为空", "bad"); alert("导出失败：当前视图为空。"); return; }
   
-  const itemsToExport = $("exportScope").value === "rank" ? RANK_ROWS.slice() : (() => { return [...(CURRENT_RANK_GROUPS || new Map()).entries()].map(([name, list]) => { const it = { name, ...sumMetrics(list) }; const a = decideAction(it, rankBy); return { ...it, action:a.action, reason:a.reason }; }).sort((a,b)=> (b.spend||0) - (a.spend||0)); })();
+  const isViewScope = $("exportScope").value === "view";
+  const itemsToExport = isViewScope ? (() => { return [...(CURRENT_RANK_GROUPS || new Map()).entries()].map(([name, list]) => { const it = { name, ...sumMetrics(list), campaigns: [...new Set(list.map(r=>r.campaign))] }; const a = decideAction(it, rankBy); return { ...it, action:a.action, reason:a.reason }; }).sort((a,b)=> (b.spend||0) - (a.spend||0)); })() : RANK_ROWS.slice();
   
-  const headers = ["关键词","否定匹配","分组维度","理由","花费","销售额","订单数","ROAS","ACOS"]; 
+  const headers = ["关键词","否定匹配","分组维度","理由","涉及计划(View模式)","花费","销售额","订单数","ROAS","ACOS"]; 
   const dataRows = [];
   const seen = new Set(); const defaultNegMatch = $("exportNegMatch").value.toUpperCase();
   
+  const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
+  const bulkDataRows = [];
+
   for (const it of itemsToExport) {
     if (it.action !== "NEGATE") continue; 
     let keyword = (rankBy === "searchTermRoot" ? rootToPhrase(it.name) : String(it.name || "").trim()).replace(/\s+/g," ").trim(); 
@@ -1359,14 +1424,28 @@ const exportNegativesExcel = () => {
     const key = `${finalMatchType}:${keyword.toLowerCase()}`; 
     if (!seen.has(key)) { 
       seen.add(key); 
-      dataRows.push([ keyword, finalMatchType, (rankBy === "searchTerm" ? "客户搜索词" : "搜索词根"), it.reason || "", it.spend || 0, it.sales || 0, it.orders || 0, it.roas || 0, it.acos === Infinity ? null : it.acos ]); 
+      const campStr = (it.campaigns && it.campaigns.length > 0) ? it.campaigns.join(", ") : "-";
+      dataRows.push([ keyword, finalMatchType, (rankBy === "searchTerm" ? "客户搜索词" : "搜索词根"), it.reason || "", campStr, it.spend || 0, it.sales || 0, it.orders || 0, it.roas || 0, it.acos === Infinity ? null : it.acos ]); 
+      
+      bulkDataRows.push([
+          "Sponsored Products", "Negative Keyword", "Create", 
+          "", "", "", "", "", "", 
+          (it.campaigns && it.campaigns.length === 1) ? it.campaigns[0] : "(请填入需否定的 Campaign 名称)", 
+          "", keyword, 
+          finalMatchType.toLowerCase() === "phrase" ? "negative phrase" : "negative exact", 
+          "", "", "", "", "enabled"
+      ]);
     }
   }
   if (dataRows.length === 0) { log("未找到可导出的 NEGATE 项", "warn"); alert("未找到可导出的 NEGATE 项（请调低阈值或扩大日期范围）。"); return; } 
   
-  log(`正在生成高定版 Excel 否定词库...`);
+  log(`正在生成包含 Bulk Upload 的高定版 Excel 否定词库...`);
   const filename = `Executive_Negatives_${rankBy}_${defaultNegMatch}_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.xlsx`; 
-  exportRichExcel(headers, dataRows, filename, "Negatives").then(() => log(`已导出否定词 Excel：${filename}（${dataRows.length} 条）`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
+  
+  exportRichExcelMultiSheet([
+      { sheetName: "Analysis Report", headers: headers, dataRows: dataRows },
+      { sheetName: "Sponsored Products Campaigns", headers: bulkHeaders, dataRows: bulkDataRows } 
+  ], filename).then(() => log(`已导出否定词 Excel (含 Bulk Sheet)：${filename}（${dataRows.length} 条）`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
 };
 
 const exportRankExcel = () => { 
@@ -1383,29 +1462,94 @@ const exportRankExcel = () => {
     }); 
     log(`正在生成高定版 Excel 榜单...`);
     const filename = `Executive_Rank_${$("dateStart").value || "start"}_${$("dateEnd").value || "end"}_${getTs()}.xlsx`; 
-    exportRichExcel(headers, dataRows, filename, "Performance Rank").then(() => log(`已导出榜单 Excel：${filename}（${dataRows.length} 条）`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
+    exportRichExcelMultiSheet([{ sheetName: "Performance Rank", headers, dataRows }], filename)
+        .then(() => log(`已导出榜单 Excel：${filename}（${dataRows.length} 条）`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
 };
 
+// 🚀 高阶重构：导出丰满的骨灰级词频报表
 const exportWordFreqExcel = () => {
     const rows = buildWordStats(); if (!rows.length) { alert("当前词频列表为空。"); return; } 
+    
     const ruleSpendNeg = safeNum($("ruleSpendNeg").value) || 30;
-    const headers = ["Word", "Freq", "Spend", "Orders", "ROAS", "ACOS", "Action"];
+    const globalCvr = sumMetrics(VIEW).cvr || 0.05;
+
+    const headers = ["Word (词根)", "Freq (所在搜索词数)", "Impressions (总曝光)", "Clicks (总点击)", "CTR", "CPC", "Spend (总花费)", "Sales (总销售额)", "Orders", "CVR (真实转化率)", "Baseline CVR (大盘均值)", "ROAS", "ACOS", "Root Attribute (词根定性)", "Action (系统建议)"];
+    
     const dataRows = rows.slice(0, 30000).map(r => {
-        const actionStr = (r.spend >= ruleSpendNeg && r.orders === 0) ? "Add as Negative Phrase" : "-";
-        return [ r.word.replace(/_/g, " "), r.freq, r.spend || 0, r.orders, r.roas || 0, r.acos === Infinity ? null : r.acos, actionStr ];
+        let rootTag = "Neutral";
+        if (r.orders > 0 && r.cvr > globalCvr * 1.5 && r.roas >= 2.5) rootTag = "Golden Root (🌟黄金)";
+        else if (r.clicks >= 15 && r.cvr < globalCvr * 0.5 && r.spend > 15) rootTag = "Toxic Root (☠️剧毒)";
+        else if (r.spend > 20 && r.orders === 0) rootTag = "Bleeder (🩸纯消耗)";
+
+        let actionStr = "-";
+        if (r.spend >= ruleSpendNeg && r.orders === 0) actionStr = "Add as Negative Phrase";
+        else if (rootTag.includes("Toxic")) actionStr = "Review for Negative Phrase";
+        else if (rootTag.includes("Golden")) actionStr = "Create Phrase/Broad Campaign for this root";
+
+        return [ 
+            r.word.replace(/_/g, " "), r.freq, 
+            r.impr || 0, r.clicks || 0, r.ctr || 0, r.cpc || 0,
+            r.spend || 0, r.sales || 0, r.orders, 
+            r.cvr || 0, globalCvr,
+            r.roas || 0, r.acos === Infinity ? null : r.acos, 
+            rootTag, actionStr 
+        ];
     });
-    log(`正在生成高定版 Excel 词频报告...`);
-    const filename = `Executive_WordFreq_${$("dateStart").value}_${getTs()}.xlsx`; 
-    exportRichExcel(headers, dataRows, filename, "Word Frequency").then(() => log(`已导出词频 Excel：${filename}`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
+    
+    log(`正在生成高定版 Excel 词频报告 (含流量毒性与引力解析)...`);
+    const filename = `Executive_WordFreq_Deep_${$("dateStart").value}_${getTs()}.xlsx`; 
+    exportRichExcelMultiSheet([{ sheetName: "Word Frequency Matrix", headers, dataRows }], filename)
+        .then(() => log(`已导出深层词频 Excel：${filename}`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
 };
 
+// 🚀 高阶重构：长尾词深度商业洞察及一键拓词批量表
 const exportLongTailExcel = () => {
     if (!LONG_TAIL_ROWS.length) { alert("当前列表为空，无数据可导出。"); return; } 
-    const headers = ["Search Term", "New Radar", "Word Count", "Spend", "Sales", "Orders", "ROAS", "ACOS"];
-    const dataRows = LONG_TAIL_ROWS.slice(0, 30000).map(c => [ c.term, c.newRadar ? "Yes" : "No", c.wordCount, c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos ]);
-    log(`正在生成高定版 Excel 长尾词...`);
+    
+    const globalMetrics = sumMetrics(VIEW);
+    const globalCpc = globalMetrics.cpc || 1.0;
+    const globalCvr = globalMetrics.cvr || 0.05;
+
+    const headers = ["Search Term", "New Radar (是否未精准)", "Word Count", "Spend", "Sales", "Orders", "Clicks", "CPC", "CVR", "ROAS", "ACOS", "Deep Diagnosis (深度诊断)", "RPC (每次点击产出)", "Suggested Exact Bid (建议出价)"];
+    
+    const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
+    const bulkDataRows = [];
+
+    const dataRows = LONG_TAIL_ROWS.slice(0, 30000).map(c => {
+        let intentTag = "Normal";
+        if (c.cpc < globalCpc * 0.8 && c.cvr > globalCvr * 1.2) intentTag = "Blue Ocean (💎低竞争高转化)";
+        else if (c.cvr > globalCvr * 2) intentTag = "High Intent (🎯极强意图)";
+
+        const rpc = c.clicks > 0 ? c.sales / c.clicks : 0;
+        const suggestedBid = rpc > 0 ? rpc * 0.25 : c.cpc; // 基于 25% ACOS 反推
+
+        if (c.newRadar) {
+            bulkDataRows.push([
+                "Sponsored Products", "Keyword", "Create", 
+                "", "", "", "", "", "", 
+                "(请填入你要投放的 Campaign 名称)", 
+                "(请填入你要投放的 Ad Group 名称)", 
+                c.term, "exact", "", "", "", 
+                suggestedBid, 
+                "enabled"
+            ]);
+        }
+
+        return [ 
+            c.term, c.newRadar ? "Yes" : "No", c.wordCount, 
+            c.spend || 0, c.sales || 0, c.orders, c.clicks || 0, c.cpc || 0, c.cvr || 0, 
+            c.roas || 0, c.acos === Infinity ? null : c.acos, 
+            intentTag, rpc || 0, suggestedBid || 0 
+        ];
+    });
+
+    log(`正在生成高定版 Excel 长尾词，并构建 Bulk Sheet 拓词表...`);
     const filename = `Executive_LongTail_${$("dateStart").value}_${getTs()}.xlsx`; 
-    exportRichExcel(headers, dataRows, filename, "Long Tail Mining").then(() => log(`已导出长尾词 Excel：${filename}`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
+    
+    exportRichExcelMultiSheet([
+        { sheetName: "Long Tail Mining", headers: headers, dataRows: dataRows },
+        { sheetName: "Bulk Upload - Add Exact", headers: bulkHeaders, dataRows: bulkDataRows } 
+    ], filename).then(() => log(`已导出长尾词 Excel (含一键精准拓词 Bulk Sheet)：${filename}`, "good")).catch(e => log(`Excel 生成失败: ${e.message}`, "bad"));
 };
 
 const renderKPIs = (total) => {
@@ -1543,6 +1687,15 @@ const renderActiveDimTab = () => {
     if (dim === 'weekday') renderWeekdayAnalysis();
 };
 
+const matchAdvancedSearch = (term, query) => {
+    if (query.startsWith("regex:")) { try { return new RegExp(query.slice(6), "i").test(term); } catch(e){return false;} }
+    const positive = [], negative = [];
+    query.toLowerCase().split(/\s+/).forEach(q => { if(q.startsWith("-") && q.length > 1) negative.push(q.slice(1)); else if (q) positive.push(q); });
+    for (const n of negative) { if (term.includes(n)) return false; }
+    for (const p of positive) { if (!term.includes(p)) return false; }
+    return true;
+};
+
 const applyFilters = (initial=false) => {
   if (!ALL.length && !BUSINESS_ROWS.length && !PLACEMENT_ROWS.length) { setSubtitle("未导入数据。请导入同类报表（支持多文件）。"); $("kpiGrid").innerHTML = ""; if (trendChart) { trendChart.destroy(); trendChart = null; } $("rankTable").querySelector("tbody").innerHTML = ""; $("anomalyAlerts").style.display = "none"; renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); renderActiveDimTab(); return; }
   setSubtitle("🔄 正在深度分析与聚合数据，请稍候...");
@@ -1556,7 +1709,14 @@ const applyFilters = (initial=false) => {
                 if (filters.filterAdType === "manual" && !isManual) return false;
                 if (filters.filterAdType === "auto" && isManual) return false;
             }
-            if (filters.filterSearchTerm) { const term = filters.filterSearchTerm.toLowerCase(); if (filters.filterSearchExact) { if (r.searchTermLower !== term) return false; } else { if (!r.searchTermLower.includes(term)) return false; } }
+            if (filters.filterSearchTerm) { 
+                const query = filters.filterSearchTerm;
+                if (filters.filterSearchExact) { 
+                    if (r.searchTermLower !== query.toLowerCase()) return false; 
+                } else { 
+                    if (!matchAdvancedSearch(r.searchTermLower, query)) return false; 
+                } 
+            }
             return true;
           });
           
@@ -1626,11 +1786,11 @@ $("btnReset").addEventListener("click", () => { ["filterSource","filterPortfolio
 $("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
 
 document.querySelectorAll(".chipBtn").forEach(btn => { btn.addEventListener("click", () => { document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); }); });
+
 $("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if (!key) return; rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderRankTable(); }));
 $("rankTable").addEventListener("click", (e) => { if (e.target.classList.contains("search-btn")) { const td = e.target.closest("td"); const term = td.getAttribute("data-name"); if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); $(".sidebar").scrollTop = 0; } } });
 $("wfTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { const key = th.dataset.sort; if(!key) return; wfSort = (wfSort.key === key) ? {key, dir: (wfSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; renderWordFreq(); }));
 
-/* 核心维度 Tab 切换器逻辑 */
 const dimHints = {
     automanual: "手动: Broad/Phrase/Exact; 自动: 其他（已采用精准鉴别算法）",
     placement: "Top of Search / Rest of Search / Product Pages 表现对比（需导入广告位报告）",
