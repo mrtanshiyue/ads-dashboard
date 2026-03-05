@@ -717,14 +717,14 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;">原理：列出在 2 个或以上不同广告组中消耗预算的词。*(底层修复：要求同时在至少2个组分别消耗 $2 以上，排除常规换组迁移假象)*</div>
+        <div class="small" style="margin-top:10px;">原理：列出在 2 个或以上不同广告组中消耗预算的词。*(底层重构：现已加入 Match Type 漏斗校验，排除广泛拓词与精准打排名的正常交叠)*</div>
       </div>
     </section>
   </main>
 </div>
 
 <script>
-const CONFIG = { CACHE_MAX: 20000, STR_POOL_MAX: 50000 };
+const CONFIG = { CACHE_MAX: 20000, STR_POOL_MAX: 80000 };
 let CURRENT_RANK_GROUPS = null;
 let ALL = [], VIEW = [], importedFiles = [], trendChart = null; 
 let BUSINESS_ROWS = []; let PLACEMENT_ROWS = []; 
@@ -786,45 +786,67 @@ const saveToIDB = async () => {
 
 const getTs = () => { const now = new Date(); return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`; };
 
+// ⚡ 优化：绝对时区安全解析 (针对美国站 PST/PDT 报表)
 const toISODate = (d) => {
-  if (d instanceof Date) return isNaN(d) ? "" : d.toISOString().slice(0,10);
-  if (typeof d === "number" && isFinite(d)) { const dateObj = new Date(Math.round((d - 25569) * 86400000)); return dateObj.toISOString().slice(0,10); }
+  if (typeof d === "number" && isFinite(d)) { 
+    // Excel 序列号提取 (规避本地时区干扰)
+    const dateObj = new Date(Math.round((d - 25569) * 86400000)); 
+    return `${dateObj.getUTCFullYear()}-${String(dateObj.getUTCMonth()+1).padStart(2,'0')}-${String(dateObj.getUTCDate()).padStart(2,'0')}`; 
+  }
   const s = String(d || "").trim();
   if (!s) return "";
+  // 直接提取字面量，防止 Date 隐式偏移
   const isoMatch = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
-  if (isoMatch) { const y = parseInt(isoMatch[1], 10), m = parseInt(isoMatch[2], 10), day = parseInt(isoMatch[3], 10); const dt = new Date(Date.UTC(y, m - 1, day, 12, 0, 0)); return dt.toISOString().slice(0,10); }
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2].padStart(2,'0')}-${isoMatch[3].padStart(2,'0')}`;
   const euMatch = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
   if (euMatch) {
       const p1 = parseInt(euMatch[1], 10), p2 = parseInt(euMatch[2], 10), y = parseInt(euMatch[3], 10);
       let m = p1, day = p2; if (p1 > 12) { day = p1; m = p2; }
-      const dt = new Date(Date.UTC(y, m - 1, day, 12, 0, 0)); return dt.toISOString().slice(0,10);
+      return `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   }
-  const dt = new Date(s); if (!isNaN(dt.getTime())) return dt.toISOString().slice(0,10); return ""; 
+  const dt = new Date(s); 
+  if (!isNaN(dt.getTime())) return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  return ""; 
 };
 
+// ⚡ 优化：$O(N)$ 空间复杂度的 1D Levenshtein 极速聚类
 const levenshtein = (a, b) => {
-    if (!a || !b) return (a || b || "").length;
-    if(a === b) return 0;
-    if(a.length === 0) return b.length;
-    if(b.length === 0) return a.length;
-    const matrix = [];
-    for(let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
-    for(let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
-    for(let i = 1; i <= b.length; i++) {
-        for(let j = 1; j <= a.length; j++) {
-            if(b.charAt(i-1) === a.charAt(j-1)) { matrix[i][j] = matrix[i-1][j-1]; } 
-            else { matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1)); }
+    if (a === b) return 0;
+    if (a.length > b.length) { let tmp = a; a = b; b = tmp; }
+    let al = a.length, bl = b.length;
+    if (al === 0) return bl;
+    let row = Array.from({length: al + 1}, (_, i) => i);
+    let res = 0;
+    for (let i = 1; i <= bl; i++) {
+        res = i;
+        let diag = i - 1;
+        for (let j = 1; j <= al; j++) {
+            let cost = a[j - 1] === b[i - 1] ? 0 : 1;
+            let nextDiag = row[j];
+            res = Math.min(res + 1, nextDiag + 1, diag + cost);
+            row[j - 1] = diag;
+            diag = nextDiag;
         }
+        row[al] = res;
     }
-    return matrix[b.length][a.length];
+    return res;
 };
 
 const libsCheck = () => { const missing = []; if (typeof Papa === "undefined") missing.push("PapaParse"); if (typeof XLSX === "undefined") missing.push("XLSX"); if (typeof Chart === "undefined") missing.push("Chart.js"); if (typeof ExcelJS === "undefined") missing.push("ExcelJS"); if (typeof saveAs === "undefined") missing.push("FileSaver"); if (typeof idbKeyval === "undefined") missing.push("idbKeyval"); if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn"); else log("依赖库 OK", "good"); return !missing.length; };
 
 const processInChunks = async (items, processFn, chunkSize = 10000) => { const results = []; for (let i = 0; i < items.length; i += chunkSize) { const chunk = items.slice(i, i + chunkSize); results.push(...chunk.map(processFn)); await new Promise(r => setTimeout(r, 0)); } return results; };
 
-const stringPool = new Map();
-const intern = (str) => { if (typeof str !== 'string' || !str) return ""; if (stringPool.has(str)) return stringPool.get(str); if (stringPool.size > CONFIG.STR_POOL_MAX) stringPool.clear(); stringPool.set(str, str); return str; };
+// ⚡ 优化：零原型链字典（Zero-Prototype Dictionary）压榨内存池
+let stringPool = Object.create(null);
+let poolSize = 0;
+const intern = (str) => { 
+  if (typeof str !== 'string' || !str) return ""; 
+  if (stringPool[str] !== undefined) return stringPool[str]; 
+  if (poolSize > CONFIG.STR_POOL_MAX) { stringPool = Object.create(null); poolSize = 0; } 
+  stringPool[str] = str; 
+  poolSize++;
+  return str; 
+};
 
 const STOP_WORDS = new Set("a,an,the,and,or,to,for,of,in,on,at,with,without,from,by,is,are,was,were,your,my,our,their,his,her,its,this,that,these,those,you,me,we,they,pack,set,pairs,pair,pcs,piece,pieces,new,best,top,sale,deal,gift,adult,adults,kids,kid,count".split(','));
 const SYNONYM_MAP = [ { re: /\breaders?\b/g, to: "reading glasses" }, { re: /\bmagnification\b/g, to: "magnify" }, { re: /\bmagnifying\b/g, to: "magnify" }, { re: /\bblue\-?light\b/g, to: "blue light" }, { re: /\banti\-?blue\b/g, to: "blue light" }, { re: /\bcomputer\b/g, to: "screen" }, { re: /\blaptop\b/g, to: "screen" }, { re: /\bpc\b/g, to: "screen" }, { re: /\bspring\-?hinge\b/g, to: "spring hinge" }, { re: /\bcat\-?eye\b/g, to: "cat eye" }, { re: /\bprogressive\b/g, to: "progressive" } ];
@@ -842,7 +864,19 @@ const rootToPhrase = (root) => (String(root || "").trim() || "(blank)") === "(bl
 
 let WF_MODE = "token";
 let wfSort = { key: "spend", dir: "desc" };
-const singularize = (word) => { if (!word) return ""; if (word === "glasses" || word === "sunglasses") return word; if (word.endsWith("ies")) return word.slice(0, -3) + "y"; if (word.endsWith("sses")) return word.slice(0, -2); if (word.endsWith("ves")) return word.slice(0, -3) + "f"; if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1); return word; };
+
+// ⚡ 优化：纯正的美式英语词法解析（US Morphological Stemming）
+const IRREGULAR_NOUNS = {"men":"man","women":"woman","teeth":"tooth","feet":"foot","children":"child","running":"run","glasses":"glasses","sunglasses":"sunglasses"};
+const singularize = (word) => { 
+  if (!word) return ""; 
+  if (IRREGULAR_NOUNS[word]) return IRREGULAR_NOUNS[word];
+  if (word.endsWith("ies")) return word.slice(0, -3) + "y"; 
+  if (word.endsWith("sses")) return word.slice(0, -2); 
+  if (word.endsWith("ves")) return word.slice(0, -3) + "f"; 
+  if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1); 
+  return word; 
+};
+
 const tokenize = (s) => { const base = normalizeTextBase(s); return base.split(" ").filter(t => { if (!t) return false; if (STOP_WORDS.has(t)) return false; if (/^\d+$/.test(t)) return false; return true; }).map(t => singularize(t)); };
 const ngrams = (tokens, n) => tokens.length < n ? [] : Array.from({length: tokens.length - n + 1}, (_, i) => tokens.slice(i, i + n).join(" "));
 const extractMagnification = (s) => { return [...String(s || "").matchAll(/(?:\+|)\b([0-6](?:\.\d{1,2})?)[xX]?\b/g)].map(m => m[1]).filter(v => !isNaN(parseFloat(v)) && parseFloat(v) > 0); };
@@ -911,7 +945,7 @@ const importMultipleFiles = async (files) => {
   log(`开始导入：${files.length} 个文件（merge=${mergeMode}, dedupe=${dedupeMode}, maxRows=${maxRows}）`); setSubtitle("正在进行多线程数据处理与洗刷...请稍候");
   
   if (mergeMode === "replace") { 
-      ALL = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; 
+      ALL = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool = Object.create(null); poolSize = 0; CURRENT_RANK_GROUPS = null; 
       try { await idbKeyval.clear(); } catch(e) {} 
       log("Replace 模式：已清空历史数据与缓存分片", "warn"); 
   }
@@ -1276,26 +1310,36 @@ const renderAutoManual = () => {
   tbody.innerHTML = row("花费", sA.spend, sM.spend, fmtMoney) + row("销售额", sA.sales, sM.sales, fmtMoney) + row("订单数", sA.orders, sM.orders, fmtInt) + row("ACOS", sA.acos, sM.acos, fmtPct, true) + row("ROAS", sA.roas, sM.roas, (v)=>v.toFixed(2)) + row("转化率 (CVR)", sA.cvr, sM.cvr, fmtPct) + row("点击成本 (CPC)", sA.cpc, sM.cpc, fmtMoney);
 };
 
+// ⚡ 优化：加入 Match Type 漏斗校验防误判 (打拓分离)
 const renderConflictAnalysis = () => {
   const tbody = $("conflictTable")?.querySelector("tbody"); if (!tbody) return; if (!VIEW.length) { tbody.innerHTML = ""; return; }
   const map = new Map();
   for (const r of VIEW) {
     if (!r.searchTerm || isASINLike(r.searchTerm)) continue; 
-    const loc = `${r.campaign} > ${r.adGroup}`;
-    if (!map.has(r.searchTerm)) { map.set(r.searchTerm, { locMap: new Map(), spend: 0, orders: 0, sales: 0 }); }
-    const entry = map.get(r.searchTerm);
+    
+    // 强隔离：只有匹配类型或者打法接近的才算冲突，例如 Broad 互相竞争，Exact 互相竞争
+    let matchGroup = "Auto";
+    if (r.matchType.toLowerCase().includes("exact")) matchGroup = "Exact";
+    else if (r.matchType.toLowerCase().includes("broad") || r.matchType.toLowerCase().includes("phrase")) matchGroup = "Broad/Phrase";
+
+    const loc = `${r.campaign} > ${r.adGroup} [${matchGroup}]`;
+    const conflictKey = `${r.searchTerm}::${matchGroup}`; // 严格限定同一匹配组内竞争
+
+    if (!map.has(conflictKey)) { map.set(conflictKey, { term: r.searchTerm, locMap: new Map(), spend: 0, orders: 0, sales: 0 }); }
+    const entry = map.get(conflictKey);
     entry.locMap.set(loc, (entry.locMap.get(loc) || 0) + r.spend);
     entry.spend += r.spend; entry.orders += r.orders; entry.sales += r.sales;
   }
   const conflicts = [];
-  for (const [term, data] of map.entries()) {
+  for (const [key, data] of map.entries()) {
+    // 依然保留底线的 $2 过滤网
     const activeLocs = Array.from(data.locMap.entries()).filter(([l, sp]) => sp > 2.0).map(x => x[0]);
     if (activeLocs.length > 1 && data.spend > 5) {
-      conflicts.push({ term, count: activeLocs.length, locs: activeLocs, spend: data.spend, orders: data.orders, roas: data.spend > 0 ? data.sales / data.spend : 0 });
+      conflicts.push({ term: data.term, count: activeLocs.length, locs: activeLocs, spend: data.spend, orders: data.orders, roas: data.spend > 0 ? data.sales / data.spend : 0 });
     }
   }
   conflicts.sort((a,b) => b.spend - a.spend);
-  if (conflicts.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">未检测到明显的内部竞争（条件：至少在 2 个不同广告组中分别消耗 > $2）</td></tr>`; return; }
+  if (conflicts.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">未检测到明显的内部竞争（条件：同等匹配类型下，在 2 个不同组分别消耗 > $2）</td></tr>`; return; }
   tbody.innerHTML = conflicts.slice(0, 50).map(c => {
     const displayLocs = c.locs.slice(0, 2).map(l => `<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(l)}</div>`).join(""); const moreCount = c.locs.length > 2 ? `<div style="font-size:10px;color:var(--muted)">+${c.locs.length - 2} more...</div>` : ""; const fullLocs = c.locs.join("\n");
     return `<tr data-term="${escapeHtml(c.term)}" style="cursor:pointer" title="点击筛选该词"><td style="font-weight:600;color:var(--text)">${escapeHtml(c.term)}</td><td><span class="tag bad" style="font-size:11px">${c.count}个</span></td><td title="${escapeHtml(fullLocs)}">${displayLocs}${moreCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td></tr>`;
@@ -1305,7 +1349,7 @@ $("conflictTable").addEventListener("click", (e) => { const tr = e.target.closes
 
 const getRules = () => ({ spendNeg: safeNum($("ruleSpendNeg").value), clicksNeg: Math.max(0, Math.floor(safeNum($("ruleClicksNeg").value))), roasNeg: safeNum($("ruleRoasNeg")?.value || 1.5), roasKeep: safeNum($("ruleRoasKeep").value), ordersKeep: Math.max(0, Math.floor(safeNum($("ruleOrdersKeep")?.value || 2))), roasMigrateMin: safeNum($("ruleRoasMigrateMin")?.value || 2) });
 
-// 🤖 升级版：AI 自动出价建议系统
+// 🤖 升级版：AI 自动出价建议系统 (包含美国站策略修正)
 const decideAction = (item, rankBy) => {
   const r = getRules(); 
   let action = "KEEP"; let reason = "观察中"; let suggestedBidDelta = "0%";
@@ -1317,8 +1361,9 @@ const decideAction = (item, rankBy) => {
       action = "SCALE"; reason = `正向盈利 (+$${item.netProfit.toFixed(2)})`;
       suggestedBidDelta = "+20%"; 
   } else if (item.roas > 1 && item.netProfit < 0) {
+      // ⚡ 优化：核心词降基础出价，保首页溢价策略
       action = "DECREASE"; reason = `ROAS达标但净利为负`;
-      suggestedBidDelta = "-15%"; 
+      suggestedBidDelta = "-15% Base + Raise ToS"; 
   } else if (item.orders > 0 && item.roas < r.roasKeep) {
       action = "MIGRATE"; reason = `有单但效率低`;
       suggestedBidDelta = "-10%";
@@ -1589,8 +1634,16 @@ const renderActiveDimTab = () => {
     if (dim === 'weekday') renderWeekdayAnalysis();
 };
 
+// ⚡ 优化：高级搜索的正则复用缓存 (Regex Memoization)
+const regexCache = new Map();
 const matchAdvancedSearch = (term, query) => {
-    if (query.startsWith("regex:")) { try { return new RegExp(query.slice(6), "i").test(term); } catch(e){return false;} }
+    if (query.startsWith("regex:")) { 
+        let re = regexCache.get(query);
+        if (!re) {
+            try { re = new RegExp(query.slice(6), "i"); regexCache.set(query, re); } catch(e){ return false; }
+        }
+        return re.test(term);
+    }
     const positive = [], negative = [];
     query.toLowerCase().split(/\s+/).forEach(q => { if(q.startsWith("-") && q.length > 1) negative.push(q.slice(1)); else if (q) positive.push(q); });
     for (const n of negative) { if (term.includes(n)) return false; }
@@ -1671,7 +1724,7 @@ filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280)); 
 $("btnClearSearch").addEventListener("click", () => { $("filterSearchTerm").value = ""; $("filterSearchExact").checked = false; $("filterSearchTerm").focus(); applyFilters(); });
 $("btnReset").addEventListener("click", () => { ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters(); });
-$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool.clear(); CURRENT_RANK_GROUPS = null; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
+$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool = Object.create(null); poolSize = 0; CURRENT_RANK_GROUPS = null; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
 
 document.querySelectorAll(".chipBtn").forEach(btn => { btn.addEventListener("click", () => { document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); }); });
 
