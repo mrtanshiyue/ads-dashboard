@@ -1162,6 +1162,7 @@ const detectAnomalies = (rows) => {
     if (alerts.length > 0) { container.innerHTML = alerts.map(a => `<div class="alert-banner ${a.type === 'warn' ? 'warn' : (a.type === 'good' ? 'good' : '')}"> <span class="alert-icon">${a.type === 'warn' ? '⚠️' : (a.type === 'good' ? '✨' : '🚨')}</span> <div>${a.msg}</div> </div>`).join(""); container.style.display = "flex"; } else { container.style.display = "none"; container.innerHTML = ""; }
 };
 
+// ⚡ 交互修复：去除 cursor:help，保持界面清爽
 const renderWordFreq = () => {
   const tbody = $("wfTable")?.querySelector("tbody"); if (!tbody) return; if (!VIEW.length) { tbody.innerHTML = ""; return; } 
   const rows = buildWordStats();
@@ -1180,7 +1181,7 @@ const renderWordFreq = () => {
       }
       const hoverTooltip = `【 ${displayWord} 】诊断：${rootTag}\n转化率：${fmtPct(r.cvr)}\n全局参考 CVR：${fmtPct(globalCvr)}`;
 
-      return `<tr title="${hoverTooltip}" style="cursor:help"> 
+      return `<tr title="${hoverTooltip}"> 
           <td>${displayWord.slice(0, 180)}</td> 
           <td>${fmtInt(r.freq)}</td> 
           <td>${fmtMoney(r.spend)}</td> 
@@ -1191,6 +1192,7 @@ const renderWordFreq = () => {
   }).join("");
 };
 
+// ⚡ 交互修复：去除 cursor:help，保持界面清爽
 const renderLongTailMining = () => {
   const tbody = $("longTailTable")?.querySelector("tbody"); if (!tbody) return; if (!VIEW.length) { tbody.innerHTML = ""; return; }
   const minWords = Math.max(1, Math.floor(safeNum($("ltMinWords").value))); const minOrders = Math.max(0, Math.floor(safeNum($("ltMinOrders").value))); const minRoas = safeNum($("ltMinRoas").value); const groups = groupBy(VIEW, r => r.searchTerm); const candidates = [];
@@ -1222,7 +1224,7 @@ const renderLongTailMining = () => {
     const suggestedBid = rpc > 0 ? rpc * 0.25 : c.cpc;
     const tooltip = `【 ${escapeHtml(c.term)} 】${intentTag}\n转化率：${fmtPct(c.cvr)} \n建议精准出价：${fmtMoney(suggestedBid)}`;
 
-    return `<tr title="${tooltip}" style="cursor:help"><td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td><td>${c.newRadar ? '<span class="tag good">New Radar</span>' : '<span style="color:var(--muted)">-</span>'}</td><td>${c.wordCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtMoney(c.sales)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td><td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(c.acos)}</td></tr>`;
+    return `<tr title="${tooltip}"><td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td><td>${c.newRadar ? '<span class="tag good">New Radar</span>' : '<span style="color:var(--muted)">-</span>'}</td><td>${c.wordCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtMoney(c.sales)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td><td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(c.acos)}</td></tr>`;
   }).join("");
   if (candidates.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">没有符合条件的长尾词（尝试降低“单词数”或“订单”门槛）</td></tr>`; }
 };
@@ -1607,6 +1609,7 @@ const buildRankTable = () => {
     RANK_ROWS = items.slice(0, clamp(safeNum($("rankTopN").value) || 30, 5, 500)); 
 };
 
+// ⚡ 交互修复：去除 cursor:help，保持界面清爽
 const renderRankTable = () => { 
     buildRankTable(); 
     const searchBtnHtml = `<span class="action-icon search-btn" title="精准搜索">🔍</span>`; 
@@ -1620,7 +1623,7 @@ const renderRankTable = () => {
 
         const hoverProfitText = `AI 决策: ${it.action} (${it.suggestedBidDelta})\n---------------------\n净利预估: ${fmtMoney(it.netProfit)}\n原因: ${it.reason}`;
 
-        return ` <tr title="${hoverProfitText}" style="cursor:help"> <td data-name="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 160)}${searchBtnHtml}</td> <td>${auditHtml}</td> <td>${fmtMoney(it.spend)}</td> <td>${fmtMoney(it.sales)}</td> <td>${fmtInt(it.orders)}</td> <td>${fmtInt(it.impr)}</td> <td>${fmtInt(it.clicks)}</td> <td>${fmtPct(it.ctr)}</td> <td>${fmtMoney(it.cpc)}</td> <td>${fmtPct(it.cvr)}</td> <td style="${(it.acos > 0.4 || it.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(it.acos)}</td> <td>${it.roas.toFixed(2)}</td> </tr> `;
+        return ` <tr title="${hoverProfitText}"> <td data-name="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 160)}${searchBtnHtml}</td> <td>${auditHtml}</td> <td>${fmtMoney(it.spend)}</td> <td>${fmtMoney(it.sales)}</td> <td>${fmtInt(it.orders)}</td> <td>${fmtInt(it.impr)}</td> <td>${fmtInt(it.clicks)}</td> <td>${fmtPct(it.ctr)}</td> <td>${fmtMoney(it.cpc)}</td> <td>${fmtPct(it.cvr)}</td> <td style="${(it.acos > 0.4 || it.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(it.acos)}</td> <td>${it.roas.toFixed(2)}</td> </tr> `;
     }).join(""); 
 };
 
