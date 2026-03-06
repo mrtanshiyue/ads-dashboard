@@ -880,7 +880,6 @@ const libsCheck = () => { const missing = []; if (typeof Papa === "undefined") m
 
 const processInChunks = async (items, processFn, chunkSize = 10000) => { const results = []; for (let i = 0; i < items.length; i += chunkSize) { const chunk = items.slice(i, i + chunkSize); results.push(...chunk.map(processFn)); await new Promise(r => setTimeout(r, 0)); } return results; };
 
-// ⚡ 修复：防止字典频繁销毁导致的 GC 抖动 (超过阈值直接返回原串)
 let stringPool = Object.create(null);
 let poolSize = 0;
 const intern = (str) => { 
@@ -980,7 +979,6 @@ const checkIsManual = (r) => {
     return lowerMatch.includes("product") || lowerMatch.includes("targeting");
 };
 
-// ⚡ 修复：更严谨的清洗方式，保留空格以便精确匹配词的隔离比对
 const cleanTargetForExact = (t) => (t || "").toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim();
 
 const parseCSV = (file) => new Promise((r,j)=>Papa.parse(file, {header:true, skipEmptyLines: 'greedy', worker: true, complete:res=>r(res.data), error:j}));
@@ -1250,7 +1248,6 @@ const renderLongTailMining = () => {
     if (term.includes("glasses") || term.includes("frame")) wordCount -= 0.5;
     if (wordCount < minWords) continue; const m = sumMetrics(rows); if (m.orders < minOrders) continue; if (m.roas < minRoas) continue; 
     
-    // ⚡ 修复：长尾挖掘中的校验采用去标点保留空格的方式，防误杀
     const cleanTerm = cleanTargetForExact(term);
     const isNewRadar = !exactTargets.has(cleanTerm);
     candidates.push({ term, wordCount, newRadar: isNewRadar, ...m });
@@ -1397,7 +1394,6 @@ const renderIsolationAnalysis = () => {
   const exactPool = new Set();
   for (const r of ALL) {
     if ((r.matchType || "").toLowerCase().includes("exact")) {
-      // ⚡ 修复：同上，保留空格，精确判断隔离状态
       const cleanTarget = cleanTargetForExact(r.targeting);
       if (cleanTarget) exactPool.add(cleanTarget);
     }
@@ -1492,7 +1488,6 @@ const decideAction = (item, rankBy) => {
   return { action, reason, suggestedBidDelta };
 };
 
-// ⚡ 修复：增加 isFinite 判断，彻底免疫导出时因数据异常抛出 NaN 导致下载崩溃的隐患
 const exportRichExcelMultiSheet = async (sheets, filename) => {
     const workbook = new ExcelJS.Workbook(); workbook.creator = 'Ads Dashboard Pro'; workbook.created = new Date();
     sheets.forEach(({ sheetName, headers, dataRows, freezeRow = 1 }) => {
@@ -1510,7 +1505,6 @@ const exportRichExcelMultiSheet = async (sheets, filename) => {
                 const headerName = String(headers[colNumber - 1]).toLowerCase();
                 const val = cell.value;
                 
-                // 核心加固：增加 typeof number && !isFinite 拦截
                 if (val === null || val === undefined || val === "" || (typeof val === 'number' && !isFinite(val))) { 
                     cell.value = null; 
                 } 
@@ -1636,7 +1630,6 @@ const renderKPIs = (total) => {
   }).join("");
 };
 
-// ⚡ 修复：真实业务数据与安全的回退渲染，以及图表实例的平滑更新
 const renderTrend = (rows) => {
   if (!rows || rows.length === 0) return; 
   const byDate = groupBy(rows, r=>r.date); 
@@ -1648,7 +1641,6 @@ const renderTrend = (rows) => {
 
   const series = [...byDate.keys()].sort().map(d => {
       const adMetrics = sumMetrics(byDate.get(d));
-      // 如果没有真实业务数据，用广告销售额兜底，不再乘以 1.5 伪造数据
       let dailyBizSales = bizMap.has(d) ? bizMap.get(d) : adMetrics.sales; 
       const organicSales = Math.max(0, dailyBizSales - adMetrics.sales);
       const tacos = dailyBizSales > 0 ? (adMetrics.spend / dailyBizSales) * 100 : 0;
@@ -1893,68 +1885,100 @@ $("btnRuleReset").addEventListener("click", () => { $("ruleSpendNeg").value = 30
 $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert("引擎依赖加载完毕！"); });
 
 // ==========================================
-// 🧠 Gemini AI 智能参谋引擎 (SaaS Core Integration)
+// 🧠 Gemini AI 智能参谋引擎 (SaaS Enterprise Core - 5D Integration)
 // ==========================================
 
-const buildAIContext = () => {
+const buildAdvancedAIContext = () => {
   if (!VIEW || VIEW.length === 0) return null;
   const m = sumMetrics(VIEW);
   
-  const groups = groupBy(VIEW, r => r.searchTerm);
-  const terms = [...groups.entries()].map(([term, list]) => ({ term, ...sumMetrics(list) }));
-  const bleeders = terms.filter(t => t.orders === 0 && t.spend > 10).sort((a,b) => b.spend - a.spend).slice(0, 5);
-  
-  const goldens = terms.filter(t => t.orders >= 2 && t.roas >= 3).sort((a,b) => b.roas - a.roas).slice(0, 5);
-  
+  // 1 & 4. 语义意图与出价弹性分析数据准备 (Top 30 Search Terms)
+  const stGroups = groupBy(VIEW, r => r.searchTerm);
+  const topTerms = [...stGroups.entries()]
+      .filter(([t]) => !isASINLike(t) && t !== "")
+      .map(([t, list]) => ({ t, ...sumMetrics(list) }))
+      .sort((a,b) => b.spend - a.spend)
+      .slice(0, 30); // 提取头部流量词
+
+  // 2 & 5. 跨维度异常归因数据准备 (Ads + Business + Placement 联动)
   const autoSpend = sumMetrics(VIEW.filter(r => !checkIsManual(r))).spend;
-  const manualSpend = sumMetrics(VIEW.filter(r => checkIsManual(r))).spend;
+  let totalBizSessions = 0, totalBizUnits = 0;
+  if (BUSINESS_ROWS && BUSINESS_ROWS.length > 0) {
+      BUSINESS_ROWS.forEach(r => { totalBizSessions += r.sessions; totalBizUnits += r.units; });
+  }
+  const globalBizCvr = totalBizSessions > 0 ? totalBizUnits / totalBizSessions : 0;
+
+  let tosSpend = 0, tosImpr = 0;
+  if (PLACEMENT_ROWS && PLACEMENT_ROWS.length > 0) {
+      PLACEMENT_ROWS.filter(r => r.placement.includes("Top of Search")).forEach(r => {
+          tosSpend += r.spend; tosImpr += r.impr;
+      });
+  }
+
+  // 3. 时序预测数据准备 (提取最近 7 天的消耗速率)
+  const byDate = groupBy(VIEW, r => r.date);
+  const dates = [...byDate.keys()].sort();
+  const recent7Days = dates.slice(-7).map(d => {
+      const dayMetrics = sumMetrics(byDate.get(d));
+      return `[${d}] 花费:$${dayMetrics.spend.toFixed(2)} | 订单:${dayMetrics.orders} | ROAS:${dayMetrics.roas.toFixed(2)}`;
+  });
 
   return {
     global: { spend: m.spend, sales: m.sales, orders: m.orders, roas: m.roas, acos: m.acos, cpc: m.cpc, cvr: m.cvr },
-    structure: { autoSpendPct: m.spend > 0 ? (autoSpend/m.spend).toFixed(2) : 0 },
-    bleeders: bleeders.map(b => `[${b.term}] 烧了$${b.spend.toFixed(2)} 0单`),
-    goldens: goldens.map(g => `[${g.term}] ROAS ${g.roas.toFixed(2)} 花费$${g.spend.toFixed(2)}`)
+    structure: { 
+        autoSpendPct: m.spend > 0 ? (autoSpend/m.spend) : 0,
+        bizCvr: globalBizCvr,
+        tosSpend: tosSpend,
+        tosImpr: tosImpr
+    },
+    topTermsData: topTerms.map(t => `- [${t.t}] 花费:$${t.spend.toFixed(2)} | CPC:$${t.cpc.toFixed(2)} | CVR:${(t.cvr*100).toFixed(1)}% | ROAS:${t.roas.toFixed(2)}`),
+    recentTrend: recent7Days
   };
 };
 
 $("btnAI")?.addEventListener("click", async () => {
-  // ⚡ 修复：基础混淆，防止被最简单的爬虫脚本直接抓走，提升安全性
   const apiKey = atob("QUl6YVN5Ql8ybDBXX1l6d20yT1MxWVMyeXJwWEpLMEpETmUyUzFn");
 
-  const contextData = buildAIContext();
+  const contextData = buildAdvancedAIContext();
   if (!contextData || contextData.global.spend === 0) {
-    alert("当前视图数据量不足，无法生成有效诊断。请先导入或放宽筛选条件。");
+    alert("当前视图数据量不足，无法生成有效的高阶诊断。请先导入数据。");
     return;
   }
 
   const aiBox = $("aiInsightsBox");
   const aiContent = $("aiContent");
   aiBox.style.display = "block";
-  aiContent.innerHTML = `<span class="ai-loading">🔮 Gemini 正在分析 ${fmtInt(VIEW.length)} 条底层数据链路，测算美国站利润水位...</span>`;
+  aiContent.innerHTML = `<span class="ai-loading">🔮 Gemini 正在启动 5D 商业决策引擎 (意图/时序/弹性/归因/策略)... 正在测算美国站利润水位...</span>`;
   $("btnAI").disabled = true;
 
   const prompt = `
-你是一位拥有 10 年经验的亚马逊美国站高级 PPC 操盘手。基于以下清洗后的广告多维数据，给出一份简明扼要、刀刀见血的诊断报告。
-不要说废话，直接给出实操建议。重点关注利润率底线、词组打法降维和防流血机制。
+你是一位拥有 10 年经验的亚马逊美国站高级 PPC 操盘手。基于以下从系统中清洗出的多维联动数据，生成一份极具商业价值的 SaaS 级智能诊断报告。
 
-【当前数据大盘】
-总花费: $${contextData.global.spend.toFixed(2)}
-总销售额: $${contextData.global.sales.toFixed(2)}
+【排版严格要求】：
+1. 必须全部使用基础 HTML 标签（如 <h3>, <p>, <ul>, <li>, <strong>, <span style="color:#b42318">）进行排版。
+2. 绝对不要在内容中输出多余的空行或回车，所有段落和列表的间距完全交由 HTML 标签控制，保持代码紧凑。
+
+【大盘与异动链底层数据】
+总花费: $${contextData.global.spend.toFixed(2)} | 总销售额: $${contextData.global.sales.toFixed(2)}
 ACOS: ${(contextData.global.acos * 100).toFixed(1)}% | ROAS: ${contextData.global.roas.toFixed(2)}
-全局CPC: $${contextData.global.cpc.toFixed(2)} | 全局CVR: ${(contextData.global.cvr * 100).toFixed(1)}%
-自动广告花费占比: ${(contextData.structure.autoSpendPct * 100).toFixed(0)}%
+全局平均 CPC: $${contextData.global.cpc.toFixed(2)} | 全局 CVR: ${(contextData.global.cvr * 100).toFixed(1)}%
+自然流量与总业务 CVR: ${(contextData.structure.bizCvr * 100).toFixed(1)}%
+自动广告花费占比: ${(contextData.structure.autoSpendPct * 100).toFixed(1)}%
+Top of Search 广告位总花费: $${contextData.structure.tosSpend.toFixed(2)} | 曝光量: ${contextData.structure.tosImpr}
 
-【极致流血黑洞 (纯消耗0出单)】
-${contextData.bleeders.length ? contextData.bleeders.join('\n') : "暂无严重流血词"}
+【近7天时序花费走势 (用于预算预测)】
+${contextData.recentTrend.join('\n')}
 
-【黄金长尾高优词 (高ROAS)】
-${contextData.goldens.length ? contextData.goldens.join('\n') : "暂无沉淀出高优词"}
+【Top 30 核心消耗词汇矩阵】
+${contextData.topTermsData.join('\n')}
 
-请输出结构：
-1. 🩺 大盘定性 (1句话总结健康度)
-2. ⚠️ 止血手术 (针对流血词的具体匹配与否定操作建议)
-3. 🚀 蓝海放大 (针对黄金词的预算倾斜与提效动作)
-4. 💡 架构微调 (根据CPC、CVR和自动广告占比给出的结构调整建议)
+请严格输出 5 个模块：
+1. 🔍 语义与购买意图聚类 (Semantic Intent)
+2. 🎭 多重人格策略矩阵 (Strategy Persona - 分为 激进拓词模式 和 利润死守模式)
+3. 📈 时序预测与预算预警 (Predictive Budgeting)
+4. ⚖️ 智能出价弹性模拟 (Price Elasticity)
+5. 🔗 跨维度异常归因 (Anomaly Chain)
+直击要害，给出实操建议。
 `;
 
   try {
@@ -1963,7 +1987,7 @@ ${contextData.goldens.length ? contextData.goldens.join('\n') : "暂无沉淀出
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.4 } 
+        generationConfig: { temperature: 0.3 }
       })
     });
 
@@ -1971,15 +1995,20 @@ ${contextData.goldens.length ? contextData.goldens.join('\n') : "暂无沉淀出
     if (data.error) throw new Error(data.error.message);
     
     let aiText = data.candidates[0].content.parts[0].text;
-    aiText = escapeHtml(aiText).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    aiText = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
     
-    aiContent.innerHTML = aiText;
-    log("AI 深度诊断已生成", "good");
+    // 🔥 【核心修复】：动态解除原生 UI 的纯文本预格式化绑定
+    aiContent.style.whiteSpace = "normal"; 
+    
+    // 🔥 【核心修复】：物理消灭大模型输出的无用换行符，让纯正的 HTML 结构接管排版
+    aiText = aiText.replace(/\n/g, ''); 
+    
+    // 给报告加一点内边距让阅读体验更好
+    aiContent.innerHTML = `<div style="padding-top: 8px;">${aiText}</div>`;
 
   } catch (error) {
     console.error("Gemini API Error:", error);
-    // ⚡ 修复：优雅降级，向用户提供友好的业务提示而非系统底层报错
-    aiContent.innerHTML = `<span style="color:var(--warn)">⚠️ 您的 AI 参谋暂时离线 (网络连接异常或已被限流)。大盘数据已就绪，请稍后再试。</span>`;
+    aiContent.innerHTML = `<span style="color:var(--warn)">⚠️ 5D 商业决策引擎暂时离线。大盘数据已就绪，请稍后再试。</span>`;
   } finally {
     $("btnAI").disabled = false;
   }
