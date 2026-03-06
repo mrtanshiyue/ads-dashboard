@@ -339,7 +339,7 @@
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     .miniInput{ width:110px !important; padding:8px 10px !important; border-radius:999px !important; font-size:12.2px !important; }
     .miniSelect{ width:150px !important; padding:8px 10px !important; border-radius:999px !important; font-size:12.2px !important; }
-    #autoManualTable th:last-child, #autoManualTable td:last-child, #longTailTable th:last-child, #longTailTable td:last-child, #weekdayTable th:last-child, #weekdayTable td:last-child, #cpcDistTable th:last-child, #cpcDistTable td:last-child, #lengthTable th:last-child, #lengthTable td:last-child, #matchTypeTable th:last-child, #matchTypeTable td:last-child, #conflictTable th:last-child, #conflictTable td:last-child, #businessReportTable th:last-child, #businessReportTable td:last-child, #placementTable th:last-child, #placementTable td:last-child { text-align: left; }
+    #autoManualTable th:last-child, #autoManualTable td:last-child, #longTailTable th:last-child, #longTailTable td:last-child, #weekdayTable th:last-child, #weekdayTable td:last-child, #cpcDistTable th:last-child, #cpcDistTable td:last-child, #lengthTable th:last-child, #lengthTable td:last-child, #matchTypeTable th:last-child, #matchTypeTable td:last-child, #conflictTable th:last-child, #conflictTable td:last-child, #businessReportTable th:last-child, #businessReportTable td:last-child, #placementTable th:last-child, #placementTable td:last-child, #isolationTable th:last-child, #isolationTable td:last-child { text-align: left; }
     .bar-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; font-size: 11.5px; width: 100%; max-width: 200px; }
     .bar-track { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: flex; }
     .action-icon { cursor: pointer; margin-left: 8px; opacity: 0.5; font-size: 14px; vertical-align: middle; transition: opacity 0.2s, transform 0.2s; display: inline-block; user-select: none; }
@@ -719,6 +719,37 @@
         </div>
         <div class="small" style="margin-top:10px;">原理：列出在 2 个或以上不同广告组中消耗预算的词。*(底层重构：现已加入 Match Type 漏斗校验，排除广泛拓词与精准打排名的正常交叠)*</div>
       </div>
+      
+      <div class="card tableCard" id="isolationCard">
+        <div class="cardTitle">
+          <h2>搜索词隔离与晋升监控 (Search Term Isolation)</h2>
+          <div class="hint">监控高转化词是否已被提取至精准匹配 (Exact)，防止预算在广泛池中低效溢出</div>
+          <div class="rightTools">
+              <span class="pill">晋升门槛 (订单 ≥)</span><input id="isoMinOrders" class="miniInput" type="number" step="1" value="3" title="自动/广泛中至少产生的订单数" />
+              <button class="btn primary" id="btnExportIsolation" type="button">导出隔离建议 Excel</button>
+          </div>
+        </div>
+        <div class="table-container" style="max-height:480px;">
+          <table id="isolationTable">
+            <thead>
+              <tr>
+                <th>高转化搜索词 (Search Term)</th>
+                <th>当前来源 (Source)</th>
+                <th>隔离状态 (Status)</th>
+                <th>未隔离花费</th>
+                <th>订单数</th>
+                <th>ROAS</th>
+                <th>建议操作 (Action)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="small" style="margin-top:10px;">
+          原理：扫描在自动 (Auto) 或广泛/词组 (Broad/Phrase) 中持续出单的词，验证其是否已在精准 (Exact) 中投放。<b>如果未提取，建议立刻开启 Exact 计划，并在原自动/广泛组中添加 Negative Exact！</b>
+        </div>
+      </div>
+
     </section>
   </main>
 </div>
@@ -945,7 +976,7 @@ const importMultipleFiles = async (files) => {
   log(`开始导入：${files.length} 个文件（merge=${mergeMode}, dedupe=${dedupeMode}, maxRows=${maxRows}）`); setSubtitle("正在进行多线程数据处理与洗刷...请稍候");
   
   if (mergeMode === "replace") { 
-      ALL = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool = Object.create(null); poolSize = 0; CURRENT_RANK_GROUPS = null; 
+      ALL = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool = Object.create(null); poolSize = 0; CURRENT_RANK_GROUPS = null; ISOLATION_ROWS = [];
       try { await idbKeyval.clear(); } catch(e) {} 
       log("Replace 模式：已清空历史数据与缓存分片", "warn"); 
   }
@@ -1349,6 +1380,90 @@ const renderConflictAnalysis = () => {
 };
 $("conflictTable").addEventListener("click", (e) => { const tr = e.target.closest("tr"); if (!tr || !tr.dataset.term) return; $("filterSearchTerm").value = tr.dataset.term; applyFilters(); });
 
+// ⚡ 新功能：搜索词隔离与晋升监控
+const renderIsolationAnalysis = () => {
+  const tbody = $("isolationTable")?.querySelector("tbody"); 
+  if (!tbody) return; 
+  if (!VIEW.length) { tbody.innerHTML = ""; return; }
+
+  const minOrders = Math.max(1, Math.floor(safeNum($("isoMinOrders")?.value || 3)));
+  
+  // 1. 构建 Exact 词池 (完全匹配的 targeting)
+  const exactPool = new Set();
+  for (const r of ALL) {
+    if ((r.matchType || "").toLowerCase().includes("exact")) {
+      const cleanTarget = (r.targeting || "").toLowerCase().replace(/[^a-z0-9]/gi, '').replace(/s$/i, '');
+      if (cleanTarget) exactPool.add(cleanTarget);
+    }
+  }
+
+  // 2. 收集 Auto/Broad/Phrase 中的 Search Term
+  const nonExactMap = new Map();
+  for (const r of VIEW) {
+    if (!r.searchTerm || isASINLike(r.searchTerm)) continue;
+    const matchLower = (r.matchType || "").toLowerCase();
+    const isExact = matchLower.includes("exact");
+    
+    if (!isExact) {
+      if (!nonExactMap.has(r.searchTerm)) {
+        nonExactMap.set(r.searchTerm, { term: r.searchTerm, sources: new Set(), rows: [] });
+      }
+      const entry = nonExactMap.get(r.searchTerm);
+      entry.sources.add(matchLower || "auto");
+      entry.rows.push(r);
+    }
+  }
+
+  const candidates = [];
+  for (const [term, data] of nonExactMap.entries()) {
+    const m = sumMetrics(data.rows);
+    if (m.orders >= minOrders) {
+      const cleanTerm = term.toLowerCase().replace(/[^a-z0-9]/gi, '').replace(/s$/i, '');
+      const isIsolated = exactPool.has(cleanTerm);
+      
+      if (!isIsolated) {
+        candidates.push({
+          term: term,
+          source: Array.from(data.sources).join(", "),
+          isIsolated: false,
+          ...m
+        });
+      }
+    }
+  }
+
+  candidates.sort((a, b) => b.sales - a.sales);
+  ISOLATION_ROWS = candidates;
+
+  if (candidates.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">🎉 太棒了！所有符合条件的高转化词均已完成精准隔离（或当前筛选无达标数据）。</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = candidates.slice(0, 50).map(c => {
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)">${escapeHtml(c.term)}</td>
+      <td style="color:var(--muted);text-transform:capitalize;">${escapeHtml(c.source)}</td>
+      <td><span class="tag bad">未提取 (Un-isolated)</span></td>
+      <td>${fmtMoney(c.spend)}</td>
+      <td>${fmtInt(c.orders)}</td>
+      <td><span style="color:var(--good);font-weight:600">${c.roas.toFixed(2)}</span></td>
+      <td><span style="font-size:11px;font-weight:600;color:var(--accent);">提取 Exact + 原组否定</span></td>
+    </tr>`;
+  }).join("");
+};
+
+$("isoMinOrders")?.addEventListener("change", renderIsolationAnalysis);
+
+$("btnExportIsolation")?.addEventListener("click", () => {
+    if (!ISOLATION_ROWS.length) { alert("当前没有需要隔离的搜索词！"); return; }
+    const headers = ["Search Term", "Source (未精准)", "Isolation Status", "Wasted Spend", "Sales", "Orders", "ROAS", "ACOS", "Action"];
+    const dataRows = ISOLATION_ROWS.map(c => [
+        c.term, c.source, "Un-isolated", c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos, "Create Exact Match & Negate in Original"
+    ]);
+    exportRichExcelMultiSheet([{ sheetName: "Isolation Opportunities", headers, dataRows }], `Executive_Isolation_${getTs()}.xlsx`);
+});
+
 const getRules = () => ({ spendNeg: safeNum($("ruleSpendNeg").value), clicksNeg: Math.max(0, Math.floor(safeNum($("ruleClicksNeg").value))), roasNeg: safeNum($("ruleRoasNeg")?.value || 1.5), roasKeep: safeNum($("ruleRoasKeep").value), ordersKeep: Math.max(0, Math.floor(safeNum($("ruleOrdersKeep")?.value || 2))), roasMigrateMin: safeNum($("ruleRoasMigrateMin")?.value || 2) });
 
 // 🤖 升级版：AI 自动出价建议系统 (包含美国站策略修正)
@@ -1655,7 +1770,7 @@ const matchAdvancedSearch = (term, query) => {
 };
 
 const applyFilters = (initial=false) => {
-  if (!ALL.length && !BUSINESS_ROWS.length && !PLACEMENT_ROWS.length) { setSubtitle("未导入数据。请导入同类报表（支持多文件）。"); $("kpiGrid").innerHTML = ""; if (trendChart) { trendChart.destroy(); trendChart = null; } $("rankTable").querySelector("tbody").innerHTML = ""; $("anomalyAlerts").style.display = "none"; renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); renderActiveDimTab(); return; }
+  if (!ALL.length && !BUSINESS_ROWS.length && !PLACEMENT_ROWS.length) { setSubtitle("未导入数据。请导入同类报表（支持多文件）。"); $("kpiGrid").innerHTML = ""; if (trendChart) { trendChart.destroy(); trendChart = null; } $("rankTable").querySelector("tbody").innerHTML = ""; $("anomalyAlerts").style.display = "none"; renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); renderIsolationAnalysis(); renderActiveDimTab(); return; }
   setSubtitle("🔄 正在通过多线程模拟真实利润引擎，请稍候...");
   setTimeout(() => {
       try {
@@ -1703,6 +1818,9 @@ const applyFilters = (initial=false) => {
           requestAnimationFrame(() => { 
               renderKPIs(total); detectAnomalies(VIEW); renderTrend(VIEW); renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); 
               
+              // 👇 新增功能：随筛选器自动触发隔离监控分析
+              renderIsolationAnalysis();
+
               const activeStrat = document.querySelector('.seg[aria-label="Strat Filter"] .segBtn.active');
               if (activeStrat) {
                   const strat = activeStrat.dataset.strat;
@@ -1727,7 +1845,7 @@ filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280)); 
 $("btnClearSearch").addEventListener("click", () => { $("filterSearchTerm").value = ""; $("filterSearchExact").checked = false; $("filterSearchTerm").focus(); applyFilters(); });
 $("btnReset").addEventListener("click", () => { ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters(); });
-$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool = Object.create(null); poolSize = 0; CURRENT_RANK_GROUPS = null; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
+$("btnClearAll").addEventListener("click", () => { ALL = []; VIEW = []; BUSINESS_ROWS = []; PLACEMENT_ROWS = []; importedFiles = []; rootCache.clear(); tokenCache.clear(); stringPool = Object.create(null); poolSize = 0; CURRENT_RANK_GROUPS = null; ISOLATION_ROWS = []; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
 
 document.querySelectorAll(".chipBtn").forEach(btn => { btn.addEventListener("click", () => { document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); }); });
 
