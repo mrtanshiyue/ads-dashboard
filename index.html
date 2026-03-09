@@ -357,9 +357,25 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ================= AI Agent 专属样式 ================= */
+    /* ================= AI Agent 专属与排版对齐样式 ================= */
     @keyframes pulseText { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     .ai-loading { animation: pulseText 1.5s infinite ease-in-out; color: #aa00ff; font-weight: 600; }
+    
+    /* 加载动画容器 */
+    .ai-loader-container { display: flex; align-items: center; gap: 14px; padding: 20px; background: color-mix(in srgb, var(--hover-bg) 60%, transparent); border-radius: 12px; border: 1px dashed rgba(170,0,255,0.4); margin: 10px 0; }
+    .ai-spinner { width: 22px; height: 22px; border: 3px solid rgba(170,0,255,0.15); border-top-color: #aa00ff; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;}
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* HTML 排版对齐修复 (Scoped CSS 限定在报告内部) */
+    #aiContent { font-size: 13.5px; line-height: 1.6; color: var(--text); padding: 4px 0 10px 0; }
+    #aiContent h1, #aiContent h2, #aiContent h3 { margin: 20px 0 10px 0; color: var(--text); font-weight: 700; letter-spacing: -0.2px; }
+    #aiContent h3 { font-size: 14.8px; border-bottom: 1px solid var(--line); padding-bottom: 6px; display: inline-block; width: 100%; color: #aa00ff;}
+    #aiContent p { margin: 0 0 12px 0; }
+    #aiContent ul, #aiContent ol { margin: 0 0 16px 0; padding-left: 24px; }
+    #aiContent li { margin-bottom: 6px; }
+    #aiContent li:last-child { margin-bottom: 0; }
+    #aiContent strong { color: var(--accent); font-weight: 600; }
+    #aiContent code { background: var(--chip); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; color: var(--warn); }
 
     @media (max-width: 1400px){ .app{ max-width: 100vw; } }
     @media (max-width: 1100px){ .app{ grid-template-columns:1fr; max-width:100vw; } .sidebar{ position:relative; height:auto; } .kpi{ grid-column: span 6; } .chartCard{ grid-column: span 12; } }
@@ -513,12 +529,16 @@
     
     <div id="aiInsightsBox" style="display:none; margin-bottom:16px; animation: fadeInDown 0.4s ease;">
       <div class="card" style="border-left: 4px solid #aa00ff; background: var(--hover-bg);">
-        <div class="cardTitle" style="margin-bottom: 8px;">
-          <h2 style="color: #aa00ff; display: flex; align-items: center; gap: 6px;">✨ Gemini AI 深度操盘诊断</h2>
-          <button class="search-clear-btn" id="btnCloseAI" type="button" title="关闭诊断">✕</button>
+        <div class="cardTitle" style="margin-bottom: 0; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px;">
+          <h2 style="color: #aa00ff; display: flex; align-items: center; gap: 6px; margin:0;">✨ Gemini AI 深度操盘诊断</h2>
+          <div style="display:flex; gap: 8px; align-items: center;">
+            <button class="btn" id="btnAILog" type="button" style="display:none; padding: 4px 10px; font-size: 11px;">📝 操作日志</button>
+            <button class="btn" id="btnAIBulk" type="button" style="display:none; padding: 4px 10px; font-size: 11px; color: var(--good); border-color: rgba(26,127,55,0.3); background: var(--softGood);" title="生成直接上传到亚马逊后台的 Bulk 操作表">⚡ 导出 Bulk 执行表</button>
+            <button class="btn primary" id="btnAIPDF" type="button" style="display:none; padding: 4px 10px; font-size: 11px;">📥 导出 PDF</button>
+            <button class="search-clear-btn" id="btnCloseAI" type="button" title="关闭诊断">✕</button>
+          </div>
         </div>
-        <div id="aiContent" style="font-size: 13.5px; line-height: 1.6; color: var(--text); white-space: pre-wrap;"></div>
-      </div>
+        <div id="aiContent" style="white-space: normal;"></div> </div>
     </div>
     
     <section class="grid">
@@ -1898,9 +1918,9 @@ const buildAdvancedAIContext = () => {
       .filter(([t]) => !isASINLike(t) && t !== "")
       .map(([t, list]) => ({ t, ...sumMetrics(list) }))
       .sort((a,b) => b.spend - a.spend)
-      .slice(0, 30); // 提取头部流量词
+      .slice(0, 30);
 
-  // 2 & 5. 跨维度异常归因数据准备 (Ads + Business + Placement 联动)
+  // 2 & 5. 跨维度异常归因数据准备
   const autoSpend = sumMetrics(VIEW.filter(r => !checkIsManual(r))).spend;
   let totalBizSessions = 0, totalBizUnits = 0;
   if (BUSINESS_ROWS && BUSINESS_ROWS.length > 0) {
@@ -1915,7 +1935,7 @@ const buildAdvancedAIContext = () => {
       });
   }
 
-  // 3. 时序预测数据准备 (提取最近 7 天的消耗速率)
+  // 3. 时序预测数据准备
   const byDate = groupBy(VIEW, r => r.date);
   const dates = [...byDate.keys()].sort();
   const recent7Days = dates.slice(-7).map(d => {
@@ -1925,12 +1945,7 @@ const buildAdvancedAIContext = () => {
 
   return {
     global: { spend: m.spend, sales: m.sales, orders: m.orders, roas: m.roas, acos: m.acos, cpc: m.cpc, cvr: m.cvr },
-    structure: { 
-        autoSpendPct: m.spend > 0 ? (autoSpend/m.spend) : 0,
-        bizCvr: globalBizCvr,
-        tosSpend: tosSpend,
-        tosImpr: tosImpr
-    },
+    structure: { autoSpendPct: m.spend > 0 ? (autoSpend/m.spend) : 0, bizCvr: globalBizCvr, tosSpend: tosSpend, tosImpr: tosImpr },
     topTermsData: topTerms.map(t => `- [${t.t}] 花费:$${t.spend.toFixed(2)} | CPC:$${t.cpc.toFixed(2)} | CVR:${(t.cvr*100).toFixed(1)}% | ROAS:${t.roas.toFixed(2)}`),
     recentTrend: recent7Days
   };
@@ -1948,15 +1963,20 @@ $("btnAI")?.addEventListener("click", async () => {
   const aiBox = $("aiInsightsBox");
   const aiContent = $("aiContent");
   aiBox.style.display = "block";
-  aiContent.innerHTML = `<span class="ai-loading">🔮 Gemini 正在启动 5D 商业决策引擎 (意图/时序/弹性/归因/策略)... 正在测算美国站利润水位...</span>`;
+  
+  // 🔥 添加 SaaS 级炫酷 Loading 动画
+  aiContent.innerHTML = `<div class="ai-loader-container"><div class="ai-spinner"></div><span class="ai-loading">🔮 Gemini 5D 商业决策引擎测算中... 正在深度透视美国站利润水位，请稍候约 10-15 秒...</span></div>`;
   $("btnAI").disabled = true;
+  $("btnAILog").style.display = "none";
+  $("btnAIPDF").style.display = "none";
+  $("btnAIBulk").style.display = "none";
 
   const prompt = `
 你是一位拥有 10 年经验的亚马逊美国站高级 PPC 操盘手。基于以下从系统中清洗出的多维联动数据，生成一份极具商业价值的 SaaS 级智能诊断报告。
 
 【排版严格要求】：
-1. 必须全部使用基础 HTML 标签（如 <h3>, <p>, <ul>, <li>, <strong>, <span style="color:#b42318">）进行排版。
-2. 绝对不要在内容中输出多余的空行或回车，所有段落和列表的间距完全交由 HTML 标签控制，保持代码紧凑。
+1. 必须且只能使用基础 HTML 标签进行排版，如 <h3>, <p>, <ul>, <li>, <strong> 等。
+2. 绝对禁止在返回的内容中使用任何 "\n" 回车符或 Markdown 语法，所有段落和列表的间距完全由 HTML 标签接管，保持代码高度紧凑！
 
 【大盘与异动链底层数据】
 总花费: $${contextData.global.spend.toFixed(2)} | 总销售额: $${contextData.global.sales.toFixed(2)}
@@ -1966,19 +1986,19 @@ ACOS: ${(contextData.global.acos * 100).toFixed(1)}% | ROAS: ${contextData.globa
 自动广告花费占比: ${(contextData.structure.autoSpendPct * 100).toFixed(1)}%
 Top of Search 广告位总花费: $${contextData.structure.tosSpend.toFixed(2)} | 曝光量: ${contextData.structure.tosImpr}
 
-【近7天时序花费走势 (用于预算预测)】
-${contextData.recentTrend.join('\n')}
+【近7天时序花费走势】
+${contextData.recentTrend.join(' | ')}
 
 【Top 30 核心消耗词汇矩阵】
-${contextData.topTermsData.join('\n')}
+${contextData.topTermsData.join(' | ')}
 
-请严格输出 5 个模块：
+请严格输出 5 个诊断模块：
 1. 🔍 语义与购买意图聚类 (Semantic Intent)
-2. 🎭 多重人格策略矩阵 (Strategy Persona - 分为 激进拓词模式 和 利润死守模式)
+2. 🎭 多重人格策略矩阵 (分为激进拓词模式和利润死守模式)
 3. 📈 时序预测与预算预警 (Predictive Budgeting)
 4. ⚖️ 智能出价弹性模拟 (Price Elasticity)
 5. 🔗 跨维度异常归因 (Anomaly Chain)
-直击要害，给出实操建议。
+直击要害，给出具体的实操指令。
 `;
 
   try {
@@ -1995,26 +2015,134 @@ ${contextData.topTermsData.join('\n')}
     if (data.error) throw new Error(data.error.message);
     
     let aiText = data.candidates[0].content.parts[0].text;
-    aiText = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
     
-    // 🔥 【核心修复】：动态解除原生 UI 的纯文本预格式化绑定
-    aiContent.style.whiteSpace = "normal"; 
+    // 消除大模型可能返回的多余换行符，全部交由 Scope CSS 控制间距
+    aiText = aiText.replace(/\n/g, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
     
-    // 🔥 【核心修复】：物理消灭大模型输出的无用换行符，让纯正的 HTML 结构接管排版
-    aiText = aiText.replace(/\n/g, ''); 
+    aiContent.innerHTML = aiText;
     
-    // 给报告加一点内边距让阅读体验更好
-    aiContent.innerHTML = `<div style="padding-top: 8px;">${aiText}</div>`;
+    // 渲染完成后显示所有操作按钮
+    $("btnAILog").style.display = "inline-flex";
+    $("btnAIPDF").style.display = "inline-flex";
+    $("btnAIBulk").style.display = "inline-flex";
 
   } catch (error) {
     console.error("Gemini API Error:", error);
-    aiContent.innerHTML = `<span style="color:var(--warn)">⚠️ 5D 商业决策引擎暂时离线。大盘数据已就绪，请稍后再试。</span>`;
+    aiContent.innerHTML = `<span style="color:var(--warn)">⚠️ 5D 商业决策引擎暂时离线 (网络超时)。大盘数据已就绪，请稍后再试。</span>`;
   } finally {
     $("btnAI").disabled = false;
   }
 });
 
 $("btnCloseAI")?.addEventListener("click", () => { $("aiInsightsBox").style.display = "none"; });
+
+// 📝 导出操作日志 (纯文本指令集)
+$("btnAILog")?.addEventListener("click", () => {
+    const aiText = $("aiContent").innerText;
+    if (!aiText) return;
+    const logHeader = `=== Ads Dashboard Pro 商业诊断日志 ===\n生成时间: ${new Date().toLocaleString()}\n操作人: 亚马逊高级运营专家\n==================================\n\n`;
+    const blob = new Blob([logHeader + aiText], { type: "text/plain;charset=utf-8" });
+    saveAs(blob, `Executive_Action_Log_${getTs()}.txt`);
+});
+
+// 📥 Google 极客风 Lazy-Load 生成 PDF (绝不拖慢首屏)
+$("btnAIPDF")?.addEventListener("click", () => {
+    const btn = $("btnAIPDF");
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "⏳ 正在渲染PDF...";
+    btn.disabled = true;
+
+    const exportToPDF = () => {
+        const element = $("aiInsightsBox");
+        const oldBorder = element.style.border;
+        element.style.border = "none"; 
+        
+        const opt = {
+            margin:       [10, 10, 10, 10],
+            filename:     `Executive_AI_Diagnosis_${getTs()}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            element.style.border = oldBorder;
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }).catch(err => {
+            console.error("PDF Export Error", err);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert("PDF导出失败，请检查浏览器权限。");
+        });
+    };
+
+    if (typeof window.html2pdf === 'undefined') {
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+        script.onload = () => { log("动态加载 html2pdf.js 引擎成功", "good"); exportToPDF(); };
+        script.onerror = () => { alert("无法加载 PDF 引擎，请检查网络连接。"); btn.innerHTML = originalText; btn.disabled = false; };
+        document.head.appendChild(script);
+    } else { exportToPDF(); }
+});
+
+// ⚡ 核心黑科技：生成直接上传到亚马逊后台的 Bulk 批量执行表
+$("btnAIBulk")?.addEventListener("click", () => {
+    const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
+    const bulkRows = [];
+
+    // 直接复用底层的全局规则和分组数据
+    const r = getRules();
+    const groups = CURRENT_RANK_GROUPS || groupBy(VIEW, getRankKey());
+
+    for (const [term, list] of groups.entries()) {
+        if (!term || term === "(blank)" || isASINLike(term)) continue;
+
+        const m = sumMetrics(list);
+        
+        // 找出该搜索词花费最大的 Campaign 和 Ad Group 作为操作的锚点
+        const mainRow = list.reduce((prev, curr) => (curr.spend > prev.spend) ? curr : prev, list[0]);
+        let cleanTerm = (term || "").replace(/\s+/g, " ").trim();
+
+        // 🔪 规则 1：止血手术 (花费超标且无出单 -> 批量添加精确否定)
+        if (m.spend >= r.spendNeg && m.orders === 0) {
+            bulkRows.push([
+                "Sponsored Products", "Negative Keyword", "Create", 
+                "", "", "", "", "", "", 
+                mainRow.campaign, mainRow.adGroup, cleanTerm, "negative exact", 
+                "", "", "", "", "enabled"
+            ]);
+        }
+        // 🚀 规则 2：放大盈利 (ROAS达标且出单稳定 -> 批量创建精准匹配)
+        else if (m.roas >= r.roasKeep && m.orders >= r.ordersKeep) {
+            // 防御机制：如果当前视图已经存在该词的 Exact 匹配，则跳过防止重复创建
+            const isAlreadyExact = list.some(row => (row.matchType || "").toLowerCase() === "exact");
+            if (!isAlreadyExact) {
+                const suggestedBid = m.cpc > 0 ? (m.cpc * 1.2).toFixed(2) : 0.5; // 激进溢价 20%
+                bulkRows.push([
+                    "Sponsored Products", "Keyword", "Create", 
+                    "", "", "", "", "", "", 
+                    mainRow.campaign, mainRow.adGroup, cleanTerm, "exact", 
+                    "", "", "", suggestedBid, "enabled"
+                ]);
+            }
+        }
+    }
+
+    if (bulkRows.length === 0) {
+        alert("当前视图未检测到符合自动止血/提价规则的词汇，无需导出。可尝试在左侧放宽判定规则。");
+        return;
+    }
+
+    // 利用系统已有的 ExcelJS 导出多表单引擎
+    exportRichExcelMultiSheet([{ 
+        sheetName: "Sponsored Products Campaigns", 
+        headers: bulkHeaders, 
+        dataRows: bulkRows 
+    }], `Bulk_Operations_AI_Action_${getTs()}.xlsx`).then(() => {
+        log(`已生成 Bulk 批量执行表 (共包含 ${bulkRows.length} 条操作指令)`, "good");
+    });
+});
 
 const THEMES = ['light', 'dark', 'ocean', 'forest', 'sepia'];
 const THEME_LABELS = { light: '🎨 主题: 浅色 (Light)', dark: '🎨 主题: 深色 (Dark)', ocean: '🎨 主题: 海洋 (Ocean)', forest: '🎨 主题: 森林 (Forest)', sepia: '🎨 主题: 护眼 (Sepia)' };
