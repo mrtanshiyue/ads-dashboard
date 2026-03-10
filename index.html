@@ -2743,45 +2743,77 @@ $("btnAILog")?.addEventListener("click", () => {
     saveAs(blob, `Executive_Action_Log_${getTs()}.txt`);
 });
 
-// 📥 Google 极客风 Lazy-Load 生成 PDF
-$("btnAIPDF")?.addEventListener("click", () => {
+// 📥 核心重构：企业级 PDF 高清导出引擎 (SaaS Enterprise Core)
+$("btnAIPDF")?.addEventListener("click", async () => {
     const btn = $("btnAIPDF");
     const originalText = btn.innerHTML;
-    btn.innerHTML = "⏳ 正在渲染PDF...";
+    const element = $("aiInsightsBox");
+    
+    // 1. 防御性拦截
+    if (!element) return;
+
+    // 2. 交互状态锁定
+    btn.innerHTML = "⏳ 正在渲染 PDF...";
     btn.disabled = true;
 
-    const exportToPDF = () => {
-        const element = $("aiInsightsBox");
-        const oldBorder = element.style.border;
-        element.style.border = "none"; 
-        
+    const exportToPDF = async () => {
+        // [极客细节] 精准锁定工具栏并隐身：保留占位但不显示
+        // 确保导出给高管/客户的报告中，绝对不会出现“按钮”这种 UI 伪影
+        const toolsContainer = element.querySelector('.cardTitle > div:last-child');
+        if (toolsContainer) toolsContainer.style.visibility = "hidden";
+
+        // 动态适配当前主题背景色，彻底解决暗黑模式下变“黑底黑字”或报错的 Bug
+        const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+        const bgColors = {
+            light: '#ffffff', dark: '#242426', ocean: '#1e293b', forest: '#1b241b', sepia: '#eee8d5'
+        };
+
+        // 深度优化 html2canvas 配置引擎
         const opt = {
-            margin:       [10, 10, 10, 10],
+            margin:       [12, 12, 15, 12], // 增加适度留白，增强高管报告的呼吸感
             filename:     `Executive_AI_Diagnosis_${getTs()}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            image:        { type: 'jpeg', quality: 0.98 }, // 兼顾体积与清晰度
+            html2canvas:  { 
+                scale: window.devicePixelRatio > 1 ? 2 : 1.5, // 动态适配视网膜屏幕防模糊
+                useCORS: true, 
+                logging: false,
+                backgroundColor: bgColors[currentTheme] || '#ffffff', 
+                ignoreElements: (node) => node.tagName === 'BUTTON' // 终极兜底机制：无视所有按钮节点
+            },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        html2pdf().set(opt).from(element).save().then(() => {
-            element.style.border = oldBorder;
+        try {
+            // 使用标准的 async/await 替代脆弱的 Promise 链
+            await html2pdf().set(opt).from(element).save();
+        } catch (err) {
+            console.error("PDF Export Core Crash:", err);
+            alert("PDF 渲染引擎遇到执行阻塞，请检查页面内存或稍后重试。");
+        } finally {
+            // 3. 严格的安全释放 (无论成功失败，UI 必须复原)
+            if (toolsContainer) toolsContainer.style.visibility = "visible";
             btn.innerHTML = originalText;
             btn.disabled = false;
-        }).catch(err => {
-            console.error("PDF Export Error", err);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert("PDF导出失败，请检查浏览器权限。");
-        });
+        }
     };
 
+    // 4. 动态资源挂载与执行
     if (typeof window.html2pdf === 'undefined') {
         const script = document.createElement('script');
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-        script.onload = () => { log("动态加载 html2pdf.js 引擎成功", "good"); exportToPDF(); };
-        script.onerror = () => { alert("无法加载 PDF 引擎，请检查网络连接。"); btn.innerHTML = originalText; btn.disabled = false; };
+        script.onload = () => { 
+            log("✅ html2pdf.js 渲染引擎挂载成功", "good"); 
+            exportToPDF(); 
+        };
+        script.onerror = () => { 
+            alert("无法加载 PDF 引擎，请检查网络策略(CORS)或代理。"); 
+            btn.innerHTML = originalText; 
+            btn.disabled = false; 
+        };
         document.head.appendChild(script);
-    } else { exportToPDF(); }
+    } else { 
+        exportToPDF(); 
+    }
 });
 
 // ⚡ 核心黑科技：生成直接上传到亚马逊后台的 Bulk 批量执行表
