@@ -275,6 +275,32 @@
     #aiContent strong { color: var(--accent); font-weight: 600; }
     #aiContent code { background: var(--chip); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; color: var(--warn); }
 
+    /* 数据墨水比优化：弱化非核心表格列 */
+    #rankTable tbody td:nth-child(6),
+    #rankTable tbody td:nth-child(7) {
+        color: var(--muted);
+        font-size: 11.8px;
+    }
+
+    /* 增强 AI 加载态的科技感 Skeleton */
+    @keyframes shimmer {
+        0% { background-position: -468px 0; }
+        100% { background-position: 468px 0; }
+    }
+    .skeleton-box {
+        animation: shimmer 2s linear infinite forwards;
+        background: #f6f7f8;
+        background: linear-gradient(to right, color-mix(in srgb, var(--hover-bg) 80%, transparent) 8%, var(--line) 18%, color-mix(in srgb, var(--hover-bg) 80%, transparent) 33%);
+        background-size: 800px 104px;
+        height: 16px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+    }
+    [data-theme="dark"] .skeleton-box, [data-theme="ocean"] .skeleton-box, [data-theme="forest"] .skeleton-box {
+        background: linear-gradient(to right, var(--hover-bg) 8%, var(--line) 18%, var(--hover-bg) 33%);
+        background-size: 800px 104px;
+    }
+
     @media (max-width: 1400px){ .app{ max-width: 100vw; } }
     @media (max-width: 1100px){ .app{ grid-template-columns:1fr; max-width:100vw; } .sidebar{ position:relative; height:auto; } .kpi{ grid-column: span 6; } .chartCard{ grid-column: span 12; } }
     @media (max-width: 650px){ .kpi{ grid-column: span 12; } .actions{ justify-content:flex-start; } .row3{ grid-template-columns:1fr; } .miniInput, .miniSelect{ width:100% !important; border-radius:12px !important; } .pareto-item { flex-direction: column; align-items: flex-start; gap: 8px; } }
@@ -411,7 +437,7 @@
   <main class="content">
     <section class="header">
       <div class="title">
-        <h1>朗容眼镜 Ads Dashboard (SaaS Core)</h1>
+        <h1>朗容眼镜 Ads Dashboard (SaaS Enterprise Core)</h1>
         <div class="sub" id="subtitle">未导入数据。请导入同类报表（支持多文件）。</div>
       </div>
       <div class="actions">
@@ -716,6 +742,31 @@ let rankSort = { key: "spend", dir: "desc" };
 let rankTypeFilter = "all"; 
 
 const $ = (id) => document.getElementById(id);
+
+// ⚡ 高阶：时间切片渲染引擎，彻底释放主线程阻塞
+const renderProgressive = (tbody, data, renderRowFn, chunkSize = 40) => {
+    tbody.innerHTML = "";
+    if (!data || !data.length) return;
+    
+    let index = 0;
+    const renderNextChunk = () => {
+        const chunk = data.slice(index, index + chunkSize);
+        if (!chunk.length) return;
+        
+        const fragment = document.createDocumentFragment();
+        const temp = document.createElement("tbody");
+        temp.innerHTML = chunk.map(renderRowFn).join("");
+        
+        while(temp.firstChild) fragment.appendChild(temp.firstChild);
+        tbody.appendChild(fragment);
+        
+        index += chunkSize;
+        if (index < data.length) {
+            requestAnimationFrame(renderNextChunk);
+        }
+    };
+    requestAnimationFrame(renderNextChunk);
+};
 
 // 🛠️ 浮点数精度防护: 严格防范 0.3000000004 这类 JS 经典溢出
 const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(v) : "0.00"; 
@@ -1292,7 +1343,7 @@ const importMultipleFiles = async (files) => {
 };
 
 // =========================================================
-// 视图渲染引擎 (使用模板拼接降低重绘开销)
+// 视图渲染引擎
 // =========================================================
 const renderFileList = () => { 
   const box = $("fileList"); 
@@ -1327,18 +1378,24 @@ const renderBusinessReport = () => {
     }
     
     aggregated.sort((a,b) => b.units - a.units);
-    let htmlStr = "";
-    for(const r of aggregated) {
+    
+    renderProgressive(tbody, aggregated, (r) => {
         const cvr = (r.sessions > 0 && isFinite(r.sessions)) ? Math.min(1, r.units / r.sessions) : 0; 
         const aov = (r.units > 0 && isFinite(r.units)) ? r.sales / r.units : 0;
-        const sptaHtml = r.spta > 0.8 ? `<span style="color:var(--bad);font-weight:bold" title="警惕：过度依赖广告！">${fmtPct(r.spta)}</span>` : fmtPct(r.spta);
+        
+        const isNewProduct = r.sessions < 1000;
+        let sptaHtml = fmtPct(r.spta);
+        if (r.spta > 0.8 && !isNewProduct) {
+            sptaHtml = `<span style="color:var(--bad);font-weight:bold" title="成熟期预警：自然流量枯竭！">${fmtPct(r.spta)}</span>`;
+        } else if (r.spta > 0.8 && isNewProduct) {
+            sptaHtml = `<span style="color:var(--warn);" title="新品推广期，高占比属于正常行为">${fmtPct(r.spta)}</span>`;
+        }
         
         const isZombie = r.sessions < 5 && r.units === 0;
         const displayAsin = isZombie ? `<span style="color:var(--bad);text-decoration:line-through;" title="流量枯竭 (近乎0曝光)">${escapeHtml(r.asin)}</span> <span class="tag bad" style="padding:2px 4px;font-size:10px">僵尸预警</span>` : `<span style="font-weight:600; color:var(--text);">${escapeHtml(r.asin)}</span>`;
 
-        htmlStr += `<tr><td>${displayAsin}</td><td title="${escapeHtml(r.title)}">${escapeHtml(r.title || "").slice(0, 80)}...</td><td>${fmtInt(r.sessions)}</td><td>${fmtInt(r.units)}</td><td>${fmtInt(r.adOrders)}</td><td style="font-weight:bold; color:var(--accent);">${fmtPct(cvr)}</td><td>${sptaHtml}</td><td>${fmtMoney(r.sales)}</td><td>${fmtMoney(aov)}</td></tr>`;
-    }
-    tbody.innerHTML = htmlStr;
+        return `<tr><td>${displayAsin}</td><td title="${escapeHtml(r.title)}">${escapeHtml(r.title || "").slice(0, 80)}...</td><td>${fmtInt(r.sessions)}</td><td>${fmtInt(r.units)}</td><td>${fmtInt(r.adOrders)}</td><td style="font-weight:bold; color:var(--accent);">${fmtPct(cvr)}</td><td>${sptaHtml}</td><td>${fmtMoney(r.sales)}</td><td>${fmtMoney(aov)}</td></tr>`;
+    });
 };
 
 const renderPlacementAnalysis = () => {
@@ -1406,7 +1463,6 @@ const wireCascade = () => {
 
 const withinDate = (r, start, end) => (!start || r.date >= start) && (!end || r.date <= end);
 
-// 🛡️ 浮点防抖的求和逻辑
 const sumMetrics = (rows) => {
   let impr=0, clicks=0, spendCents=0, salesCents=0, orders=0, units=0;
   for (const r of rows) { 
@@ -1538,9 +1594,7 @@ const renderWordFreq = () => {
   const globalMetrics = sumMetrics(AdsStore.view);
   const globalCvr = globalMetrics.cvr || 0.05;
 
-  let htmlStr = "";
-  for(let i=0; i<rows.length; i++) {
-      const r = rows[i];
+  renderProgressive(tbody, rows, (r) => {
       const displayWord = escapeHtml(r.word).replace(/_/g, " "); 
       let rootTag = "中性词根 (Neutral)";
       if (r.orders > 0 && r.cvr > globalCvr * 1.5 && r.roas >= 2.5) {
@@ -1552,16 +1606,15 @@ const renderWordFreq = () => {
       }
       const hoverTooltip = `【 ${displayWord} 】诊断：${rootTag}\n转化率：${fmtPct(r.cvr)}\n全局参考 CVR：${fmtPct(globalCvr)}`;
 
-      htmlStr += `<tr title="${hoverTooltip}"> 
+      return `<tr title="${hoverTooltip}"> 
           <td>${displayWord.slice(0, 180)}</td> 
           <td>${fmtInt(r.freq)}</td> 
           <td>${fmtMoney(r.spend)}</td> 
           <td>${fmtInt(r.orders)}</td> 
           <td style="${(r.roas >= 2.5) ? 'color:#1a7f37;font-weight:700' : ''}">${(r.roas ?? 0).toFixed(2)}</td> 
-          <td style="${(r.acos > 0.4 || r.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(r.acos)}</td> 
+          <td style="${(r.acos > 0.4 || r.acos === Infinity) ? 'color:#b42318;font-weight:600' : ''}">${fmtPct(r.acos)}</td> 
       </tr>`;
-  }
-  tbody.innerHTML = htmlStr;
+  });
 };
 
 const renderLongTailMining = () => {
@@ -1607,7 +1660,7 @@ const renderLongTailMining = () => {
     return;
   }
   
-  tbody.innerHTML = candidates.slice(0, 50).map(c => {
+  renderProgressive(tbody, candidates.slice(0, 50), (c) => {
     let intentTag = "常规长尾 (Normal)";
     if (c.cpc < globalCpc * 0.8 && c.cvr > globalCvr * 1.2) intentTag = "💎 蓝海词 (低竞争高转化)";
     else if (c.cvr > globalCvr * 2) intentTag = "🎯 极强意图 (超大盘2倍)";
@@ -1615,8 +1668,8 @@ const renderLongTailMining = () => {
     const suggestedBid = rpc > 0 ? rpc * 0.25 : c.cpc;
     const tooltip = `【 ${escapeHtml(c.term)} 】${intentTag}\n转化率：${fmtPct(c.cvr)} \n建议精准出价：${fmtMoney(suggestedBid)}`;
 
-    return `<tr title="${tooltip}"><td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td><td>${c.newRadar ? '<span class="tag good">New Radar</span>' : '<span style="color:var(--muted)">-</span>'}</td><td>${c.wordCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtMoney(c.sales)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td><td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(c.acos)}</td></tr>`;
-  }).join("");
+    return `<tr title="${tooltip}"><td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td><td>${c.newRadar ? '<span class="tag good">New Radar</span>' : '<span style="color:var(--muted)">-</span>'}</td><td>${c.wordCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtMoney(c.sales)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td><td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:#b42318;font-weight:600' : ''}">${fmtPct(c.acos)}</td></tr>`;
+  });
 };
 
 const renderWeekdayAnalysis = () => {
@@ -1906,25 +1959,34 @@ const getRules = () => ({
   roasMigrateMin: safeNum($("ruleRoasMigrateMin")?.value || 2) 
 });
 
+// 增强版 AI 决策引擎：加入归因延迟惩罚与宽容度
 const decideAction = (item, rankBy) => {
-  const r = getRules(); 
-  let action = "KEEP"; let reason = "观察中"; let suggestedBidDelta = "0%";
+    const r = getRules(); 
+    let action = "KEEP"; let reason = "观察中"; let suggestedBidDelta = "0%";
 
-  if (item.spend >= r.spendNeg && item.orders <= 0) {
-      action = "NEGATE"; reason = `无单且花费高 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})`;
-      suggestedBidDelta = "-100%";
-  } else if (item.roas >= r.roasKeep && item.netProfit > 10) {
-      action = "SCALE"; reason = `正向盈利 (+$${item.netProfit.toFixed(2)})`;
-      suggestedBidDelta = "+20%"; 
-  } else if (item.roas > 1 && item.netProfit < 0) {
-      action = "DECREASE"; reason = `ROAS达标但净利为负`;
-      suggestedBidDelta = "-15% Base + Raise ToS"; 
-  } else if (item.orders > 0 && item.roas < r.roasKeep) {
-      action = "MIGRATE"; reason = `有单但效率低`;
-      suggestedBidDelta = "-10%";
-  }
+    // 探测当前筛选是否包含最近 7 天（归因窗口期）
+    const endDateStr = $("dateEnd")?.value;
+    const isWithinAttributionWindow = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000 <= 7) : true;
+    
+    // 动态阈值：如果在归因窗口期内，对流血词的容忍度提升 1.5 倍
+    const dynamicSpendNeg = isWithinAttributionWindow ? (r.spendNeg * 1.5) : r.spendNeg;
 
-  return { action, reason, suggestedBidDelta };
+    if (item.spend >= dynamicSpendNeg && item.orders <= 0) {
+        action = "NEGATE"; 
+        reason = isWithinAttributionWindow ? `归因期内高消耗 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})` : `深度流血 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})`;
+        suggestedBidDelta = "-100%";
+    } else if (item.roas >= r.roasKeep && item.netProfit > 10) {
+        action = "SCALE"; reason = `正向盈利 (+$${item.netProfit.toFixed(2)})`;
+        suggestedBidDelta = "+20%"; 
+    } else if (item.roas > 1 && item.netProfit < 0) {
+        action = "DECREASE"; reason = `ROAS达标但净利为负`;
+        suggestedBidDelta = "-15% Base + Raise ToS"; 
+    } else if (item.orders > 0 && item.roas < r.roasKeep) {
+        action = "MIGRATE"; reason = `有单但效率低`;
+        suggestedBidDelta = "-10%";
+    }
+
+    return { action, reason, suggestedBidDelta };
 };
 
 const exportRichExcelMultiSheet = async (sheets, filename) => {
@@ -2216,8 +2278,10 @@ const buildRankTable = () => {
 
 const renderRankTable = () => { 
     buildRankTable(); 
+    const tbody = $("rankTable").querySelector("tbody");
     const searchBtnHtml = `<span class="action-icon search-btn" title="精准搜索">🔍</span>`; 
-    $("rankTable").querySelector("tbody").innerHTML = AdsStore.rankRows.map(it => {
+    
+    renderProgressive(tbody, AdsStore.rankRows, (it) => {
         let auditHtml = '<span style="color:var(--muted)">-</span>';
         if (it.audit === '页面缺陷') auditHtml = '<span class="tag bad">页面缺陷</span>';
         else if (it.audit === '潜力词') auditHtml = '<span class="tag good">潜力词</span>';
@@ -2227,8 +2291,8 @@ const renderRankTable = () => {
 
         const hoverProfitText = `AI 决策: ${it.action} (${it.suggestedBidDelta})\n---------------------\n净利预估: ${fmtMoney(it.netProfit)}\n原因: ${it.reason}`;
 
-        return ` <tr title="${hoverProfitText}"> <td data-name="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 160)}${searchBtnHtml}</td> <td>${auditHtml}</td> <td>${fmtMoney(it.spend)}</td> <td>${fmtMoney(it.sales)}</td> <td>${fmtInt(it.orders)}</td> <td>${fmtInt(it.impr)}</td> <td>${fmtInt(it.clicks)}</td> <td>${fmtPct(it.ctr)}</td> <td>${fmtMoney(it.cpc)}</td> <td>${fmtPct(it.cvr)}</td> <td style="${(it.acos > 0.4 || it.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(it.acos)}</td> <td>${it.roas.toFixed(2)}</td> </tr> `;
-    }).join(""); 
+        return ` <tr title="${hoverProfitText}"> <td data-name="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 160)}${searchBtnHtml}</td> <td>${auditHtml}</td> <td>${fmtMoney(it.spend)}</td> <td>${fmtMoney(it.sales)}</td> <td>${fmtInt(it.orders)}</td> <td style="color:var(--muted);font-size:11.8px;">${fmtInt(it.impr)}</td> <td style="color:var(--muted);font-size:11.8px;">${fmtInt(it.clicks)}</td> <td>${fmtPct(it.ctr)}</td> <td>${fmtMoney(it.cpc)}</td> <td>${fmtPct(it.cvr)}</td> <td style="${(it.acos > 0.4 || it.acos === Infinity) ? 'color:#b42318;font-weight:600' : ''}">${fmtPct(it.acos)}</td> <td style="font-weight:600">${it.roas.toFixed(2)}</td> </tr> `;
+    });
 };
 
 const renderActiveDimTab = () => {
@@ -2289,7 +2353,6 @@ const applyFilters = (initial=false) => {
             filterSearchExact: $("filterSearchExact").checked 
           };
           
-          // 🚀 缓存命中检测：防抖并防止 React 风格的无意义重绘
           const currentHash = JSON.stringify(filters);
           if (!initial && currentHash === AdsStore.lastFilterHash && AdsStore.lastDataLength === AdsStore.all.length) {
               setSubtitle(`已导入 ${AdsStore.files.length} 个文件；Ads=${AdsStore.all.length} 行；日期范围 ${filters.dateStart} → ${filters.dateEnd}`); 
@@ -2298,7 +2361,6 @@ const applyFilters = (initial=false) => {
           AdsStore.lastFilterHash = currentHash;
           AdsStore.lastDataLength = AdsStore.all.length;
 
-          // 🚀 核心优化：使用极速 for 循环替代数组高阶方法，彻底消除海量中间对象创建
           const newView = [];
           const allLen = AdsStore.all.length;
           for (let i = 0; i < allLen; i++) {
@@ -2361,7 +2423,6 @@ const applyFilters = (initial=false) => {
 
           setSubtitle(`已导入 ${AdsStore.files.length} 个文件；Ads=${AdsStore.all.length} 行；日期范围 ${filters.dateStart} → ${filters.dateEnd}`); 
           
-          // 渲染分离，防止主线程阻塞
           requestAnimationFrame(() => { 
               renderKPIs(total); detectAnomalies(AdsStore.view); renderTrend(AdsStore.view); 
               renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); 
@@ -2489,37 +2550,45 @@ $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert("引擎依
 
 // ==========================================
 // 🧠 Gemini AI 智能参谋引擎 (SaaS Enterprise Core - 5D Integration)
-// 优化版：深度上下文穿透 + 原生 UI 渲染注入 + Bulk 安全导出机制
 // ==========================================
+
+// 新增防溢出截断工具
+const truncateForAI = (arr, limit, typeName) => {
+    if(arr.length <= limit) return arr.map(t => `${t.t} (消耗$${t.spend.toFixed(0)}, 产出$${(t.sales||0).toFixed(0)})`);
+    const kept = arr.slice(0, limit);
+    const hidden = arr.slice(limit);
+    const hiddenSpend = hidden.reduce((s, x) => s + x.spend, 0);
+    
+    return [
+        ...kept.map(t => `${t.t} (消耗$${t.spend.toFixed(0)}, 产出$${(t.sales||0).toFixed(0)})`),
+        `...【系统折叠了另外 ${hidden.length} 个${typeName}，累计浪费预算 $${hiddenSpend.toFixed(0)}】`
+    ];
+};
 
 const buildAdvancedAIContext = () => {
   if (!AdsStore.view || AdsStore.view.length === 0) return null;
   const m = sumMetrics(AdsStore.view);
   
-  // 1. 深度聚合：提取极端两极分化的词（而非单纯的 Top 花费）
   const stGroups = groupBy(AdsStore.view, r => r.searchTerm);
   let totalWastedSpend = 0;
   let exactSpend = 0;
-  const bleeders = []; // 纯流血词 (高花费0转化)
-  const golden = [];   // 黄金词 (高ROAS高出单)
-  const broadAutoLeaks = []; // 泛匹配泄露
+  const bleeders = []; 
+  const golden = [];   
+  const broadAutoLeaks = []; 
 
   for (const [t, list] of stGroups.entries()) {
       if (isASINLike(t) || !t) continue;
       const tm = sumMetrics(list);
       
-      // 统计精准匹配占比
       const isExact = list.some(r => (r.matchType || "").toLowerCase().includes("exact"));
       if (isExact) exactSpend += tm.spend;
       else broadAutoLeaks.push({t, ...tm});
 
-      // 统计纯浪费花费
       if (tm.orders === 0 && tm.spend > 0) {
           totalWastedSpend += tm.spend;
           if (tm.spend > 15) bleeders.push({t, ...tm});
       }
       
-      // 黄金词
       if (tm.orders >= 3 && tm.roas >= 3) {
           golden.push({t, ...tm});
       }
@@ -2529,7 +2598,6 @@ const buildAdvancedAIContext = () => {
   golden.sort((a,b) => b.sales - a.sales);
   broadAutoLeaks.sort((a,b) => b.spend - a.spend);
 
-  // 2. 大盘流量健康度
   const autoSpend = sumMetrics(AdsStore.view.filter(r => !checkIsManual(r))).spend;
   let totalBizSessions = 0, totalBizUnits = 0;
   if (AdsStore.biz && AdsStore.biz.length > 0) {
@@ -2537,7 +2605,6 @@ const buildAdvancedAIContext = () => {
   }
   const globalBizCvr = totalBizSessions > 0 ? totalBizUnits / totalBizSessions : 0;
 
-  // 3. 时序趋势折点
   const byDate = groupBy(AdsStore.view, r => r.date);
   const dates = [...byDate.keys()].sort();
   const recent7Days = dates.slice(-7).map(d => {
@@ -2546,23 +2613,22 @@ const buildAdvancedAIContext = () => {
   });
 
   return {
-    global: { spend: m.spend, sales: m.sales, orders: m.orders, roas: m.roas, acos: m.acos, cpc: m.cpc, cvr: m.cvr },
-    structure: { 
-        autoSpendPct: m.spend > 0 ? (autoSpend/m.spend) : 0, 
-        exactSpendPct: m.spend > 0 ? (exactSpend/m.spend) : 0,
-        wastedSpendPct: m.spend > 0 ? (totalWastedSpend/m.spend) : 0,
-        wastedSpendAbs: totalWastedSpend,
-        bizCvr: globalBizCvr 
-    },
-    bleeders: bleeders.slice(0, 10).map(t => `${t.t} (净亏$${t.spend.toFixed(2)})`),
-    golden: golden.slice(0, 10).map(t => `${t.t} (产出$${t.sales.toFixed(2)}, ROAS:${t.roas.toFixed(2)})`),
-    unisolated: broadAutoLeaks.slice(0, 5).map(t => `${t.t} (泛匹配消耗$${t.spend.toFixed(2)}, 尚未打Exact)`),
-    recentTrend: recent7Days
+      global: { spend: m.spend, sales: m.sales, orders: m.orders, roas: m.roas, acos: m.acos, cpc: m.cpc, cvr: m.cvr },
+      structure: { 
+          autoSpendPct: m.spend > 0 ? (autoSpend/m.spend) : 0, 
+          exactSpendPct: m.spend > 0 ? (exactSpend/m.spend) : 0,
+          wastedSpendPct: m.spend > 0 ? (totalWastedSpend/m.spend) : 0,
+          wastedSpendAbs: totalWastedSpend,
+          bizCvr: globalBizCvr 
+      },
+      bleeders: truncateForAI(bleeders, 15, "纯消耗词"),
+      golden: truncateForAI(golden, 10, "高转化黄金词"),
+      unisolated: truncateForAI(broadAutoLeaks, 8, "泛匹配泄露词"),
+      recentTrend: recent7Days
   };
 };
 
 $("btnAI")?.addEventListener("click", async () => {
-  // [SECURITY WARNING]: 纯前端环境直接明文调用 API 极易被窃取消耗配额。如作为 SaaS 发布，请务必将其移至 Node.js / Python 后端。
   const apiKey = atob("QUl6YVN5Ql8ybDBXX1l6d20yT1MxWVMyeXJwWEpLMEpETmUyUzFn");
 
   const contextData = buildAdvancedAIContext();
@@ -2575,7 +2641,23 @@ $("btnAI")?.addEventListener("click", async () => {
   const aiContent = $("aiContent");
   aiBox.style.display = "block";
   
-  aiContent.innerHTML = `<div class="ai-loader-container"><div class="ai-spinner"></div><span class="ai-loading">🔮 Gemini 5D 商业决策引擎测算中... 正在深度透视底层逻辑，寻找利润泄漏点，请稍候约 10-15 秒...</span></div>`;
+  // 注入高级骨架屏
+  aiContent.innerHTML = `
+      <div class="ai-loader-container" style="border-color: transparent;">
+          <div class="ai-spinner"></div>
+          <span class="ai-loading">🔮 Gemini 5D 引擎测算中... 正在构建决策树</span>
+      </div>
+      <div style="padding: 0 20px;">
+          <div class="skeleton-box" style="width: 40%; height: 24px; margin-bottom: 16px;"></div>
+          <div class="skeleton-box" style="width: 100%;"></div>
+          <div class="skeleton-box" style="width: 90%;"></div>
+          <div class="skeleton-box" style="width: 80%; margin-bottom: 24px;"></div>
+          
+          <div class="skeleton-box" style="width: 30%; height: 20px; margin-bottom: 16px;"></div>
+          <div class="skeleton-box" style="width: 95%;"></div>
+          <div class="skeleton-box" style="width: 85%;"></div>
+      </div>
+  `;
   $("btnAI").disabled = true;
   $("btnAILog").style.display = "none";
   $("btnAIPDF").style.display = "none";
@@ -2652,7 +2734,7 @@ ${contextData.recentTrend.join(' ➡️ ')}
 
 $("btnCloseAI")?.addEventListener("click", () => { $("aiInsightsBox").style.display = "none"; });
 
-// 📝 导出操作日志 (纯文本指令集)
+// 📝 导出操作日志
 $("btnAILog")?.addEventListener("click", () => {
     const aiText = $("aiContent").innerText;
     if (!aiText) return;
@@ -2661,7 +2743,7 @@ $("btnAILog")?.addEventListener("click", () => {
     saveAs(blob, `Executive_Action_Log_${getTs()}.txt`);
 });
 
-// 📥 Google 极客风 Lazy-Load 生成 PDF (绝不拖慢首屏)
+// 📥 Google 极客风 Lazy-Load 生成 PDF
 $("btnAIPDF")?.addEventListener("click", () => {
     const btn = $("btnAIPDF");
     const originalText = btn.innerHTML;
@@ -2702,7 +2784,7 @@ $("btnAIPDF")?.addEventListener("click", () => {
     } else { exportToPDF(); }
 });
 
-// ⚡ 核心黑科技：生成直接上传到亚马逊后台的 Bulk 批量执行表 (安全增强)
+// ⚡ 核心黑科技：生成直接上传到亚马逊后台的 Bulk 批量执行表
 $("btnAIBulk")?.addEventListener("click", () => {
     const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
     const bulkRows = [];
@@ -2717,7 +2799,6 @@ $("btnAIBulk")?.addEventListener("click", () => {
         const mainRow = list.reduce((prev, curr) => (curr.spend > prev.spend) ? curr : prev, list[0]);
         let cleanTerm = (term || "").replace(/\s+/g, " ").trim();
         
-        // [防爆拦截] 防止空 Campaign 导致亚马逊批量文件上传直接崩溃
         const safeCampaign = mainRow.campaign || "(请填入 Campaign 名称)";
         const safeAdGroup = mainRow.adGroup || "(请填入 Ad Group 名称)";
 
