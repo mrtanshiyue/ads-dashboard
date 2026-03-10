@@ -2273,7 +2273,7 @@ const buildRankTable = () => {
     }); 
     if (rankTypeFilter !== "all") items = items.filter(it => detectRowType(it.name, rankBy) === rankTypeFilter); 
     sortRank(items); 
-    AdsStore.rankRows = items.slice(0, clamp(safeNum($("rankTopN").value) || 30, 5, 500)); 
+    AdsStore.rankRows = items.slice(0, clamp(safeNum($("rankTopN").value) || 30, 5, 50000));
 };
 
 const renderRankTable = () => { 
