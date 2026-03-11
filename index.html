@@ -709,7 +709,7 @@
           </table>
         </div>
         <div class="small" style="margin-top:10px;">
-          原理：扫描在自动 (Auto) 或广泛/词组 (Broad/Phrase) 中持续出单的词，验证其是否已在精准 (Exact) 中投放。<b>如果未提取，建议立刻开启 Exact 计划，并在原自动/广泛组中添加 Negative Exact！</b>
+          建议：如果词已被提取，建议在原词组采用降价策略（Downbidding）或仅执行 Negative Exact，<b>切忌直接暂停原广告组，以免断流损失历史权重！</b>
         </div>
       </div>
 
@@ -719,8 +719,18 @@
 
 <script>
 // =========================================================================
-// 🚀 工程优化: 状态收敛与高性能引擎重构 (Senior Level Format)
+// 🚀 工程优化: 状态收敛与高性能引擎重构 (Enterprise IIFE Encapsulation)
 // =========================================================================
+
+const AdsDashboardApp = (function() {
+// 🛡️ 核心：将所有逻辑包裹在闭包内，杜绝全局作用域污染
+
+// 🧮 浮点数安全引擎 (Money Engine)
+const SafeMath = {
+  add: (a, b) => Math.round(a * 100 + b * 100) / 100,
+  sub: (a, b) => Math.round(a * 100 - b * 100) / 100,
+  mul: (a, b) => Math.round(a * b * 100) / 100
+};
 
 const AdsStore = {
   all: [],
@@ -768,7 +778,6 @@ const renderProgressive = (tbody, data, renderRowFn, chunkSize = 40) => {
     requestAnimationFrame(renderNextChunk);
 };
 
-// 🛠️ 浮点数精度防护: 严格防范 0.3000000004 这类 JS 经典溢出
 const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(v) : "0.00"; 
 const fmtInt = (v) => new Intl.NumberFormat("en-US",{maximumFractionDigits:0}).format(v||0);
 const fmtPct = (v) => { 
@@ -789,8 +798,7 @@ const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;'
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const setSubtitle = (text) => $("subtitle").textContent = text;
 const debounce = (fn, wait=250) => { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); }; };
-const logBox = $("logBox");
-const clearLog = () => logBox.innerHTML = "";
+const clearLog = () => $("logBox").innerHTML = "";
 const log = (msg, level="info") => { 
   const t = new Date(), stamp = `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}:${String(t.getSeconds()).padStart(2,"0")}`; 
   const line = document.createElement("div"); 
@@ -799,13 +807,13 @@ const log = (msg, level="info") => {
   line.className = "small"; 
   line.style.cssText = "padding:6px 6px;border-bottom:1px solid rgba(229,229,234,.7);"; 
   line.textContent = `[${stamp}] ${msg}`; 
-  logBox.prepend(line); 
+  $("logBox").prepend(line); 
 };
 
 // ==========================================
 // 🛡️ 高阶：IndexedDB 动态时间序列分片恢复引擎
 // ==========================================
-window.addEventListener('load', async () => { 
+const initIDB = async () => { 
   document.body.classList.remove('preload'); 
   try {
       const meta = await idbKeyval.get('db_meta');
@@ -825,7 +833,7 @@ window.addEventListener('load', async () => {
           applyFilters(true);
       }
   } catch(e) { console.warn("IDB Load Skipped", e); }
-});
+};
 
 const saveToIDB = async () => {
   try {
@@ -911,7 +919,7 @@ const processInChunks = async (items, processFn, chunkSize = 10000) => {
   return results; 
 };
 
-// 高性能字符串驻留池
+// 高性能字符串驻留池 (带 GC 释放)
 let stringPool = Object.create(null);
 let poolSize = 0;
 const intern = (str) => { 
@@ -921,6 +929,10 @@ const intern = (str) => {
   stringPool[str] = str; 
   poolSize++;
   return str; 
+};
+const clearStringPool = () => {
+  stringPool = Object.create(null);
+  poolSize = 0;
 };
 
 const STOP_WORDS = new Set("a,an,the,and,or,to,for,of,in,on,at,with,without,from,by,is,are,was,were,your,my,our,their,his,her,its,this,that,these,those,you,me,we,they,pack,set,pairs,pair,pcs,piece,pieces,new,best,top,sale,deal,gift,adult,adults,kids,kid,count".split(','));
@@ -1233,10 +1245,10 @@ const importMultipleFiles = async (files) => {
   log(`开始导入：${files.length} 个文件（merge=${mergeMode}, dedupe=${dedupeMode}, maxRows=${maxRows}）`); 
   setSubtitle("正在进行多线程数据处理与洗刷...请稍候");
   
-  // 🛡️ 内存泄漏防护：如果替换，严格切断引用链
+  // 🛡️ 内存泄漏防护：如果替换，严格切断引用链并主动 GC
   if (mergeMode === "replace") { 
       AdsStore.all.length = 0; AdsStore.biz.length = 0; AdsStore.placement.length = 0; AdsStore.files.length = 0; 
-      rootCache.clear(); tokenCache.clear(); stringPool = Object.create(null); poolSize = 0; 
+      rootCache.clear(); tokenCache.clear(); clearStringPool(); 
       AdsStore.rankGroups = null; AdsStore.isolationRows = [];
       try { await idbKeyval.clear(); } catch(e) {} 
       log("Replace 模式：已清空历史数据与缓存分片", "warn"); 
@@ -1477,10 +1489,10 @@ const sumMetrics = (rows) => {
   const fbaFee = safeNum($("bizFba")?.value) || 4.5;
   const referralFeeRate = safeNum($("bizRef")?.value) || 0.15;
 
-  const cogs = sales * marginRate;
-  const fbaFees = units * fbaFee;
-  const referralFees = sales * referralFeeRate;
-  const netProfit = sales - spend - cogs - fbaFees - referralFees;
+  const cogs = SafeMath.mul(sales, marginRate);
+  const fbaFees = SafeMath.mul(units, fbaFee);
+  const referralFees = SafeMath.mul(sales, referralFeeRate);
+  const netProfit = SafeMath.sub(SafeMath.sub(SafeMath.sub(SafeMath.sub(sales, spend), cogs), fbaFees), referralFees);
 
   const cvr = clicks > 0 ? Math.min(1, orders / clicks) : 0;
   const smoothCvr = clicks > 0 ? (orders + 15 * 0.05) / (clicks + 15) : 0;
@@ -1805,7 +1817,7 @@ const renderAutoManual = () => {
   const sA = sumMetrics(autoRows), sM = sumMetrics(manualRows);
   
   const row = (label, vA, vM, fmt, highlightAcos=false) => {
-    let pctA = 0, pctM = 0; const total = (vA||0) + (vM||0);
+    let pctA = 0, pctM = 0; const total = SafeMath.add(vA||0, vM||0);
     if (total > 0 && !label.includes("率") && !label.includes("ACOS") && !label.includes("ROAS") && !label.includes("CPC")) { pctA = (vA/total); pctM = (vM/total); }
     const colorA = highlightAcos && (vA > 0.4 || vA === Infinity) ? 'color:#b42318' : ''; const colorM = highlightAcos && (vM > 0.4 || vM === Infinity) ? 'color:#b42318' : '';
     let barHtml = `<div style="color:var(--muted);font-size:11px;">—</div>`;
@@ -1833,8 +1845,10 @@ const renderConflictAnalysis = () => {
 
     if (!map.has(conflictKey)) { map.set(conflictKey, { term: r.searchTerm, locMap: new Map(), spend: 0, orders: 0, sales: 0 }); }
     const entry = map.get(conflictKey);
-    entry.locMap.set(loc, (entry.locMap.get(loc) || 0) + r.spend);
-    entry.spend += r.spend; entry.orders += r.orders; entry.sales += r.sales;
+    entry.locMap.set(loc, SafeMath.add(entry.locMap.get(loc) || 0, r.spend));
+    entry.spend = SafeMath.add(entry.spend, r.spend); 
+    entry.orders += r.orders; 
+    entry.sales = SafeMath.add(entry.sales, r.sales);
   }
   
   const conflicts = [];
@@ -1934,7 +1948,7 @@ const renderIsolationAnalysis = () => {
       <td>${fmtMoney(c.spend)}</td>
       <td>${fmtInt(c.orders)}</td>
       <td><span style="color:var(--good);font-weight:600">${c.roas.toFixed(2)}</span></td>
-      <td><span style="font-size:11px;font-weight:600;color:var(--accent);">提取 Exact + 原组否定</span></td>
+      <td><span style="font-size:11px;font-weight:600;color:var(--accent);">提取 Exact + 原组降低出价 (Downbid)</span></td>
     </tr>`;
   }).join("");
 };
@@ -1945,7 +1959,7 @@ $("btnExportIsolation")?.addEventListener("click", () => {
     if (!AdsStore.isolationRows.length) { alert("当前没有需要隔离的搜索词！"); return; }
     const headers = ["Search Term", "Source (未精准)", "Isolation Status", "Wasted Spend", "Sales", "Orders", "ROAS", "ACOS", "Action"];
     const dataRows = AdsStore.isolationRows.map(c => [
-        c.term, c.source, "Un-isolated", c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos, "Create Exact Match & Negate in Original"
+        c.term, c.source, "Un-isolated", c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos, "Create Exact Match & Downbid in Original"
     ]);
     exportRichExcelMultiSheet([{ sheetName: "Isolation Opportunities", headers, dataRows }], `Executive_Isolation_${getTs()}.xlsx`);
 });
@@ -1959,21 +1973,25 @@ const getRules = () => ({
   roasMigrateMin: safeNum($("ruleRoasMigrateMin")?.value || 2) 
 });
 
-// 增强版 AI 决策引擎：加入归因延迟惩罚与宽容度
+// 🚀 贝叶斯进阶版 AI 决策引擎：防错杀机制
 const decideAction = (item, rankBy) => {
     const r = getRules(); 
     let action = "KEEP"; let reason = "观察中"; let suggestedBidDelta = "0%";
 
-    // 探测当前筛选是否包含最近 7 天（归因窗口期）
     const endDateStr = $("dateEnd")?.value;
     const isWithinAttributionWindow = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000 <= 7) : true;
     
-    // 动态阈值：如果在归因窗口期内，对流血词的容忍度提升 1.5 倍
     const dynamicSpendNeg = isWithinAttributionWindow ? (r.spendNeg * 1.5) : r.spendNeg;
+    
+    // 获取大盘转化率作为贝叶斯先验概率参考
+    const globalMetrics = sumMetrics(AdsStore.view);
+    const globalCvr = globalMetrics.cvr || 0.05;
+    const expectedClicksForOneOrder = globalCvr > 0 ? (1 / globalCvr) : 20;
 
-    if (item.spend >= dynamicSpendNeg && item.orders <= 0) {
+    // 核心改进：花费超标且点击量足够大 (排除了单次点击超高但总体点击数少的随机情况)
+    if (item.spend >= dynamicSpendNeg && item.clicks > (expectedClicksForOneOrder * 1.5) && item.orders <= 0) {
         action = "NEGATE"; 
-        reason = isWithinAttributionWindow ? `归因期内高消耗 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})` : `深度流血 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})`;
+        reason = isWithinAttributionWindow ? `归因期内高消耗且无点击效能 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})` : `深度流血且点击量远超大盘阈值 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})`;
         suggestedBidDelta = "-100%";
     } else if (item.roas >= r.roasKeep && item.netProfit > 10) {
         action = "SCALE"; reason = `正向盈利 (+$${item.netProfit.toFixed(2)})`;
@@ -1984,6 +2002,10 @@ const decideAction = (item, rankBy) => {
     } else if (item.orders > 0 && item.roas < r.roasKeep) {
         action = "MIGRATE"; reason = `有单但效率低`;
         suggestedBidDelta = "-10%";
+    } else if (item.spend >= dynamicSpendNeg && item.orders <= 0) {
+        // 如果花费高，但点击量还没到大盘阈值 (比如高 CPC 的词)
+        action = "DECREASE"; reason = `高客单点击，暂不否定，建议降价`;
+        suggestedBidDelta = "-30%";
     }
 
     return { action, reason, suggestedBidDelta };
@@ -2156,13 +2178,13 @@ const renderTrend = (rows) => {
   
   const bizMap = new Map();
   for (const r of AdsStore.biz) {
-    if (r.date) bizMap.set(r.date, (bizMap.get(r.date) || 0) + r.sales);
+    if (r.date) bizMap.set(r.date, SafeMath.add(bizMap.get(r.date) || 0, r.sales));
   }
 
   const series = [...byDate.keys()].sort().map(d => {
       const adMetrics = sumMetrics(byDate.get(d));
       let dailyBizSales = bizMap.has(d) ? bizMap.get(d) : adMetrics.sales; 
-      const organicSales = Math.max(0, dailyBizSales - adMetrics.sales);
+      const organicSales = Math.max(0, SafeMath.sub(dailyBizSales, adMetrics.sales));
       const tacos = dailyBizSales > 0 ? (adMetrics.spend / dailyBizSales) * 100 : 0;
       return { date: d, ...adMetrics, organicSales, tacos };
   });
@@ -2325,7 +2347,7 @@ const matchAdvancedSearch = (term, query) => {
 };
 
 // =========================================================================
-// 🚀 工程优化 2: 极速单遍循环过滤 (Zero-Allocation Filtering) 与防抖机制
+// 🚀 工程优化 2: 异步分片非阻塞过滤引擎 (Async Yielding Engine)
 // =========================================================================
 const applyFilters = (initial=false) => {
   if (!AdsStore.all.length && !AdsStore.biz.length && !AdsStore.placement.length) { 
@@ -2340,9 +2362,9 @@ const applyFilters = (initial=false) => {
     return; 
   }
   
-  setSubtitle("🔄 正在通过多线程模拟真实利润引擎，请稍候...");
+  setSubtitle("🔄 正在通过分片线程模拟真实利润引擎，请稍候...");
   
-  setTimeout(() => {
+  setTimeout(async () => {
       try {
           const filters = { 
             dateStart: $("dateStart").value, dateEnd: $("dateEnd").value, 
@@ -2361,38 +2383,49 @@ const applyFilters = (initial=false) => {
           AdsStore.lastFilterHash = currentHash;
           AdsStore.lastDataLength = AdsStore.all.length;
 
-          const newView = [];
-          const allLen = AdsStore.all.length;
-          for (let i = 0; i < allLen; i++) {
-              const r = AdsStore.all[i];
-              if (filters.filterSource && r.sourceFile !== filters.filterSource) continue; 
-              if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) continue; 
-              if (filters.filterCampaign && r.campaign !== filters.filterCampaign) continue; 
-              if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) continue; 
-              if (filters.filterTargeting && r.targeting !== filters.filterTargeting) continue; 
-              if (filters.filterMatchType && r.matchType !== filters.filterMatchType) continue; 
-              if (!withinDate(r, filters.dateStart, filters.dateEnd)) continue;
+          // 核心重构：时间切片让渡主线程，防止 UI 假死
+          const processAsync = async () => {
+              const newView = [];
+              const allLen = AdsStore.all.length;
+              const chunkSize = 20000;
               
-              if (filters.filterAdType) { 
-                  const isManual = checkIsManual(r); 
-                  if (filters.filterAdType === "manual" && !isManual) continue; 
-                  if (filters.filterAdType === "auto" && isManual) continue; 
+              for (let i = 0; i < allLen; i += chunkSize) {
+                  const chunkEnd = Math.min(i + chunkSize, allLen);
+                  for (let j = i; j < chunkEnd; j++) {
+                      const r = AdsStore.all[j];
+                      if (filters.filterSource && r.sourceFile !== filters.filterSource) continue; 
+                      if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) continue; 
+                      if (filters.filterCampaign && r.campaign !== filters.filterCampaign) continue; 
+                      if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) continue; 
+                      if (filters.filterTargeting && r.targeting !== filters.filterTargeting) continue; 
+                      if (filters.filterMatchType && r.matchType !== filters.filterMatchType) continue; 
+                      if (!withinDate(r, filters.dateStart, filters.dateEnd)) continue;
+                      
+                      if (filters.filterAdType) { 
+                          const isManual = checkIsManual(r); 
+                          if (filters.filterAdType === "manual" && !isManual) continue; 
+                          if (filters.filterAdType === "auto" && isManual) continue; 
+                      }
+                      if (filters.filterSearchTerm) { 
+                          const query = filters.filterSearchTerm;
+                          if (filters.filterSearchExact) { 
+                              if (r.searchTermLower !== query.toLowerCase()) continue; 
+                          } else { 
+                              if (!matchAdvancedSearch(r.searchTermLower, query)) continue; 
+                          } 
+                      }
+                      newView.push(r);
+                  }
+                  await new Promise(resolve => setTimeout(resolve, 0)); // 主动交出线程控制权
               }
-              if (filters.filterSearchTerm) { 
-                  const query = filters.filterSearchTerm;
-                  if (filters.filterSearchExact) { 
-                      if (r.searchTermLower !== query.toLowerCase()) continue; 
-                  } else { 
-                      if (!matchAdvancedSearch(r.searchTermLower, query)) continue; 
-                  } 
-              }
-              newView.push(r);
-          }
-          AdsStore.view = newView;
+              return newView;
+          };
+
+          AdsStore.view = await processAsync();
           
           const total = sumMetrics(AdsStore.view); 
           let bizSales = 0; 
-          for(let i = 0; i < AdsStore.biz.length; i++) bizSales += AdsStore.biz[i].sales; 
+          for(let i = 0; i < AdsStore.biz.length; i++) bizSales = SafeMath.add(bizSales, AdsStore.biz[i].sales); 
           total.bizSales = bizSales;
 
           AdsStore.rankGroups = groupBy(AdsStore.view, getRankKey());
@@ -2473,86 +2506,80 @@ const applyQuickRange = (type) => {
 // =========================================================================
 // UI 事件绑定绑定
 // =========================================================================
-$("fileInput").addEventListener("change", async (e) => { 
-  const files = Array.from(e.target.files || []); 
-  if (files.length) { 
-    log("文件选择事件触发，开始调度后台多线程引擎..."); 
-    await importMultipleFiles(files); 
-    e.target.value = ""; 
-  } 
-});
+const bindEvents = () => {
+    $("fileInput").addEventListener("change", async (e) => { 
+      const files = Array.from(e.target.files || []); 
+      if (files.length) { 
+        log("文件选择事件触发，开始调度后台多线程引擎..."); 
+        await importMultipleFiles(files); 
+        e.target.value = ""; 
+      } 
+    });
 
-const filterIds = ["dateStart","dateEnd","filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef"];
-filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
+    const filterIds = ["dateStart","dateEnd","filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef"];
+    filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 
-$("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280)); 
-$("btnClearSearch").addEventListener("click", () => { $("filterSearchTerm").value = ""; $("filterSearchExact").checked = false; $("filterSearchTerm").focus(); applyFilters(); });
-$("btnReset").addEventListener("click", () => { ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters(); });
-$("btnClearAll").addEventListener("click", () => { AdsStore.all.length = 0; AdsStore.view.length = 0; AdsStore.biz.length = 0; AdsStore.placement.length = 0; AdsStore.files.length = 0; rootCache.clear(); tokenCache.clear(); stringPool = Object.create(null); poolSize = 0; AdsStore.rankGroups = null; AdsStore.isolationRows = []; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
+    $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280)); 
+    $("btnClearSearch").addEventListener("click", () => { $("filterSearchTerm").value = ""; $("filterSearchExact").checked = false; $("filterSearchTerm").focus(); applyFilters(); });
+    $("btnReset").addEventListener("click", () => { ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters(); });
+    $("btnClearAll").addEventListener("click", () => { AdsStore.all.length = 0; AdsStore.view.length = 0; AdsStore.biz.length = 0; AdsStore.placement.length = 0; AdsStore.files.length = 0; rootCache.clear(); tokenCache.clear(); clearStringPool(); AdsStore.rankGroups = null; AdsStore.isolationRows = []; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
 
-document.querySelectorAll(".chipBtn").forEach(btn => { 
-  btn.addEventListener("click", () => { 
-    document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); 
-    btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); 
-  }); 
-});
+    document.querySelectorAll(".chipBtn").forEach(btn => { 
+      btn.addEventListener("click", () => { 
+        document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); 
+        btn.classList.add("active"); applyQuickRange(btn.dataset.range); applyFilters(); 
+      }); 
+    });
 
-$("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { 
-  const key = th.dataset.sort; if (!key) return; 
-  rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; 
-  renderRankTable(); 
-}));
+    $("rankTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { 
+      const key = th.dataset.sort; if (!key) return; 
+      rankSort = (rankSort.key === key) ? {key, dir: (rankSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; 
+      renderRankTable(); 
+    }));
 
-$("rankTable").addEventListener("click", (e) => { 
-  if (e.target.classList.contains("search-btn")) { 
-    const td = e.target.closest("td"); const term = td.getAttribute("data-name"); 
-    if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); $(".sidebar").scrollTop = 0; } 
-  } 
-});
+    $("rankTable").addEventListener("click", (e) => { 
+      if (e.target.classList.contains("search-btn")) { 
+        const td = e.target.closest("td"); const term = td.getAttribute("data-name"); 
+        if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); $(".sidebar").scrollTop = 0; } 
+      } 
+    });
 
-$("wfTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { 
-  const key = th.dataset.sort; if(!key) return; 
-  wfSort = (wfSort.key === key) ? {key, dir: (wfSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; 
-  renderWordFreq(); 
-}));
+    $("wfTable").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => { 
+      const key = th.dataset.sort; if(!key) return; 
+      wfSort = (wfSort.key === key) ? {key, dir: (wfSort.dir === "desc" ? "asc" : "desc")} : {key, dir:"desc"}; 
+      renderWordFreq(); 
+    }));
 
-const dimHints = { automanual: "手动: Broad/Phrase/Exact; 自动: 其他（已采用精准鉴别算法）", placement: "Top of Search / Rest of Search / Product Pages 表现对比（需导入广告位报告）", matchtype: "Exact / Phrase / Broad / Auto / Product Targeting 效能对比", weekday: "发现一周中的最佳销售日/亏损日 (Mon-Sun)" };
-const stratHints = { length: "短尾(泛) vs 长尾(准) | 分析单词数量对 ROAS 的影响", cpc: "发现 ROAS 最高的“甜点”出价区间 (Sweet Spot)" };
+    document.addEventListener("click", (e) => { 
+        const btn = e.target.closest(".segBtn"); if (!btn) return; 
+        if (btn.dataset.dim) {
+            document.querySelectorAll('.seg[aria-label="Dimension Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.dim === btn.dataset.dim)); 
+            document.querySelectorAll('#multiDimCard .dim-view').forEach(v => v.style.display = 'none'); 
+            const targetView = $('view-' + btn.dataset.dim); 
+            if(targetView) { targetView.style.display = 'block'; const dimHints = { automanual: "手动: Broad/Phrase/Exact; 自动: 其他（已采用精准鉴别算法）", placement: "Top of Search / Rest of Search / Product Pages 表现对比（需导入广告位报告）", matchtype: "Exact / Phrase / Broad / Auto / Product Targeting 效能对比", weekday: "发现一周中的最佳销售日/亏损日 (Mon-Sun)" }; $('dimHint').textContent = dimHints[btn.dataset.dim] || ""; renderActiveDimTab(); } 
+        }
+        if (btn.dataset.strat) { 
+          document.querySelectorAll('.seg[aria-label="Strat Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.strat === btn.dataset.strat)); 
+          document.querySelectorAll('#stratCard .dim-view').forEach(v => v.style.display = 'none'); 
+          const targetView = $('view-' + btn.dataset.strat); 
+          if(targetView) { targetView.style.display = 'block'; const stratHints = { length: "短尾(泛) vs 长尾(准) | 分析单词数量对 ROAS 的影响", cpc: "发现 ROAS 最高的“甜点”出价区间 (Sweet Spot)" }; $('stratHint').textContent = stratHints[btn.dataset.strat] || ""; } 
+        }
+        if (btn.dataset.type) { rankTypeFilter = btn.dataset.type; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.type === btn.dataset.type)); renderRankTable(); }
+        if (btn.dataset.wf) { WF_MODE = btn.dataset.wf; document.querySelectorAll('.seg[aria-label="Word Frequency Mode"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.wf === WF_MODE)); renderWordFreq(); } 
+    });
 
-const setDimFilter = (dim) => { 
-  document.querySelectorAll('.seg[aria-label="Dimension Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.dim === dim)); 
-  document.querySelectorAll('#multiDimCard .dim-view').forEach(v => v.style.display = 'none'); 
-  const targetView = $('view-' + dim); 
-  if(targetView) { targetView.style.display = 'block'; $('dimHint').textContent = dimHints[dim] || ""; renderActiveDimTab(); } 
+    $("btnExportWf").addEventListener("click", exportWordFreqExcel); 
+    $("btnExportNeg").addEventListener("click", exportNegativesExcel); 
+    $("btnExportLongTail").addEventListener("click", exportLongTailExcel); 
+    $("btnExportRank").addEventListener("click", exportRankExcel);
+    $("btnRuleReset").addEventListener("click", () => { $("ruleSpendNeg").value = 30; $("ruleClicksNeg").value = 20; $("ruleRoasNeg").value = 1.5; $("ruleRoasKeep").value = 3; $("ruleOrdersKeep").value = 2; $("ruleRoasMigrateMin").value = 2; applyFilters(); });
+    $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert("引擎依赖加载完毕！"); });
 };
-
-document.addEventListener("click", (e) => { 
-    const btn = e.target.closest(".segBtn"); if (!btn) return; 
-    if (btn.dataset.dim) setDimFilter(btn.dataset.dim); 
-    if (btn.dataset.strat) { 
-      document.querySelectorAll('.seg[aria-label="Strat Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.strat === btn.dataset.strat)); 
-      document.querySelectorAll('#stratCard .dim-view').forEach(v => v.style.display = 'none'); 
-      const targetView = $('view-' + btn.dataset.strat); 
-      if(targetView) { targetView.style.display = 'block'; $('stratHint').textContent = stratHints[btn.dataset.strat] || ""; } 
-    }
-    if (btn.dataset.type) setTypeFilter(btn.dataset.type); 
-    if (btn.dataset.wf) { WF_MODE = btn.dataset.wf; document.querySelectorAll('.seg[aria-label="Word Frequency Mode"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.wf === WF_MODE)); renderWordFreq(); } 
-});
-
-const setTypeFilter = (t) => { rankTypeFilter = t; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.type === t)); renderRankTable(); };
-
-$("btnExportWf").addEventListener("click", exportWordFreqExcel); 
-$("btnExportNeg").addEventListener("click", exportNegativesExcel); 
-$("btnExportLongTail").addEventListener("click", exportLongTailExcel); 
-$("btnExportRank").addEventListener("click", exportRankExcel);
-$("btnRuleReset").addEventListener("click", () => { $("ruleSpendNeg").value = 30; $("ruleClicksNeg").value = 20; $("ruleRoasNeg").value = 1.5; $("ruleRoasKeep").value = 3; $("ruleOrdersKeep").value = 2; $("ruleRoasMigrateMin").value = 2; applyFilters(); });
-$("btnCheck").addEventListener("click", () => { if(libsCheck()) alert("引擎依赖加载完毕！"); });
 
 // ==========================================
 // 🧠 Gemini AI 智能参谋引擎 (SaaS Enterprise Core - 5D Integration)
 // ==========================================
 
-// 新增防溢出截断工具
 const truncateForAI = (arr, limit, typeName) => {
     if(arr.length <= limit) return arr.map(t => `${t.t} (消耗$${t.spend.toFixed(0)}, 产出$${(t.sales||0).toFixed(0)})`);
     const kept = arr.slice(0, limit);
@@ -2581,11 +2608,11 @@ const buildAdvancedAIContext = () => {
       const tm = sumMetrics(list);
       
       const isExact = list.some(r => (r.matchType || "").toLowerCase().includes("exact"));
-      if (isExact) exactSpend += tm.spend;
+      if (isExact) exactSpend = SafeMath.add(exactSpend, tm.spend);
       else broadAutoLeaks.push({t, ...tm});
 
       if (tm.orders === 0 && tm.spend > 0) {
-          totalWastedSpend += tm.spend;
+          totalWastedSpend = SafeMath.add(totalWastedSpend, tm.spend);
           if (tm.spend > 15) bleeders.push({t, ...tm});
       }
       
@@ -2628,42 +2655,42 @@ const buildAdvancedAIContext = () => {
   };
 };
 
-$("btnAI")?.addEventListener("click", async () => {
-  const apiKey = atob("QUl6YVN5Ql8ybDBXX1l6d20yT1MxWVMyeXJwWEpLMEpETmUyUzFn");
+const bindAIEvents = () => {
+    $("btnAI")?.addEventListener("click", async () => {
+      const apiKey = atob("QUl6YVN5Ql8ybDBXX1l6d20yT1MxWVMyeXJwWEpLMEpETmUyUzFn");
 
-  const contextData = buildAdvancedAIContext();
-  if (!contextData || contextData.global.spend === 0) {
-    alert("当前视图数据量不足，无法生成有效的高阶诊断。请先导入数据。");
-    return;
-  }
+      const contextData = buildAdvancedAIContext();
+      if (!contextData || contextData.global.spend === 0) {
+        alert("当前视图数据量不足，无法生成有效的高阶诊断。请先导入数据。");
+        return;
+      }
 
-  const aiBox = $("aiInsightsBox");
-  const aiContent = $("aiContent");
-  aiBox.style.display = "block";
-  
-  // 注入高级骨架屏
-  aiContent.innerHTML = `
-      <div class="ai-loader-container" style="border-color: transparent;">
-          <div class="ai-spinner"></div>
-          <span class="ai-loading">🔮 Gemini 5D 引擎测算中... 正在构建决策树</span>
-      </div>
-      <div style="padding: 0 20px;">
-          <div class="skeleton-box" style="width: 40%; height: 24px; margin-bottom: 16px;"></div>
-          <div class="skeleton-box" style="width: 100%;"></div>
-          <div class="skeleton-box" style="width: 90%;"></div>
-          <div class="skeleton-box" style="width: 80%; margin-bottom: 24px;"></div>
-          
-          <div class="skeleton-box" style="width: 30%; height: 20px; margin-bottom: 16px;"></div>
-          <div class="skeleton-box" style="width: 95%;"></div>
-          <div class="skeleton-box" style="width: 85%;"></div>
-      </div>
-  `;
-  $("btnAI").disabled = true;
-  $("btnAILog").style.display = "none";
-  $("btnAIPDF").style.display = "none";
-  $("btnAIBulk").style.display = "none";
+      const aiBox = $("aiInsightsBox");
+      const aiContent = $("aiContent");
+      aiBox.style.display = "block";
+      
+      aiContent.innerHTML = `
+          <div class="ai-loader-container" style="border-color: transparent;">
+              <div class="ai-spinner"></div>
+              <span class="ai-loading">🔮 Gemini 5D 引擎测算中... 正在构建决策树</span>
+          </div>
+          <div style="padding: 0 20px;">
+              <div class="skeleton-box" style="width: 40%; height: 24px; margin-bottom: 16px;"></div>
+              <div class="skeleton-box" style="width: 100%;"></div>
+              <div class="skeleton-box" style="width: 90%;"></div>
+              <div class="skeleton-box" style="width: 80%; margin-bottom: 24px;"></div>
+              
+              <div class="skeleton-box" style="width: 30%; height: 20px; margin-bottom: 16px;"></div>
+              <div class="skeleton-box" style="width: 95%;"></div>
+              <div class="skeleton-box" style="width: 85%;"></div>
+          </div>
+      `;
+      $("btnAI").disabled = true;
+      $("btnAILog").style.display = "none";
+      $("btnAIPDF").style.display = "none";
+      $("btnAIBulk").style.display = "none";
 
-  const prompt = `
+      const prompt = `
 你是一位拥有 10 年经验的亚马逊高级 PPC 操盘手。请基于以下底层切片数据，生成一份极具商业价值的 SaaS 级智能诊断报告。
 
 【全局大盘与结构健康度】
@@ -2697,178 +2724,166 @@ ${contextData.recentTrend.join(' ➡️ ')}
 <h3>2. 🩸 止血手术清单 (Negation & Downbidding)</h3>
 (具体指出哪些词必须立刻 Negate 否定，哪些词出价过高)
 <h3>3. 🚀 结构重组与拓词建议 (Search Term Isolation)</h3>
-(针对未隔离的词或表现优异的长尾词，给出提取 Exact 并加 Bid 的建议)
+(针对未隔离的词或表现优异的长尾词，给出提取 Exact 并在原组降低出价的建议，切忌让用户直接暂停原组)
 <h3>4. 💡 竞价与预算操盘指令 (Execution Tiers)</h3>
 (给出明日的操作策略，如：降低 Auto 预算，提高黄金词 Top of Search 溢价比例等)
 `;
 
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.15 } 
-      })
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.15 } 
+          })
+        });
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+        
+        let aiText = data.candidates[0].content.parts[0].text;
+        aiText = aiText.replace(/```html/g, '').replace(/```/g, '').replace(/\n/g, ''); 
+        
+        aiContent.innerHTML = aiText;
+        
+        $("btnAILog").style.display = "inline-flex";
+        $("btnAIPDF").style.display = "inline-flex";
+        $("btnAIBulk").style.display = "inline-flex";
+
+      } catch (error) {
+        console.error("Gemini API Error:", error);
+        aiContent.innerHTML = `<div class="alert-banner">⚠️ 5D 商业决策引擎暂时离线 (网络超时)。大盘数据已就绪，请稍后再试。</div>`;
+      } finally {
+        $("btnAI").disabled = false;
+      }
     });
 
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    
-    let aiText = data.candidates[0].content.parts[0].text;
-    aiText = aiText.replace(/```html/g, '').replace(/```/g, '').replace(/\n/g, ''); 
-    
-    aiContent.innerHTML = aiText;
-    
-    $("btnAILog").style.display = "inline-flex";
-    $("btnAIPDF").style.display = "inline-flex";
-    $("btnAIBulk").style.display = "inline-flex";
+    $("btnCloseAI")?.addEventListener("click", () => { $("aiInsightsBox").style.display = "none"; });
 
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    aiContent.innerHTML = `<div class="alert-banner">⚠️ 5D 商业决策引擎暂时离线 (网络超时)。大盘数据已就绪，请稍后再试。</div>`;
-  } finally {
-    $("btnAI").disabled = false;
-  }
-});
+    $("btnAILog")?.addEventListener("click", () => {
+        const aiText = $("aiContent").innerText;
+        if (!aiText) return;
+        const logHeader = `=== Ads Dashboard Pro 商业诊断日志 ===\n生成时间: ${new Date().toLocaleString()}\n操作人: 亚马逊高级运营专家\n==================================\n\n`;
+        const blob = new Blob([logHeader + aiText], { type: "text/plain;charset=utf-8" });
+        saveAs(blob, `Executive_Action_Log_${getTs()}.txt`);
+    });
 
-$("btnCloseAI")?.addEventListener("click", () => { $("aiInsightsBox").style.display = "none"; });
-
-// 📝 导出操作日志
-$("btnAILog")?.addEventListener("click", () => {
-    const aiText = $("aiContent").innerText;
-    if (!aiText) return;
-    const logHeader = `=== Ads Dashboard Pro 商业诊断日志 ===\n生成时间: ${new Date().toLocaleString()}\n操作人: 亚马逊高级运营专家\n==================================\n\n`;
-    const blob = new Blob([logHeader + aiText], { type: "text/plain;charset=utf-8" });
-    saveAs(blob, `Executive_Action_Log_${getTs()}.txt`);
-});
-
-// 📥 核心重构：企业级 PDF 高清导出引擎 (SaaS Enterprise Core)
-$("btnAIPDF")?.addEventListener("click", async () => {
-    const btn = $("btnAIPDF");
-    const originalText = btn.innerHTML;
-    const element = $("aiInsightsBox");
-    
-    // 1. 防御性拦截
-    if (!element) return;
-
-    // 2. 交互状态锁定
-    btn.innerHTML = "⏳ 正在渲染 PDF...";
-    btn.disabled = true;
-
-    const exportToPDF = async () => {
-        // [极客细节] 精准锁定工具栏并隐身：保留占位但不显示
-        // 确保导出给高管/客户的报告中，绝对不会出现“按钮”这种 UI 伪影
-        const toolsContainer = element.querySelector('.cardTitle > div:last-child');
-        if (toolsContainer) toolsContainer.style.visibility = "hidden";
-
-        // 动态适配当前主题背景色，彻底解决暗黑模式下变“黑底黑字”或报错的 Bug
-        const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
-        const bgColors = {
-            light: '#ffffff', dark: '#242426', ocean: '#1e293b', forest: '#1b241b', sepia: '#eee8d5'
-        };
-
-        // 深度优化 html2canvas 配置引擎
-        const opt = {
-            margin:       [12, 12, 15, 12], // 增加适度留白，增强高管报告的呼吸感
-            filename:     `Executive_AI_Diagnosis_${getTs()}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 }, // 兼顾体积与清晰度
-            html2canvas:  { 
-                scale: window.devicePixelRatio > 1 ? 2 : 1.5, // 动态适配视网膜屏幕防模糊
-                useCORS: true, 
-                logging: false,
-                backgroundColor: bgColors[currentTheme] || '#ffffff', 
-                ignoreElements: (node) => node.tagName === 'BUTTON' // 终极兜底机制：无视所有按钮节点
-            },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        try {
-            // 使用标准的 async/await 替代脆弱的 Promise 链
-            await html2pdf().set(opt).from(element).save();
-        } catch (err) {
-            console.error("PDF Export Core Crash:", err);
-            alert("PDF 渲染引擎遇到执行阻塞，请检查页面内存或稍后重试。");
-        } finally {
-            // 3. 严格的安全释放 (无论成功失败，UI 必须复原)
-            if (toolsContainer) toolsContainer.style.visibility = "visible";
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    };
-
-    // 4. 动态资源挂载与执行
-    if (typeof window.html2pdf === 'undefined') {
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-        script.onload = () => { 
-            log("✅ html2pdf.js 渲染引擎挂载成功", "good"); 
-            exportToPDF(); 
-        };
-        script.onerror = () => { 
-            alert("无法加载 PDF 引擎，请检查网络策略(CORS)或代理。"); 
-            btn.innerHTML = originalText; 
-            btn.disabled = false; 
-        };
-        document.head.appendChild(script);
-    } else { 
-        exportToPDF(); 
-    }
-});
-
-// ⚡ 核心黑科技：生成直接上传到亚马逊后台的 Bulk 批量执行表
-$("btnAIBulk")?.addEventListener("click", () => {
-    const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
-    const bulkRows = [];
-
-    const r = getRules();
-    const groups = AdsStore.rankGroups || groupBy(AdsStore.view, getRankKey());
-
-    for (const [term, list] of groups.entries()) {
-        if (!term || term === "(blank)" || isASINLike(term)) continue;
-
-        const m = sumMetrics(list);
-        const mainRow = list.reduce((prev, curr) => (curr.spend > prev.spend) ? curr : prev, list[0]);
-        let cleanTerm = (term || "").replace(/\s+/g, " ").trim();
+    $("btnAIPDF")?.addEventListener("click", async () => {
+        const btn = $("btnAIPDF");
+        const originalText = btn.innerHTML;
+        const element = $("aiInsightsBox");
         
-        const safeCampaign = mainRow.campaign || "(请填入 Campaign 名称)";
-        const safeAdGroup = mainRow.adGroup || "(请填入 Ad Group 名称)";
+        if (!element) return;
 
-        if (m.spend >= r.spendNeg && m.orders === 0) {
-            bulkRows.push([
-                "Sponsored Products", "Negative Keyword", "Create", 
-                "", "", "", "", "", "", 
-                safeCampaign, safeAdGroup, cleanTerm, "negative exact", 
-                "", "", "", "", "enabled"
-            ]);
+        btn.innerHTML = "⏳ 正在渲染 PDF...";
+        btn.disabled = true;
+
+        const exportToPDF = async () => {
+            const toolsContainer = element.querySelector('.cardTitle > div:last-child');
+            if (toolsContainer) toolsContainer.style.visibility = "hidden";
+
+            const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+            const bgColors = { light: '#ffffff', dark: '#242426', ocean: '#1e293b', forest: '#1b241b', sepia: '#eee8d5' };
+
+            const opt = {
+                margin:       [12, 12, 15, 12], 
+                filename:     `Executive_AI_Diagnosis_${getTs()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 }, 
+                html2canvas:  { 
+                    scale: window.devicePixelRatio > 1 ? 2 : 1.5, 
+                    useCORS: true, 
+                    logging: false,
+                    backgroundColor: bgColors[currentTheme] || '#ffffff', 
+                    ignoreElements: (node) => node.tagName === 'BUTTON' 
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } catch (err) {
+                console.error("PDF Export Core Crash:", err);
+                alert("PDF 渲染引擎遇到执行阻塞，请检查页面内存或稍后重试。");
+            } finally {
+                if (toolsContainer) toolsContainer.style.visibility = "visible";
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        if (typeof window.html2pdf === 'undefined') {
+            const script = document.createElement('script');
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+            script.onload = () => { exportToPDF(); };
+            script.onerror = () => { 
+                alert("无法加载 PDF 引擎，请检查网络策略(CORS)或代理。"); 
+                btn.innerHTML = originalText; 
+                btn.disabled = false; 
+            };
+            document.head.appendChild(script);
+        } else { 
+            exportToPDF(); 
         }
-        else if (m.roas >= r.roasKeep && m.orders >= r.ordersKeep) {
-            const isAlreadyExact = list.some(row => (row.matchType || "").toLowerCase() === "exact");
-            if (!isAlreadyExact) {
-                const suggestedBid = m.cpc > 0 ? (m.cpc * 1.2).toFixed(2) : 0.5; 
+    });
+
+    $("btnAIBulk")?.addEventListener("click", () => {
+        const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
+        const bulkRows = [];
+
+        const r = getRules();
+        const groups = AdsStore.rankGroups || groupBy(AdsStore.view, getRankKey());
+
+        const globalMetrics = sumMetrics(AdsStore.view);
+        const globalCvr = globalMetrics.cvr || 0.05;
+        const expectedClicksForOneOrder = globalCvr > 0 ? (1 / globalCvr) : 20;
+
+        for (const [term, list] of groups.entries()) {
+            if (!term || term === "(blank)" || isASINLike(term)) continue;
+
+            const m = sumMetrics(list);
+            const mainRow = list.reduce((prev, curr) => (curr.spend > prev.spend) ? curr : prev, list[0]);
+            let cleanTerm = (term || "").replace(/\s+/g, " ").trim();
+            
+            const safeCampaign = mainRow.campaign || "(请填入 Campaign 名称)";
+            const safeAdGroup = mainRow.adGroup || "(请填入 Ad Group 名称)";
+
+            if (m.spend >= r.spendNeg && m.clicks > (expectedClicksForOneOrder * 1.5) && m.orders === 0) {
                 bulkRows.push([
-                    "Sponsored Products", "Keyword", "Create", 
+                    "Sponsored Products", "Negative Keyword", "Create", 
                     "", "", "", "", "", "", 
-                    safeCampaign, safeAdGroup, cleanTerm, "exact", 
-                    "", "", "", suggestedBid, "enabled"
+                    safeCampaign, safeAdGroup, cleanTerm, "negative exact", 
+                    "", "", "", "", "enabled"
                 ]);
             }
+            else if (m.roas >= r.roasKeep && m.orders >= r.ordersKeep) {
+                const isAlreadyExact = list.some(row => (row.matchType || "").toLowerCase() === "exact");
+                if (!isAlreadyExact) {
+                    const suggestedBid = m.cpc > 0 ? (m.cpc * 1.2).toFixed(2) : 0.5; 
+                    bulkRows.push([
+                        "Sponsored Products", "Keyword", "Create", 
+                        "", "", "", "", "", "", 
+                        safeCampaign, safeAdGroup, cleanTerm, "exact", 
+                        "", "", "", suggestedBid, "enabled"
+                    ]);
+                }
+            }
         }
-    }
 
-    if (bulkRows.length === 0) {
-        alert("当前视图未检测到符合自动止血/提价规则的词汇，无需导出。可尝试在左侧放宽判定规则。");
-        return;
-    }
+        if (bulkRows.length === 0) {
+            alert("当前视图未检测到符合自动止血/提价规则的词汇，无需导出。可尝试在左侧放宽判定规则。");
+            return;
+        }
 
-    exportRichExcelMultiSheet([{ 
-        sheetName: "Sponsored Products Campaigns", 
-        headers: bulkHeaders, 
-        dataRows: bulkRows 
-    }], `Bulk_Operations_AI_Action_${getTs()}.xlsx`).then(() => {
-        log(`已生成 Bulk 批量执行表 (共包含 ${bulkRows.length} 条操作指令)`, "good");
+        exportRichExcelMultiSheet([{ 
+            sheetName: "Sponsored Products Campaigns", 
+            headers: bulkHeaders, 
+            dataRows: bulkRows 
+        }], `Bulk_Operations_AI_Action_${getTs()}.xlsx`).then(() => {
+            log(`已生成 Bulk 批量执行表 (共包含 ${bulkRows.length} 条操作指令)`, "good");
+        });
     });
-});
+};
 
 const THEMES = ['light', 'dark', 'ocean', 'forest', 'sepia'];
 const THEME_LABELS = { light: '🎨 主题: 浅色 (Light)', dark: '🎨 主题: 深色 (Dark)', ocean: '🎨 主题: 海洋 (Ocean)', forest: '🎨 主题: 森林 (Forest)', sepia: '🎨 主题: 护眼 (Sepia)' };
@@ -2886,9 +2901,21 @@ const toggleTheme = () => {
       renderTrend(AdsStore.view || AdsStore.all); 
   } 
 };
-$("btnTheme").addEventListener("click", toggleTheme);
 
-renderFileList(); populateDropdowns(); applyFilters(true); initThemeButton();
+// 🌟 对外暴露的启动入口
+return {
+  init: () => {
+    initIDB();
+    bindEvents();
+    bindAIEvents();
+    initThemeButton();
+    $("btnTheme").addEventListener("click", toggleTheme);
+  }
+};
+
+})(); // End of IIFE AdsDashboardApp
+
+window.addEventListener('load', AdsDashboardApp.init);
 </script>
 </body>
 </html>
