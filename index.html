@@ -1006,6 +1006,7 @@ const ngrams = (tokens, n) => tokens.length < n ? [] : Array.from({length: token
 const extractMagnification = (s) => { return [...String(s || "").matchAll(/(?:\+|)\b([0-6](?:\.\d{1,2})?)[xX]?\b/g)].map(m => m[1]).filter(v => !isNaN(parseFloat(v)) && parseFloat(v) > 0); };
 const tokenCache = new Map();
 
+/* 🛠️ [Bug修复 5：词频分析防死锁增强（拦截 NaN 与 Infinity 干扰排序）] */
 const buildWordStats = () => {
   const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3))); 
   const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10)); 
@@ -1047,8 +1048,14 @@ const buildWordStats = () => {
   
   const {key, dir} = wfSort; const mul = dir==="asc" ? 1 : -1;
   out.sort((a,b) => { 
-    const av = (key==="word") ? String(a[key]||"") : (a[key] ?? 0); 
-    const bv = (key==="word") ? String(b[key]||"") : (b[key] ?? 0); 
+    const getSafeVal = (obj) => {
+        const v = obj[key];
+        if (key==="word") return String(v||"");
+        if (!isFinite(v)) return v === Infinity ? 999999999 : 0;
+        return v ?? 0;
+    };
+    const av = getSafeVal(a);
+    const bv = getSafeVal(b);
     if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * mul; 
     return (av === bv ? 0 : (av > bv ? 1 : -1)) * mul; 
   });
@@ -1056,22 +1063,24 @@ const buildWordStats = () => {
 };
 
 const cleanHeader = (h) => String(h).replace(/^\uFEFF/, '').replace(/\s+/g, '').toLowerCase();
+
+/* 🛠️ [Bug修复 1：扩充 ALIASES，兼容双语环境及 14天周期等情况] */
 const COL_MAP_ALIASES = { 
   date: ["日期","Date","Day","ReportDate"], 
   portfolio: ["广告组合名称","Portfolioname","Portfolio","PortfolioName"], 
   campaign: ["广告活动名称","Campaignname","Campaign","CampaignName"], 
   adGroup: ["广告组名称","Adgroupname","Adgroup","AdGroup","AdGroupName"], 
-  targeting: ["投放","Targeting","KeywordorProductTargeting"], 
+  targeting: ["投放","Targeting","KeywordorProductTargeting","Keyword","关键词"], 
   matchType: ["匹配类型","Matchtype","MatchType"], 
   searchTerm: ["客户搜索词","Customersearchterm","Searchterm","SearchTerm"], 
   impr: ["展示量","Impressions","Impr"], 
   clicks: ["点击量","Clicks"], 
   spend: ["花费","Spend","Cost"], 
-  sales7d: ["7天总销售额","7DayTotalSales","7-daytotalsales","7daytotalsales","TotalSales","Est.TotalSales", "Sales"], 
-  orders7d: ["7天总订单数","7天总订单数(#)","7天总订单数（#）","7DayTotalOrders(#)","7-daytotalorders","7daytotalorders","TotalOrders","Est.TotalOrders", "Orders"], 
+  sales7d: ["7天总销售额","7DayTotalSales","7-daytotalsales","7daytotalsales","14天总销售额","14DayTotalSales","14-daytotalsales","14daytotalsales","TotalSales","Est.TotalSales", "Sales"], 
+  orders7d: ["7天总订单数","7天总订单数(#)","7天总订单数（#）","7DayTotalOrders(#)","7-daytotalorders","7daytotalorders","14天总订单数","14天总订单数(#)","14DayTotalOrders(#)","14-daytotalorders","14daytotalorders","TotalOrders","Est.TotalOrders", "Orders"], 
   ctr: ["点击率","CTR"], 
   cpc: ["每次点击费用","CPC","Costperclick","Costperclick(CPC)"], 
-  cvr: ["7天的转化率","7DayConversionRate","7-dayconversionrate","7dayconversionrate"], 
+  cvr: ["7天的转化率","7DayConversionRate","7-dayconversionrate","7dayconversionrate","14天的转化率","14DayConversionRate","14-dayconversionrate","14dayconversionrate"], 
   acos: ["ACOS","Acos"], 
   roas: ["ROAS","Roas"] 
 };
@@ -1086,12 +1095,12 @@ const BR_MAP_ALIASES = {
 const PLACEMENT_MAP_ALIASES = { 
   date: ["开始日期","Date","Day","StartDate"], 
   campaign: ["广告活动名称","Campaignname","Campaign","CampaignName"], 
-  placement: ["放置","Placement"], 
+  placement: ["放置","Placement","广告位","位置"], 
   impr: ["展示量","Impressions","Impr"], 
   clicks: ["点击量","Clicks"], 
   spend: ["花费","Spend","Cost"], 
-  sales: ["7天总销售额","7DayTotalSales","7-daytotalsales","7daytotalsales","TotalSales","Est.TotalSales", "Sales"], 
-  orders: ["7天总订单数","7天总订单数(#)","7天总订单数（#）","7DayTotalOrders(#)","7-daytotalorders","7daytotalorders","TotalOrders","Est.TotalOrders", "Orders"] 
+  sales: ["7天总销售额","7DayTotalSales","7-daytotalsales","7daytotalsales","14天总销售额","14DayTotalSales","14-daytotalsales","14daytotalsales","TotalSales","Est.TotalSales", "Sales"], 
+  orders: ["7天总订单数","7天总订单数(#)","7天总订单数（#）","7DayTotalOrders(#)","7-daytotalorders","7daytotalorders","14天总订单数","14天总订单数(#)","14DayTotalOrders(#)","14-daytotalorders","14daytotalorders","TotalOrders","Est.TotalOrders", "Orders"] 
 };
 
 const pickCol = (header, aliases) => { 
@@ -1203,13 +1212,14 @@ const isASINLike = (s) => {
 
 const detectRowType = (name, rankBy) => (rankBy === "searchTerm" || rankBy === "searchTermRoot" || rankBy === "targeting") ? (isASINLike(name) ? "asin" : "keyword") : "other";
 
+/* 🛠️ [Bug修复 4：兼容中文匹配类型判定，强化自动/手动鉴别算法] */
 const checkIsManual = (r) => {
     const lowerMatch = (r.matchType||"").toLowerCase();
     const lowerTargeting = (r.targeting||"").toLowerCase();
-    if (["broad", "phrase", "exact"].includes(lowerMatch)) return true;
-    if (lowerTargeting === "*" || ["close-match", "loose-match", "substitutes", "complements"].includes(lowerTargeting)) return false;
-    if (isASINLike(lowerTargeting) || lowerTargeting.includes("category") || lowerTargeting.includes("asin")) return true;
-    return lowerMatch.includes("product") || lowerMatch.includes("targeting");
+    if (["broad", "phrase", "exact", "广泛", "词组", "精准", "精确"].some(m => lowerMatch.includes(m))) return true;
+    if (lowerTargeting === "*" || ["close-match", "loose-match", "substitutes", "complements", "宽泛", "紧密", "同类", "补充"].some(m => lowerTargeting.includes(m))) return false;
+    if (isASINLike(lowerTargeting) || lowerTargeting.includes("category") || lowerTargeting.includes("asin") || lowerTargeting.includes("分类")) return true;
+    return lowerMatch.includes("product") || lowerMatch.includes("targeting") || lowerMatch.includes("商品") || lowerMatch.includes("投放");
 };
 
 const cleanTargetForExact = (t) => (t || "").toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ').trim();
@@ -1283,7 +1293,8 @@ const importMultipleFiles = async (files) => {
       
       const hasAsin = normHeader.some(h => ["（子）asin", "(child)asin", "childasin", "子商品asin"].includes(h));
       const hasSessions = normHeader.some(h => ["会话数-总计", "sessions-total", "sessions", "买家访问次数"].includes(h));
-      const hasPlacement = normHeader.some(h => ["放置", "placement"].includes(h));
+      /* 🛠️ [Bug修复：广告位报告字段全面支持，防止全空] */
+      const hasPlacement = normHeader.some(h => ["放置", "placement", "广告位", "位置"].includes(h));
       const hasSearchTerm = normHeader.some(h => ["客户搜索词", "customersearchterm", "searchterm"].includes(h));
 
       if (hasAsin && hasSessions) {
@@ -1443,12 +1454,17 @@ const renderPlacementAnalysis = () => {
 };
 
 const uniqSorted = (arr) => Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+
 const setSingleSelectOptions = (select, values, allLabel="All") => { 
   const cur = select.value; 
-  select.innerHTML = `<option value="">${allLabel}</option>` + values.map(v => `<option value="${v}">${v}</option>`).join(""); 
+  select.innerHTML = `<option value="">${allLabel}</option>` + values.map(v => {
+      const safeV = escapeHtml(v);
+      return `<option value="${safeV}">${safeV}</option>`;
+  }).join(""); 
   if ([...select.options].some(o=>o.value===cur)) select.value = cur; 
 };
 
+/* 🛠️ [Bug修复 2：彻底解耦初始化注入与层级筛选的事件泄露死循环] */
 const populateDropdowns = () => {
   const dropdowns = [ 
     { id: "filterSource", mapFn: r => r.sourceFile, allLabel: "All Files" }, 
@@ -1458,21 +1474,45 @@ const populateDropdowns = () => {
     { id: "filterTargeting", mapFn: r => r.targeting }, 
     { id: "filterMatchType", mapFn: r => r.matchType } 
   ];
+  // 仅做初始化注入，绝不在内部重新绑定事件！
   dropdowns.forEach(({ id, mapFn, allLabel }) => setSingleSelectOptions($(id), uniqSorted(AdsStore.all.map(mapFn)), allLabel)); 
-  wireCascade();
 };
 
-const wireCascade = () => {
-  const updateChildDropdowns = (currentFilterId, childFilterIds, mapFns) => { 
-    const filters = ["filterSource", "filterPortfolio", "filterCampaign"].reduce((acc, id) => ({ ...acc, [id]: $(id).value }), {}); 
-    let rows = AdsStore.all; 
-    for (const key in filters) if (filters[key]) rows = rows.filter(r => r[key.replace("filter", "").toLowerCase()] === filters[key]); 
-    childFilterIds.forEach((childId, i) => setSingleSelectOptions($(childId), uniqSorted(rows.map(mapFns[i])))); 
+/* 🛠️ [Bug修复 3：级联更新加入严格的 Trim+LowerCase 及正确的 SourceFile 字段匹配] */
+const updateChildDropdowns = (changedId) => { 
+    const filters = {
+        sourceFile: $("filterSource").value,
+        portfolio: $("filterPortfolio").value,
+        campaign: $("filterCampaign").value
+    };
+
+    const isMatch = (val, filterVal) => {
+        if (!filterVal) return true;
+        return String(val || "").trim().toLowerCase() === String(filterVal).trim().toLowerCase();
+    };
+
+    let rows = AdsStore.all;
+    if (filters.sourceFile) rows = rows.filter(r => isMatch(r.sourceFile, filters.sourceFile));
+    if (filters.portfolio) rows = rows.filter(r => isMatch(r.portfolio, filters.portfolio));
+    if (filters.campaign) rows = rows.filter(r => isMatch(r.campaign, filters.campaign));
+
+    if (changedId === "filterSource") {
+        ["filterPortfolio", "filterCampaign", "filterAdGroup", "filterTargeting", "filterMatchType"].forEach(id => ($(id).value = ""));
+        setSingleSelectOptions($("filterPortfolio"), uniqSorted(rows.map(r => r.portfolio)));
+        setSingleSelectOptions($("filterCampaign"), uniqSorted(rows.map(r => r.campaign)));
+        setSingleSelectOptions($("filterAdGroup"), uniqSorted(rows.map(r => r.adGroup)));
+        setSingleSelectOptions($("filterTargeting"), uniqSorted(rows.map(r => r.targeting)));
+        setSingleSelectOptions($("filterMatchType"), uniqSorted(rows.map(r => r.matchType)));
+    } else if (changedId === "filterPortfolio") {
+        ["filterCampaign", "filterAdGroup"].forEach(id => ($(id).value = ""));
+        setSingleSelectOptions($("filterCampaign"), uniqSorted(rows.map(r => r.campaign)));
+        setSingleSelectOptions($("filterAdGroup"), uniqSorted(rows.map(r => r.adGroup)));
+    } else if (changedId === "filterCampaign") {
+        ["filterAdGroup"].forEach(id => ($(id).value = ""));
+        setSingleSelectOptions($("filterAdGroup"), uniqSorted(rows.map(r => r.adGroup)));
+    }
+    
     autoApply(); 
-  };
-  $("filterSource").onchange = () => { ["filterPortfolio", "filterCampaign", "filterAdGroup", "filterTargeting", "filterMatchType"].forEach(id => ($(id).value = "")); populateDropdowns(); autoApply(); };
-  $("filterPortfolio").onchange = () => updateChildDropdowns("filterPortfolio", ["filterCampaign", "filterAdGroup"], [r => r.campaign, r => r.adGroup]); 
-  $("filterCampaign").onchange = () => updateChildDropdowns("filterCampaign", ["filterAdGroup"], [r => r.adGroup]);
 };
 
 const withinDate = (r, start, end) => (!start || r.date >= start) && (!end || r.date <= end);
@@ -1790,11 +1830,11 @@ const renderMatchTypeAnalysis = () => {
   for (const r of AdsStore.view) {
      const m = (r.matchType || "").toLowerCase();
      const t = (r.targeting || "").toLowerCase();
-     if(m.includes("exact")) bins["Exact"].push(r);
-     else if(m.includes("phrase")) bins["Phrase"].push(r);
-     else if(m.includes("broad")) bins["Broad"].push(r);
-     else if(isASINLike(t) || t.includes("category") || m.includes("targeting") || m.includes("product")) bins["Product Targeting"].push(r);
-     else if(t === "*" || ["close-match", "loose-match", "substitutes", "complements"].includes(t) || m === "-" || m === "") bins["Auto"].push(r);
+     if(m.includes("exact") || m.includes("精准") || m.includes("精确")) bins["Exact"].push(r);
+     else if(m.includes("phrase") || m.includes("词组")) bins["Phrase"].push(r);
+     else if(m.includes("broad") || m.includes("广泛")) bins["Broad"].push(r);
+     else if(isASINLike(t) || t.includes("category") || m.includes("targeting") || m.includes("product") || m.includes("商品")) bins["Product Targeting"].push(r);
+     else if(t === "*" || ["close-match", "loose-match", "substitutes", "complements", "宽泛", "紧密", "同类", "补充"].some(x => t.includes(x)) || m === "-" || m === "") bins["Auto"].push(r);
      else bins["Other"].push(r);
   }
   
@@ -1901,7 +1941,7 @@ const renderIsolationAnalysis = () => {
   const nonExactMap = new Map();
   for (let i = 0; i < AdsStore.view.length; i++) {
     const r = AdsStore.view[i];
-    if (!r.searchTerm || isASINLike(r.searchTerm)) continue;
+    if (!r.searchTerm || isASINLike(r.searchTerm)) continue; 
     
     const matchLower = (r.matchType || "").toLowerCase();
     const isExact = matchLower.includes("exact");
@@ -2233,12 +2273,19 @@ const getRankKey = () => {
   return mapping[$("rankBy").value]; 
 };
 
+/* 🛠️ [Bug修复 5：排行榜排序保护机制，拦截 Infinity 引发的前端 Crash] */
 const sortRank = (items) => { 
     const {key, dir} = rankSort; 
     const mul = dir==="asc" ? 1 : -1; 
     items.sort((a,b)=>{ 
-        const av = key==="name"||key==="action"||key==="audit" ? String(a[key]||"") : (a[key] ?? 0); 
-        const bv = key==="name"||key==="action"||key==="audit" ? String(b[key]||"") : (b[key] ?? 0); 
+        const getSafeVal = (obj) => {
+            const v = obj[key];
+            if (key==="name"||key==="action"||key==="audit") return String(v||"");
+            if (!isFinite(v)) return v === Infinity ? 999999999 : 0;
+            return v ?? 0;
+        };
+        const av = getSafeVal(a);
+        const bv = getSafeVal(b);
         if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * mul; 
         return (av === bv ? 0 : (av > bv ? 1 : -1)) * mul;
     }); 
@@ -2391,12 +2438,17 @@ const applyFilters = (initial=false) => {
                   const chunkEnd = Math.min(i + chunkSize, allLen);
                   for (let j = i; j < chunkEnd; j++) {
                       const r = AdsStore.all[j];
-                      if (filters.filterSource && r.sourceFile !== filters.filterSource) continue; 
-                      if (filters.filterPortfolio && r.portfolio !== filters.filterPortfolio) continue; 
-                      if (filters.filterCampaign && r.campaign !== filters.filterCampaign) continue; 
-                      if (filters.filterAdGroup && r.adGroup !== filters.filterAdGroup) continue; 
-                      if (filters.filterTargeting && r.targeting !== filters.filterTargeting) continue; 
-                      if (filters.filterMatchType && r.matchType !== filters.filterMatchType) continue; 
+                      
+                      /* 🛠️ [Bug修复 3：统一小写与去空格的强力兼容] */
+                      const safeEq = (a, b) => String(a||"").trim().toLowerCase() === String(b||"").trim().toLowerCase();
+
+                      if (filters.filterSource && !safeEq(r.sourceFile, filters.filterSource)) continue; 
+                      if (filters.filterPortfolio && !safeEq(r.portfolio, filters.filterPortfolio)) continue; 
+                      if (filters.filterCampaign && !safeEq(r.campaign, filters.filterCampaign)) continue; 
+                      if (filters.filterAdGroup && !safeEq(r.adGroup, filters.filterAdGroup)) continue; 
+                      if (filters.filterTargeting && !safeEq(r.targeting, filters.filterTargeting)) continue; 
+                      if (filters.filterMatchType && !safeEq(r.matchType, filters.filterMatchType)) continue; 
+                      
                       if (!withinDate(r, filters.dateStart, filters.dateEnd)) continue;
                       
                       if (filters.filterAdType) { 
@@ -2513,12 +2565,25 @@ const bindEvents = () => {
       } 
     });
 
-    const filterIds = ["dateStart","dateEnd","filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef"];
-    filterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
+    const simpleFilterIds = ["dateStart","dateEnd","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef"];
+    simpleFilterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
+
+    /* 🛠️ [Bug修复 2：彻底隔离级联操作，将绑定与渲染剥离，不再卡死浏览器] */
+    $("filterSource").addEventListener("change", () => updateChildDropdowns("filterSource"));
+    $("filterPortfolio").addEventListener("change", () => updateChildDropdowns("filterPortfolio"));
+    $("filterCampaign").addEventListener("change", () => updateChildDropdowns("filterCampaign"));
 
     $("filterSearchTerm").addEventListener("input", debounce(applyFilters, 280)); 
     $("btnClearSearch").addEventListener("click", () => { $("filterSearchTerm").value = ""; $("filterSearchExact").checked = false; $("filterSearchTerm").focus(); applyFilters(); });
-    $("btnReset").addEventListener("click", () => { ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); $("rankBy").value = "searchTerm"; rankSort = { key:"spend", dir:"desc" }; populateDropdowns(); applyFilters(); });
+    
+    $("btnReset").addEventListener("click", () => { 
+        ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); 
+        $("rankBy").value = "searchTerm"; 
+        rankSort = { key:"spend", dir:"desc" }; 
+        populateDropdowns(); // 仅重新注回所有选项，不再执行级联事件绑定
+        applyFilters(); 
+    });
+    
     $("btnClearAll").addEventListener("click", () => { AdsStore.all.length = 0; AdsStore.view.length = 0; AdsStore.biz.length = 0; AdsStore.placement.length = 0; AdsStore.files.length = 0; rootCache.clear(); tokenCache.clear(); clearStringPool(); AdsStore.rankGroups = null; AdsStore.isolationRows = []; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
 
     document.querySelectorAll(".chipBtn").forEach(btn => { 
