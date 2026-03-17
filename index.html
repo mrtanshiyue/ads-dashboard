@@ -1006,7 +1006,6 @@ const ngrams = (tokens, n) => tokens.length < n ? [] : Array.from({length: token
 const extractMagnification = (s) => { return [...String(s || "").matchAll(/(?:\+|)\b([0-6](?:\.\d{1,2})?)[xX]?\b/g)].map(m => m[1]).filter(v => !isNaN(parseFloat(v)) && parseFloat(v) > 0); };
 const tokenCache = new Map();
 
-/* 🛠️ [Bug修复 5：词频分析防死锁增强（拦截 NaN 与 Infinity 干扰排序）] */
 const buildWordStats = () => {
   const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3))); 
   const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10)); 
@@ -1064,7 +1063,6 @@ const buildWordStats = () => {
 
 const cleanHeader = (h) => String(h).replace(/^\uFEFF/, '').replace(/\s+/g, '').toLowerCase();
 
-/* 🛠️ [Bug修复 1：扩充 ALIASES，兼容双语环境及 14天周期等情况] */
 const COL_MAP_ALIASES = { 
   date: ["日期","Date","Day","ReportDate"], 
   portfolio: ["广告组合名称","Portfolioname","Portfolio","PortfolioName"], 
@@ -1212,7 +1210,6 @@ const isASINLike = (s) => {
 
 const detectRowType = (name, rankBy) => (rankBy === "searchTerm" || rankBy === "searchTermRoot" || rankBy === "targeting") ? (isASINLike(name) ? "asin" : "keyword") : "other";
 
-/* 🛠️ [Bug修复 4：兼容中文匹配类型判定，强化自动/手动鉴别算法] */
 const checkIsManual = (r) => {
     const lowerMatch = (r.matchType||"").toLowerCase();
     const lowerTargeting = (r.targeting||"").toLowerCase();
@@ -1260,7 +1257,8 @@ const importMultipleFiles = async (files) => {
   setSubtitle("正在进行多线程数据处理与洗刷...请稍候");
   
   if (mergeMode === "replace") { 
-      AdsStore.all.length = 0; AdsStore.biz.length = 0; AdsStore.placement.length = 0; AdsStore.files.length = 0; 
+      // 🛠️ 彻底清空内存防闭包泄露
+      AdsStore.all = []; AdsStore.biz = []; AdsStore.placement = []; AdsStore.files = []; 
       rootCache.clear(); tokenCache.clear(); clearStringPool(); 
       AdsStore.rankGroups = null; AdsStore.isolationRows = [];
       try { await idbKeyval.clear(); } catch(e) {} 
@@ -1293,7 +1291,6 @@ const importMultipleFiles = async (files) => {
       
       const hasAsin = normHeader.some(h => ["（子）asin", "(child)asin", "childasin", "子商品asin"].includes(h));
       const hasSessions = normHeader.some(h => ["会话数-总计", "sessions-total", "sessions", "买家访问次数"].includes(h));
-      /* 🛠️ [Bug修复：广告位报告字段全面支持，防止全空] */
       const hasPlacement = normHeader.some(h => ["放置", "placement", "广告位", "位置"].includes(h));
       const hasSearchTerm = normHeader.some(h => ["客户搜索词", "customersearchterm", "searchterm"].includes(h));
 
@@ -1464,7 +1461,6 @@ const setSingleSelectOptions = (select, values, allLabel="All") => {
   if ([...select.options].some(o=>o.value===cur)) select.value = cur; 
 };
 
-/* 🛠️ [Bug修复 2：彻底解耦初始化注入与层级筛选的事件泄露死循环] */
 const populateDropdowns = () => {
   const dropdowns = [ 
     { id: "filterSource", mapFn: r => r.sourceFile, allLabel: "All Files" }, 
@@ -1474,11 +1470,9 @@ const populateDropdowns = () => {
     { id: "filterTargeting", mapFn: r => r.targeting }, 
     { id: "filterMatchType", mapFn: r => r.matchType } 
   ];
-  // 仅做初始化注入，绝不在内部重新绑定事件！
   dropdowns.forEach(({ id, mapFn, allLabel }) => setSingleSelectOptions($(id), uniqSorted(AdsStore.all.map(mapFn)), allLabel)); 
 };
 
-/* 🛠️ [Bug修复 3：级联更新加入严格的 Trim+LowerCase 及正确的 SourceFile 字段匹配] */
 const updateChildDropdowns = (changedId) => { 
     const filters = {
         sourceFile: $("filterSource").value,
@@ -1685,6 +1679,11 @@ const renderLongTailMining = () => {
   const globalCpc = globalMetrics.cpc || 1.0; 
   const globalCvr = globalMetrics.cvr || 0.05;
 
+  // 🛠️ 动态 Target ACOS 计算
+  const margin = safeNum($("bizMargin")?.value) || 0.3;
+  const ref = safeNum($("bizRef")?.value) || 0.15;
+  const targetAcos = Math.max(0.15, 1 - margin - ref - 0.1); 
+
   const exactTargets = new Set();
   for (const row of AdsStore.all) {
       if ((row.matchType || "").toLowerCase().includes("exact")) {
@@ -1719,7 +1718,7 @@ const renderLongTailMining = () => {
     if (c.cpc < globalCpc * 0.8 && c.cvr > globalCvr * 1.2) intentTag = "💎 蓝海词 (低竞争高转化)";
     else if (c.cvr > globalCvr * 2) intentTag = "🎯 极强意图 (超大盘2倍)";
     const rpc = c.clicks > 0 ? c.sales / c.clicks : 0;
-    const suggestedBid = rpc > 0 ? rpc * 0.25 : c.cpc;
+    const suggestedBid = rpc > 0 ? rpc * targetAcos : c.cpc;
     const tooltip = `【 ${escapeHtml(c.term)} 】${intentTag}\n转化率：${fmtPct(c.cvr)} \n建议精准出价：${fmtMoney(suggestedBid)}`;
 
     return `<tr title="${tooltip}"><td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td><td>${c.newRadar ? '<span class="tag good">New Radar</span>' : '<span style="color:var(--muted)">-</span>'}</td><td>${c.wordCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtMoney(c.sales)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td><td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:#b42318;font-weight:600' : ''}">${fmtPct(c.acos)}</td></tr>`;
@@ -2020,7 +2019,8 @@ const decideAction = (item, rankBy) => {
     let action = "KEEP"; let reason = "观察中"; let suggestedBidDelta = "0%";
 
     const endDateStr = $("dateEnd")?.value;
-    const isWithinAttributionWindow = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000 <= 7) : true;
+    const isWithinAttributionWindow = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000 <= 14) : true;
+    const isStrictAttribution = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000 <= 3) : false; // 🛠️ 核心：3天内防杀保护
     
     const dynamicSpendNeg = isWithinAttributionWindow ? (r.spendNeg * 1.5) : r.spendNeg;
     
@@ -2029,15 +2029,21 @@ const decideAction = (item, rankBy) => {
     const expectedClicksForOneOrder = globalCvr > 0 ? (1 / globalCvr) : 20;
 
     if (item.spend >= dynamicSpendNeg && item.clicks > (expectedClicksForOneOrder * 1.5) && item.orders <= 0) {
-        action = "NEGATE"; 
-        reason = isWithinAttributionWindow ? `归因期内高消耗且无点击效能 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})` : `深度流血且点击量远超大盘阈值 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})`;
-        suggestedBidDelta = "-100%";
+        if (isStrictAttribution) {
+            action = "WATCH"; 
+            reason = `近期数据归因延迟保护 (当前净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})`;
+            suggestedBidDelta = "0%";
+        } else {
+            action = "NEGATE"; 
+            reason = isWithinAttributionWindow ? `归因期内高消耗且无点击效能 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})` : `深度流血且点击量远超大盘阈值 (净亏 $${Math.abs(item.netProfit || 0).toFixed(2)})`;
+            suggestedBidDelta = "-100%";
+        }
     } else if (item.roas >= r.roasKeep && item.netProfit > 10) {
         action = "SCALE"; reason = `正向盈利 (+$${item.netProfit.toFixed(2)})`;
         suggestedBidDelta = "+20%"; 
     } else if (item.roas > 1 && item.netProfit < 0) {
         action = "DECREASE"; reason = `ROAS达标但净利为负`;
-        suggestedBidDelta = "-15% Base + Raise ToS"; 
+        suggestedBidDelta = "-15%"; 
     } else if (item.orders > 0 && item.roas < r.roasKeep) {
         action = "MIGRATE"; reason = `有单但效率低`;
         suggestedBidDelta = "-10%";
@@ -2045,6 +2051,20 @@ const decideAction = (item, rankBy) => {
         action = "DECREASE"; reason = `高客单点击，暂不否定，建议降价`;
         suggestedBidDelta = "-30%";
     }
+
+    // 🛠️ 核心：整合广告位数据给出 Multiplier 建议
+    let placementBoost = "";
+    if (AdsStore.placement.length > 0 && item.campaign) {
+        const campPlacements = AdsStore.placement.filter(p => p.campaign === item.campaign);
+        if (campPlacements.length > 0) {
+            const tos = sumMetrics(campPlacements.filter(p => p.placement.includes("Top of Search")));
+            const ros = sumMetrics(campPlacements.filter(p => p.placement.includes("Rest of Search")));
+            if (tos.clicks > 10 && ros.clicks > 10 && ros.cvr > 0 && tos.cvr > ros.cvr * 1.5) {
+                placementBoost = ` | TOS溢价建议 +${Math.round((tos.cvr/ros.cvr - 1)*100)}%`;
+            }
+        }
+    }
+    suggestedBidDelta += placementBoost;
 
     return { action, reason, suggestedBidDelta };
 };
@@ -2172,13 +2192,19 @@ const exportLongTailExcel = () => {
     const headers = ["Search Term", "New Radar (未精准)", "Word Count", "Spend", "Sales", "Orders", "Net Profit", "Clicks", "CPC", "CVR", "ROAS", "ACOS", "Deep Diagnosis", "Suggested Exact Bid"];
     const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
     const bulkDataRows = [];
+    
+    // 🛠️ 动态出价公式
+    const margin = safeNum($("bizMargin")?.value) || 0.3;
+    const ref = safeNum($("bizRef")?.value) || 0.15;
+    const targetAcos = Math.max(0.15, 1 - margin - ref - 0.1);
+
     const dataRows = AdsStore.longTailRows.slice(0, 30000).map(c => {
         let intentTag = "Normal"; 
         if (c.cpc < globalCpc * 0.8 && c.cvr > globalCvr * 1.2) intentTag = "Blue Ocean (💎低竞争高转化)"; 
         else if (c.cvr > globalCvr * 2) intentTag = "High Intent (🎯极强意图)";
         
         const rpc = c.clicks > 0 ? c.sales / c.clicks : 0; 
-        const suggestedBid = rpc > 0 ? rpc * 0.25 : c.cpc;
+        const suggestedBid = rpc > 0 ? rpc * targetAcos : c.cpc;
         
         if (c.newRadar) { 
           bulkDataRows.push([ "Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", "(请填入投放的 Campaign)", "(请填入投放的 Ad Group)", c.term, "exact", "", "", "", suggestedBid, "enabled" ]); 
@@ -2273,7 +2299,6 @@ const getRankKey = () => {
   return mapping[$("rankBy").value]; 
 };
 
-/* 🛠️ [Bug修复 5：排行榜排序保护机制，拦截 Infinity 引发的前端 Crash] */
 const sortRank = (items) => { 
     const {key, dir} = rankSort; 
     const mul = dir==="asc" ? 1 : -1; 
@@ -2392,7 +2417,7 @@ const matchAdvancedSearch = (term, query) => {
 };
 
 // =========================================================================
-// 🚀 工程优化 2: 异步分片非阻塞过滤引擎 (Async Yielding Engine)
+// 🚀 工程优化 2: 异步分片非阻塞过滤引擎 (Async Yielding Engine - 动态渲染)
 // =========================================================================
 const applyFilters = (initial=false) => {
   if (!AdsStore.all.length && !AdsStore.biz.length && !AdsStore.placement.length) { 
@@ -2428,45 +2453,46 @@ const applyFilters = (initial=false) => {
           AdsStore.lastFilterHash = currentHash;
           AdsStore.lastDataLength = AdsStore.all.length;
 
-          // 核心重构：时间切片让渡主线程，防止 UI 假死
+          // 🛠️ 核心重构：动态时间切片机制 (Time Slicing)，确保浏览器跑满 60FPS 的同时绝不卡死
           const processAsync = async () => {
               const newView = [];
               const allLen = AdsStore.all.length;
-              const chunkSize = 20000;
+              let lastYieldTime = performance.now();
               
-              for (let i = 0; i < allLen; i += chunkSize) {
-                  const chunkEnd = Math.min(i + chunkSize, allLen);
-                  for (let j = i; j < chunkEnd; j++) {
-                      const r = AdsStore.all[j];
-                      
-                      /* 🛠️ [Bug修复 3：统一小写与去空格的强力兼容] */
-                      const safeEq = (a, b) => String(a||"").trim().toLowerCase() === String(b||"").trim().toLowerCase();
+              for (let i = 0; i < allLen; i++) {
+                  const r = AdsStore.all[i];
+                  
+                  const safeEq = (a, b) => String(a||"").trim().toLowerCase() === String(b||"").trim().toLowerCase();
 
-                      if (filters.filterSource && !safeEq(r.sourceFile, filters.filterSource)) continue; 
-                      if (filters.filterPortfolio && !safeEq(r.portfolio, filters.filterPortfolio)) continue; 
-                      if (filters.filterCampaign && !safeEq(r.campaign, filters.filterCampaign)) continue; 
-                      if (filters.filterAdGroup && !safeEq(r.adGroup, filters.filterAdGroup)) continue; 
-                      if (filters.filterTargeting && !safeEq(r.targeting, filters.filterTargeting)) continue; 
-                      if (filters.filterMatchType && !safeEq(r.matchType, filters.filterMatchType)) continue; 
-                      
-                      if (!withinDate(r, filters.dateStart, filters.dateEnd)) continue;
-                      
-                      if (filters.filterAdType) { 
-                          const isManual = checkIsManual(r); 
-                          if (filters.filterAdType === "manual" && !isManual) continue; 
-                          if (filters.filterAdType === "auto" && isManual) continue; 
-                      }
-                      if (filters.filterSearchTerm) { 
-                          const query = filters.filterSearchTerm;
-                          if (filters.filterSearchExact) { 
-                              if (r.searchTermLower !== query.toLowerCase()) continue; 
-                          } else { 
-                              if (!matchAdvancedSearch(r.searchTermLower, query)) continue; 
-                          } 
-                      }
-                      newView.push(r);
+                  if (filters.filterSource && !safeEq(r.sourceFile, filters.filterSource)) continue; 
+                  if (filters.filterPortfolio && !safeEq(r.portfolio, filters.filterPortfolio)) continue; 
+                  if (filters.filterCampaign && !safeEq(r.campaign, filters.filterCampaign)) continue; 
+                  if (filters.filterAdGroup && !safeEq(r.adGroup, filters.filterAdGroup)) continue; 
+                  if (filters.filterTargeting && !safeEq(r.targeting, filters.filterTargeting)) continue; 
+                  if (filters.filterMatchType && !safeEq(r.matchType, filters.filterMatchType)) continue; 
+                  
+                  if (!withinDate(r, filters.dateStart, filters.dateEnd)) continue;
+                  
+                  if (filters.filterAdType) { 
+                      const isManual = checkIsManual(r); 
+                      if (filters.filterAdType === "manual" && !isManual) continue; 
+                      if (filters.filterAdType === "auto" && isManual) continue; 
                   }
-                  await new Promise(resolve => setTimeout(resolve, 0)); // 主动交出线程控制权
+                  if (filters.filterSearchTerm) { 
+                      const query = filters.filterSearchTerm;
+                      if (filters.filterSearchExact) { 
+                          if (r.searchTermLower !== query.toLowerCase()) continue; 
+                      } else { 
+                          if (!matchAdvancedSearch(r.searchTermLower, query)) continue; 
+                      } 
+                  }
+                  newView.push(r);
+
+                  // 当主线程任务耗时超过一帧 (14ms ≈ 60FPS)，主动交出控制权
+                  if (i % 1000 === 0 && (performance.now() - lastYieldTime) > 14) {
+                      await new Promise(resolve => setTimeout(resolve, 0));
+                      lastYieldTime = performance.now();
+                  }
               }
               return newView;
           };
@@ -2568,7 +2594,6 @@ const bindEvents = () => {
     const simpleFilterIds = ["dateStart","dateEnd","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef"];
     simpleFilterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 
-    /* 🛠️ [Bug修复 2：彻底隔离级联操作，将绑定与渲染剥离，不再卡死浏览器] */
     $("filterSource").addEventListener("change", () => updateChildDropdowns("filterSource"));
     $("filterPortfolio").addEventListener("change", () => updateChildDropdowns("filterPortfolio"));
     $("filterCampaign").addEventListener("change", () => updateChildDropdowns("filterCampaign"));
@@ -2580,11 +2605,12 @@ const bindEvents = () => {
         ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); 
         $("rankBy").value = "searchTerm"; 
         rankSort = { key:"spend", dir:"desc" }; 
-        populateDropdowns(); // 仅重新注回所有选项，不再执行级联事件绑定
+        populateDropdowns(); 
         applyFilters(); 
     });
     
-    $("btnClearAll").addEventListener("click", () => { AdsStore.all.length = 0; AdsStore.view.length = 0; AdsStore.biz.length = 0; AdsStore.placement.length = 0; AdsStore.files.length = 0; rootCache.clear(); tokenCache.clear(); clearStringPool(); AdsStore.rankGroups = null; AdsStore.isolationRows = []; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
+    // 🛠️ 核心防御：清空缓存必须执行彻底赋值
+    $("btnClearAll").addEventListener("click", () => { AdsStore.all = []; AdsStore.view = []; AdsStore.biz = []; AdsStore.placement = []; AdsStore.files = []; rootCache.clear(); tokenCache.clear(); clearStringPool(); AdsStore.rankGroups = null; AdsStore.isolationRows = []; try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
 
     document.querySelectorAll(".chipBtn").forEach(btn => { 
       btn.addEventListener("click", () => { 
