@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Langrong</title>
+  <title>朗容眼镜 - 广告数据中台</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -869,7 +869,6 @@ const initIDB = async () => {
           AdsStore.placement = meta.PLACEMENT_ROWS || [];
           AdsStore.files = meta.importedFiles || [];
           
-          // 【优化项】确保 DOM 引用严格准确，防止 ReferenceError
           if ($("logBox")) $("logBox").innerHTML = '<div class="small" style="color:var(--good);padding:6px;border-bottom:1px solid rgba(229,229,234,.7);">✅ 分片引擎启动：已从 IndexedDB 光速恢复时序数据。</div>';
           renderFileList(); 
           buildIndexes(); // 构建倒排索引
@@ -942,7 +941,6 @@ const levenshtein = (a, b) => {
 
 const libsCheck = () => { 
   const missing = []; 
-  // 【优化项】更严谨的防御性 window 挂载检查
   if (typeof window.Papa === "undefined") missing.push("PapaParse"); 
   if (typeof window.XLSX === "undefined") missing.push("XLSX"); 
   if (typeof window.Chart === "undefined") missing.push("Chart.js"); 
@@ -954,7 +952,6 @@ const libsCheck = () => {
   return !missing.length; 
 };
 
-// 💡 PapaParse 的 worker:true 已经利用了原生 Web Worker 来脱离主线程解析 CSV，这里我们配合分片异步确保主线程丝滑
 const processInChunks = async (items, processFn, chunkSize = 10000) => { 
   const results = []; 
   for (let i = 0; i < items.length; i += chunkSize) { 
@@ -965,7 +962,6 @@ const processInChunks = async (items, processFn, chunkSize = 10000) => {
   return results; 
 };
 
-// 高性能字符串驻留池 (带 GC 释放)
 let stringPool = Object.create(null);
 let poolSize = 0;
 const intern = (str) => { 
@@ -991,7 +987,7 @@ const SYNONYM_MAP = [
   { re: /\bprogressive\b/g, to: "progressive" } 
 ];
 const PHRASES = ["blue light", "cat eye", "spring hinge", "anti glare", "scratch resistant"];
-const MAG_RE = /(?:\+|)\b([0-6](?:\.\d{1,2})?)[xX]?\b/g; // 精准适配老花镜的度数提取 (例如 1.5, 1.5x, +1.50)
+const MAG_RE = /(?:\+|)\b([0-6](?:\.\d{1,2})?)[xX]?\b/g;
 
 const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const PHRASE_REGEXES = PHRASES.map(p => ({ re: new RegExp("\\b" + escapeRegExp(p).replace(/\s+/g, "\\s+") + "\\b", "g"), to: p.replace(/\s+/g, "_") }));
@@ -1133,7 +1129,7 @@ const BR_MAP_ALIASES = {
   cvr: ["商品会话百分比", "UnitSessionPercentage", "转化率-总计", "转化率"] 
 };
 const PLACEMENT_MAP_ALIASES = { 
-  date: ["开始日期","Date","Day","StartDate"], 
+  date: ["日期", "开始日期", "Date", "Day", "StartDate"], 
   campaign: ["广告活动名称","Campaignname","Campaign","CampaignName"], 
   placement: ["放置","Placement","广告位","位置"], 
   impr: ["展示量","Impressions","Impr"], 
@@ -1175,9 +1171,6 @@ const buildPlacementMap = (rows) => {
   return map; 
 };
 
-// =========================================================
-// 报表规整引擎
-// =========================================================
 const normalizeRow = (raw, map, sourceFile) => {
   if (!raw) return null; 
   const impr = safeNum(raw[map.impr]);
@@ -1285,7 +1278,6 @@ const dedupeRows = (rows) => {
   return out; 
 };
 
-// 🚀 构建倒排索引，加速查找
 const buildIndexes = () => {
     AdsStore.indexes.exactTerm.clear();
     for (let i = 0; i < AdsStore.all.length; i++) {
@@ -1302,9 +1294,6 @@ const buildIndexes = () => {
     }
 };
 
-// =========================================================
-// 主文件摄入引擎
-// =========================================================
 const importMultipleFiles = async (files) => {
   clearLog(); 
   if (!libsCheck()) return; 
@@ -1423,9 +1412,6 @@ const importMultipleFiles = async (files) => {
   applyFilters(true);
 };
 
-// =========================================================
-// 视图渲染引擎
-// =========================================================
 const renderFileList = () => { 
   const box = $("fileList"); 
   box.innerHTML = AdsStore.files.length ? AdsStore.files.map(f=>` <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;"> <div style="font-size:12px;color:var(--text);word-break:break-all;">${escapeHtml(f.name)}</div> <div style="font-size:11.5px;color:var(--muted);white-space:nowrap;">${fmtInt(f.rows)} rows</div> </div> `).join("") : `<div class="small">暂无</div>`; 
@@ -1476,7 +1462,7 @@ const renderBusinessReport = () => {
             lifecycle = "成熟期";
             lifecycleHtml = `<span class="tag" style="background:#0a84ff; color:#fff">成熟收割期</span>`;
         }
-        r.lifecycle = lifecycle; // 供后续逻辑调用
+        r.lifecycle = lifecycle; 
         
         let sptaHtml = fmtPct(r.spta);
         if (r.spta > 0.8 && lifecycle !== "新品期") {
@@ -1522,9 +1508,6 @@ const renderPlacementAnalysis = () => {
     }).join("");
 };
 
-// ==========================================
-// 🌟 针对老花镜业务：核心度数聚合引擎
-// ==========================================
 const renderMagnificationAnalysis = () => {
     const tbody = $("magTable")?.querySelector("tbody");
     if (!tbody) return;
@@ -1554,7 +1537,6 @@ const renderMagnificationAnalysis = () => {
         return `<tr><td style="font-weight:bold;color:var(--accent)">${row.mag}</td><td>${barHtml}</td><td>${fmtMoney(row.spend)}</td><td>${fmtMoney(row.sales)}</td><td>${fmtInt(row.orders)}</td><td style="${row.roas >= 3 ? 'color:#1a7f37;font-weight:700' : ''}">${row.roas.toFixed(2)}</td><td style="${(row.acos > 0.4 || row.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(row.acos)}</td><td>${fmtPct(row.cvr)}</td></tr>`;
     }).join("");
 };
-
 
 const uniqSorted = (arr) => Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b));
 
@@ -2018,7 +2000,6 @@ $("conflictTable").addEventListener("click", (e) => {
   applyFilters(); 
 });
 
-// 🌟 高阶：隔离漏斗分析防漏
 const renderIsolationAnalysis = () => {
   const tbody = $("isolationTable")?.querySelector("tbody"); 
   if (!tbody) return; 
@@ -2055,7 +2036,6 @@ const renderIsolationAnalysis = () => {
       if (!isIsolated) {
         candidates.push({ term: term, source: Array.from(data.sources).join(", "), isIsolated: false, statusHtml: `<span class="tag bad">未提取 (Un-isolated)</span>`, actionHtml: `<span style="font-size:11px;font-weight:600;color:var(--accent);">提取 Exact + 原组降低出价 (Downbid)</span>`, ...m });
       } else if (exactStats.impr < 50 && m.orders > 0) {
-        // 伪隔离侦测
         candidates.push({ term: term, source: Array.from(data.sources).join(", "), isIsolated: true, statusHtml: `<span class="tag warn">⚠️ 假隔离(曝光不足)</span>`, actionHtml: `<span style="font-size:11px;font-weight:600;color:var(--warn);">去精确组提价，争夺曝光！</span>`, ...m });
       }
     }
@@ -2108,16 +2088,14 @@ const decideAction = (item, rankBy) => {
 
     const endDateStr = $("dateEnd")?.value;
     const isWithinAttributionWindow = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000 <= 14) : true;
-    const isStrictAttribution = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000 <= 3) : false; // 3天内防杀保护
-    const isEventProtection = $("eventProtectionToggle")?.checked; // 大促保护机制
+    const isStrictAttribution = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000 <= 3) : false; 
+    const isEventProtection = $("eventProtectionToggle")?.checked; 
     
-    // 动态调整阈值
     let lifecycleAdjustment = 1.0;
     if (AdsStore.biz && AdsStore.biz.length > 0 && item.campaign) {
-        // 尝试通过 Campaign 名称匹配 ASIN 的生命周期
         const matchedBr = AdsStore.biz.find(b => item.campaign.includes(b.asin));
-        if (matchedBr && matchedBr.lifecycle === "新品期") lifecycleAdjustment = 1.5; // 新品期容忍度提升 50%
-        if (matchedBr && matchedBr.lifecycle === "衰退期") lifecycleAdjustment = 0.8; // 衰退期容忍度降低 20%
+        if (matchedBr && matchedBr.lifecycle === "新品期") lifecycleAdjustment = 1.5; 
+        if (matchedBr && matchedBr.lifecycle === "衰退期") lifecycleAdjustment = 0.8; 
     }
 
     const dynamicSpendNeg = (isWithinAttributionWindow ? (r.spendNeg * 1.5) : r.spendNeg) * lifecycleAdjustment;
@@ -2166,7 +2144,6 @@ const decideAction = (item, rankBy) => {
     return { action, reason, suggestedBidDelta };
 };
 
-// 🌟 高阶：异步时间切片生成 Excel (防止“死亡冻结”)
 const exportRichExcelMultiSheet = async (sheets, filename) => {
     const wrap = $("globalProgressWrap");
     const bar = $("globalProgressBar");
@@ -2189,7 +2166,6 @@ const exportRichExcelMultiSheet = async (sheets, filename) => {
         headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
         sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
 
-        // 异步分块写入防止卡死
         for (let i = 0; i < dataRows.length; i++) {
             const rowData = dataRows[i];
             const row = sheet.addRow(rowData);
@@ -2220,7 +2196,7 @@ const exportRichExcelMultiSheet = async (sheets, filename) => {
             processedRows++;
             if (processedRows % 1000 === 0) {
                 if (bar) bar.style.width = `${(processedRows / totalRows) * 100}%`;
-                await new Promise(resolve => setTimeout(resolve, 0)); // 释放主线程
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
         }
 
@@ -2236,7 +2212,6 @@ const exportRichExcelMultiSheet = async (sheets, filename) => {
 
     if (bar) bar.style.width = `100%`;
     const buffer = await workbook.xlsx.writeBuffer();
-    // 【优化项】确保 window.saveAs 已正确挂载
     if (window.saveAs) {
         window.saveAs(new Blob([buffer], { type: 'application/octet-stream' }), filename);
     } else {
@@ -2316,7 +2291,6 @@ const exportLongTailExcel = () => {
     const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
     const bulkDataRows = [];
     
-    // 🛠️ 动态出价公式
     const margin = safeNum($("bizMargin")?.value) || 0.3;
     const ref = safeNum($("bizRef")?.value) || 0.15;
     const targetAcos = Math.max(0.15, 1 - margin - ref - 0.1);
@@ -2540,9 +2514,6 @@ const matchAdvancedSearch = (term, query) => {
     return true;
 };
 
-// =========================================================================
-// 🚀 工程优化 2: 异步分片非阻塞过滤引擎 (Async Yielding Engine - 动态渲染)
-// =========================================================================
 const applyFilters = (initial=false) => {
   if (!AdsStore.all.length && !AdsStore.biz.length && !AdsStore.placement.length) { 
     setSubtitle("未导入数据。请导入同类报表（支持多文件）。"); 
@@ -2577,7 +2548,6 @@ const applyFilters = (initial=false) => {
           AdsStore.lastFilterHash = currentHash;
           AdsStore.lastDataLength = AdsStore.all.length;
 
-          // 🛠️ 核心重构：动态时间切片机制 (Time Slicing)
           const processAsync = async () => {
               const newView = [];
               const allLen = AdsStore.all.length;
@@ -2612,7 +2582,6 @@ const applyFilters = (initial=false) => {
                   }
                   newView.push(r);
 
-                  // 14ms 释放控制权
                   if (i % 1000 === 0 && (performance.now() - lastYieldTime) > 14) {
                       await new Promise(resolve => setTimeout(resolve, 0));
                       lastYieldTime = performance.now();
@@ -2702,9 +2671,6 @@ const applyQuickRange = (type) => {
   $("dateEnd").value = maxD; 
 };
 
-// =========================================================================
-// UI 事件绑定绑定
-// =========================================================================
 const bindEvents = () => {
     $("fileInput").addEventListener("change", async (e) => { 
       const files = Array.from(e.target.files || []); 
@@ -2786,7 +2752,6 @@ const bindEvents = () => {
     $("btnRuleReset").addEventListener("click", () => { $("ruleSpendNeg").value = 30; $("ruleClicksNeg").value = 20; $("ruleRoasNeg").value = 1.5; $("ruleRoasKeep").value = 3; $("ruleOrdersKeep").value = 2; $("ruleRoasMigrateMin").value = 2; applyFilters(); });
     $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert("引擎依赖加载完毕！"); });
 
-    // 🌟 挂载 AI UI Action 执行器
     document.addEventListener("click", (e) => {
         const trigger = e.target.closest(".ai-trigger");
         if (trigger) {
@@ -2803,10 +2768,6 @@ const bindEvents = () => {
         }
     });
 };
-
-// ==========================================
-// 🧠 Gemini AI 智能参谋引擎 (Agentic Workflow & Streaming Edition)
-// ==========================================
 
 let aiMessageHistory = []; 
 let currentSystemContext = ""; 
@@ -2918,7 +2879,6 @@ const createChatBubble = (sender) => {
     return bubble;
 };
 
-// 🌟 解析 AI 返回的 JSON 图表指令并用 Chart.js 渲染
 const processAICharts = (bubble) => {
     const chartRegex = /\[CHART\]([\s\S]*?)\[\/CHART\]/g;
     let html = bubble.innerHTML;
@@ -2932,7 +2892,6 @@ const processAICharts = (bubble) => {
             const replacement = `<div class="ai-chart-container"><canvas id="${canvasId}"></canvas></div>`;
             html = html.replace(match[0], replacement);
             
-            // 延迟渲染保证 DOM 已挂载
             setTimeout(() => {
                 const ctx = $(canvasId)?.getContext('2d');
                 if (ctx) {
@@ -2951,9 +2910,7 @@ const processAICharts = (bubble) => {
     bubble.innerHTML = html;
 };
 
-// 🌟 深度重构为流式请求 (Streaming Server-Sent Events) - 【优化项】引入 Buffer 解决分包截断报错
 const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
-    // ⚠️ 警告：生产环境中绝不应将 API Key 硬编码在前端
     const apiKey = atob("QUl6YVN5Ql8ybDBXX1l6d20yT1MxWVMyeXJwWEpLMEpETmUyUzFn");
     
     const systemPrompt = `你是一位拥有10年经验的亚马逊高级PPC操盘手。这是你当前所处的大盘数据沙盘：\n${currentSystemContext}\n
@@ -2997,14 +2954,13 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let aiFullText = "";
-        let buffer = ""; // 【新增】缓冲池，解决长包截断问题
+        let buffer = ""; 
         bubble.innerHTML = ""; 
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) {
                 if (buffer.trim()) {
-                    // 处理最后剩余在 buffer 的数据 (若有)
                     try {
                         if (buffer.startsWith("data: ") && buffer !== "data: [DONE]") {
                             const data = JSON.parse(buffer.substring(6));
@@ -3012,7 +2968,7 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
                                 aiFullText += data.candidates[0].content.parts[0].text;
                             }
                         }
-                    } catch (e) { /* ignore end buffer errors */ }
+                    } catch (e) { }
                 }
                 break;
             }
@@ -3020,7 +2976,6 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split("\n");
             
-            // 【核心修复】将最后一行（可能不完整）丢回缓冲区
             buffer = lines.pop(); 
             
             for (const line of lines) {
@@ -3030,7 +2985,6 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
                         if (data.candidates && data.candidates[0].content.parts) {
                             const textPart = data.candidates[0].content.parts[0].text;
                             aiFullText += textPart;
-                            // 实时渲染文本 (去除潜在的 markdown 块)
                             bubble.innerHTML = aiFullText.replace(/```html/g, '').replace(/```/g, '');
                             $("aiChatHistory").scrollTop = $("aiChatHistory").scrollHeight;
                         }
@@ -3041,7 +2995,6 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
             }
         }
         
-        // 最终后处理：渲染图表
         processAICharts(bubble);
         
         aiMessageHistory.push({ role: "user", parts: [{ text: userPrompt }] });
@@ -3252,7 +3205,6 @@ const toggleTheme = () => {
   } 
 };
 
-// 🌟 对外暴露的启动入口
 return {
   init: () => {
     initIDB();
@@ -3263,7 +3215,7 @@ return {
   }
 };
 
-})(); // End of IIFE AdsDashboardApp
+})();
 
 window.addEventListener('load', AdsDashboardApp.init);
 </script>
