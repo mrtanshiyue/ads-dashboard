@@ -759,11 +759,11 @@
 const AdsDashboardApp = (function() {
 // 🛡️ 核心：将所有逻辑包裹在闭包内，杜绝全局作用域污染
 
-// 🧮 浮点数安全引擎 (Money Engine)
+// 🧮 浮点数安全引擎 (Money Engine) - 【优化项】防止浮点数计算极化丢失精度
 const SafeMath = {
-  add: (a, b) => Math.round(a * 100 + b * 100) / 100,
-  sub: (a, b) => Math.round(a * 100 - b * 100) / 100,
-  mul: (a, b) => Math.round(a * b * 100) / 100
+  add: (a, b) => Math.round((parseFloat(a) + parseFloat(b)) * 100) / 100,
+  sub: (a, b) => Math.round((parseFloat(a) - parseFloat(b)) * 100) / 100,
+  mul: (a, b) => Math.round((parseFloat(a) * parseFloat(b)) * 100) / 100
 };
 
 const AdsStore = {
@@ -869,7 +869,8 @@ const initIDB = async () => {
           AdsStore.placement = meta.PLACEMENT_ROWS || [];
           AdsStore.files = meta.importedFiles || [];
           
-          if ($("logBox")) logBox.innerHTML = '<div class="small" style="color:var(--good);padding:6px;border-bottom:1px solid rgba(229,229,234,.7);">✅ 分片引擎启动：已从 IndexedDB 光速恢复时序数据。</div>';
+          // 【优化项】确保 DOM 引用严格准确，防止 ReferenceError
+          if ($("logBox")) $("logBox").innerHTML = '<div class="small" style="color:var(--good);padding:6px;border-bottom:1px solid rgba(229,229,234,.7);">✅ 分片引擎启动：已从 IndexedDB 光速恢复时序数据。</div>';
           renderFileList(); 
           buildIndexes(); // 构建倒排索引
           populateDropdowns(); 
@@ -941,12 +942,13 @@ const levenshtein = (a, b) => {
 
 const libsCheck = () => { 
   const missing = []; 
-  if (typeof Papa === "undefined") missing.push("PapaParse"); 
-  if (typeof XLSX === "undefined") missing.push("XLSX"); 
-  if (typeof Chart === "undefined") missing.push("Chart.js"); 
-  if (typeof ExcelJS === "undefined") missing.push("ExcelJS"); 
-  if (typeof saveAs === "undefined") missing.push("FileSaver"); 
-  if (typeof idbKeyval === "undefined") missing.push("idbKeyval"); 
+  // 【优化项】更严谨的防御性 window 挂载检查
+  if (typeof window.Papa === "undefined") missing.push("PapaParse"); 
+  if (typeof window.XLSX === "undefined") missing.push("XLSX"); 
+  if (typeof window.Chart === "undefined") missing.push("Chart.js"); 
+  if (typeof window.ExcelJS === "undefined") missing.push("ExcelJS"); 
+  if (typeof window.saveAs === "undefined") missing.push("FileSaver"); 
+  if (typeof window.idbKeyval === "undefined") missing.push("idbKeyval"); 
   if (missing.length) log("依赖库未加载：" + missing.join(", ") + "。部分功能可能受限。", "warn"); 
   else log("依赖库 OK", "good"); 
   return !missing.length; 
@@ -2234,7 +2236,12 @@ const exportRichExcelMultiSheet = async (sheets, filename) => {
 
     if (bar) bar.style.width = `100%`;
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), filename);
+    // 【优化项】确保 window.saveAs 已正确挂载
+    if (window.saveAs) {
+        window.saveAs(new Blob([buffer], { type: 'application/octet-stream' }), filename);
+    } else {
+        alert("无法导出文件，因 FileSaver 库未正确加载。");
+    }
     
     setTimeout(() => { if(wrap) wrap.style.display = "none"; if(bar) bar.style.width = "0%"; }, 500);
 };
@@ -2944,8 +2951,9 @@ const processAICharts = (bubble) => {
     bubble.innerHTML = html;
 };
 
-// 🌟 深度重构为流式请求 (Streaming Server-Sent Events)
+// 🌟 深度重构为流式请求 (Streaming Server-Sent Events) - 【优化项】引入 Buffer 解决分包截断报错
 const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
+    // ⚠️ 警告：生产环境中绝不应将 API Key 硬编码在前端
     const apiKey = atob("QUl6YVN5Ql8ybDBXX1l6d20yT1MxWVMyeXJwWEpLMEpETmUyUzFn");
     
     const systemPrompt = `你是一位拥有10年经验的亚马逊高级PPC操盘手。这是你当前所处的大盘数据沙盘：\n${currentSystemContext}\n
@@ -2989,14 +2997,31 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let aiFullText = "";
-        bubble.innerHTML = ""; // 清空 loading
+        let buffer = ""; // 【新增】缓冲池，解决长包截断问题
+        bubble.innerHTML = ""; 
 
         while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done) {
+                if (buffer.trim()) {
+                    // 处理最后剩余在 buffer 的数据 (若有)
+                    try {
+                        if (buffer.startsWith("data: ") && buffer !== "data: [DONE]") {
+                            const data = JSON.parse(buffer.substring(6));
+                            if (data.candidates && data.candidates[0].content.parts) {
+                                aiFullText += data.candidates[0].content.parts[0].text;
+                            }
+                        }
+                    } catch (e) { /* ignore end buffer errors */ }
+                }
+                break;
+            }
             
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            
+            // 【核心修复】将最后一行（可能不完整）丢回缓冲区
+            buffer = lines.pop(); 
             
             for (const line of lines) {
                 if (line.startsWith("data: ") && line !== "data: [DONE]") {
@@ -3009,7 +3034,9 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
                             bubble.innerHTML = aiFullText.replace(/```html/g, '').replace(/```/g, '');
                             $("aiChatHistory").scrollTop = $("aiChatHistory").scrollHeight;
                         }
-                    } catch (e) { console.warn("SSE Parse Error", e); }
+                    } catch (e) { 
+                        console.warn("SSE Parse Error (Line chunking issue normally resolved by buffer)", e); 
+                    }
                 }
             }
         }
@@ -3092,7 +3119,9 @@ const bindAIEvents = () => {
         });
 
         const blob = new Blob([logText], { type: "text/plain;charset=utf-8" });
-        saveAs(blob, `Ultimate_AI_Chat_Log_${getTs()}.txt`);
+        if (window.saveAs) {
+            window.saveAs(blob, `Ultimate_AI_Chat_Log_${getTs()}.txt`);
+        }
     });
 
     $("btnAIPDF")?.addEventListener("click", async () => {
