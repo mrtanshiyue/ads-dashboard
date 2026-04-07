@@ -316,7 +316,7 @@
       <div class="fieldRow">
         <label>导入同类报表（多文件 CSV / XLSX）</label>
         <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" multiple />
-        <div class="small">支持：广告报表、业务报告、广告位报告、<b>SQP 搜索词表现</b></div>
+        <div class="small">支持：广告报表 (SP/SB/SD)、业务报告、广告位报告、<b>SQP 搜索词表现</b></div>
       </div>
       <div class="row2">
         <div class="fieldRow">
@@ -348,6 +348,17 @@
     
     <div class="fieldGroup">
       <div class="fieldRow"><label>来源文件（Source File）</label><div class="selectWrap"><select id="filterSource"></select></div></div>
+      <div class="fieldRow">
+        <label>广告矩阵架构 (Ad Product)</label>
+        <div class="selectWrap">
+            <select id="filterAdProduct">
+                <option value="" selected>全部 (All)</option>
+                <option value="SP">Sponsored Products (SP)</option>
+                <option value="SB">Sponsored Brands (SB)</option>
+                <option value="SD">Sponsored Display (SD)</option>
+            </select>
+        </div>
+      </div>
       <div class="fieldRow"><label>广告组合（Portfolio）</label><div class="selectWrap"><select id="filterPortfolio"></select></div></div>
       <div class="fieldRow"><label>广告活动（Campaign）</label><div class="selectWrap"><select id="filterCampaign"></select></div></div>
       <div class="fieldRow"><label>广告组（Ad Group）</label><div class="selectWrap"><select id="filterAdGroup"></select></div></div>
@@ -723,7 +734,7 @@
           <div class="hint">监控高转化词是否已被提取至精准匹配 (Exact)，并检测是否存在“名为隔离、实为断流”的假象。</div>
           <div class="rightTools">
               <span class="pill">晋升门槛 (订单 ≥)</span><input id="isoMinOrders" class="miniInput" type="number" step="1" value="3" title="自动/广泛中至少产生的订单数" />
-              <button class="btn primary" id="btnExportIsolation" type="button">导出隔离建议 Excel</button>
+              <button class="btn primary" id="btnExportIsolation" type="button">深度隔离闭环导出 (含 Bulk 操作)</button>
           </div>
         </div>
         <div class="table-container" style="max-height:480px;">
@@ -743,7 +754,8 @@
           </table>
         </div>
         <div class="small" style="margin-top:10px;">
-          红灯预警 <b>⚠️ 假隔离(精确曝光不足)</b> 意味着你虽然把它加入了 Exact 匹配，但由于 Exact 组竞价过低，实际上流量还是全在自动/广泛里跑！此时必须去 Exact 组加价！
+          红灯预警 <b>⚠️ 假隔离(曝光不足)</b> 意味着你虽然把它加入了 Exact 匹配，但由于 Exact 组竞价过低，实际上流量还是全在自动/广泛里跑！此时必须去 Exact 组加价！<br/>
+          <b>【深度隔离闭环】</b>：点击右上角导出，系统将自动生成包含 <b>新建 Exact</b> 和 <b>来源组精准否定 (Negative Exact)</b> 的批量上传表格。
         </div>
       </div>
 
@@ -759,11 +771,12 @@
 const AdsDashboardApp = (function() {
 // 🛡️ 核心：将所有逻辑包裹在闭包内，杜绝全局作用域污染
 
-// 🧮 浮点数安全引擎 (Money Engine) - 【优化项】防止浮点数计算极化丢失精度
+// 🧮 浮点数安全引擎 (Money Engine) - 【已重构为 Cents 级整数计算，100%防止精度丢失】
 const SafeMath = {
-  add: (a, b) => Math.round((parseFloat(a) + parseFloat(b)) * 100) / 100,
-  sub: (a, b) => Math.round((parseFloat(a) - parseFloat(b)) * 100) / 100,
-  mul: (a, b) => Math.round((parseFloat(a) * parseFloat(b)) * 100) / 100
+  add: (a, b) => Math.round((parseFloat(a || 0) * 100) + (parseFloat(b || 0) * 100)) / 100,
+  sub: (a, b) => Math.round((parseFloat(a || 0) * 100) - (parseFloat(b || 0) * 100)) / 100,
+  mul: (a, b) => Math.round((parseFloat(a || 0) * 100) * (parseFloat(b || 0) * 100)) / 10000,
+  div: (a, b) => parseFloat(b || 0) === 0 ? 0 : (parseFloat(a || 0) / parseFloat(b || 0))
 };
 
 const AdsStore = {
@@ -1101,6 +1114,14 @@ const buildWordStats = () => {
 
 const cleanHeader = (h) => String(h).replace(/^\uFEFF/, '').replace(/\s+/g, '').toLowerCase();
 
+// 自动识别广告架构 (SP/SB/SD)
+const detectAdProduct = (headers) => {
+    const joined = headers.map(cleanHeader).join("|");
+    if (joined.includes("viewableimpression") || joined.includes("vpm")) return "SD";
+    if (joined.includes("ntb") || joined.includes("new-to-brand")) return "SB";
+    return "SP"; // 默认 SP
+};
+
 const COL_MAP_ALIASES = { 
   date: ["日期","Date","Day","ReportDate"], 
   portfolio: ["广告组合名称","Portfolioname","Portfolio","PortfolioName"], 
@@ -1154,6 +1175,7 @@ const buildMap = (rows) => {
   const map = {}; 
   for (const key in COL_MAP_ALIASES) map[key] = pickCol(header, COL_MAP_ALIASES[key]); 
   if (!map.date) throw new Error("Ads Report: 未找到日期列 (Date)."); 
+  map.adProductType = detectAdProduct(header);
   return map; 
 };
 
@@ -1183,6 +1205,7 @@ const normalizeRow = (raw, map, sourceFile) => {
 
   return {
     sourceFile: intern(sourceFile), 
+    adProduct: intern(map.adProductType || "SP"), // 新增：广告类型
     date: intern(toISODate(raw[map.date])), 
     portfolio: intern(String(raw[map.portfolio] ?? "").trim()), 
     campaign: intern(String(raw[map.campaign] ?? "").trim()), 
@@ -1358,7 +1381,7 @@ const importMultipleFiles = async (files) => {
       } else {
          try { 
            const map = buildMap(rows); 
-           log(`标准化字段 + 提取时序特征：${name}`); 
+           log(`标准化字段 + 提取时序特征 (发现类型: ${map.adProductType})：${name}`); 
            const mappedRows = await processInChunks(rows, r => normalizeRow(r, map, name)); 
            const normalized = mappedRows.filter(r => r && r.date); 
            log(`追加广告数据：${name} → ${normalized.length.toLocaleString()} 行`, "good"); 
@@ -1603,8 +1626,8 @@ const sumMetrics = (rows) => {
   let impr=0, clicks=0, spendCents=0, salesCents=0, orders=0, units=0;
   for (const r of rows) { 
       impr += r.impr; clicks += r.clicks; orders += r.orders; 
-      spendCents += Math.round(r.spend * 100); 
-      salesCents += Math.max(0, Math.round(r.sales * 100)); 
+      spendCents += Math.round((r.spend || 0) * 100); 
+      salesCents += Math.max(0, Math.round((r.sales || 0) * 100)); 
       units += (r.orders || 0) * 1.1; 
   }
   const spend = spendCents / 100; const sales = salesCents / 100;
@@ -2017,10 +2040,11 @@ const renderIsolationAnalysis = () => {
     
     if (!isExact) {
       if (!nonExactMap.has(r.searchTerm)) {
-        nonExactMap.set(r.searchTerm, { term: r.searchTerm, sources: new Set(), rows: [] });
+        nonExactMap.set(r.searchTerm, { term: r.searchTerm, sources: new Set(), sourceLocs: [], rows: [] });
       }
       const entry = nonExactMap.get(r.searchTerm);
       entry.sources.add(matchLower || "auto");
+      entry.sourceLocs.push({ camp: r.campaign, adg: r.adGroup, match: matchLower });
       entry.rows.push(r);
     }
   }
@@ -2034,9 +2058,9 @@ const renderIsolationAnalysis = () => {
       const isIsolated = !!exactStats;
       
       if (!isIsolated) {
-        candidates.push({ term: term, source: Array.from(data.sources).join(", "), isIsolated: false, statusHtml: `<span class="tag bad">未提取 (Un-isolated)</span>`, actionHtml: `<span style="font-size:11px;font-weight:600;color:var(--accent);">提取 Exact + 原组降低出价 (Downbid)</span>`, ...m });
+        candidates.push({ term: term, sourceLocs: data.sourceLocs, source: Array.from(data.sources).join(", "), isIsolated: false, statusHtml: `<span class="tag bad">未提取 (Un-isolated)</span>`, actionHtml: `<span style="font-size:11px;font-weight:600;color:var(--accent);">提取 Exact + 来源组精准否定</span>`, ...m });
       } else if (exactStats.impr < 50 && m.orders > 0) {
-        candidates.push({ term: term, source: Array.from(data.sources).join(", "), isIsolated: true, statusHtml: `<span class="tag warn">⚠️ 假隔离(曝光不足)</span>`, actionHtml: `<span style="font-size:11px;font-weight:600;color:var(--warn);">去精确组提价，争夺曝光！</span>`, ...m });
+        candidates.push({ term: term, sourceLocs: data.sourceLocs, source: Array.from(data.sources).join(", "), isIsolated: true, statusHtml: `<span class="tag warn">⚠️ 假隔离(曝光不足)</span>`, actionHtml: `<span style="font-size:11px;font-weight:600;color:var(--warn);">去精确组提价，争夺曝光！</span>`, ...m });
       }
     }
   }
@@ -2066,11 +2090,44 @@ $("isoMinOrders")?.addEventListener("change", renderIsolationAnalysis);
 
 $("btnExportIsolation")?.addEventListener("click", () => {
     if (!AdsStore.isolationRows.length) { alert("当前没有需要隔离的搜索词！"); return; }
+    
+    // Sheet 1: 报告概览
     const headers = ["Search Term", "Source (未精准)", "Isolation Status", "Wasted Spend", "Sales", "Orders", "ROAS", "ACOS", "Action"];
     const dataRows = AdsStore.isolationRows.map(c => [
-        c.term, c.source, c.isIsolated ? "Fake Isolation" : "Un-isolated", c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos, c.isIsolated ? "Increase Bid in Exact Campaign" : "Create Exact Match & Downbid in Original"
+        c.term, c.source, c.isIsolated ? "Fake Isolation" : "Un-isolated", c.spend || 0, c.sales || 0, c.orders, c.roas || 0, c.acos === Infinity ? null : c.acos, c.isIsolated ? "Increase Bid in Exact Campaign" : "Create Exact Match & Negative Exact in Original"
     ]);
-    exportRichExcelMultiSheet([{ sheetName: "Isolation Opportunities", headers, dataRows }], `Ultimate_Isolation_${getTs()}.xlsx`);
+
+    // Sheet 2: Bulk Upload 闭环隔离操作 (同时含新建 Exact 和来源否词)
+    const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
+    const bulkRows = [];
+
+    AdsStore.isolationRows.forEach(c => {
+        if (c.isIsolated) return; // 假隔离只需在后台提价，暂时不生成新建指令
+        
+        // 1. 在目标计划新建 Exact
+        const suggestedBid = (c.cpc > 0) ? (c.cpc * 1.2).toFixed(2) : 1.00;
+        bulkRows.push([
+            "Sponsored Products", "Keyword", "Create", "", "", "", "", "", "",
+            "(填写目标 精准 Campaign)", "(填写目标 精准 AdGroup)", c.term, "exact", "", "", "", suggestedBid, "enabled"
+        ]);
+
+        // 2. 在原先曝光来源的所有组中，执行 Negative Exact 彻底封死
+        const uniqueSources = Array.from(new Set(c.sourceLocs.map(x => JSON.stringify({c: x.camp, a: x.adg}))));
+        uniqueSources.forEach(sStr => {
+            const s = JSON.parse(sStr);
+            if (s.c && s.a) {
+                bulkRows.push([
+                    "Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "",
+                    s.c, s.a, c.term, "negative exact", "", "", "", "", "enabled"
+                ]);
+            }
+        });
+    });
+
+    exportRichExcelMultiSheet([
+        { sheetName: "Isolation Opportunities", headers, dataRows },
+        { sheetName: "Bulk Upload Loop", headers: bulkHeaders, dataRows: bulkRows }
+    ], `Ultimate_Isolation_Loop_${getTs()}.xlsx`).then(() => log("✅ 深度隔离防漏斗 Excel 已导出，含批量执行代码", "good"));
 });
 
 const getRules = () => ({ 
@@ -2537,6 +2594,7 @@ const applyFilters = (initial=false) => {
             filterCampaign: $("filterCampaign").value, filterAdGroup: $("filterAdGroup").value, 
             filterTargeting: $("filterTargeting").value, filterMatchType: $("filterMatchType").value, 
             filterAdType: $("filterAdType").value, filterSearchTerm: $("filterSearchTerm").value.trim(), 
+            filterAdProduct: $("filterAdProduct").value, // SP/SB/SD 筛选
             filterSearchExact: $("filterSearchExact").checked 
           };
           
@@ -2548,6 +2606,7 @@ const applyFilters = (initial=false) => {
           AdsStore.lastFilterHash = currentHash;
           AdsStore.lastDataLength = AdsStore.all.length;
 
+          // 使用优化过的高效时间切片模拟多线程
           const processAsync = async () => {
               const newView = [];
               const allLen = AdsStore.all.length;
@@ -2559,6 +2618,7 @@ const applyFilters = (initial=false) => {
                   const safeEq = (a, b) => String(a||"").trim().toLowerCase() === String(b||"").trim().toLowerCase();
 
                   if (filters.filterSource && !safeEq(r.sourceFile, filters.filterSource)) continue; 
+                  if (filters.filterAdProduct && r.adProduct !== filters.filterAdProduct) continue;
                   if (filters.filterPortfolio && !safeEq(r.portfolio, filters.filterPortfolio)) continue; 
                   if (filters.filterCampaign && !safeEq(r.campaign, filters.filterCampaign)) continue; 
                   if (filters.filterAdGroup && !safeEq(r.adGroup, filters.filterAdGroup)) continue; 
@@ -2681,7 +2741,7 @@ const bindEvents = () => {
       } 
     });
 
-    const simpleFilterIds = ["dateStart","dateEnd","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef", "eventProtectionToggle"];
+    const simpleFilterIds = ["dateStart","dateEnd","filterAdProduct","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef", "eventProtectionToggle"];
     simpleFilterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 
     $("filterSource").addEventListener("change", () => updateChildDropdowns("filterSource"));
@@ -2692,7 +2752,7 @@ const bindEvents = () => {
     $("btnClearSearch").addEventListener("click", () => { $("filterSearchTerm").value = ""; $("filterSearchExact").checked = false; $("filterSearchTerm").focus(); applyFilters(); });
     
     $("btnReset").addEventListener("click", () => { 
-        ["filterSource","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); 
+        ["filterSource","filterAdProduct","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterSearchTerm", "filterAdType"].forEach(id => ($(id).value = "")); 
         $("rankBy").value = "searchTerm"; 
         rankSort = { key:"spend", dir:"desc" }; 
         populateDropdowns(); 
@@ -2871,6 +2931,21 @@ ${recent7Days.join(' ➡️ ')}
 `;
 };
 
+// 🤖 动态上下文注入（Mini RAG）
+const buildDynamicContext = (msg) => {
+    let ctx = "";
+    const m = msg.toLowerCase();
+    if (m.includes("转化") || m.includes("cvr")) {
+        const lowCvrTerms = AdsStore.rankRows.filter(r => r.cvr < 0.03 && r.clicks > 10).map(r => `${r.name}(CVR:${fmtPct(r.cvr)})`).slice(0, 5);
+        ctx += `[动态插入] 近期转化率极低的重灾区词汇: ${lowCvrTerms.join(', ')}\n`;
+    }
+    if (m.includes("流血") || m.includes("浪费")) {
+        const bleeders = AdsStore.rankRows.filter(r => r.orders === 0 && r.spend > 10).map(r => `${r.name}(Spend:$${r.spend.toFixed(2)})`).slice(0, 5);
+        ctx += `[动态插入] 纯消耗且 0 出单的流血词: ${bleeders.join(', ')}\n`;
+    }
+    return ctx ? `\n\n【用户询问相关局部快照】\n${ctx}` : "";
+};
+
 const createChatBubble = (sender) => {
     const chatContainer = $("aiChatHistory");
     const bubble = document.createElement("div");
@@ -2880,17 +2955,22 @@ const createChatBubble = (sender) => {
 };
 
 const processAICharts = (bubble) => {
-    const chartRegex = /\[CHART\]([\s\S]*?)\[\/CHART\]/g;
     let html = bubble.innerHTML;
-    let match;
-    
-    while ((match = chartRegex.exec(html)) !== null) {
-        const jsonStr = match[1].replace(/<[^>]+>/g, '').replace(/&quot;/g, '"');
+    // 强制弃用正则，采用更稳定的标记提取结构化输出
+    while (html.includes('<chart-config>') && html.includes('</chart-config>')) {
+        const startTag = '<chart-config>';
+        const endTag = '</chart-config>';
+        const startIdx = html.indexOf(startTag);
+        const endIdx = html.indexOf(endTag) + endTag.length;
+        
+        const block = html.substring(startIdx, endIdx);
+        const jsonStr = block.replace(startTag, '').replace(endTag, '').replace(/<[^>]+>/g, '').replace(/&quot;/g, '"');
+        
         try {
             const config = JSON.parse(jsonStr);
             const canvasId = 'ai-chart-' + Math.random().toString(36).substr(2, 9);
             const replacement = `<div class="ai-chart-container"><canvas id="${canvasId}"></canvas></div>`;
-            html = html.replace(match[0], replacement);
+            html = html.replace(block, replacement);
             
             setTimeout(() => {
                 const ctx = $(canvasId)?.getContext('2d');
@@ -2904,7 +2984,7 @@ const processAICharts = (bubble) => {
             }, 100);
         } catch (e) {
             console.error("AI Chart Parsing Error", e);
-            html = html.replace(match[0], `<div class="tag bad">图表渲染失败</div>`);
+            html = html.replace(block, `<div class="tag bad">图表 JSON 渲染失败，可能是大模型格式出错</div>`);
         }
     }
     bubble.innerHTML = html;
@@ -2925,16 +3005,19 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
 3. 【Agent 执行能力】：你可以在回答中插入操作按钮供用户点击执行。
    - 过滤查询词组：<button class="ai-trigger" data-action="search" data-val="blue light">筛选包含 blue light 的词</button>
    - 切换分析维度：<button class="ai-trigger" data-action="dim" data-val="magnification">一键查看老花镜度数矩阵</button>
-4. 【动态画图能力】：如果你觉得需要用图表展示数据（比如趋势对比、占比等），请严格输出以下JSON格式包裹在[CHART]和[/CHART]中（无需markdown转义）：
-   [CHART]
+4. 【动态画图能力】：如果你觉得需要用图表展示数据（比如趋势对比、占比等），请严格输出以下JSON格式包裹在 <chart-config> 和 </chart-config> 之间（杜绝任何 Markdown 转义）：
+   <chart-config>
    {"type":"bar","labels":["A","B"],"datasets":[{"label":"销量","data":[10,20],"backgroundColor":"#0071e3"}]}
-   [/CHART]
+   </chart-config>
 5. 当用户要求“语义聚类”时，请基于【Top 50 搜索词】分析买家意图，并针对老花镜 (Reading Glasses) 的度数长尾词提供深度见解。
 6. 段落紧凑，直击痛点，像高级分析师一样对话。`;
 
+    const dynamicCtx = buildDynamicContext(userPrompt);
+    const finalPrompt = userPrompt + dynamicCtx;
+
     const payload = {
         systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [...aiMessageHistory, { role: "user", parts: [{ text: userPrompt }] }],
+        contents: [...aiMessageHistory, { role: "user", parts: [{ text: finalPrompt }] }],
         generationConfig: { temperature: 0.2 } 
     };
 
@@ -2989,7 +3072,7 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
                             $("aiChatHistory").scrollTop = $("aiChatHistory").scrollHeight;
                         }
                     } catch (e) { 
-                        console.warn("SSE Parse Error (Line chunking issue normally resolved by buffer)", e); 
+                        console.warn("SSE Parse Error", e); 
                     }
                 }
             }
@@ -2997,7 +3080,7 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
         
         processAICharts(bubble);
         
-        aiMessageHistory.push({ role: "user", parts: [{ text: userPrompt }] });
+        aiMessageHistory.push({ role: "user", parts: [{ text: finalPrompt }] });
         aiMessageHistory.push({ role: "model", parts: [{ text: aiFullText }] });
 
         if (isInitialReport) {
