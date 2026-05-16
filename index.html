@@ -452,22 +452,11 @@
       </div>
       <div class="row2">
         <button class="btn primary" id="btnExportNeg" type="button" data-i18n="btn_export_neg">导出否定词 Excel（仅 NEGATE）</button>
-        <button class="btn" id="btnExportTargeting" type="button" data-i18n="btn_export_targeting">导出商品投放/否定 ASIN</button>
-      </div>
-      <div class="row2">
         <button class="btn" id="btnRuleReset" type="button" data-i18n="btn_reset_rules">重置默认规则</button>
-        <button class="btn" id="btnExportAudit" type="button" data-i18n="btn_export_audit">导出 Listing 词覆盖诊断</button>
       </div>
       <div class="small" data-i18n="desc_export_limit">导出限制：只有榜单维度为 Search Term / Root 时允许导出（避免导出 Campaign/AdGroup 之类的名字当否定词）</div>
     </div>
     
-    <div class="fieldGroup">
-      <div class="fieldRow">
-        <label data-i18n="lbl_listing_copy">Listing 文案覆盖率诊断（标题/五点/后台词，可粘贴）</label>
-        <textarea id="listingCopyInput" data-i18n-placeholder="ph_listing_copy" placeholder="粘贴当前 Listing 文案，用广告搜索词反查是否覆盖高转化词" style="width:100%;min-height:96px;resize:vertical;border-radius:12px;border:1px solid var(--line);background:var(--input-bg);color:var(--text);padding:10px;outline:none;"></textarea>
-        <div class="small" data-i18n="desc_listing_copy">用于将 Search Term/SQP 高价值词和 Listing 词覆盖打通，帮助判断标题、五点和后台词缺口。</div>
-      </div>
-    </div>
 
     <div class="fieldGroup">
       <div class="fieldRow"><label data-i18n="lbl_webhook">异常告警 Webhook (如钉钉/飞书)</label>
@@ -533,12 +522,87 @@
     <section class="grid">
       <div class="card chartCard" style="grid-column: span 12; display: flex; flex-direction: column; gap: 8px;">
         <div class="cardTitle" style="margin-bottom: 8px;">
-          <h2 data-i18n="title_exec_overview">大盘总览与联动趋势 (Executive Overview & TACOS)</h2>
+          <h2 data-i18n="title_exec_overview">大盘总览与联动趋势 (Executive Overview)</h2>
           <div class="hint" data-i18n="hint_exec_overview">大盘核心 KPI 与每日消耗/产出走势对比</div>
         </div>
         <div class="grid" id="kpiGrid" style="margin-bottom: 12px;"></div>
         <hr style="border: 0; border-top: 1px dashed var(--line); margin: 12px 0;" />
         <div class="chartWrap tall" style="height: 320px;"><canvas id="trendChart"></canvas></div>
+      </div>
+    </section>
+
+
+
+    <section class="grid" id="growthCommandSection">
+      <div class="card tableCard" style="grid-column: span 12;">
+        <div class="cardTitle" style="align-items:center; border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:14px;">
+          <div>
+            <h2 style="font-size:16px;">广告动作清单中心 Simple (Action Command Center)</h2>
+            <div class="hint">只输出 6 类动作：否定、加价、降价、投放精准、投放词组、投放广泛；新增今日 Top 20 与广泛词根提炼</div>
+          </div>
+          <div class="rightTools">
+            <button class="btn" id="btnRefreshActionPlan" type="button">刷新建议</button>
+            <button class="btn" id="btnExportActionBulk" type="button">导出 Bulk 草稿</button>
+            <button class="btn primary" id="btnExportActionPlan" type="button">导出建议 Excel</button>
+          </div>
+        </div>
+
+        <div class="row3" style="margin-bottom:12px;">
+          <div class="fieldRow">
+            <label>动作过滤</label>
+            <div class="selectWrap">
+              <select id="actionFilterType">
+                <option value="all" selected>全部建议</option>
+                <option value="negate">否定</option>
+                <option value="increase">加价</option>
+                <option value="decrease">降价</option>
+                <option value="exact">投放精准</option>
+                <option value="phrase">投放词组</option>
+                <option value="broad">投放广泛</option>
+              </select>
+            </div>
+          </div>
+          <div class="fieldRow">
+            <label>执行模式</label>
+            <div class="selectWrap">
+              <select id="actionTopMode">
+                <option value="all" selected>全部建议</option>
+                <option value="top20">今日 Top 20</option>
+              </select>
+            </div>
+          </div>
+          <div class="fieldRow">
+            <label>广泛词根提炼</label>
+            <div class="selectWrap">
+              <select id="actionBroadRootMode">
+                <option value="on" selected>开启，Broad 只投词根</option>
+                <option value="off">关闭，保留原词</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="row2" style="margin-bottom:12px;">
+          <div class="fieldRow">
+            <label>最小花费门槛</label>
+            <input id="actionMinSpend" type="number" step="1" value="0" />
+          </div>
+          <div class="fieldRow">
+            <label>最大显示行数</label>
+            <input id="actionMaxRows" type="number" step="10" value="120" />
+          </div>
+        </div>
+
+        <div class="grid" id="actionKpiGrid" style="margin-bottom:12px;"></div>
+        <div id="actionExecutiveSummary" class="alert-banner good" style="display:none; margin-bottom:12px;"></div>
+
+        <div class="table-container" style="max-height:520px;">
+          <table id="actionPlanTable">
+            <thead><tr>
+              <th>动作</th><th>对象</th><th>来源匹配</th><th>建议匹配/操作</th><th>建议出价</th><th>Campaign</th><th>Ad Group</th><th>简单理由</th><th>Spend</th><th>Sales</th><th>Orders</th><th>Clicks</th><th>CVR</th><th>ROAS</th><th>ACOS</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -888,11 +952,6 @@ const I18N = {
       lbl_neg_roas: "否定 ROAS ≤",
       lbl_keep_orders: "保留订单 ≥",
       lbl_migrate_roas: "迁移 ROAS ≥",
-      btn_export_targeting: "导出商品投放/否定 ASIN",
-      btn_export_audit: "导出 Listing 词覆盖诊断",
-      lbl_listing_copy: "Listing 文案覆盖率诊断（标题/五点/后台词，可粘贴）",
-      ph_listing_copy: "粘贴当前 Listing 文案，用广告搜索词反查是否覆盖高转化词",
-      desc_listing_copy: "用于将 Search Term/SQP 高价值词和 Listing 词覆盖打通，帮助判断标题、五点和后台词缺口。",
       lbl_event_protection: "开启大促归因保护 (Spring Sale 等防杀机制)",
       lbl_export_scope: "导出范围",
       opt_scope_rank: "当前榜单 (Top N)",
@@ -919,7 +978,7 @@ const I18N = {
       title_close_ai: "关闭诊断",
       ph_ai_chat: "输入指令，例如：画一个关于各维度 CPC 的柱状图...",
       btn_send: "发送",
-      title_exec_overview: "大盘总览与联动趋势 (Executive Overview & TACOS)",
+      title_exec_overview: "大盘总览与联动趋势 (Executive Overview)",
       hint_exec_overview: "大盘核心 KPI 与每日消耗/产出走势对比",
       title_structure: "多维结构透视 (Structure Deep Dive)",
       hint_dim_auto: "手动: Broad/Phrase/Exact; 自动: 其他 (已采用精准鉴别算法)",
@@ -1202,11 +1261,6 @@ const I18N = {
       lbl_neg_roas: "Negate ROAS ≤",
       lbl_keep_orders: "Keep Orders ≥",
       lbl_migrate_roas: "Migrate ROAS ≥",
-      btn_export_targeting: "Export Product Targeting / Negative ASIN",
-      btn_export_audit: "Export Listing Coverage Audit",
-      lbl_listing_copy: "Listing Coverage Audit (Title/Bullets/Search Terms)",
-      ph_listing_copy: "Paste current listing copy to check high-value search term coverage",
-      desc_listing_copy: "Connects Search Term/SQP winners with listing copy coverage to identify title, bullet and backend search term gaps.",
       lbl_event_protection: "Enable Event Attribution Protection (Spring Sale etc.)",
       lbl_export_scope: "Export Scope",
       opt_scope_rank: "Current Rank (Top N)",
@@ -1981,6 +2035,7 @@ const normalizeBrRow = (raw, map, sourceFile) => {
   const calculatedAov = units > 0 ? sales / units : 0; 
   return { 
     sourceFile: intern(sourceFile), 
+    date: intern(map.date ? toISODate(raw[map.date]) : ""),
     asin: intern(String(raw[map.asin] ?? "").trim()), 
     title: String(raw[map.title] ?? "").trim(), 
     sessions, units, sales: Math.max(0, sales), 
@@ -3638,6 +3693,358 @@ const runLocalSemanticClustering = async () => {
 };
 
 
+
+// ==================== Action Command Center Simple ====================
+const extractAsinFromText = (value) => {
+  const match = String(value || "").match(/\b[A-Z0-9]{10}\b/i);
+  return match ? match[0].toUpperCase() : "";
+};
+
+const getMainRow = (list) => {
+  if (!list || !list.length) return {};
+  return list.reduce((best, row) => (safeNum(row.spend) > safeNum(best.spend) ? row : best), list[0]);
+};
+
+const isExactLike = (v) => /exact|精准|精确/i.test(String(v || ""));
+const isPhraseLike = (v) => /phrase|词组/i.test(String(v || ""));
+const isBroadLike = (v) => /broad|广泛/i.test(String(v || ""));
+const ACTION_BRAND_RE = /\b(ytdbns|yt\s*dbns|langrong|朗容)\b/i;
+const ACTION_MISMATCH_RE = /\b(bifocal|bi\s*focal|progressive|prescription|rx|photochromic|transition|transitions|sunglasses|sun\s*glasses|contact\s*lens|contacts|kids|children|child|toddler|clip\s*on|magnifier|magnifying\s*glass|safety\s*glasses)\b/i;
+const ACTION_CORE_RE = /\b(reading\s*glasses|reader|readers|cheaters|eye\s*glasses|eyeglasses|glasses)\b/i;
+const ACTION_STYLE_RE = /\b(women|womens|ladies|cat\s*eye|floral|rectangle|square|oversized|fashion|stylish|spring\s*hinge|computer|blue\s*light|small\s*print)\b/i;
+
+const countTermWords = (text) => String(text || "").toLowerCase().replace(/[^a-z0-9+.\s-]/g, " ").split(/\s+/).filter(Boolean).length;
+
+const normalizeBroadRootTerm = (text) => String(text || "")
+  .toLowerCase()
+  .replace(/women's|womens|ladies|female/g, "women")
+  .replace(/men's|mens|male/g, "men")
+  .replace(/eye\s*glasses/g, "eyeglasses")
+  .replace(/cheaters/g, "readers")
+  .replace(/reader\b/g, "readers")
+  .replace(/\+/g, " ")
+  .replace(/[^a-z0-9.\s-]/g, " ")
+  .replace(/\s+/g, " ")
+  .trim();
+
+const extractMagnificationToken = (text) => {
+  const s = String(text || "").toLowerCase();
+  const m = s.match(/(?:^|\s)(?:\+)?([1-4](?:\.\d{1,2})?)(?:\s*x)?(?:\s|$)/);
+  return m ? m[1] : "";
+};
+
+const extractBroadRootTerm = (text) => {
+  const s = normalizeBroadRootTerm(text);
+  if (!s) return "";
+  const hasWomen = /\bwomen\b/.test(s);
+  const hasReaders = /\b(readers|reading\s*glasses|eyeglasses|glasses)\b/.test(s);
+  const mag = extractMagnificationToken(s);
+  const withWomen = (root) => hasWomen && countTermWords(root) <= 3 ? `${root} women` : root;
+
+  if (/\bcat\s*eye\b/.test(s)) return withWomen("cat eye readers");
+  if (/\bcomputer\b/.test(s)) return withWomen("computer readers");
+  if (/\bblue\s*light\b/.test(s)) return withWomen("blue light readers");
+  if (mag && hasReaders) return `reading glasses ${mag}`;
+  if (/\bfloral\b/.test(s)) return withWomen("floral readers");
+  if (/\brectangle\b/.test(s)) return withWomen("rectangle readers");
+  if (/\bsquare\b/.test(s)) return withWomen("square readers");
+  if (/\boversized\b/.test(s)) return withWomen("oversized readers");
+  if (/\bfashion\b/.test(s)) return withWomen("fashion readers");
+  if (/\bstylish\b/.test(s)) return withWomen("stylish readers");
+  if (hasWomen && hasReaders) return "readers women";
+  if (/\breading\s*glasses\b/.test(s)) return "reading glasses";
+  if (/\breaders\b/.test(s)) return hasWomen ? "readers women" : "readers";
+
+  const stop = new Set(["for","the","and","or","with","without","of","to","in","on","by","from","a","an","pack","packs","pair","pairs","set","sets","bulk","cheap","best","amazon","sale","clearance","near","my","your"]);
+  const tokens = s.split(/\s+/).filter(t => t && !stop.has(t));
+  const preferred = tokens.filter(t => /^(women|readers|glasses|eyeglasses|computer|blue|light|cat|eye|floral|rectangle|square|fashion|stylish|oversized|spring|hinge|small|print|[1-4](?:\.\d{1,2})?)$/.test(t));
+  const root = (preferred.length ? preferred : tokens).slice(0, 4).join(" ");
+  return root || s.split(/\s+/).slice(0, 4).join(" ");
+};
+
+const getActionTargetAcos = () => {
+  const margin = safeNum($("bizMargin")?.value) || 0.30;
+  const ref = safeNum($("bizRef")?.value) || 0.15;
+  return Math.max(0.12, Math.min(0.55, 1 - margin - ref - 0.10));
+};
+
+const getActionControls = () => {
+  const top20 = ($("actionTopMode")?.value || "all") === "top20";
+  return {
+    minSpend: Math.max(0, safeNum($("actionMinSpend")?.value) || 0),
+    maxRows: top20 ? 20 : Math.max(20, safeNum($("actionMaxRows")?.value) || 120),
+    reviewDays: 7,
+    top20,
+    broadRoot: ($("actionBroadRootMode")?.value || "on") !== "off"
+  };
+};
+
+const getGroupedActionItems = () => {
+  const groups = groupBy(AdsStore.view || [], r => (r.searchTerm || r.targeting || "(blank)").trim());
+  return [...groups.entries()].map(([name, list]) => {
+    const m = sumMetrics(list);
+    const main = getMainRow(list);
+    const matchTypes = [...new Set(list.map(r => r.matchType).filter(Boolean))];
+    const hasExact = list.some(r => isExactLike(r.matchType));
+    const hasPhrase = list.some(r => isPhraseLike(r.matchType));
+    const hasBroad = list.some(r => isBroadLike(r.matchType));
+    const hasAuto = list.some(r => !checkIsManual(r));
+    return { name, ...m, campaign: main.campaign || "", adGroup: main.adGroup || "", matchTypes, hasExact, hasPhrase, hasBroad, hasAuto, rows:list };
+  }).filter(x => x.name && x.name !== "(blank)");
+};
+
+const getSimpleSourceMatch = (it) => {
+  const arr = [];
+  if (it.hasAuto) arr.push("Auto");
+  if (it.hasBroad) arr.push("Broad");
+  if (it.hasPhrase) arr.push("Phrase");
+  if (it.hasExact) arr.push("Exact");
+  return arr.length ? arr.join(" / ") : (it.matchTypes[0] || "Mixed");
+};
+
+const getSuggestedBid = (it, mode, targetAcos) => {
+  const currentCpc = it.cpc || (it.clicks > 0 ? it.spend / it.clicks : 0);
+  const rpc = it.clicks > 0 ? it.sales / it.clicks : 0;
+  let bid = currentCpc || 0.5;
+  if (mode === "increase") bid = currentCpc ? currentCpc * 1.12 : 0.5;
+  if (mode === "decrease") bid = currentCpc ? currentCpc * 0.75 : 0.3;
+  if (mode === "exact") bid = rpc > 0 ? rpc * targetAcos : (currentCpc ? currentCpc * 1.05 : 0.5);
+  if (mode === "phrase") bid = currentCpc ? currentCpc * 0.90 : 0.4;
+  if (mode === "broad") bid = currentCpc ? currentCpc * 0.70 : 0.3;
+  return Math.max(0.15, Math.min(bid, 3.5)).toFixed(2);
+};
+
+const makeSimpleAction = (it, actionKey, actionLabel, matchAdvice, bid, reason, bulkReady=true, overrides={}) => ({
+  actionKey, actionLabel, name: overrides.name || it.name, sourceName: overrides.sourceName || it.name,
+  objectType: (extractAsinFromText(overrides.name || it.name) || isASINLike(overrides.name || it.name)) ? "ASIN" : "Keyword",
+  sourceMatch: getSimpleSourceMatch(it), matchAdvice, suggestedBid: bid || "", reason,
+  campaign: it.campaign || "", adGroup: it.adGroup || "", spend: it.spend || 0, sales: it.sales || 0, orders: it.orders || 0,
+  clicks: it.clicks || 0, cvr: it.cvr || 0, roas: it.roas || 0, acos: it.acos, cpc: it.cpc || 0, bulkReady
+});
+
+const getTop20ActionScore = (r) => {
+  const spend = safeNum(r.spend), sales = safeNum(r.sales), orders = safeNum(r.orders), clicks = safeNum(r.clicks), roas = safeNum(r.roas);
+  if (r.actionKey === "negate") return 1000000 + spend * 100 + clicks * 10;
+  if (r.actionKey === "increase") return 800000 + roas * 1000 + sales * 2 + orders * 120;
+  if (r.actionKey === "exact") return 700000 + sales * 2 + orders * 120 + roas * 300;
+  if (r.actionKey === "phrase") return 600000 + sales * 1.5 + orders * 100 + roas * 220;
+  if (r.actionKey === "broad") return 500000 + sales + orders * 80 + roas * 180;
+  if (r.actionKey === "decrease") return 400000 + spend * 60 + clicks * 8;
+  return 0;
+};
+
+const buildActionPlan = () => {
+  const rules = getRules();
+  const controls = getActionControls();
+  const targetAcos = getActionTargetAcos();
+  const rows = [];
+  const items = getGroupedActionItems().filter(it => it.spend >= controls.minSpend);
+
+  for (const it of items) {
+    const raw = String(it.name || "");
+    const lower = raw.toLowerCase();
+    const words = countTermWords(raw);
+    const isAsin = Boolean(extractAsinFromText(raw)) || isASINLike(raw);
+    const isBrand = ACTION_BRAND_RE.test(lower);
+    const isMismatch = ACTION_MISMATCH_RE.test(lower);
+    const isRelevantCore = ACTION_CORE_RE.test(lower) || ACTION_STYLE_RE.test(lower);
+    const nearNegSpend = it.spend >= Math.max(5, rules.spendNeg * 0.55);
+    const nearNegClicks = it.clicks >= Math.max(5, rules.clicksNeg * 0.55);
+    const currentCpc = it.cpc || (it.clicks > 0 ? it.spend / it.clicks : 0);
+    const broadRoot = controls.broadRoot ? extractBroadRootTerm(raw) : raw;
+    const broadRootWords = countTermWords(broadRoot);
+
+    // 1) 否定：烧钱 0 单，或者明显类目错配 0 单。
+    if (it.orders <= 0 && ((it.spend >= rules.spendNeg && it.clicks >= rules.clicksNeg) || (isMismatch && nearNegSpend))) {
+      if (isAsin) {
+        rows.push(makeSimpleAction(it, "negate", "否定", "Negative Product Targeting", "", "ASIN 页面高花费/高点击但没有订单，直接否定商品投放", true));
+      } else {
+        const negType = isBrand || it.hasExact ? "Negative Exact" : "Negative Phrase";
+        rows.push(makeSimpleAction(it, "negate", "否定", negType, "", isMismatch ? "类目/需求错配且没有订单，优先否定" : "达到花费和点击止损线仍没有订单，优先否定", true));
+      }
+      continue;
+    }
+
+    // 2) 降价：还没到直接否定，但效率差；或者有单但 ACOS 超利润线。
+    if ((it.orders <= 0 && (nearNegSpend || nearNegClicks)) || (it.orders > 0 && (it.roas < rules.roasMigrateMin || it.acos > targetAcos * 1.30))) {
+      rows.push(makeSimpleAction(it, "decrease", "降价", "Bid Decrease", getSuggestedBid(it, "decrease", targetAcos), it.orders > 0 ? "有订单但 ROAS/ACOS 不达标，先降价保留验证" : "接近止损线但样本还不够，先降价控损", false));
+    }
+
+    // 3) 加价：Exact 或已精准承接的高 ROAS 词，直接提高竞价。
+    if (!isAsin && it.hasExact && it.orders >= rules.ordersKeep && it.roas >= rules.roasKeep) {
+      rows.push(makeSimpleAction(it, "increase", "加价", "Increase Exact Bid", getSuggestedBid(it, "increase", targetAcos), "Exact 已验证出单且 ROAS 达标，可小幅加价抢更多展示", false));
+    }
+
+    // 4) 投放精准：Auto/Broad/Phrase 出单词，沉淀到 Exact。
+    if (!isAsin && it.orders >= 1 && it.roas >= rules.roasMigrateMin && (it.hasAuto || it.hasBroad || it.hasPhrase) && !it.hasExact && !isMismatch) {
+      rows.push(makeSimpleAction(it, "exact", "投放精准", "Create Exact Keyword", getSuggestedBid(it, "exact", targetAcos), "Auto/Broad/Phrase 已验证出单，新增精准词承接高意图流量", true));
+    }
+
+    // 5) 投放词组：中长尾出单词，用 Phrase 扩展相近长尾。
+    if (!isAsin && it.orders >= 1 && it.roas >= rules.roasMigrateMin && words >= 2 && words <= 6 && !it.hasPhrase && !isMismatch) {
+      rows.push(makeSimpleAction(it, "phrase", "投放词组", "Create Phrase Keyword", getSuggestedBid(it, "phrase", targetAcos), "该词有成交基础，词组匹配适合扩展相近长尾搜索词", true));
+    }
+
+    // 6) 投放广泛：只给高 ROAS、相关性明确的词，先提炼成 2-4 个词的 Broad 词根，避免把长尾整句拿去广泛乱烧钱。
+    if (!isAsin && it.orders >= Math.max(2, rules.ordersKeep) && it.roas >= Math.max(rules.roasKeep, 3) && broadRoot && broadRootWords >= 2 && broadRootWords <= 4 && !it.hasBroad && !isMismatch && isRelevantCore) {
+      const broadReason = controls.broadRoot && broadRoot !== raw
+        ? `从原搜索词「${raw}」提炼为 Broad 词根「${broadRoot}」，低价探索相近流量`
+        : "高 ROAS 核心相关词，可低出价广泛拓词；必须配合否定词控风险";
+      rows.push(makeSimpleAction(it, "broad", "投放广泛", "Create Broad Keyword", getSuggestedBid(it, "broad", targetAcos), broadReason, true, { name: broadRoot, sourceName: raw }));
+    }
+  }
+
+  const filter = $("actionFilterType")?.value || "all";
+  const filtered = rows.filter(r => filter === "all" ? true : r.actionKey === filter);
+  if (controls.top20) {
+    filtered.sort((a,b) => getTop20ActionScore(b) - getTop20ActionScore(a));
+  } else {
+    const order = { negate:0, increase:1, decrease:2, exact:3, phrase:4, broad:5 };
+    filtered.sort((a,b) => (order[a.actionKey] - order[b.actionKey]) || (b.orders - a.orders) || (b.spend - a.spend) || (b.roas - a.roas));
+  }
+  return filtered.slice(0, controls.maxRows);
+};
+
+const kpiMiniCard = (label, value, meta="") => `
+  <div class="card kpi" style="grid-column: span 3; padding:10px; box-shadow:none;">
+    <div class="label"><span>${escapeHtml(label)}</span></div>
+    <div class="value" style="font-size:18px;">${value}</div>
+    <div class="meta">${escapeHtml(meta)}</div>
+  </div>`;
+
+const renderActionCommandCenter = () => {
+  const tbody = $("actionPlanTable")?.querySelector("tbody");
+  if (!tbody) return;
+  const rows = buildActionPlan();
+  const controls = getActionControls();
+  const counts = {
+    negate: rows.filter(r => r.actionKey === "negate").length,
+    increase: rows.filter(r => r.actionKey === "increase").length,
+    decrease: rows.filter(r => r.actionKey === "decrease").length,
+    launch: rows.filter(r => ["exact","phrase","broad"].includes(r.actionKey)).length,
+    exact: rows.filter(r => r.actionKey === "exact").length,
+    phrase: rows.filter(r => r.actionKey === "phrase").length,
+    broad: rows.filter(r => r.actionKey === "broad").length
+  };
+
+  if ($("actionKpiGrid")) {
+    $("actionKpiGrid").innerHTML = [
+      kpiMiniCard("否定", fmtInt(counts.negate), "0 单烧钱 / 错配流量"),
+      kpiMiniCard("加价", fmtInt(counts.increase), "高 ROAS Exact"),
+      kpiMiniCard("降价", fmtInt(counts.decrease), "低效但不直接杀"),
+      kpiMiniCard("新增投放", fmtInt(counts.launch), `精准 ${counts.exact} / 词组 ${counts.phrase} / 广泛 ${counts.broad}`)
+    ].join("");
+  }
+
+  if ($("actionExecutiveSummary")) {
+    if (rows.length) {
+      $("actionExecutiveSummary").style.display = "flex";
+      $("actionExecutiveSummary").innerHTML = `<span class="alert-icon">✅</span><div><b>${controls.top20 ? "今日 Top 20：" : "简单执行顺序："}</b>${controls.top20 ? "只显示最值得今天处理的 20 条，优先级按：否定止损 → 高 ROAS 加价 → 出单词迁移精准/词组 → 广泛词根低价测试 → 降价控损。" : "先处理“否定”，再看“加价/精准迁移”，最后处理“降价”。广泛匹配已自动提炼词根，避免整句 Broad 乱烧钱。"}</div>`;
+    } else {
+      $("actionExecutiveSummary").style.display = "none";
+    }
+  }
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="15" class="small">暂无建议。导入广告报表后自动生成；如果建议太少，可降低左侧“否定花费/点击”门槛或降低最小花费门槛。</td></tr>`;
+    return;
+  }
+
+  renderProgressive(tbody, rows, r => {
+    const tagClass = r.actionKey === "negate" ? "bad" : r.actionKey === "decrease" ? "warn" : "good";
+    return `<tr>
+      <td><span class="tag ${tagClass}">${escapeHtml(r.actionLabel)}</span></td>
+      <td title="${escapeHtml(r.name)}"><b>${escapeHtml(r.name).slice(0, 110)}</b>${r.sourceName && r.sourceName !== r.name ? `<div class="small">来源：${escapeHtml(r.sourceName).slice(0, 90)}</div>` : ""}</td>
+      <td>${escapeHtml(r.sourceMatch || "-")}</td>
+      <td>${escapeHtml(r.matchAdvice || "-")}</td>
+      <td>${r.suggestedBid ? "$" + escapeHtml(r.suggestedBid) : "-"}</td>
+      <td title="${escapeHtml(r.campaign)}">${escapeHtml(r.campaign).slice(0, 75)}</td>
+      <td title="${escapeHtml(r.adGroup)}">${escapeHtml(r.adGroup).slice(0, 65)}</td>
+      <td title="${escapeHtml(r.reason)}">${escapeHtml(r.reason).slice(0, 110)}</td>
+      <td>${fmtMoney(r.spend)}</td><td>${fmtMoney(r.sales)}</td><td>${fmtInt(r.orders)}</td><td>${fmtInt(r.clicks)}</td><td>${fmtPct(r.cvr)}</td><td>${(r.roas || 0).toFixed(2)}</td><td>${r.acos === Infinity ? "∞" : fmtPct(r.acos)}</td>
+    </tr>`;
+  });
+};
+
+const renderGrowthCommandModules = () => {
+  renderActionCommandCenter();
+};
+
+const clearGrowthCommandModules = () => {
+  const tbody = $("actionPlanTable")?.querySelector("tbody");
+  if (tbody) tbody.innerHTML = "";
+  ["actionKpiGrid", "actionExecutiveSummary"].forEach(id => { if ($(id)) $(id).innerHTML = ""; });
+  if ($("actionExecutiveSummary")) $("actionExecutiveSummary").style.display = "none";
+};
+
+const buildSponsoredProductsBulkRows = (rows) => {
+  const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Product Targeting Expression", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
+  const bulkRows = [];
+  const bidDraftRows = [];
+  for (const r of rows) {
+    if (r.actionKey === "negate") {
+      if (r.objectType === "ASIN") {
+        const asin = extractAsinFromText(r.name);
+        bulkRows.push(["Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", r.campaign || "[Campaign Name Required]", r.adGroup || "[Ad Group Name Required]", "", `asin=\"${asin}\"`, "negative exact", "", "", "", "", "enabled"]);
+      } else {
+        const mt = /exact/i.test(r.matchAdvice || "") ? "negative exact" : "negative phrase";
+        bulkRows.push(["Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "", r.campaign || "[Campaign Name Required]", r.adGroup || "[Ad Group Name Required]", r.name, "", mt, "", "", "", "", "enabled"]);
+      }
+    }
+    if (["exact","phrase","broad"].includes(r.actionKey)) {
+      const match = r.actionKey;
+      const camp = r.actionKey === "exact" ? "[Exact Campaign]" : r.actionKey === "phrase" ? "[Phrase Campaign]" : "[Broad Campaign]";
+      const adg = r.actionKey === "exact" ? "[Exact Ad Group]" : r.actionKey === "phrase" ? "[Phrase Ad Group]" : "[Broad Ad Group]";
+      bulkRows.push(["Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", camp, adg, r.name, "", match, "", "", "", r.suggestedBid || "0.50", "enabled"]);
+    }
+    if (["increase","decrease"].includes(r.actionKey)) {
+      bidDraftRows.push([r.actionLabel, r.name, r.campaign, r.adGroup, r.sourceMatch, r.suggestedBid, r.reason, r.spend, r.sales, r.orders, r.roas, r.acos === Infinity ? null : r.acos]);
+    }
+  }
+  return { bulkHeaders, bulkRows, bidDraftRows };
+};
+
+const buildActionExportSheets = (rows) => {
+  const headers = ["Action", "Object", "Source Search Term", "Type", "Source Match", "Suggested Match/Operation", "Suggested Bid", "Campaign", "Ad Group", "Reason", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS"];
+  const dataRows = rows.map(r => [r.actionLabel, r.name, r.sourceName || r.name, r.objectType, r.sourceMatch, r.matchAdvice, r.suggestedBid || "", r.campaign, r.adGroup, r.reason, r.spend || 0, r.sales || 0, r.orders || 0, r.clicks || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos]);
+  const { bulkHeaders, bulkRows, bidDraftRows } = buildSponsoredProductsBulkRows(rows);
+  const rules = getRules();
+  const ruleRows = [
+    ["Negative Spend Threshold", rules.spendNeg],
+    ["Negative Click Threshold", rules.clicksNeg],
+    ["Negative ROAS Threshold", rules.roasNeg],
+    ["Keep ROAS Threshold", rules.roasKeep],
+    ["Keep Orders Threshold", rules.ordersKeep],
+    ["Migrate ROAS Threshold", rules.roasMigrateMin],
+    ["Target ACOS", getActionTargetAcos()]
+  ];
+  const broadRootRows = rows.filter(r => r.actionKey === "broad").map(r => [r.sourceName || r.name, r.name, r.campaign, r.adGroup, r.suggestedBid || "", r.orders || 0, r.roas || 0, r.reason || ""]);
+  const sheets = [
+    { sheetName:"Simple Action Plan", headers, dataRows },
+    { sheetName:"SP Bulk Create Negatives", headers:bulkHeaders, dataRows:bulkRows },
+    { sheetName:"Bid Change Draft", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows:bidDraftRows }
+  ];
+  if (broadRootRows.length) sheets.push({ sheetName:"Broad Root Mining", headers:["Source Search Term", "Broad Root", "Campaign", "Ad Group", "Suggested Bid", "Orders", "ROAS", "Reason"], dataRows:broadRootRows });
+  sheets.push({ sheetName:"Rules", headers:["Rule", "Value"], dataRows: ruleRows });
+  return sheets;
+};
+
+const exportActionPlanExcel = () => {
+  const rows = buildActionPlan();
+  if (!rows.length) { alert("暂无可导出的建议"); return; }
+  exportRichExcelMultiSheet(buildActionExportSheets(rows), `Simple_Action_Command_Center_${getTs()}.xlsx`).then(()=>log("简单动作建议已导出", "good"));
+};
+
+const exportActionBulkExcel = () => {
+  const rows = buildActionPlan().filter(r => r.bulkReady);
+  if (!rows.length) { alert("暂无可导出的 Bulk 草稿"); return; }
+  const { bulkHeaders, bulkRows, bidDraftRows } = buildSponsoredProductsBulkRows(rows);
+  exportRichExcelMultiSheet([
+    { sheetName:"SP Bulk Create Negatives", headers:bulkHeaders, dataRows:bulkRows },
+    { sheetName:"Bid Change Draft", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows:bidDraftRows }
+  ], `Simple_Action_Bulk_Draft_${getTs()}.xlsx`).then(()=>log("Bulk 草稿已导出", "good"));
+};
+
 const applyFilters = (initial=false) => {
   if (!AdsStore.all.length && !AdsStore.biz.length && !AdsStore.placement.length && !AdsStore.sqp.length) { 
     setSubtitle(t('app_subtitle_init')); 
@@ -3647,7 +4054,7 @@ const applyFilters = (initial=false) => {
     $("anomalyAlerts").style.display = "none"; 
     renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); 
     renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); 
-    renderIsolationAnalysis(); renderActiveDimTab(); 
+    renderIsolationAnalysis(); renderActiveDimTab(); clearGrowthCommandModules(); 
     return; 
   }
   
@@ -3754,6 +4161,7 @@ const applyFilters = (initial=false) => {
               renderKPIs(total); detectAnomalies(AdsStore.view); renderTrend(AdsStore.view); 
               renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); 
               renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); renderIsolationAnalysis();
+              renderGrowthCommandModules();
 
               const activeStrat = document.querySelector('.seg[aria-label="Strat Filter"] .segBtn.active');
               if (activeStrat) {
@@ -3882,10 +4290,13 @@ const bindEvents = () => {
 
     $("btnExportWf").addEventListener("click", exportWordFreqExcel); 
     $("btnExportNeg").addEventListener("click", exportNegativesExcel); 
-    $("btnExportTargeting")?.addEventListener("click", exportProductTargetingExcel);
-    $("btnExportAudit")?.addEventListener("click", exportListingCoverageAudit);
     $("btnExportLongTail").addEventListener("click", exportLongTailExcel); 
     $("btnExportRank").addEventListener("click", exportRankExcel);
+    $("btnExportActionPlan")?.addEventListener("click", exportActionPlanExcel);
+    $("btnExportActionBulk")?.addEventListener("click", exportActionBulkExcel);
+    $("btnRefreshActionPlan")?.addEventListener("click", renderActionCommandCenter);
+    ["actionFilterType", "actionTopMode", "actionBroadRootMode", "actionMinSpend", "actionMaxRows"].forEach(id => { $(id)?.addEventListener("input", debounce(renderActionCommandCenter, 200)); $(id)?.addEventListener("change", renderActionCommandCenter); });
+
     $("btnRuleReset").addEventListener("click", () => {
       const defaults = { ruleSpendNeg:30, ruleClicksNeg:20, ruleRoasNeg:1.5, ruleRoasKeep:3, ruleOrdersKeep:2, ruleRoasMigrateMin:2 };
       Object.entries(defaults).forEach(([id,val]) => { if ($(id)) $(id).value = val; });
