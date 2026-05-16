@@ -429,6 +429,11 @@
         <div class="fieldRow"><label data-i18n="lbl_neg_clicks">否定点击量 ≥</label><input id="ruleClicksNeg" type="number" step="1" value="20" /></div>
         <div class="fieldRow"><label data-i18n="lbl_keep_roas">保留 ROAS ≥</label><input id="ruleRoasKeep" type="number" step="0.1" value="3" /></div>
       </div>
+      <div class="row3">
+        <div class="fieldRow"><label data-i18n="lbl_neg_roas">否定 ROAS ≤</label><input id="ruleRoasNeg" type="number" step="0.1" value="1.5" /></div>
+        <div class="fieldRow"><label data-i18n="lbl_keep_orders">保留订单 ≥</label><input id="ruleOrdersKeep" type="number" step="1" value="2" /></div>
+        <div class="fieldRow"><label data-i18n="lbl_migrate_roas">迁移 ROAS ≥</label><input id="ruleRoasMigrateMin" type="number" step="0.1" value="2" /></div>
+      </div>
       <div class="fieldRow" style="margin-top: 4px; padding: 6px; background: var(--softGood); border-radius: 8px; border: 1px solid rgba(26,127,55,0.2);">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--good); margin: 0;">
           <input type="checkbox" id="eventProtectionToggle" checked style="width:16px; height:16px; margin:0; appearance:auto; -webkit-appearance:checkbox;">
@@ -447,11 +452,23 @@
       </div>
       <div class="row2">
         <button class="btn primary" id="btnExportNeg" type="button" data-i18n="btn_export_neg">导出否定词 Excel（仅 NEGATE）</button>
+        <button class="btn" id="btnExportTargeting" type="button" data-i18n="btn_export_targeting">导出商品投放/否定 ASIN</button>
+      </div>
+      <div class="row2">
         <button class="btn" id="btnRuleReset" type="button" data-i18n="btn_reset_rules">重置默认规则</button>
+        <button class="btn" id="btnExportAudit" type="button" data-i18n="btn_export_audit">导出 Listing 词覆盖诊断</button>
       </div>
       <div class="small" data-i18n="desc_export_limit">导出限制：只有榜单维度为 Search Term / Root 时允许导出（避免导出 Campaign/AdGroup 之类的名字当否定词）</div>
     </div>
     
+    <div class="fieldGroup">
+      <div class="fieldRow">
+        <label data-i18n="lbl_listing_copy">Listing 文案覆盖率诊断（标题/五点/后台词，可粘贴）</label>
+        <textarea id="listingCopyInput" data-i18n-placeholder="ph_listing_copy" placeholder="粘贴当前 Listing 文案，用广告搜索词反查是否覆盖高转化词" style="width:100%;min-height:96px;resize:vertical;border-radius:12px;border:1px solid var(--line);background:var(--input-bg);color:var(--text);padding:10px;outline:none;"></textarea>
+        <div class="small" data-i18n="desc_listing_copy">用于将 Search Term/SQP 高价值词和 Listing 词覆盖打通，帮助判断标题、五点和后台词缺口。</div>
+      </div>
+    </div>
+
     <div class="fieldGroup">
       <div class="fieldRow"><label data-i18n="lbl_webhook">异常告警 Webhook (如钉钉/飞书)</label>
         <div style="display: flex; gap: 6px;">
@@ -868,6 +885,14 @@ const I18N = {
       lbl_neg_spend: "否定花费 ≥",
       lbl_neg_clicks: "否定点击量 ≥",
       lbl_keep_roas: "保留 ROAS ≥",
+      lbl_neg_roas: "否定 ROAS ≤",
+      lbl_keep_orders: "保留订单 ≥",
+      lbl_migrate_roas: "迁移 ROAS ≥",
+      btn_export_targeting: "导出商品投放/否定 ASIN",
+      btn_export_audit: "导出 Listing 词覆盖诊断",
+      lbl_listing_copy: "Listing 文案覆盖率诊断（标题/五点/后台词，可粘贴）",
+      ph_listing_copy: "粘贴当前 Listing 文案，用广告搜索词反查是否覆盖高转化词",
+      desc_listing_copy: "用于将 Search Term/SQP 高价值词和 Listing 词覆盖打通，帮助判断标题、五点和后台词缺口。",
       lbl_event_protection: "开启大促归因保护 (Spring Sale 等防杀机制)",
       lbl_export_scope: "导出范围",
       opt_scope_rank: "当前榜单 (Top N)",
@@ -1112,6 +1137,10 @@ const I18N = {
       dyn_msg_export_rank_gen: "正在异步生成榜单 (含智能调价建议)...",
       dyn_msg_bulk_empty: "当前视图未检测到符合自动止血/提价规则的词汇，无需导出。可尝试在左侧放宽判定规则。",
       dyn_msg_bulk_done: "已生成 Bulk 批量执行表 (共包含 {0} 条操作指令)",
+      dyn_msg_targeting_empty: "当前没有可导出的 ASIN 商品投放或否定 ASIN。",
+      dyn_msg_targeting_done: "已导出商品投放/否定 ASIN Bulk 表，共 {0} 条",
+      dyn_msg_audit_empty: "请先导入广告数据；如需检测 Listing 缺口，请在左侧粘贴 Listing 文案。",
+      dyn_msg_audit_done: "已导出 Listing 词覆盖诊断",
       dyn_msg_ai_err: "当前视图数据量不足，无法生成有效的高阶诊断。请先导入数据。"
   },
   en: {
@@ -1170,6 +1199,14 @@ const I18N = {
       lbl_neg_spend: "Negate Spend ≥",
       lbl_neg_clicks: "Negate Clicks ≥",
       lbl_keep_roas: "Keep ROAS ≥",
+      lbl_neg_roas: "Negate ROAS ≤",
+      lbl_keep_orders: "Keep Orders ≥",
+      lbl_migrate_roas: "Migrate ROAS ≥",
+      btn_export_targeting: "Export Product Targeting / Negative ASIN",
+      btn_export_audit: "Export Listing Coverage Audit",
+      lbl_listing_copy: "Listing Coverage Audit (Title/Bullets/Search Terms)",
+      ph_listing_copy: "Paste current listing copy to check high-value search term coverage",
+      desc_listing_copy: "Connects Search Term/SQP winners with listing copy coverage to identify title, bullet and backend search term gaps.",
       lbl_event_protection: "Enable Event Attribution Protection (Spring Sale etc.)",
       lbl_export_scope: "Export Scope",
       opt_scope_rank: "Current Rank (Top N)",
@@ -1413,7 +1450,12 @@ const I18N = {
       dyn_msg_export_rank_empty: "Rank is empty, nothing to export.",
       dyn_msg_export_rank_gen: "Generating Rank async (with AI bid suggestions)...",
       dyn_msg_bulk_empty: "No terms hit auto-rules. Try relaxing rules on the left.",
-      dyn_msg_bulk_done: "Generated Bulk Sheet ({0} operations)"
+      dyn_msg_bulk_done: "Generated Bulk Sheet ({0} operations)",
+      dyn_msg_targeting_empty: "No ASIN product targeting or negative ASIN candidates in the current view.",
+      dyn_msg_targeting_done: "Product targeting / negative ASIN Bulk sheet exported ({0} rows)",
+      dyn_msg_audit_empty: "Import ads data first; paste listing copy on the left to check listing coverage gaps.",
+      dyn_msg_audit_done: "Listing coverage audit exported",
+      dyn_msg_ai_err: "Not enough data in current view to generate advanced diagnosis. Please import data first."
   }
 };
 
@@ -1645,8 +1687,14 @@ const libsCheck = () => {
   if (typeof window.ExcelJS === "undefined") missing.push("ExcelJS"); 
   if (typeof window.saveAs === "undefined") missing.push("FileSaver"); 
   if (typeof window.idbKeyval === "undefined") missing.push("idbKeyval"); 
-  if (missing.length) log(t('dyn_missing_libs', missing.join(", ")), "warn"); 
-  else log(t('dyn_libs_ok'), "good"); 
+  if (missing.length) {
+    log(t('dyn_missing_libs', missing.join(", ")), "warn");
+    const box = $("anomalyAlerts");
+    if (box) {
+      box.style.display = "flex";
+      box.innerHTML = `<div class="alert-banner warn"><span class="alert-icon">⚠️</span><div>${escapeHtml(t('dyn_missing_libs', missing.join(", ")))}<br/><span class="small">建议把 CDN 依赖下载到本地 /libs/ 后再长期部署，避免导入、图表和 Excel 导出失效。</span></div></div>`;
+    }
+  } else log(t('dyn_libs_ok'), "good"); 
   return !missing.length; 
 };
 
@@ -3066,8 +3114,8 @@ const exportRichExcelMultiSheet = async (sheets, filename) => {
               
               if ((headerName.includes('acos') || headerName === 'acos') && cell.value > 0.4) { cell.font = { color: { argb: 'FFB42318' }, bold: true }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE4E2' } }; }
               if ((headerName.includes('roas') || headerName === 'roas') && cell.value >= 3) { cell.font = { color: { argb: 'FF1A7F37' }, bold: true }; }
-              if (val === 'SCALE' || val === '潜力词' || val === 'Yes' || val === 'KEEP' || val.toString().includes('Golden')) { cell.font = { color: { argb: 'FF1A7F37' }, bold: true }; }
-              if (val === '页面缺陷' || val === 'NEGATE' || val === 'No' || val === 'DECREASE' || val.toString().includes('Toxic') || val.toString().includes('Bleeder')) { cell.font = { color: { argb: 'FFB42318' }, bold: true }; }
+              if (val != null && (val === 'SCALE' || val === '潜力词' || val === 'Yes' || val === 'KEEP' || String(val).includes('Golden'))) { cell.font = { color: { argb: 'FF1A7F37' }, bold: true }; }
+              if (val != null && (val === '页面缺陷' || val === 'NEGATE' || val === 'No' || val === 'DECREASE' || String(val).includes('Toxic') || String(val).includes('Bleeder'))) { cell.font = { color: { argb: 'FFB42318' }, bold: true }; }
           });
 
           processedRows++;
@@ -3098,6 +3146,65 @@ const exportRichExcelMultiSheet = async (sheets, filename) => {
   setTimeout(() => { if(wrap) wrap.style.display = "none"; if(bar) bar.style.width = "0%"; }, 500);
 };
 
+
+const exportProductTargetingExcel = () => {
+  if (!AdsStore.view.length) { alert(t('dyn_msg_export_empty')); return; }
+  const groups = groupBy(AdsStore.view.filter(r => isASINLike(r.searchTerm || r.targeting)), r => (r.searchTerm || r.targeting || "").toUpperCase());
+  const headers = ["ASIN", "Decision", "Reason", "Campaigns", "Ad Groups", "Spend", "Sales", "Orders", "Clicks", "ROAS", "ACOS"];
+  const dataRows = [];
+  const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Product Targeting Expression", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
+  const bulkRows = [];
+  const r = getRules();
+  const globalCvr = sumMetrics(AdsStore.view).cvr || 0.05;
+  const expectedClicksForOneOrder = globalCvr > 0 ? (1 / globalCvr) : 20;
+
+  for (const [asin, list] of groups.entries()) {
+    const m = sumMetrics(list);
+    const campaigns = [...new Set(list.map(x => x.campaign).filter(Boolean))];
+    const adGroups = [...new Set(list.map(x => x.adGroup).filter(Boolean))];
+    const main = list.reduce((p,c) => (c.spend > p.spend ? c : p), list[0]);
+    let decision = "WATCH";
+    let reason = currentLang === "zh" ? "ASIN 流量观察" : "ASIN traffic watch";
+    if (m.spend >= r.spendNeg && m.clicks >= Math.max(r.clicksNeg, expectedClicksForOneOrder) && m.orders === 0) {
+      decision = "NEGATIVE_PRODUCT_TARGETING";
+      reason = currentLang === "zh" ? "ASIN 消耗达标但无转化，建议否定商品投放" : "ASIN spend/click threshold hit with zero orders; add negative product targeting";
+      bulkRows.push(["Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", main.campaign || "[Campaign Name Required]", main.adGroup || "[Ad Group Name Required]", `asin=\"${asin}\"`, "negative exact", "", "", "", "", "enabled"]);
+    } else if (m.roas >= r.roasKeep && m.orders >= r.ordersKeep) {
+      decision = "PRODUCT_TARGETING_SCALE";
+      reason = currentLang === "zh" ? "ASIN 已验证转化，建议独立商品投放放量" : "Validated ASIN; isolate and scale as product targeting";
+      const suggestedBid = m.cpc > 0 ? (m.cpc * 1.1).toFixed(2) : "0.50";
+      bulkRows.push(["Sponsored Products", "Product Targeting", "Create", "", "", "", "", "", "", "[Target Product Targeting Campaign]", "[Target Ad Group]", `asin=\"${asin}\"`, "exact", "", "", "", suggestedBid, "enabled"]);
+    }
+    dataRows.push([asin, decision, reason, campaigns.join(", "), adGroups.join(", "), m.spend || 0, m.sales || 0, m.orders || 0, m.clicks || 0, m.roas || 0, m.acos === Infinity ? null : m.acos]);
+  }
+
+  if (!dataRows.length && !bulkRows.length) { log(t('dyn_msg_targeting_empty'), "warn"); return; }
+  exportRichExcelMultiSheet([
+    { sheetName: "ASIN Targeting Audit", headers, dataRows },
+    { sheetName: "Sponsored Products Campaigns", headers: bulkHeaders, dataRows: bulkRows }
+  ], `Ultimate_ASIN_Targeting_${getTs()}.xlsx`).then(() => log(t('dyn_msg_targeting_done', bulkRows.length), "good"));
+};
+
+const exportListingCoverageAudit = () => {
+  if (!AdsStore.view.length) { alert(t('dyn_msg_audit_empty')); return; }
+  const copy = ($("listingCopyInput")?.value || "").toLowerCase();
+  const groups = AdsStore.rankGroups || groupBy(AdsStore.view, getRankKey());
+  const rows = [...groups.entries()].map(([term, list]) => {
+    const m = sumMetrics(list);
+    const clean = String(term || "").toLowerCase().replace(/\s+/g, " ").trim();
+    const tokens = clean.split(/\s+/).filter(w => w.length > 2 && !STOPWORDS.has(w));
+    const covered = copy ? (copy.includes(clean) || tokens.some(w => copy.includes(w))) : false;
+    let priority = "Observe";
+    if (!covered && m.orders >= 2 && m.roas >= 2) priority = "High - Add to Listing";
+    else if (!covered && m.clicks >= 20 && m.orders === 0) priority = "Do Not Add / Possible Negative";
+    else if (!covered && m.spend >= 20 && m.roas >= 1.5) priority = "Medium - Test in Bullet/Image";
+    return [term, covered ? "Covered" : "Missing", priority, m.spend || 0, m.sales || 0, m.orders || 0, m.clicks || 0, m.cvr || 0, m.roas || 0, m.acos === Infinity ? null : m.acos];
+  }).filter(r => r[0] && r[0] !== "(blank)").sort((a,b) => (b[4] || 0) - (a[4] || 0)).slice(0, 5000);
+  if (!rows.length) { alert(t('dyn_msg_audit_empty')); return; }
+  const headers = ["Search Term / Root", "Listing Coverage", "Priority", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS"];
+  exportRichExcelMultiSheet([{ sheetName: "Listing Coverage Audit", headers, dataRows: rows }], `Ultimate_Listing_Coverage_${getTs()}.xlsx`).then(() => log(t('dyn_msg_audit_done'), "good"));
+};
+
 const exportNegativesExcel = () => {
 const rankBy = $("rankBy").value; 
 if (!["searchTerm", "searchTermRoot"].includes(rankBy)) { log(t('dyn_msg_export_err'), "bad"); return; } 
@@ -3122,12 +3229,16 @@ for (const it of itemsToExport) {
   let keyword = (rankBy === "searchTermRoot" ? rootToPhrase(it.name) : String(it.name || "").trim()).replace(/\s+/g," ").trim(); 
   if (!keyword || keyword === "(blank)") continue;
   
-  let finalMatchType = defaultNegMatch; if (isASINLike(keyword)) { finalMatchType = "NEGATIVE TARGETING"; }
+  let finalMatchType = defaultNegMatch; const isAsinTarget = isASINLike(keyword); if (isAsinTarget) { finalMatchType = "NEGATIVE PRODUCT TARGETING"; }
   const key = `${finalMatchType}:${keyword.toLowerCase()}`; 
   if (!seen.has(key)) { 
     seen.add(key); const campStr = (it.campaigns && it.campaigns.length > 0) ? it.campaigns.join(", ") : "-";
     dataRows.push([ keyword, finalMatchType, (rankBy === "searchTerm" ? "Search Term" : "Root"), it.reason || "", campStr, it.spend || 0, it.sales || 0, it.orders || 0, it.roas || 0, it.acos === Infinity ? null : it.acos ]); 
-    bulkDataRows.push([ "Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "", (it.campaigns && it.campaigns.length === 1) ? it.campaigns[0] : "[Campaign Name Required]", "", keyword, finalMatchType.toLowerCase() === "phrase" ? "negative phrase" : "negative exact", "", "", "", "", "enabled" ]);
+    if (isAsinTarget) {
+      bulkDataRows.push([ "Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", (it.campaigns && it.campaigns.length === 1) ? it.campaigns[0] : "[Campaign Name Required]", "[Ad Group Name Required]", `asin="${keyword.toUpperCase()}"`, "negative exact", "", "", "", "", "enabled" ]);
+    } else {
+      bulkDataRows.push([ "Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "", (it.campaigns && it.campaigns.length === 1) ? it.campaigns[0] : "[Campaign Name Required]", "", keyword, finalMatchType.toLowerCase() === "phrase" ? "negative phrase" : "negative exact", "", "", "", "", "enabled" ]);
+    }
   }
 }
 if (dataRows.length === 0) { log(t('dyn_msg_export_neg_warn'), "warn"); return; } 
@@ -3732,7 +3843,7 @@ const bindEvents = () => {
     $("rankTable").addEventListener("click", (e) => { 
       if (e.target.classList.contains("search-btn")) { 
         const td = e.target.closest("td"); const term = td.getAttribute("data-name"); 
-        if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); $(".sidebar").scrollTop = 0; } 
+        if (term) { $("filterSearchTerm").value = term; $("filterSearchExact").checked = true; applyFilters(); document.querySelector(".sidebar")?.scrollTo({ top: 0, behavior: "smooth" }); } 
       } 
     });
 
@@ -3771,9 +3882,15 @@ const bindEvents = () => {
 
     $("btnExportWf").addEventListener("click", exportWordFreqExcel); 
     $("btnExportNeg").addEventListener("click", exportNegativesExcel); 
+    $("btnExportTargeting")?.addEventListener("click", exportProductTargetingExcel);
+    $("btnExportAudit")?.addEventListener("click", exportListingCoverageAudit);
     $("btnExportLongTail").addEventListener("click", exportLongTailExcel); 
     $("btnExportRank").addEventListener("click", exportRankExcel);
-    $("btnRuleReset").addEventListener("click", () => { $("ruleSpendNeg").value = 30; $("ruleClicksNeg").value = 20; $("ruleRoasNeg").value = 1.5; $("ruleRoasKeep").value = 3; $("ruleOrdersKeep").value = 2; $("ruleRoasMigrateMin").value = 2; applyFilters(); });
+    $("btnRuleReset").addEventListener("click", () => {
+      const defaults = { ruleSpendNeg:30, ruleClicksNeg:20, ruleRoasNeg:1.5, ruleRoasKeep:3, ruleOrdersKeep:2, ruleRoasMigrateMin:2 };
+      Object.entries(defaults).forEach(([id,val]) => { if ($(id)) $(id).value = val; });
+      applyFilters();
+    });
     $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert(t('dyn_libs_ok')); });
 
     document.addEventListener("click", (e) => {
@@ -3930,6 +4047,40 @@ const createChatBubble = (sender) => {
     return bubble;
 };
 
+
+const sanitizeAIHtml = (inputHtml) => {
+    const template = document.createElement("template");
+    template.innerHTML = String(inputHtml || "").replace(/```html/g, "").replace(/```/g, "");
+    const allowedTags = new Set(["DIV","SPAN","P","BR","UL","OL","LI","STRONG","B","EM","I","CODE","TABLE","THEAD","TBODY","TR","TH","TD","BUTTON","CHART-CONFIG","CANVAS"]);
+    const allowedAttrs = new Set(["class","data-action","data-val","type","id","colspan","rowspan"]);
+    const allowedClasses = new Set(["tag","good","bad","warn","alert-banner","ai-trigger","ai-chart-container","small"]);
+    const walk = (node) => {
+        [...node.childNodes].forEach(child => {
+            if (child.nodeType === Node.COMMENT_NODE) { child.remove(); return; }
+            if (child.nodeType !== Node.ELEMENT_NODE) return;
+            const tag = child.tagName;
+            if (!allowedTags.has(tag)) {
+                child.replaceWith(document.createTextNode(child.textContent || ""));
+                return;
+            }
+            [...child.attributes].forEach(attr => {
+                const name = attr.name.toLowerCase();
+                if (name.startsWith("on") || !allowedAttrs.has(name)) { child.removeAttribute(attr.name); return; }
+                if (name === "class") {
+                    const safe = attr.value.split(/\s+/).filter(c => allowedClasses.has(c)).join(" ");
+                    if (safe) child.setAttribute("class", safe); else child.removeAttribute("class");
+                }
+                if (name === "id" && !/^ai-chart-[a-z0-9]+$/i.test(attr.value)) child.removeAttribute("id");
+                if (name === "type" && child.tagName === "BUTTON") child.setAttribute("type", "button");
+            });
+            if (tag === "BUTTON" && child.classList.contains("ai-trigger")) child.setAttribute("type", "button");
+            walk(child);
+        });
+    };
+    walk(template.content);
+    return template.innerHTML;
+};
+
 const processAICharts = (bubble) => {
     let html = bubble.innerHTML;
     while (html.includes('<chart-config>') && html.includes('</chart-config>')) {
@@ -3962,7 +4113,7 @@ const processAICharts = (bubble) => {
             html = html.replace(block, `<div class="tag bad">Chart render failed (invalid JSON format from LLM)</div>`);
         }
     }
-    bubble.innerHTML = html;
+    bubble.innerHTML = sanitizeAIHtml(html);
 };
 
 const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
@@ -4043,7 +4194,7 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
                         if (data.candidates && data.candidates[0].content.parts) {
                             const textPart = data.candidates[0].content.parts[0].text;
                             aiFullText += textPart;
-                            bubble.innerHTML = aiFullText.replace(/```html/g, '').replace(/```/g, '');
+                            bubble.innerHTML = sanitizeAIHtml(aiFullText);
                             $("aiChatHistory").scrollTop = $("aiChatHistory").scrollHeight;
                         }
                     } catch (e) { 
@@ -4066,7 +4217,7 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
 
     } catch (error) {
         console.error("Gemini API Streaming Error:", error);
-        bubble.innerHTML = `<div class="alert-banner">⚠️ Connection Interrupted / 流式连接中断。</div>`;
+        bubble.innerHTML = sanitizeAIHtml(`<div class="alert-banner">⚠️ Connection Interrupted / 流式连接中断。</div>`);
     } finally {
         $("btnSendAI").disabled = false;
         $("aiChatInput").disabled = false;
