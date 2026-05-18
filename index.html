@@ -504,7 +504,7 @@
           <h2 style="color: #aa00ff; display: flex; align-items: center; gap: 6px; margin:0;" data-i18n="ai_title">✨ Gemini AI Agent 引擎</h2>
           <div style="display:flex; gap: 8px; align-items: center;">
             <button class="btn" id="btnAILog" type="button" style="display:none; padding: 4px 10px; font-size: 11px;" data-i18n="btn_ai_log">📝 导出对话日志</button>
-            <button class="btn" id="btnAIBulk" type="button" style="display:none; padding: 4px 10px; font-size: 11px; color: var(--good); border-color: rgba(26,127,55,0.3); background: var(--softGood);" data-i18n-title="title_ai_bulk" title="生成直接上传到亚马逊后台的 Bulk 操作表" data-i18n="btn_ai_bulk">⚡ 导出 Bulk 执行表</button>
+            <button class="btn" id="btnAIBulk" type="button" style="display:none; padding: 4px 10px; font-size: 11px; color: var(--good); border-color: rgba(26,127,55,0.3); background: var(--softGood);" data-i18n-title="title_ai_bulk" title="AI 仅生成 Bulk 草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid" data-i18n="btn_ai_bulk">⚡ 导出 AI Bulk 草稿</button>
             <button class="btn primary" id="btnAIPDF" type="button" style="display:none; padding: 4px 10px; font-size: 11px;" data-i18n="btn_ai_pdf">📥 导出 PDF 报告</button>
             <button class="search-clear-btn" id="btnCloseAI" type="button" data-i18n-title="title_close_ai" title="关闭诊断">✕</button>
           </div>
@@ -597,6 +597,21 @@
             <div>
               <h2 style="font-size:14px;" data-i18n="title_keyword_template_export">关键词上传模板导出</h2>
               <div class="hint" data-i18n="hint_keyword_template_export">按照你提供的模板导出：关键词 / 匹配类型 / 竞价，可分别上传精准、词组、广泛</div>
+            </div>
+          </div>
+          <div class="row2" style="margin-bottom:10px;">
+            <div class="fieldRow">
+              <label data-i18n="lbl_keyword_export_scope">关键词导出范围</label>
+              <div class="selectWrap">
+                <select id="actionKeywordExportScope">
+                  <option value="view" selected data-i18n="opt_keyword_export_view">当前显示范围</option>
+                  <option value="all" data-i18n="opt_keyword_export_all">全部可执行建议</option>
+                </select>
+              </div>
+            </div>
+            <div class="fieldRow">
+              <label data-i18n="lbl_keyword_upload_entry">上传入口说明</label>
+              <div class="small" data-i18n="hint_keyword_upload_entry">该三列表适用于广告组内关键词批量导入，不是 Amazon Ads Bulk Operations 总入口；建议在单一 Campaign / Ad Group 内使用</div>
             </div>
           </div>
           <div class="row3">
@@ -986,12 +1001,13 @@ const I18N = {
       btn_ai: "召唤 AI 参谋 (Streaming)",
       ai_title: "✨ Gemini AI Agent 引擎",
       btn_ai_log: "📝 导出对话日志",
-      title_ai_bulk: "生成直接上传到亚马逊后台的 Bulk 操作表",
-      btn_ai_bulk: "⚡ 导出 Bulk 执行表",
+      title_ai_bulk: "AI 仅生成 Bulk 草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid",
+      btn_ai_bulk: "⚡ 导出 AI Bulk 草稿",
       btn_ai_pdf: "📥 导出 PDF 报告",
       title_close_ai: "关闭诊断",
       ph_ai_chat: "输入指令，例如：画一个关于各维度 CPC 的柱状图...",
       btn_send: "发送",
+      btn_ai_stop: "停止生成",
       title_exec_overview: "大盘总览与联动趋势 (Executive Overview)",
       hint_exec_overview: "大盘核心 KPI 与每日消耗/产出走势对比",
       title_action_center: "广告动作清单中心 Simple (Action Command Center)",
@@ -1001,6 +1017,11 @@ const I18N = {
       btn_action_excel: "导出建议 Excel",
       title_keyword_template_export: "关键词上传模板导出",
       hint_keyword_template_export: "按照你提供的模板导出：关键词 / 匹配类型 / 竞价，可分别上传精准、词组、广泛",
+      lbl_keyword_export_scope: "关键词导出范围",
+      opt_keyword_export_view: "当前显示范围",
+      opt_keyword_export_all: "全部可执行建议",
+      lbl_keyword_upload_entry: "上传入口说明",
+      hint_keyword_upload_entry: "该三列表适用于广告组内关键词批量导入，不是 Amazon Ads Bulk Operations 总入口；建议在单一 Campaign / Ad Group 内使用，避免跨 ASIN 混传",
       btn_export_kw_exact: "导出精准关键词",
       btn_export_kw_phrase: "导出词组关键词",
       btn_export_kw_broad: "导出广泛关键词",
@@ -1051,6 +1072,7 @@ const I18N = {
       action_reason_neg_threshold: "达到花费和点击止损线仍没有订单，优先否定",
       action_reason_decrease_order: "有订单但 ROAS/ACOS 不达标，先降价保留验证",
       action_reason_decrease_sample: "接近止损线但样本还不够，先降价控损",
+      action_reason_brand_protect: "品牌词不自动否定，先降价控损并人工复核",
       action_reason_increase_exact: "Exact 已验证出单且 ROAS 达标，可小幅加价抢更多展示",
       action_reason_create_exact: "Auto/Broad/Phrase 已验证出单，新增精准词承接高意图流量",
       action_reason_create_phrase: "该词有成交基础，词组匹配适合扩展相近长尾搜索词",
@@ -1280,8 +1302,8 @@ const I18N = {
       dyn_msg_export_neg_done: "已导出否定词 Excel",
       dyn_msg_export_rank_empty: "当前榜单为空，无数据可导出。",
       dyn_msg_export_rank_gen: "正在异步生成榜单 (含智能调价建议)...",
-      dyn_msg_bulk_empty: "当前视图未检测到符合自动止血/提价规则的词汇，无需导出。可尝试在左侧放宽判定规则。",
-      dyn_msg_bulk_done: "已生成 Bulk 批量执行表 (共包含 {0} 条操作指令)",
+      dyn_msg_bulk_empty: "当前视图未检测到 Action Center 已审核的可执行 Bulk 草稿动作。可尝试在左侧放宽判定规则。",
+      dyn_msg_bulk_done: "已生成 AI Bulk 草稿 (共包含 {0} 条操作指令)",
       dyn_msg_targeting_empty: "当前没有可导出的 ASIN 商品投放或否定 ASIN。",
       dyn_msg_targeting_done: "已导出商品投放/否定 ASIN Bulk 表，共 {0} 条",
       dyn_msg_audit_empty: "请先导入广告数据；如需检测 Listing 缺口，请在左侧粘贴 Listing 文案。",
@@ -1367,12 +1389,13 @@ const I18N = {
       btn_ai: "Summon AI Agent (Streaming)",
       ai_title: "✨ Gemini AI Agent Engine",
       btn_ai_log: "📝 Export Chat Log",
-      title_ai_bulk: "Generate Bulk Operation Sheet for Amazon Upload",
-      btn_ai_bulk: "⚡ Export Bulk Sheet",
+      title_ai_bulk: "AI generates a Bulk draft only. Confirm Campaign, Ad Group, Match Type, and Bid before upload.",
+      btn_ai_bulk: "⚡ Export AI Bulk Draft",
       btn_ai_pdf: "📥 Export PDF Report",
       title_close_ai: "Close Diagnosis",
       ph_ai_chat: "Enter prompt, e.g.: Draw a bar chart of CPC by dimension...",
       btn_send: "Send",
+      btn_ai_stop: "Stop",
       title_exec_overview: "Executive Overview & TACOS",
       hint_exec_overview: "Core KPIs and daily spend/sales trend",
       title_action_center: "Simple Action Command Center",
@@ -1382,6 +1405,11 @@ const I18N = {
       btn_action_excel: "Export Action Excel",
       title_keyword_template_export: "Keyword Upload Template Export",
       hint_keyword_template_export: "Exports using your template: keyword / match type / bid, split into exact, phrase, and broad files.",
+      lbl_keyword_export_scope: "Keyword Export Scope",
+      opt_keyword_export_view: "Current Display Scope",
+      opt_keyword_export_all: "All Executable Suggestions",
+      lbl_keyword_upload_entry: "Upload Entry Note",
+      hint_keyword_upload_entry: "This 3-column file is for keyword bulk import inside one ad group, not the Amazon Ads Bulk Operations global upload. Use it within a single Campaign / Ad Group to avoid mixing ASIN contexts.",
       btn_export_kw_exact: "Export Exact Keywords",
       btn_export_kw_phrase: "Export Phrase Keywords",
       btn_export_kw_broad: "Export Broad Keywords",
@@ -1432,6 +1460,7 @@ const I18N = {
       action_reason_neg_threshold: "Reached spend and click stop-loss thresholds with zero orders; prioritize negation",
       action_reason_decrease_order: "Has orders but ROAS/ACOS is below target; decrease bid first and keep validating",
       action_reason_decrease_sample: "Near stop-loss threshold but sample is not enough; decrease bid to control loss",
+      action_reason_brand_protect: "Brand terms are not auto-negated; decrease bid first and review manually",
       action_reason_increase_exact: "Exact term has proven orders and target ROAS; raise bid slightly to capture more impressions",
       action_reason_create_exact: "Auto/Broad/Phrase has proven orders; create Exact keyword to capture high-intent traffic",
       action_reason_create_phrase: "This term has conversion evidence; Phrase match can expand similar long-tail searches",
@@ -1661,8 +1690,8 @@ const I18N = {
       dyn_msg_export_neg_done: "Negative Keyword Excel Exported",
       dyn_msg_export_rank_empty: "Rank is empty, nothing to export.",
       dyn_msg_export_rank_gen: "Generating Rank async (with AI bid suggestions)...",
-      dyn_msg_bulk_empty: "No terms hit auto-rules. Try relaxing rules on the left.",
-      dyn_msg_bulk_done: "Generated Bulk Sheet ({0} operations)",
+      dyn_msg_bulk_empty: "No Action Center-approved executable Bulk draft actions found. Try relaxing the rules on the left.",
+      dyn_msg_bulk_done: "Generated AI Bulk Draft ({0} operations)",
       dyn_msg_targeting_empty: "No ASIN product targeting or negative ASIN candidates in the current view.",
       dyn_msg_targeting_done: "Product targeting / negative ASIN Bulk sheet exported ({0} rows)",
       dyn_msg_audit_empty: "Import ads data first; paste listing copy on the left to check listing coverage gaps.",
@@ -2370,7 +2399,7 @@ const importMultipleFiles = async (files) => {
       const header = Object.keys(rows[0]); 
       const normHeader = header.map(cleanHeader);
       
-      const hasAsin = normHeader.some(h => ["（子）asin", "(child)asin", "childasin", "子商品asin"].includes(h));
+      const hasAsin = normHeader.some(h => ["asin", "（子）asin", "(child)asin", "childasin", "子商品asin", "（父）asin", "(parent)asin", "parentasin", "父商品asin"].includes(h));
       const hasSessions = normHeader.some(h => ["会话数-总计", "sessions-total", "sessions", "买家访问次数"].includes(h));
       const hasPlacement = normHeader.some(h => ["放置", "placement", "广告位", "位置"].includes(h));
       const hasSearchTerm = normHeader.some(h => ["客户搜索词", "customersearchterm", "searchterm"].includes(h));
@@ -2531,7 +2560,7 @@ const buildBusinessAggregates = () => {
   for (const adRow of AdsStore.view || []) {
     if (!adRow.orders) continue;
     const haystack = `${adRow.campaign || ""} ${adRow.adGroup || ""} ${adRow.targeting || ""} ${adRow.searchTerm || ""}`;
-    const asins = [...new Set(haystack.match(/B0[A-Z0-9]{8}/gi) || [])].map(x => x.toUpperCase());
+    const asins = [...new Set(haystack.match(/\bB0[A-Z0-9]{8}\b/gi) || [])].map(x => x.toUpperCase());
     for (const asin of asins) adOrdersByAsin.set(asin, (adOrdersByAsin.get(asin) || 0) + adRow.orders);
   }
 
@@ -3910,7 +3939,7 @@ const runLocalSemanticClustering = async () => {
 
 // ==================== Action Command Center Simple ====================
 const extractAsinFromText = (value) => {
-  const match = String(value || "").match(/\b[A-Z0-9]{10}\b/i);
+  const match = String(value || "").match(/\bB0[A-Z0-9]{8}\b/i);
   return match ? match[0].toUpperCase() : "";
 };
 
@@ -3955,7 +3984,7 @@ const extractBroadRootTerm = (text) => {
   if (/\bcomputer\b/.test(s)) return withWomen("computer readers");
   // Blue Light 对老花镜业务更适合作为功能辅助词，不默认作为 Broad 主轴放量
   if (/\bblue\s*light\b/.test(s) && /\bcomputer\b|\bscreen\b|\bdigital\b/.test(s)) return withWomen("computer readers");
-  if (/\bblue\s*light\b/.test(s)) return withWomen("reading glasses");
+  if (/\bblue\s*light\b/.test(s)) return "";
   if (mag && hasReaders) return `reading glasses ${mag}`;
   if (/\bfloral\b/.test(s)) return withWomen("floral readers");
   if (/\brectangle\b/.test(s)) return withWomen("rectangle readers");
@@ -3972,6 +4001,14 @@ const extractBroadRootTerm = (text) => {
   const preferred = tokens.filter(t => /^(women|readers|glasses|eyeglasses|computer|blue|light|cat|eye|floral|rectangle|square|fashion|stylish|oversized|spring|hinge|small|print|[1-4](?:\.\d{1,2})?)$/.test(t));
   const root = (preferred.length ? preferred : tokens).slice(0, 4).join(" ");
   return root || s.split(/\s+/).slice(0, 4).join(" ");
+};
+
+const BROAD_ROOT_ALLOW_RE = /^(reading glasses women|readers women|women readers|cat eye readers(?: women)?|computer readers(?: women)?|fashion readers(?: women)?|stylish readers(?: women)?|floral readers(?: women)?|rectangle readers(?: women)?|square readers(?: women)?|oversized readers(?: women)?|reading glasses (?:[1-4](?:\.\d{1,2})?))$/i;
+const BROAD_ROOT_BLOCK_RE = /^(reading glasses|readers|glasses|eyeglasses|blue light readers|blue light glasses)$/i;
+const isBroadRootAllowed = (root) => {
+  const normalized = normalizeBroadRootTerm(root);
+  if (!normalized || BROAD_ROOT_BLOCK_RE.test(normalized)) return false;
+  return BROAD_ROOT_ALLOW_RE.test(normalized);
 };
 
 const getActionTargetAcos = (aov = 15) => {
@@ -4075,20 +4112,25 @@ const buildActionPlan = (options = {}) => {
     const broadRoot = controls.broadRoot ? extractBroadRootTerm(raw) : raw;
     const broadRootWords = countTermWords(broadRoot);
 
-    // 1) 否定：烧钱 0 单，或者明显类目错配 0 单。
-    if (it.orders <= 0 && ((it.spend >= rules.spendNeg && it.clicks >= rules.clicksNeg) || (isMismatch && nearNegSpend))) {
-      if (isAsin) {
+    // 1) 否定：烧钱 0 单，或者明显类目错配 0 单。品牌词不自动否定，只允许降价和人工复核。
+    const hitNegativeThreshold = it.orders <= 0 && ((it.spend >= rules.spendNeg && it.clicks >= rules.clicksNeg) || (isMismatch && nearNegSpend));
+    if (hitNegativeThreshold) {
+      if (isBrand) {
+        rows.push(makeSimpleAction(it, "decrease", "降价", "Brand Defense Review", getSuggestedBid(it, "decrease", targetAcos), t("action_reason_brand_protect"), false));
+      } else if (isAsin) {
         rows.push(makeSimpleAction(it, "negate", "否定", "Negative Product Targeting", "", t("action_reason_neg_asin"), true));
       } else {
-        const negType = isBrand || it.hasExact ? "Negative Exact" : "Negative Phrase";
+        const negType = it.hasExact ? "Negative Exact" : "Negative Phrase";
         rows.push(makeSimpleAction(it, "negate", "否定", negType, "", isMismatch ? t("action_reason_neg_mismatch") : t("action_reason_neg_threshold"), true));
       }
       continue;
     }
 
-    // 2) 降价：还没到直接否定，但效率差；或者有单但 ACOS 超利润线。
-    if ((it.orders <= 0 && (nearNegSpend || nearNegClicks)) || (it.orders > 0 && (it.roas < rules.roasMigrateMin || it.acos > targetAcos * 1.30))) {
+    // 2) 降价：还没到直接否定，但效率差；或者有单但 ACOS 超利润线。进入降价后不再同时扩展 Exact/Phrase/Broad，避免执行冲突。
+    const needsDecrease = (it.orders <= 0 && (nearNegSpend || nearNegClicks)) || (it.orders > 0 && (it.roas < rules.roasMigrateMin || it.acos > targetAcos * 1.30));
+    if (needsDecrease) {
       rows.push(makeSimpleAction(it, "decrease", "降价", "Bid Decrease", getSuggestedBid(it, "decrease", targetAcos), it.orders > 0 ? t("action_reason_decrease_order") : t("action_reason_decrease_sample"), false));
+      continue;
     }
 
     // 3) 加价：Exact 或已精准承接的高 ROAS 词，直接提高竞价。
@@ -4106,8 +4148,9 @@ const buildActionPlan = (options = {}) => {
       rows.push(makeSimpleAction(it, "phrase", "投放词组", "Create Phrase Keyword", getSuggestedBid(it, "phrase", targetAcos), t("action_reason_create_phrase"), true));
     }
 
-    // 6) 投放广泛：只给高 ROAS、相关性明确的词，先提炼成 2-4 个词的 Broad 词根，避免把长尾整句拿去广泛乱烧钱。
-    if (!isAsin && it.orders >= Math.max(2, rules.ordersKeep) && it.roas >= Math.max(rules.roasKeep, 3) && broadRoot && broadRootWords >= 2 && broadRootWords <= 4 && !it.hasBroad && !isMismatch && isRelevantCore) {
+    // 6) 投放广泛：只允许白名单 Broad 词根，禁止 reading glasses / readers / blue light readers 这类泛词直接 Broad 放量。
+    const broadAllowed = controls.broadRoot ? isBroadRootAllowed(broadRoot) : isBroadRootAllowed(raw);
+    if (!isAsin && it.orders >= Math.max(2, rules.ordersKeep) && it.roas >= Math.max(rules.roasKeep, 3) && broadRoot && broadRootWords >= 2 && broadRootWords <= 4 && !it.hasBroad && !isMismatch && isRelevantCore && broadAllowed) {
       const broadReason = controls.broadRoot && broadRoot !== raw
         ? t("action_reason_broad_root", raw, broadRoot)
         : t("action_reason_broad_core");
@@ -4123,6 +4166,7 @@ const buildActionPlan = (options = {}) => {
     const order = { negate:0, increase:1, decrease:2, exact:3, phrase:4, broad:5 };
     filtered.sort((a,b) => (order[a.actionKey] - order[b.actionKey]) || (b.orders - a.orders) || (b.spend - a.spend) || (b.roas - a.roas));
   }
+  if (options.noLimit) return filtered;
   const maxRows = Number.isFinite(options.maxRows) ? options.maxRows : controls.maxRows;
   return filtered.slice(0, maxRows);
 };
@@ -4259,8 +4303,11 @@ const getKeywordTemplateMatchText = (matchType) => {
 
 const getKeywordExportLabel = (matchType) => t(`keyword_match_${matchType}`);
 
+const getKeywordExportScope = () => ($("actionKeywordExportScope")?.value || "view");
+
 const buildKeywordTemplateRows = (matchType) => {
-  const rows = buildActionPlan({ actionFilter: matchType });
+  const exportAll = getKeywordExportScope() === "all";
+  const rows = buildActionPlan({ actionFilter: matchType, noLimit: exportAll });
   const seen = new Set();
   return rows
     .filter(r => r.actionKey === matchType && r.bulkReady && r.objectType !== "ASIN")
@@ -4637,6 +4684,7 @@ const bindEvents = () => {
 
 let aiMessageHistory = []; 
 let currentSystemContext = ""; 
+let aiAbortController = null;
 
 const truncateForAI = (arr, limit, typeName) => {
     if(arr.length <= limit) return arr.map(t => `${t.t} (消耗$${t.spend.toFixed(0)}, 产出$${(t.sales||0).toFixed(0)})`);
@@ -4647,6 +4695,40 @@ const truncateForAI = (arr, limit, typeName) => {
         ...kept.map(t => `${t.t} (消耗$${t.spend.toFixed(0)}, 产出$${(t.sales||0).toFixed(0)})`),
         `...[折叠了额外 ${hidden.length} 个${typeName}，累计浪费 $${hiddenSpend.toFixed(0)}]`
     ];
+};
+
+const summarizeActionRowsForAI = (rows = []) => {
+    if (!rows.length) return currentLang === 'zh' ? '暂无 Action Center 可执行动作。' : 'No executable Action Center actions yet.';
+    const counts = rows.reduce((acc, r) => {
+        acc[r.actionKey] = (acc[r.actionKey] || 0) + 1;
+        return acc;
+    }, {});
+    const sortScore = (r) => (r.actionKey === 'negate' ? 100000 : 0) + (r.spend || 0) * 10 + (r.orders || 0) * 50 + (r.roas || 0) * 20;
+    const topByAction = ['negate','decrease','increase','exact','phrase','broad'].map(actionKey => {
+        const items = rows.filter(r => r.actionKey === actionKey).sort((a,b) => sortScore(b) - sortScore(a)).slice(0, 6);
+        if (!items.length) return '';
+        const label = getActionLabelText(actionKey, actionKey);
+        return `${label}(${items.length}/${counts[actionKey] || items.length}): ` + items.map(r => `${r.name} | ${r.matchAdvice || '-'} | Bid:${r.suggestedBid || '-'} | Spend:$${(r.spend||0).toFixed(0)} | Orders:${r.orders||0} | ROAS:${(r.roas||0).toFixed(2)}${r.bulkReady ? ' | bulkReady' : ''}`).join(' ; ');
+    }).filter(Boolean).join('\n');
+    return `${currentLang === 'zh' ? '动作数量' : 'Action counts'}: NEGATE ${counts.negate || 0}, DECREASE ${counts.decrease || 0}, INCREASE ${counts.increase || 0}, EXACT ${counts.exact || 0}, PHRASE ${counts.phrase || 0}, BROAD ${counts.broad || 0}\n${topByAction}`;
+};
+
+const getAiLanguageInstruction = () => currentLang === 'zh'
+    ? '请用中文输出，关键词、匹配类型和亚马逊术语可以保留英文。'
+    : 'Please respond in clear English. Keep Amazon ad terms and keyword examples precise.';
+
+const getAiInitialPrompt = () => currentLang === 'zh'
+    ? `请对当前大盘进行一次全面的综合体检报告。请严格按照以下 4 个模块输出（使用 <h3> 标签）：\n1. 🧭 核心体检与趋势定调\n2. 🩸 止血手术清单 (Negation & Downbidding)\n3. 🚀 结构重组与拓词建议 (Search Term Isolation)\n4. 💡 接下来 14 天的预算操盘指令`
+    : `Run a full account health diagnosis. Output exactly these 4 modules with <h3> tags:\n1. 🧭 Core Health Check and Trend Direction\n2. 🩸 Bleeding Control List (Negation & Downbidding)\n3. 🚀 Structure Rebuild and Keyword Expansion\n4. 💡 Budget Command Plan for the Next 14 Days`;
+
+const getGeminiErrorMessage = async (response) => {
+    let detail = '';
+    try { detail = await response.text(); } catch(e) {}
+    const shortDetail = detail ? `\n${detail.slice(0, 300)}` : '';
+    const zhMap = { 400: '请求体过大或格式错误，请减少对话历史或缩小筛选范围。', 401: 'API Key 无效或未授权。', 403: 'API 权限不足或项目限制。', 429: '触发频率或额度限制，请降低请求频率。', 500: 'Gemini 服务端错误。', 503: 'Gemini 服务暂时不可用。' };
+    const enMap = { 400: 'Request body is too large or malformed. Reduce chat history or narrow the filters.', 401: 'API key is invalid or unauthorized.', 403: 'API permission denied or project restricted.', 429: 'Rate limit or quota limit reached. Reduce request frequency.', 500: 'Gemini server error.', 503: 'Gemini service temporarily unavailable.' };
+    const msg = (currentLang === 'zh' ? zhMap : enMap)[response.status] || (currentLang === 'zh' ? 'Gemini API 返回异常。' : 'Gemini API returned an error.');
+    return `Gemini API ${response.status}: ${msg}${shortDetail}`;
 };
 
 const buildAdvancedAIContext = () => {
@@ -4713,6 +4795,9 @@ const buildAdvancedAIContext = () => {
       return `[${d}] 消耗:$${dayMetrics.spend.toFixed(0)}|单:${dayMetrics.orders}|ROAS:${dayMetrics.roas.toFixed(2)}`;
   });
 
+  const actionRowsForAI = buildActionPlan({ actionFilter: 'all', noLimit: true });
+  const actionCenterSummary = summarizeActionRowsForAI(actionRowsForAI);
+
   return `
 【全局大盘与结构健康度】
 总花费: $${m.spend.toFixed(2)} | 总产出: $${m.sales.toFixed(2)} | ROAS: ${m.roas.toFixed(2)} | ACOS: ${(m.acos * 100).toFixed(1)}%
@@ -4734,6 +4819,9 @@ ${topTerms.join('; ')}
 
 【近7天动能趋势】
 ${recent7Days.join(' ➡️ ')}
+
+【Action Center 已判定动作池】
+${actionCenterSummary}
 `;
 };
 
@@ -4814,10 +4902,12 @@ const processAICharts = (bubble) => {
             setTimeout(() => {
                 const ctx = $(canvasId)?.getContext('2d');
                 if (ctx) {
+                    const chartData = config.data || { labels: config.labels || [], datasets: config.datasets || [] };
+                    const chartOptions = Object.assign({ responsive: true, maintainAspectRatio: false }, config.options || {});
                     new Chart(ctx, {
                         type: config.type || 'bar',
-                        data: config,
-                        options: { responsive: true, maintainAspectRatio: false }
+                        data: chartData,
+                        options: chartOptions
                     });
                 }
             }, 100);
@@ -4831,9 +4921,35 @@ const processAICharts = (bubble) => {
 
 const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
     const apiKey = atob("QUl6YVN5QnhNaE0yRXlhbDYxZm9rcGNwZ1Nrb3p2amdwcU9aZWlJ");
-    
-    const systemPrompt = `你是一位拥有10年经验的亚马逊高级PPC操盘手。这是你当前所处的大盘数据沙盘：\n${currentSystemContext}\n
-【你的任务约束】：
+    if (aiAbortController) {
+        try { aiAbortController.abort(); } catch(e) {}
+    }
+    aiAbortController = new AbortController();
+    const sendBtn = $("btnSendAI");
+    const inputObj = $("aiChatInput");
+    if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = t('btn_ai_stop');
+        sendBtn.dataset.mode = 'stop';
+    }
+    if (inputObj) inputObj.disabled = true;
+
+    const systemPrompt = `你是一位拥有10年经验的亚马逊高级PPC操盘手。这是你当前所处的大盘数据沙盘：
+${currentSystemContext}
+
+【语言要求】
+${getAiLanguageInstruction()}
+
+【执行红线，必须高于你的自由判断】
+1. 所有可执行上传建议必须以 Action Center 已判定动作池为准；AI 只能解释、排序、补充风险，不得绕开确定性规则另算 Bulk。
+2. 品牌词只能降价或人工复核，不得建议自动否定。
+3. Broad 只允许白名单方向：reading glasses women / readers women / women readers / cat eye readers / fashion readers / computer readers 及明确高转化风格词根。
+4. Blue Light 只能作为 Phrase/Exact 验证或 Listing 功能辅助，不作为 Broad 放量主轴。
+5. SB/SD 数据只能分析，不得生成 Sponsored Products Bulk 行。
+6. 三列关键词模板适用于广告组内关键词批量导入，不是 Amazon Ads Bulk Operations 总入口。
+7. 任何 Bulk 文件都只能称为草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid。
+
+【你的任务约束】
 1. 绝对禁止使用 Markdown 语法（如 ** 或 #）。必须且只能使用基础 HTML 标签。
 2. 必须使用系统内置的 CSS 类名来高亮重点，以完美融合系统 UI：
    - 使用 <span class="tag good">文本</span> 来标记好的信号/利润/涨幅。
@@ -4844,15 +4960,16 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
 3. 【Agent 执行能力】：你可以在回答中插入操作按钮供用户点击执行。
    - 过滤查询词组：<button class="ai-trigger" data-action="search" data-val="blue light">筛选包含 blue light 的词</button>
    - 切换分析维度：<button class="ai-trigger" data-action="dim" data-val="magnification">一键查看老花镜度数矩阵</button>
-4. 【动态画图能力】：如果你觉得需要用图表展示数据（比如趋势对比、占比等），请严格输出以下JSON格式包裹在 <chart-config> 和 </chart-config> 之间（杜绝任何 Markdown 转义）：
-   <chart-config>
-   {"type":"bar","labels":["A","B"],"datasets":[{"label":"销量","data":[10,20],"backgroundColor":"#0071e3"}]}
-   </chart-config>
+4. 【动态画图能力】：如果你觉得需要用图表展示数据（比如趋势对比、占比等），请输出 JSON 包裹在 <chart-config> 和 </chart-config> 之间。支持两种格式：
+   <chart-config>{"type":"bar","labels":["A","B"],"datasets":[{"label":"Sales","data":[10,20]}]}</chart-config>
+   或 <chart-config>{"type":"bar","data":{"labels":["A","B"],"datasets":[{"label":"Sales","data":[10,20]}]}}</chart-config>
 5. 当用户要求“语义聚类”时，请基于【Top 50 搜索词】分析买家意图，并针对老花镜 (Reading Glasses) 的度数长尾词提供深度见解。
 6. 段落紧凑，直击痛点，像高级分析师一样对话。`;
 
     const dynamicCtx = buildDynamicContext(userPrompt);
     const finalPrompt = userPrompt + dynamicCtx;
+    const MAX_HISTORY_MESSAGES = 12;
+    if (aiMessageHistory.length > MAX_HISTORY_MESSAGES) aiMessageHistory = aiMessageHistory.slice(-MAX_HISTORY_MESSAGES);
 
     const payload = {
         systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -4868,16 +4985,23 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: aiAbortController.signal
         });
 
-        if (!response.ok) throw new Error("API Response Error");
+        if (!response.ok) throw new Error(await getGeminiErrorMessage(response));
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let aiFullText = "";
         let buffer = ""; 
+        let lastRender = 0;
         bubble.innerHTML = ""; 
+
+        const renderStreamingText = () => {
+            bubble.textContent = aiFullText;
+            $("aiChatHistory").scrollTop = $("aiChatHistory").scrollHeight;
+        };
 
         while (true) {
             const { done, value } = await reader.read();
@@ -4886,9 +5010,8 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
                     try {
                         if (buffer.startsWith("data: ") && buffer !== "data: [DONE]") {
                             const data = JSON.parse(buffer.substring(6));
-                            if (data.candidates && data.candidates[0].content.parts) {
-                                aiFullText += data.candidates[0].content.parts[0].text;
-                            }
+                            const textPart = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                            aiFullText += textPart;
                         }
                     } catch (e) { }
                 }
@@ -4897,18 +5020,18 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
             
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split("\n");
-            
             buffer = lines.pop(); 
             
             for (const line of lines) {
                 if (line.startsWith("data: ") && line !== "data: [DONE]") {
                     try {
                         const data = JSON.parse(line.substring(6));
-                        if (data.candidates && data.candidates[0].content.parts) {
-                            const textPart = data.candidates[0].content.parts[0].text;
-                            aiFullText += textPart;
-                            bubble.innerHTML = sanitizeAIHtml(aiFullText);
-                            $("aiChatHistory").scrollTop = $("aiChatHistory").scrollHeight;
+                        const textPart = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                        aiFullText += textPart;
+                        const now = Date.now();
+                        if (now - lastRender > 100) {
+                            renderStreamingText();
+                            lastRender = now;
                         }
                     } catch (e) { 
                         console.warn("SSE Parse Error", e); 
@@ -4917,10 +5040,12 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
             }
         }
         
+        bubble.innerHTML = sanitizeAIHtml(aiFullText);
         processAICharts(bubble);
         
         aiMessageHistory.push({ role: "user", parts: [{ text: finalPrompt }] });
         aiMessageHistory.push({ role: "model", parts: [{ text: aiFullText }] });
+        if (aiMessageHistory.length > MAX_HISTORY_MESSAGES) aiMessageHistory = aiMessageHistory.slice(-MAX_HISTORY_MESSAGES);
 
         if (isInitialReport) {
             $("btnAILog").style.display = "inline-flex";
@@ -4930,11 +5055,22 @@ const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
 
     } catch (error) {
         console.error("Gemini API Streaming Error:", error);
-        bubble.innerHTML = sanitizeAIHtml(`<div class="alert-banner">⚠️ Connection Interrupted / 流式连接中断。</div>`);
+        const aborted = error?.name === 'AbortError';
+        const msg = aborted
+            ? (currentLang === 'zh' ? '已停止生成。' : 'Generation stopped.')
+            : escapeHtml(error?.message || (currentLang === 'zh' ? '流式连接中断。' : 'Streaming connection interrupted.'));
+        bubble.innerHTML = sanitizeAIHtml(`<div class="alert-banner warn">⚠️ ${msg}</div>`);
     } finally {
-        $("btnSendAI").disabled = false;
-        $("aiChatInput").disabled = false;
-        $("aiChatInput").focus();
+        aiAbortController = null;
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = t('btn_send');
+            sendBtn.dataset.mode = 'send';
+        }
+        if (inputObj) {
+            inputObj.disabled = false;
+            inputObj.focus();
+        }
     }
 };
 
@@ -4954,20 +5090,25 @@ const bindAIEvents = () => {
         aiBox.style.display = "block";
         $("btnAI").disabled = true;
 
-        const initialPrompt = `请对当前大盘进行一次全面的综合体检报告。请严格按照以下 4 个模块输出（使用 <h3> 标签）：\n1. 🧭 核心体检与趋势定调\n2. 🩸 止血手术清单 (Negation & Downbidding)\n3. 🚀 结构重组与拓词建议 (Search Term Isolation)\n4. 💡 针对即将到来的 Spring Sale (春季大促) 的预算操盘指令`;
+        const initialPrompt = getAiInitialPrompt();
         
         await callGeminiChatAPI(initialPrompt, true);
         $("btnAI").disabled = false;
     });
 
     $("btnSendAI")?.addEventListener("click", () => {
+        const sendBtn = $("btnSendAI");
+        if (sendBtn?.dataset.mode === 'stop' && aiAbortController) {
+            aiAbortController.abort();
+            return;
+        }
         const inputObj = $("aiChatInput");
         const msg = inputObj.value.trim();
         if (!msg) return;
         
         inputObj.value = "";
         inputObj.disabled = true;
-        $("btnSendAI").disabled = true;
+        sendBtn.disabled = false;
         
         const userBubble = createChatBubble("user");
         userBubble.innerHTML = `<strong>You / 我:</strong> ${escapeHtml(msg)}`;
@@ -5053,59 +5194,21 @@ const bindAIEvents = () => {
     });
 
     $("btnAIBulk")?.addEventListener("click", () => {
-        const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Product Targeting Expression", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
-        const bulkRows = [];
-
-        const r = getRules();
-        const groups = AdsStore.rankGroups || groupBy(AdsStore.view, getRankKey());
-
-        const globalMetrics = sumMetrics(AdsStore.view);
-        const globalCvr = globalMetrics.cvr || 0.05;
-        const expectedClicksForOneOrder = globalCvr > 0 ? (1 / globalCvr) : 20;
-
-        for (const [term, list] of groups.entries()) {
-            if (!term || term === "(blank)" || isASINLike(term)) continue;
-
-            const m = sumMetrics(list);
-            const mainRow = list.reduce((prev, curr) => (curr.spend > prev.spend) ? curr : prev, list[0]);
-            let cleanTerm = (term || "").replace(/\s+/g, " ").trim();
-            
-            const safeCampaign = mainRow.campaign || "[Campaign Name Required]";
-            const safeAdGroup = mainRow.adGroup || "[Ad Group Name Required]";
-
-            if (m.spend >= r.spendNeg && m.clicks > (expectedClicksForOneOrder * 1.5) && m.orders === 0) {
-                bulkRows.push([
-                    "Sponsored Products", "Negative Keyword", "Create", 
-                    "", "", "", "", "", "", 
-                    safeCampaign, safeAdGroup, cleanTerm, "", "negative exact", 
-                    "", "", "", "", "enabled"
-                ]);
-            }
-            else if (m.roas >= r.roasKeep && m.orders >= r.ordersKeep) {
-                const isAlreadyExact = list.some(row => (row.matchType || "").toLowerCase() === "exact");
-                if (!isAlreadyExact) {
-                    const suggestedBid = m.cpc > 0 ? (m.cpc * 1.2).toFixed(2) : 0.5; 
-                    bulkRows.push([
-                        "Sponsored Products", "Keyword", "Create", 
-                        "", "", "", "", "", "", 
-                        safeCampaign, safeAdGroup, cleanTerm, "", "exact", 
-                        "", "", "", suggestedBid, "enabled"
-                    ]);
-                }
-            }
-        }
-
-        if (bulkRows.length === 0) {
+        const rows = buildActionPlan({ actionFilter: 'all', noLimit: true }).filter(r => r.bulkReady);
+        if (!rows.length) {
             alert(t('dyn_msg_bulk_empty'));
             return;
         }
-
-        exportRichExcelMultiSheet([{ 
-            sheetName: "Sponsored Products Campaigns", 
-            headers: bulkHeaders, 
-            dataRows: bulkRows 
-        }], `Bulk_Operations_AI_Action_${getTs()}.xlsx`).then(() => {
-            log(t('dyn_msg_bulk_done', bulkRows.length), "good");
+        const { bulkHeaders, bulkRows, bidDraftRows } = buildSponsoredProductsBulkRows(rows);
+        if (!bulkRows.length && !bidDraftRows.length) {
+            alert(t('dyn_msg_bulk_empty'));
+            return;
+        }
+        const sheets = [];
+        if (bulkRows.length) sheets.push({ sheetName: "SP Bulk Create Draft", headers: bulkHeaders, dataRows: bulkRows });
+        if (bidDraftRows.length) sheets.push({ sheetName: "Bid Change Draft", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows: bidDraftRows });
+        exportRichExcelMultiSheet(sheets, `AI_Bulk_Draft_Action_Center_${getTs()}.xlsx`).then(() => {
+            log(t('dyn_msg_bulk_done', bulkRows.length + bidDraftRows.length), "good");
         });
     });
 };
