@@ -218,8 +218,9 @@
     .fieldGroup:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
     .fieldRow { display: flex; flex-direction: column; gap: 6px; }
     label { font-size: 12.2px; color: var(--muted); font-weight: 500; }
-    input[type="text"], input[type="date"], input[type="number"], input[type="password"], select { width: 100%; padding: 10px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--input-bg); color: var(--text); font-size: 12.7px; outline: none; transition: border-color .2s ease, box-shadow .2s ease, background .3s ease; appearance: none; }
-    input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, input[type="password"]:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0,113,227,.12); }
+    input[type="text"], input[type="date"], input[type="number"], input[type="password"], select, textarea { width: 100%; padding: 10px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--input-bg); color: var(--text); font-size: 12.7px; outline: none; transition: border-color .2s ease, box-shadow .2s ease, background .3s ease; appearance: none; }
+    textarea { resize: vertical; min-height: 110px; line-height: 1.45; }
+    input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, input[type="password"]:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0,113,227,.12); }
     [data-theme="dark"] input:focus, [data-theme="ocean"] input:focus, [data-theme="forest"] input:focus, [data-theme="dark"] select:focus, [data-theme="ocean"] select:focus, [data-theme="forest"] select:focus { box-shadow: 0 0 0 4px rgba(10,132,255,0.2); }
     .selectWrap { position: relative; }
     .selectWrap:after { content: "▾"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 12.2px; font-weight: 700; }
@@ -456,6 +457,17 @@
       </div>
       <div class="small" data-i18n="desc_export_limit">导出限制：只有榜单维度为 Search Term / Root 时允许导出（避免导出 Campaign/AdGroup 之类的名字当否定词）</div>
     </div>
+
+    <div class="fieldGroup">
+      <div class="fieldRow">
+        <label data-i18n="lbl_ai_conversion_engine">AI 转化诊断输入</label>
+        <textarea id="listingCopyInput" data-i18n-placeholder="ph_listing_copy" placeholder="粘贴当前 Listing 标题、五点、后台词或 A+ 文案。AI 会用广告出单词反查承接缺口。"></textarea>
+        <div class="small" data-i18n="desc_ai_conversion_engine">用于 Listing Conversion Doctor：识别广告高转化词是否被标题/五点/A+ 承接，避免广告有流量但页面不转化。</div>
+      </div>
+      <div class="fieldRow">
+        <button class="btn primary" id="btnExportListingAudit" type="button" data-i18n="btn_export_listing_audit">导出 Listing 转化诊断</button>
+      </div>
+    </div>
     
 
     <div class="fieldGroup">
@@ -627,7 +639,7 @@
         <div class="table-container" style="max-height:520px;">
           <table id="actionPlanTable">
             <thead><tr>
-              <th data-i18n="action_th_action">动作</th><th data-i18n="action_th_object">对象</th><th data-i18n="action_th_source_match">来源匹配</th><th data-i18n="action_th_operation">建议匹配/操作</th><th data-i18n="action_th_bid">建议出价</th><th>Campaign</th><th>Ad Group</th><th data-i18n="action_th_reason">简单理由</th><th>Spend</th><th>Sales</th><th>Orders</th><th>Clicks</th><th>CVR</th><th>ROAS</th><th>ACOS</th>
+              <th data-i18n="action_th_action">动作</th><th data-i18n="action_th_object">对象</th><th data-i18n="action_th_intent">意图</th><th data-i18n="action_th_source_match">来源匹配</th><th data-i18n="action_th_operation">建议匹配/操作</th><th data-i18n="action_th_bid">建议出价</th><th>Campaign</th><th>Ad Group</th><th data-i18n="action_th_confidence">置信度/风险</th><th data-i18n="action_th_reason">简单理由</th><th>Spend</th><th>Sales</th><th>Orders</th><th>Clicks</th><th>CVR</th><th>ROAS</th><th>ACOS</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -991,6 +1003,10 @@ const I18N = {
       btn_export_neg: "导出否定词 Excel (仅 NEGATE)",
       btn_reset_rules: "重置默认规则",
       desc_export_limit: "导出限制：只有榜单维度为 Search Term / Root 时允许导出（避免导出 Campaign/AdGroup 之类的名字当否定词）",
+      lbl_ai_conversion_engine: "AI 转化诊断输入",
+      ph_listing_copy: "粘贴当前 Listing 标题、五点、后台词或 A+ 文案。AI 会用广告出单词反查承接缺口。",
+      desc_ai_conversion_engine: "用于 Listing Conversion Doctor：识别广告高转化词是否被标题/五点/A+ 承接，避免广告有流量但页面不转化。",
+      btn_export_listing_audit: "导出 Listing 转化诊断",
       lbl_webhook: "异常告警 Webhook (如钉钉/飞书)",
       btn_test_webhook: "测试推送",
       lbl_actions: "操作",
@@ -1043,9 +1059,11 @@ const I18N = {
       opt_action_broad_off: "关闭，保留原词",
       action_th_action: "动作",
       action_th_object: "对象",
+      action_th_intent: "意图",
       action_th_source_match: "来源匹配",
       action_th_operation: "建议匹配/操作",
       action_th_bid: "建议出价",
+      action_th_confidence: "置信度/风险",
       action_th_reason: "简单理由",
       action_label_negate: "否定",
       action_label_increase: "加价",
@@ -1379,6 +1397,10 @@ const I18N = {
       btn_export_neg: "Export Negatives Excel (NEGATE Only)",
       btn_reset_rules: "Reset Default Rules",
       desc_export_limit: "Limit: Export allowed only when Rank By is Search Term / Root.",
+      lbl_ai_conversion_engine: "AI Conversion Diagnostic Input",
+      ph_listing_copy: "Paste your current title, bullets, backend terms, or A+ copy. AI will map converting ad terms to listing coverage gaps.",
+      desc_ai_conversion_engine: "Used by Listing Conversion Doctor: checks whether high-converting ad terms are supported by the listing, reducing traffic-to-page mismatch.",
+      btn_export_listing_audit: "Export Listing Conversion Audit",
       lbl_webhook: "Anomaly Webhook (Slack/Teams)",
       btn_test_webhook: "Test Push",
       lbl_actions: "Actions",
@@ -1431,9 +1453,11 @@ const I18N = {
       opt_action_broad_off: "Off, keep original term",
       action_th_action: "Action",
       action_th_object: "Object",
+      action_th_intent: "Intent",
       action_th_source_match: "Source Match",
       action_th_operation: "Suggested Match / Operation",
       action_th_bid: "Suggested Bid",
+      action_th_confidence: "Confidence/Risk",
       action_th_reason: "Simple Reason",
       action_label_negate: "Negate",
       action_label_increase: "Increase Bid",
@@ -3483,22 +3507,24 @@ const exportProductTargetingExcel = () => {
 
 const exportListingCoverageAudit = () => {
   if (!AdsStore.view.length) { alert(t('dyn_msg_audit_empty')); return; }
-  const copy = ($("listingCopyInput")?.value || "").toLowerCase();
-  const groups = AdsStore.rankGroups || groupBy(AdsStore.view, getRankKey());
-  const rows = [...groups.entries()].map(([term, list]) => {
-    const m = sumMetrics(list);
-    const clean = String(term || "").toLowerCase().replace(/\s+/g, " ").trim();
-    const tokens = clean.split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
-    const covered = copy ? (copy.includes(clean) || tokens.some(w => copy.includes(w))) : false;
-    let priority = "Observe";
-    if (!covered && m.orders >= 2 && m.roas >= 2) priority = "High - Add to Listing";
-    else if (!covered && m.clicks >= 20 && m.orders === 0) priority = "Do Not Add / Possible Negative";
-    else if (!covered && m.spend >= 20 && m.roas >= 1.5) priority = "Medium - Test in Bullet/Image";
-    return [term, covered ? "Covered" : "Missing", priority, m.spend || 0, m.sales || 0, m.orders || 0, m.clicks || 0, m.cvr || 0, m.roas || 0, m.acos === Infinity ? null : m.acos];
-  }).filter(r => r[0] && r[0] !== "(blank)").sort((a,b) => (b[4] || 0) - (a[4] || 0)).slice(0, 5000);
+  const doctorRows = buildListingConversionDoctorRows(5000);
+  const rows = doctorRows.map(r => [
+    r.term,
+    r.intent.label,
+    r.coverage.covered ? "Covered" : "Missing",
+    r.coverage.mode,
+    r.recommendation,
+    r.spend || 0,
+    r.sales || 0,
+    r.orders || 0,
+    r.clicks || 0,
+    r.cvr || 0,
+    r.roas || 0,
+    r.acos === Infinity ? null : r.acos
+  ]);
   if (!rows.length) { alert(t('dyn_msg_audit_empty')); return; }
-  const headers = ["Search Term / Root", "Listing Coverage", "Priority", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS"];
-  exportRichExcelMultiSheet([{ sheetName: "Listing Coverage Audit", headers, dataRows: rows }], `Ultimate_Listing_Coverage_${getTs()}.xlsx`).then(() => log(t('dyn_msg_audit_done'), "good"));
+  const headers = ["Search Term / Root", "Intent", "Listing Coverage", "Coverage Mode", "Listing Conversion Doctor", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS"];
+  exportRichExcelMultiSheet([{ sheetName: "Listing Conversion Doctor", headers, dataRows: rows }], `Ultimate_Listing_Conversion_Doctor_${getTs()}.xlsx`).then(() => log(t('dyn_msg_audit_done'), "good"));
 };
 
 const exportNegativesExcel = () => {
@@ -3956,6 +3982,206 @@ const ACTION_MISMATCH_RE = /\b(bifocal|bi\s*focal|progressive|prescription|rx|ph
 const ACTION_CORE_RE = /\b(reading\s*glasses|reader|readers|cheaters|eye\s*glasses|eyeglasses|glasses)\b/i;
 const ACTION_STYLE_RE = /\b(women|womens|ladies|cat\s*eye|floral|rectangle|square|oversized|fashion|stylish|spring\s*hinge|computer|blue\s*light|small\s*print)\b/i;
 
+const ACTION_MALE_RE = /\b(men|mens|men's|male|man|man's|guys)\b/i;
+const ACTION_BLUE_LIGHT_RE = /\b(blue\s*light|anti\s*blue|screen|digital|computer|monitor|tablet|phone)\b/i;
+const ACTION_DIOPTER_RE = /(?:^|\s)(?:\+)?[1-4](?:\.\d{1,2})?(?:\s*x|\s*power|\s*strength|\s*diopter)?(?:\s|$)/i;
+const ACTION_GENERIC_RE = /^(glasses|eyeglasses|eye glasses|eyewear|reading glasses|readers|reader|cheaters)$/i;
+
+const INTENT_LABELS = {
+  zh: {
+    asin: "ASIN商品", brand: "品牌防守", mismatch: "错配流量", male: "男士观察", diopter: "度数强意图", cat_eye: "猫眼款式", style: "款式流量", blue_light: "蓝光辅助", computer: "电脑场景", core: "核心词", generic: "泛流量", accessory: "配件/数量", unknown: "待识别"
+  },
+  en: {
+    asin: "ASIN", brand: "Brand Defense", mismatch: "Mismatch", male: "Men Review", diopter: "Diopter Intent", cat_eye: "Cat Eye Style", style: "Style Intent", blue_light: "Blue Light Support", computer: "Computer Use", core: "Core Term", generic: "Generic Traffic", accessory: "Accessory/Pack", unknown: "Unknown"
+  }
+};
+
+const getIntentLabel = (key) => (INTENT_LABELS[currentLang] || INTENT_LABELS.zh)[key] || key;
+
+const classifySearchTermIntent = (term) => {
+  const raw = String(term || "").trim();
+  const s = raw.toLowerCase().replace(/[^a-z0-9+.\s'-]/g, " ").replace(/\s+/g, " ").trim();
+  const mags = extractMagnificationValues(raw);
+  let key = "unknown", tagClass = "warn", listingRole = "observe", negativePolicy = "review", broadPolicy = "blocked";
+
+  if (!raw || raw === "(blank)") key = "unknown";
+  else if (extractAsinFromText(raw) || isASINLike(raw)) { key = "asin"; tagClass = "warn"; listingRole = "product_targeting"; negativePolicy = "product_review"; }
+  else if (ACTION_BRAND_RE.test(s)) { key = "brand"; tagClass = "warn"; listingRole = "brand_defense"; negativePolicy = "never_auto"; }
+  else if (ACTION_MISMATCH_RE.test(s)) { key = "mismatch"; tagClass = "bad"; listingRole = "exclude"; negativePolicy = "safe_negative"; }
+  else if (ACTION_MALE_RE.test(s) && !/(?:\bwomen\b|\bwomens\b|\bladies\b|\bfemale\b)/.test(s)) { key = "male"; tagClass = "warn"; listingRole = "separate_test"; negativePolicy = "never_auto"; }
+  else if (/\bpack|packs|pair|pairs|case|cases|cloth|pouch|bag|sleeve\b/.test(s)) { key = "accessory"; tagClass = "warn"; listingRole = "avoid_title"; negativePolicy = "review"; }
+  else if (mags.length || ACTION_DIOPTER_RE.test(s)) { key = "diopter"; tagClass = "good"; listingRole = "high_intent"; negativePolicy = "review"; broadPolicy = "exact_phrase"; }
+  else if (/\bcat\s*eye\b/.test(s)) { key = "cat_eye"; tagClass = "good"; listingRole = "title_or_bullet"; negativePolicy = "review"; broadPolicy = "allowed_if_profitable"; }
+  else if (/\b(floral|rectangle|square|oversized|fashion|stylish|trendy|retro|lightweight|comfortable)\b|\bspring\s*hinge\b/.test(s)) { key = "style"; tagClass = "good"; listingRole = "bullet_or_image"; negativePolicy = "review"; broadPolicy = "allowed_if_profitable"; }
+  else if (/\b(computer|screen|digital|monitor|tablet|phone)\b/.test(s)) { key = "computer"; tagClass = "warn"; listingRole = "supporting_scene"; negativePolicy = "review"; broadPolicy = "phrase_exact"; }
+  else if (/\bblue\s*light\b|\banti\s*blue\b/.test(s)) { key = "blue_light"; tagClass = "warn"; listingRole = "supporting_feature"; negativePolicy = "review"; broadPolicy = "blocked"; }
+  else if (/\b(reading\s*glasses|readers|reader|cheaters)\b/.test(s) && /\b(women|womens|ladies|female)\b/.test(s)) { key = "core"; tagClass = "good"; listingRole = "title_priority"; negativePolicy = "review"; broadPolicy = "allowed_if_profitable"; }
+  else if (ACTION_GENERIC_RE.test(s) || /\b(glasses|eyeglasses|eyewear)\b/.test(s)) { key = "generic"; tagClass = "warn"; listingRole = "avoid_frontload"; negativePolicy = "review"; broadPolicy = "blocked"; }
+
+  return { key, label: getIntentLabel(key), tagClass, listingRole, negativePolicy, broadPolicy, magnifications: mags };
+};
+
+const normalizeConflictTerm = (term) => normalizeBroadRootTerm(term)
+  .replace(/\breader\b/g, "readers")
+  .replace(/\s+/g, " ")
+  .trim();
+
+const termContainsForConflict = (needle, haystack) => {
+  const a = normalizeConflictTerm(needle);
+  const b = normalizeConflictTerm(haystack);
+  if (!a || !b || a === b) return false;
+  if (a.length >= 5 && b.includes(a)) return true;
+  const tokens = a.split(" ").filter(t => t.length > 2 && !STOP_WORDS.has(t));
+  if (!tokens.length) return false;
+  return tokens.every(t => new RegExp(`\\b${escapeRegExp(t)}\\b`, "i").test(b));
+};
+
+const evaluateNegativeConflictGuard = (it, allItems = []) => {
+  const name = String(it?.name || "").trim();
+  const intent = classifySearchTermIntent(name);
+  const normalized = normalizeConflictTerm(name);
+  const genericCoreBlock = /^(reading glasses|readers|reader|glasses|eyeglasses|eyewear|women readers|reading glasses women|women reading glasses)$/i.test(normalized);
+
+  if (intent.key === "asin" || intent.key === "mismatch") {
+    return { level: "safe", label: currentLang === "zh" ? "安全" : "Safe", reason: intent.key === "mismatch" ? (currentLang === "zh" ? "明显错配流量" : "Clear mismatch intent") : "", conflicts: [] };
+  }
+  if (intent.key === "brand") {
+    return { level: "block", label: currentLang === "zh" ? "禁止自动否定" : "Blocked", reason: currentLang === "zh" ? "品牌词只能降价或人工复核" : "Brand terms require manual review or bid reduction", conflicts: [] };
+  }
+  if (intent.key === "male") {
+    return { level: "block", label: currentLang === "zh" ? "禁止自动否定" : "Blocked", reason: currentLang === "zh" ? "男士流量按你的策略保留观察，不自动否定" : "Men traffic is protected for review, not auto-negation", conflicts: [] };
+  }
+  if (genericCoreBlock) {
+    return { level: "block", label: currentLang === "zh" ? "禁止自动否定" : "Blocked", reason: currentLang === "zh" ? "核心泛词/类目词不能自动否定，建议降价控量" : "Generic/core category term cannot be auto-negated; reduce bid instead", conflicts: [] };
+  }
+
+  const profitableChildren = allItems
+    .filter(x => x && x.name !== name && x.orders >= 1 && x.roas >= 2 && termContainsForConflict(name, x.name))
+    .sort((a,b) => (b.sales || 0) - (a.sales || 0))
+    .slice(0, 5)
+    .map(x => x.name);
+
+  if (profitableChildren.length) {
+    return { level: "review", label: currentLang === "zh" ? "需复核" : "Review", reason: currentLang === "zh" ? `该词根存在赚钱长尾，禁止直接 Phrase 误杀：${profitableChildren.join(" / ")}` : `Profitable child terms exist; avoid phrase over-blocking: ${profitableChildren.join(" / ")}`, conflicts: profitableChildren };
+  }
+  if (["core","style","cat_eye","diopter","blue_light","computer"].includes(intent.key)) {
+    return { level: "review", label: currentLang === "zh" ? "需复核" : "Review", reason: currentLang === "zh" ? "相关流量词默认进入复核，优先精准否定或降价" : "Relevant intent term requires review; prefer exact negative or bid reduction", conflicts: [] };
+  }
+  return { level: "safe", label: currentLang === "zh" ? "安全" : "Safe", reason: "", conflicts: [] };
+};
+
+const scoreActionConfidence = (it, actionKey, guard, intent) => {
+  let score = 0.50;
+  const clicks = safeNum(it.clicks), spend = safeNum(it.spend), orders = safeNum(it.orders), roas = safeNum(it.roas), cvr = safeNum(it.cvr);
+  if (clicks >= 50 || orders >= 5) score += 0.22;
+  else if (clicks >= 20 || orders >= 2 || spend >= 30) score += 0.14;
+  else if (clicks >= 10 || spend >= 12) score += 0.06;
+
+  if (actionKey === "negate" && orders === 0 && spend >= (safeNum($("ruleSpendNeg")?.value) || 30)) score += 0.16;
+  if (["exact","phrase","broad","increase"].includes(actionKey) && orders >= 2 && roas >= 3) score += 0.18;
+  if (actionKey === "decrease" && ((orders === 0 && spend >= 10) || (orders > 0 && roas < 2))) score += 0.10;
+  if (intent?.key === "mismatch" && actionKey === "negate") score += 0.10;
+  if (intent?.key === "male" || intent?.key === "brand") score -= 0.25;
+  if (guard?.level === "review") score -= 0.18;
+  if (guard?.level === "block") score -= 0.35;
+  if (orders === 0 && clicks < 8 && spend < 10) score -= 0.12;
+  if (cvr > 0 && cvr < 0.02 && clicks >= 20) score += 0.04;
+
+  score = Math.max(0.05, Math.min(0.98, score));
+  const label = score >= 0.78 ? (currentLang === "zh" ? "高" : "High") : score >= 0.58 ? (currentLang === "zh" ? "中" : "Medium") : (currentLang === "zh" ? "低" : "Low");
+  const tagClass = score >= 0.78 && guard?.level !== "review" ? "good" : score < 0.58 || guard?.level === "review" || guard?.level === "block" ? "warn" : "good";
+  const sample = clicks >= 50 || orders >= 5 ? (currentLang === "zh" ? "样本足" : "Strong sample") : clicks >= 20 || spend >= 20 ? (currentLang === "zh" ? "样本中" : "Medium sample") : (currentLang === "zh" ? "样本低" : "Low sample");
+  const risk = guard?.level === "block" ? (currentLang === "zh" ? "禁止自动执行" : "Blocked") : guard?.level === "review" ? (currentLang === "zh" ? "人工复核" : "Human review") : (currentLang === "zh" ? "可执行" : "Executable");
+  return { score, label, tagClass, sample, risk };
+};
+
+const getAIDecisionActionCode = (actionKey, matchAdvice = "") => {
+  if (actionKey === "negate") return /product/i.test(matchAdvice) ? "NEGATE_PRODUCT" : /exact/i.test(matchAdvice) ? "NEGATE_EXACT" : "NEGATE_PHRASE";
+  if (actionKey === "increase") return "BID_INCREASE";
+  if (actionKey === "decrease") return "BID_DECREASE";
+  if (actionKey === "exact") return "CREATE_EXACT";
+  if (actionKey === "phrase") return "CREATE_PHRASE";
+  if (actionKey === "broad") return "CREATE_BROAD";
+  return String(actionKey || "WATCH").toUpperCase();
+};
+
+const buildAIDecisionSchema = (row) => ({
+  version: "AI_DECISION_SCHEMA_2026_05_V1",
+  action: getAIDecisionActionCode(row.actionKey, row.matchAdvice),
+  object: row.name,
+  sourceSearchTerm: row.sourceName || row.name,
+  intent: row.intentKey,
+  intentLabel: row.intentLabel,
+  matchAdvice: row.matchAdvice || "",
+  evidence: {
+    spend: Number((row.spend || 0).toFixed(2)),
+    sales: Number((row.sales || 0).toFixed(2)),
+    orders: row.orders || 0,
+    clicks: row.clicks || 0,
+    cvr: Number((row.cvr || 0).toFixed(4)),
+    roas: Number((row.roas || 0).toFixed(2)),
+    acos: row.acos === Infinity ? null : Number((row.acos || 0).toFixed(4))
+  },
+  confidence: Number((row.confidenceScore || 0).toFixed(2)),
+  risk: row.executionRisk || "",
+  negativeGuard: row.negativeGuard?.level || "safe",
+  humanReviewRequired: !row.bulkReady || row.negativeGuard?.level === "review" || row.negativeGuard?.level === "block"
+});
+
+const getListingCopyText = () => String($("listingCopyInput")?.value || "").toLowerCase().replace(/[^a-z0-9+.\s-]/g, " ").replace(/\s+/g, " ").trim();
+
+const checkListingCoverage = (term, listingCopy = getListingCopyText()) => {
+  if (!listingCopy) return { covered: false, mode: "No Listing Copy" };
+  const clean = String(term || "").toLowerCase().replace(/[^a-z0-9+.\s-]/g, " ").replace(/\s+/g, " ").trim();
+  if (clean && listingCopy.includes(clean)) return { covered: true, mode: "Exact Phrase" };
+  const tokens = clean.split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+  const hit = tokens.filter(w => listingCopy.includes(w));
+  return { covered: hit.length >= Math.max(1, Math.ceil(tokens.length * 0.55)), mode: hit.length ? `Token ${hit.length}/${tokens.length}` : "Missing" };
+};
+
+const getListingDoctorRecommendation = (term, m, intent, coverage) => {
+  const lowCvr = m.clicks >= 20 && (m.cvr || 0) < 0.035;
+  if (intent.key === "mismatch") return currentLang === "zh" ? "不要写进 Listing；优先否定或降价隔离" : "Do not add to listing; negative or reduce bid";
+  if (intent.key === "male") return currentLang === "zh" ? "保留观察，可单独建男士测试组，不要自动否定" : "Keep under review; separate men test group, no auto-negative";
+  if (intent.key === "blue_light" && m.roas < 2) return currentLang === "zh" ? "Blue Light 只做功能辅助，不要标题前置放量" : "Use blue light as supporting feature, not front-loaded scaling";
+  if (!coverage.covered && m.orders >= 2 && m.roas >= 2.5) return currentLang === "zh" ? "高转化但 Listing 未承接，建议加入五点/A+图片文案或后台词" : "High-converting but missing from listing; add to bullets/A+ image copy/backend terms";
+  if (!coverage.covered && m.orders >= 1 && m.roas >= 2) return currentLang === "zh" ? "中等优先级承接，可放五点或场景图" : "Medium priority; support in bullets or scenario image";
+  if (coverage.covered && lowCvr) return currentLang === "zh" ? "Listing 已覆盖但 CVR 低，检查主图、价格、评论、A+卖点承接" : "Covered but low CVR; inspect main image, price, reviews, and A+";
+  if (!coverage.covered && lowCvr) return currentLang === "zh" ? "低转化且未承接，先判断相关性，不要盲目加词" : "Low CVR and missing; validate relevance before adding";
+  return currentLang === "zh" ? "观察" : "Observe";
+};
+
+const buildListingConversionDoctorRows = (limit = 500) => {
+  const groups = AdsStore.rankGroups || groupBy(AdsStore.view || [], getRankKey());
+  const listingCopy = getListingCopyText();
+  return [...groups.entries()].map(([term, list]) => {
+    const m = sumMetrics(list);
+    const intent = classifySearchTermIntent(term);
+    const coverage = checkListingCoverage(term, listingCopy);
+    let priorityScore = 0;
+    if (!coverage.covered && m.orders >= 2 && m.roas >= 2.5) priorityScore += 1000;
+    if (m.clicks >= 20 && (m.cvr || 0) < 0.035) priorityScore += 450;
+    if (intent.key === "mismatch") priorityScore += 300;
+    priorityScore += (m.sales || 0) + (m.spend || 0) * 0.5 + (m.orders || 0) * 35;
+    return { term, intent, coverage, recommendation: getListingDoctorRecommendation(term, m, intent, coverage), priorityScore, ...m };
+  }).filter(r => r.term && r.term !== "(blank)").sort((a,b) => b.priorityScore - a.priorityScore).slice(0, limit);
+};
+
+const buildListingConversionDoctorContext = () => {
+  if (!AdsStore.view || !AdsStore.view.length) return currentLang === "zh" ? "暂无广告数据。" : "No ad data.";
+  const rows = buildListingConversionDoctorRows(40);
+  const missingWinners = rows.filter(r => !r.coverage.covered && r.orders >= 1 && r.roas >= 2).slice(0, 10);
+  const coveredLowCvr = rows.filter(r => r.coverage.covered && r.clicks >= 20 && r.cvr < 0.035).slice(0, 8);
+  const mismatch = rows.filter(r => r.intent.key === "mismatch").slice(0, 8);
+  const fmt = (r) => `${r.term} | ${r.intent.label} | ${r.coverage.mode} | Spend:$${(r.spend||0).toFixed(0)} | Orders:${r.orders||0} | ROAS:${(r.roas||0).toFixed(2)} | ${r.recommendation}`;
+  return [
+    currentLang === "zh" ? "【Listing Conversion Doctor】" : "【Listing Conversion Doctor】",
+    `${currentLang === "zh" ? "高转化但 Listing 未承接" : "Converting terms missing from listing"}: ${missingWinners.map(fmt).join(" ; ") || "-"}`,
+    `${currentLang === "zh" ? "已承接但低 CVR" : "Covered but low CVR"}: ${coveredLowCvr.map(fmt).join(" ; ") || "-"}`,
+    `${currentLang === "zh" ? "禁止写入 Listing 的错配词" : "Mismatch terms not to add"}: ${mismatch.map(fmt).join(" ; ") || "-"}`
+  ].join("\n");
+};
+
 const countTermWords = (text) => String(text || "").toLowerCase().replace(/[^a-z0-9+.\s-]/g, " ").split(/\s+/).filter(Boolean).length;
 
 const normalizeBroadRootTerm = (text) => String(text || "")
@@ -4071,13 +4297,26 @@ const getSuggestedBid = (it, mode, targetAcos) => {
 
 const getActionLabelText = (actionKey, fallback="") => I18N[currentLang]?.[`action_label_${actionKey}`] || fallback || actionKey;
 
-const makeSimpleAction = (it, actionKey, actionLabel, matchAdvice, bid, reason, bulkReady=true, overrides={}) => ({
-  actionKey, actionLabel: getActionLabelText(actionKey, actionLabel), name: overrides.name || it.name, sourceName: overrides.sourceName || it.name,
-  objectType: (extractAsinFromText(overrides.name || it.name) || isASINLike(overrides.name || it.name)) ? "ASIN" : "Keyword",
-  sourceMatch: getSimpleSourceMatch(it), matchAdvice, suggestedBid: bid || "", reason,
-  campaign: overrides.campaign || it.bulkCampaign || it.campaign || "", adGroup: overrides.adGroup || it.bulkAdGroup || it.adGroup || "", spend: it.spend || 0, sales: it.sales || 0, orders: it.orders || 0,
-  clicks: it.clicks || 0, cvr: it.cvr || 0, roas: it.roas || 0, acos: it.acos, cpc: it.cpc || 0, bulkReady: Boolean(bulkReady && it.isSpEligible)
-});
+const makeSimpleAction = (it, actionKey, actionLabel, matchAdvice, bid, reason, bulkReady=true, overrides={}) => {
+  const name = overrides.name || it.name;
+  const sourceName = overrides.sourceName || it.name;
+  const intent = classifySearchTermIntent(sourceName || name);
+  const negativeGuard = overrides.guard || { level: "safe", label: currentLang === "zh" ? "安全" : "Safe", reason: "", conflicts: [] };
+  const confidence = scoreActionConfidence(it, actionKey, negativeGuard, intent);
+  const canBulk = Boolean(bulkReady && it.isSpEligible && !(actionKey === "negate" && negativeGuard.level !== "safe"));
+  const row = {
+    actionKey, actionLabel: getActionLabelText(actionKey, actionLabel), name, sourceName,
+    objectType: (extractAsinFromText(name) || isASINLike(name)) ? "ASIN" : "Keyword",
+    sourceMatch: getSimpleSourceMatch(it), matchAdvice, suggestedBid: bid || "", reason,
+    campaign: overrides.campaign || it.bulkCampaign || it.campaign || "", adGroup: overrides.adGroup || it.bulkAdGroup || it.adGroup || "", spend: it.spend || 0, sales: it.sales || 0, orders: it.orders || 0,
+    clicks: it.clicks || 0, cvr: it.cvr || 0, roas: it.roas || 0, acos: it.acos, cpc: it.cpc || 0, bulkReady: canBulk,
+    intentKey: intent.key, intentLabel: intent.label, intentTagClass: intent.tagClass, intentMeta: intent,
+    negativeGuard,
+    confidenceScore: confidence.score, confidenceLabel: confidence.label, confidenceTagClass: confidence.tagClass, sampleLabel: confidence.sample, executionRisk: confidence.risk
+  };
+  row.decisionSchema = buildAIDecisionSchema(row);
+  return row;
+};
 
 const getTop20ActionScore = (r) => {
   const spend = safeNum(r.spend), sales = safeNum(r.sales), orders = safeNum(r.orders), clicks = safeNum(r.clicks), roas = safeNum(r.roas);
@@ -4116,12 +4355,19 @@ const buildActionPlan = (options = {}) => {
     const hitNegativeThreshold = it.orders <= 0 && ((it.spend >= rules.spendNeg && it.clicks >= rules.clicksNeg) || (isMismatch && nearNegSpend));
     if (hitNegativeThreshold) {
       if (isBrand) {
-        rows.push(makeSimpleAction(it, "decrease", "降价", "Brand Defense Review", getSuggestedBid(it, "decrease", targetAcos), t("action_reason_brand_protect"), false));
+        const guard = evaluateNegativeConflictGuard(it, items);
+        rows.push(makeSimpleAction(it, "decrease", "降价", "Brand Defense Review", getSuggestedBid(it, "decrease", targetAcos), t("action_reason_brand_protect") + (guard.reason ? " | " + guard.reason : ""), false, { guard }));
       } else if (isAsin) {
-        rows.push(makeSimpleAction(it, "negate", "否定", "Negative Product Targeting", "", t("action_reason_neg_asin"), true));
+        rows.push(makeSimpleAction(it, "negate", "否定", "Negative Product Targeting", "", t("action_reason_neg_asin"), true, { guard: evaluateNegativeConflictGuard(it, items) }));
       } else {
-        const negType = it.hasExact ? "Negative Exact" : "Negative Phrase";
-        rows.push(makeSimpleAction(it, "negate", "否定", negType, "", isMismatch ? t("action_reason_neg_mismatch") : t("action_reason_neg_threshold"), true));
+        const guard = evaluateNegativeConflictGuard(it, items);
+        if (guard.level === "block") {
+          rows.push(makeSimpleAction(it, "decrease", "降价", "Guarded Bid Decrease", getSuggestedBid(it, "decrease", targetAcos), `${t("action_reason_decrease_sample")} | ${guard.reason}`, false, { guard }));
+        } else {
+          const negType = it.hasExact ? "Negative Exact" : (guard.level === "review" ? "Review Negative Exact" : "Negative Phrase");
+          const baseReason = isMismatch ? t("action_reason_neg_mismatch") : t("action_reason_neg_threshold");
+          rows.push(makeSimpleAction(it, "negate", "否定", negType, "", guard.reason ? `${baseReason} | ${guard.reason}` : baseReason, guard.level === "safe", { guard }));
+        }
       }
       continue;
     }
@@ -4212,20 +4458,23 @@ const renderActionCommandCenter = () => {
   }
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="15" class="small">${escapeHtml(t("action_no_suggestions"))}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="17" class="small">${escapeHtml(t("action_no_suggestions"))}</td></tr>`;
     return;
   }
 
   renderProgressive(tbody, rows, r => {
     const tagClass = r.actionKey === "negate" ? "bad" : r.actionKey === "decrease" ? "warn" : "good";
+    const guardNote = r.negativeGuard?.reason ? `<div class="small" title="${escapeHtml(r.negativeGuard.reason)}">${escapeHtml(r.negativeGuard.label || "")}：${escapeHtml(r.negativeGuard.reason).slice(0, 80)}</div>` : `<div class="small">${escapeHtml(r.sampleLabel || "")}</div>`;
     return `<tr>
       <td><span class="tag ${tagClass}">${escapeHtml(r.actionLabel)}</span></td>
       <td title="${escapeHtml(r.name)}"><b>${escapeHtml(r.name).slice(0, 110)}</b>${r.sourceName && r.sourceName !== r.name ? `<div class="small">${escapeHtml(t("action_source_prefix"))}${escapeHtml(r.sourceName).slice(0, 90)}</div>` : ""}</td>
+      <td><span class="tag ${escapeHtml(r.intentTagClass || "warn")}">${escapeHtml(r.intentLabel || "-")}</span></td>
       <td>${escapeHtml(r.sourceMatch || "-")}</td>
       <td>${escapeHtml(r.matchAdvice || "-")}</td>
       <td>${r.suggestedBid ? "$" + escapeHtml(r.suggestedBid) : "-"}</td>
       <td title="${escapeHtml(r.campaign)}">${escapeHtml(r.campaign).slice(0, 75)}</td>
       <td title="${escapeHtml(r.adGroup)}">${escapeHtml(r.adGroup).slice(0, 65)}</td>
+      <td><span class="tag ${escapeHtml(r.confidenceTagClass || "warn")}">${escapeHtml(r.confidenceLabel || "-")} ${(safeNum(r.confidenceScore)*100).toFixed(0)}%</span>${guardNote}</td>
       <td title="${escapeHtml(r.reason)}">${escapeHtml(r.reason).slice(0, 110)}</td>
       <td>${fmtMoney(r.spend)}</td><td>${fmtMoney(r.sales)}</td><td>${fmtInt(r.orders)}</td><td>${fmtInt(r.clicks)}</td><td>${fmtPct(r.cvr)}</td><td>${(r.roas || 0).toFixed(2)}</td><td>${r.acos === Infinity ? "∞" : fmtPct(r.acos)}</td>
     </tr>`;
@@ -4271,8 +4520,8 @@ const buildSponsoredProductsBulkRows = (rows) => {
 };
 
 const buildActionExportSheets = (rows) => {
-  const headers = ["Action", "Object", "Source Search Term", "Type", "Source Match", "Suggested Match/Operation", "Suggested Bid", "Campaign", "Ad Group", "Reason", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS"];
-  const dataRows = rows.map(r => [r.actionLabel, r.name, r.sourceName || r.name, r.objectType, r.sourceMatch, r.matchAdvice, r.suggestedBid || "", r.campaign, r.adGroup, r.reason, r.spend || 0, r.sales || 0, r.orders || 0, r.clicks || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos]);
+  const headers = ["Action", "Object", "Source Search Term", "Intent", "Type", "Source Match", "Suggested Match/Operation", "Suggested Bid", "Campaign", "Ad Group", "Confidence", "Execution Risk", "Negative Guard", "Reason", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS", "AI Decision JSON"];
+  const dataRows = rows.map(r => [r.actionLabel, r.name, r.sourceName || r.name, r.intentLabel || "", r.objectType, r.sourceMatch, r.matchAdvice, r.suggestedBid || "", r.campaign, r.adGroup, r.confidenceScore || 0, r.executionRisk || "", r.negativeGuard?.label || "", r.reason, r.spend || 0, r.sales || 0, r.orders || 0, r.clicks || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, JSON.stringify(r.decisionSchema || {})]);
   const { bulkHeaders, bulkRows, bidDraftRows } = buildSponsoredProductsBulkRows(rows);
   const rules = getRules();
   const ruleRows = [
@@ -4638,6 +4887,7 @@ const bindEvents = () => {
     $("btnExportNeg").addEventListener("click", exportNegativesExcel); 
     $("btnExportLongTail").addEventListener("click", exportLongTailExcel); 
     $("btnExportRank").addEventListener("click", exportRankExcel);
+    $("btnExportListingAudit")?.addEventListener("click", exportListingCoverageAudit);
     $("btnExportActionPlan")?.addEventListener("click", exportActionPlanExcel);
     $("btnExportActionBulk")?.addEventListener("click", exportActionBulkExcel);
     $("btnExportActionKeywordExact")?.addEventListener("click", () => exportActionKeywordTemplateExcel("exact"));
@@ -4708,7 +4958,7 @@ const summarizeActionRowsForAI = (rows = []) => {
         const items = rows.filter(r => r.actionKey === actionKey).sort((a,b) => sortScore(b) - sortScore(a)).slice(0, 6);
         if (!items.length) return '';
         const label = getActionLabelText(actionKey, actionKey);
-        return `${label}(${items.length}/${counts[actionKey] || items.length}): ` + items.map(r => `${r.name} | ${r.matchAdvice || '-'} | Bid:${r.suggestedBid || '-'} | Spend:$${(r.spend||0).toFixed(0)} | Orders:${r.orders||0} | ROAS:${(r.roas||0).toFixed(2)}${r.bulkReady ? ' | bulkReady' : ''}`).join(' ; ');
+        return `${label}(${items.length}/${counts[actionKey] || items.length}): ` + items.map(r => `${r.name} | Intent:${r.intentLabel || '-'} | ${r.matchAdvice || '-'} | Conf:${((r.confidenceScore||0)*100).toFixed(0)}% | Risk:${r.executionRisk || '-'} | Bid:${r.suggestedBid || '-'} | Spend:$${(r.spend||0).toFixed(0)} | Orders:${r.orders||0} | ROAS:${(r.roas||0).toFixed(2)}${r.bulkReady ? ' | bulkReady' : ' | reviewOnly'}`).join(' ; ');
     }).filter(Boolean).join('\n');
     return `${currentLang === 'zh' ? '动作数量' : 'Action counts'}: NEGATE ${counts.negate || 0}, DECREASE ${counts.decrease || 0}, INCREASE ${counts.increase || 0}, EXACT ${counts.exact || 0}, PHRASE ${counts.phrase || 0}, BROAD ${counts.broad || 0}\n${topByAction}`;
 };
@@ -4718,8 +4968,18 @@ const getAiLanguageInstruction = () => currentLang === 'zh'
     : 'Please respond in clear English. Keep Amazon ad terms and keyword examples precise.';
 
 const getAiInitialPrompt = () => currentLang === 'zh'
-    ? `请对当前大盘进行一次全面的综合体检报告。请严格按照以下 4 个模块输出（使用 <h3> 标签）：\n1. 🧭 核心体检与趋势定调\n2. 🩸 止血手术清单 (Negation & Downbidding)\n3. 🚀 结构重组与拓词建议 (Search Term Isolation)\n4. 💡 接下来 14 天的预算操盘指令`
-    : `Run a full account health diagnosis. Output exactly these 4 modules with <h3> tags:\n1. 🧭 Core Health Check and Trend Direction\n2. 🩸 Bleeding Control List (Negation & Downbidding)\n3. 🚀 Structure Rebuild and Keyword Expansion\n4. 💡 Budget Command Plan for the Next 14 Days`;
+    ? `请对当前大盘进行一次全面的综合体检报告。请严格按照以下 5 个模块输出（使用 <h3> 标签）：
+1. 🧭 核心体检与趋势定调
+2. 🧠 搜索词意图分层与否定冲突风险
+3. 🩸 止血手术清单 (Negation & Downbidding)
+4. 🚀 结构重组、精准/词组/广泛拓词建议
+5. 🧩 Listing Conversion Doctor 与接下来 14 天操盘指令`
+    : `Run a full account health diagnosis. Output exactly these 5 modules with <h3> tags:
+1. 🧭 Core Health Check and Trend Direction
+2. 🧠 Search Term Intent Layers and Negative Conflict Risk
+3. 🩸 Bleeding Control List (Negation & Downbidding)
+4. 🚀 Structure Rebuild and Exact/Phrase/Broad Expansion
+5. 🧩 Listing Conversion Doctor and 14-Day Command Plan`;
 
 const getGeminiErrorMessage = async (response) => {
     let detail = '';
@@ -4797,6 +5057,8 @@ const buildAdvancedAIContext = () => {
 
   const actionRowsForAI = buildActionPlan({ actionFilter: 'all', noLimit: true });
   const actionCenterSummary = summarizeActionRowsForAI(actionRowsForAI);
+  const listingDoctorSummary = buildListingConversionDoctorContext();
+  const decisionSchemaSnapshot = JSON.stringify(actionRowsForAI.slice(0, 25).map(r => r.decisionSchema), null, 2);
 
   return `
 【全局大盘与结构健康度】
@@ -4822,6 +5084,11 @@ ${recent7Days.join(' ➡️ ')}
 
 【Action Center 已判定动作池】
 ${actionCenterSummary}
+
+${listingDoctorSummary}
+
+【AI 决策 JSON Schema 快照】
+${decisionSchemaSnapshot}
 `;
 };
 
@@ -5142,6 +5409,9 @@ ${getAiLanguageInstruction()}
 5. SB/SD 数据只能分析，不得生成 Sponsored Products Bulk 行。
 6. 三列关键词模板适用于广告组内关键词批量导入，不是 Amazon Ads Bulk Operations 总入口。
 7. 任何 Bulk 文件都只能称为草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid。
+8. 必须优先引用【AI 决策 JSON Schema 快照】里的 action、intent、confidence、negativeGuard 和 evidence，不允许凭感觉给否定/加价/拓词。
+9. 否定词必须通过 Negative Conflict Guard：遇到 review/block 只能建议人工复核或降价，不得说“直接上传”。
+10. Listing 建议必须基于 Listing Conversion Doctor：高转化但未承接的词才建议加入五点/A+/后台词；错配词绝不写入 Listing。
 
 【你的任务约束】
 1. 绝对禁止使用 Markdown 语法（如 ** 或 #）。必须且只能使用基础 HTML 标签。
@@ -5158,7 +5428,8 @@ ${getAiLanguageInstruction()}
    <chart-config>{"type":"bar","labels":["A","B"],"datasets":[{"label":"Sales","data":[10,20]}]}</chart-config>
    或 <chart-config>{"type":"bar","data":{"labels":["A","B"],"datasets":[{"label":"Sales","data":[10,20]}]}}</chart-config>
 5. 当用户要求“语义聚类”时，请基于【Top 50 搜索词】分析买家意图，并针对老花镜 (Reading Glasses) 的度数长尾词提供深度见解。
-6. 段落紧凑，直击痛点，像高级分析师一样对话。`;
+6. 每条关键建议必须同时说明：买家意图、证据链、置信度、执行风险、是否可导出 Bulk 草稿。
+7. 段落紧凑，直击痛点，像高级分析师一样对话。`;
 
     const dynamicCtx = buildDynamicContext(userPrompt);
     const finalPrompt = userPrompt + dynamicCtx;
