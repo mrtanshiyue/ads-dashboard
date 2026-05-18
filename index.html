@@ -501,7 +501,7 @@
     <div id="aiInsightsBox" style="display:none; margin-bottom:16px; animation: fadeInDown 0.4s ease;">
       <div class="card" style="border-left: 4px solid #aa00ff; background: var(--hover-bg); position: relative;">
         <div class="cardTitle" style="margin-bottom: 0; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px;">
-          <h2 style="color: #aa00ff; display: flex; align-items: center; gap: 6px; margin:0;" data-i18n="ai_title">✨ Gemini AI Agent 引擎</h2>
+          <h2 style="color: #aa00ff; display: flex; align-items: center; gap: 6px; margin:0;" data-i18n="ai_title">✨ Gemini + OpenRouter AI Agent 引擎</h2>
           <div style="display:flex; gap: 8px; align-items: center;">
             <button class="btn" id="btnAILog" type="button" style="display:none; padding: 4px 10px; font-size: 11px;" data-i18n="btn_ai_log">📝 导出对话日志</button>
             <button class="btn" id="btnAIBulk" type="button" style="display:none; padding: 4px 10px; font-size: 11px; color: var(--good); border-color: rgba(26,127,55,0.3); background: var(--softGood);" data-i18n-title="title_ai_bulk" title="AI 仅生成 Bulk 草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid" data-i18n="btn_ai_bulk">⚡ 导出 AI Bulk 草稿</button>
@@ -999,7 +999,7 @@ const I18N = {
       lbl_import_logs: "导入日志",
       btn_check: "依赖自检",
       btn_ai: "召唤 AI 参谋 (Streaming)",
-      ai_title: "✨ Gemini AI Agent 引擎",
+      ai_title: "✨ Gemini + OpenRouter AI Agent 引擎",
       btn_ai_log: "📝 导出对话日志",
       title_ai_bulk: "AI 仅生成 Bulk 草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid",
       btn_ai_bulk: "⚡ 导出 AI Bulk 草稿",
@@ -1387,7 +1387,7 @@ const I18N = {
       lbl_import_logs: "Import Logs",
       btn_check: "Dependency Check",
       btn_ai: "Summon AI Agent (Streaming)",
-      ai_title: "✨ Gemini AI Agent Engine",
+      ai_title: "✨ Gemini + OpenRouter AI Agent Engine",
       btn_ai_log: "📝 Export Chat Log",
       title_ai_bulk: "AI generates a Bulk draft only. Confirm Campaign, Ad Group, Match Type, and Bid before upload.",
       btn_ai_bulk: "⚡ Export AI Bulk Draft",
@@ -4919,8 +4919,202 @@ const processAICharts = (bubble) => {
     bubble.innerHTML = sanitizeAIHtml(html);
 };
 
-const callGeminiChatAPI = async (userPrompt, isInitialReport = false) => {
-    const apiKey = atob("QUl6YVN5QnhNaE0yRXlhbDYxZm9rcGNwZ1Nrb3p2amdwcU9aZWlJ");
+const AI_PROVIDER_CONFIG = {
+    gemini: {
+        label: "Gemini 2.5 Flash",
+        model: "gemini-2.5-flash",
+        apiKey: atob("QUl6YVN5QnhNaE0yRXlhbDYxZm9rcGNwZ1Nrb3p2amdwcU9aZWlJ")
+    },
+    openrouter: {
+        label: "OpenRouter Auto Router",
+        model: "openrouter/auto",
+        endpoint: "https://openrouter.ai/api/v1/chat/completions",
+        apiKey: atob("c2stb3ItdjEtOGNkYTBkZDQ0NWFkZWJjMjQ5Nzg2NDc3N2U0MTlmOTE5ODE3YjU1MGYyNWI0NGM2YjZhMjA0ZDNmMDQ3MDM5OA==")
+    }
+};
+
+const getOpenRouterErrorMessage = async (response) => {
+    let detail = '';
+    try { detail = await response.text(); } catch(e) {}
+    let parsedMessage = '';
+    try {
+        const parsed = JSON.parse(detail);
+        parsedMessage = parsed?.error?.message || parsed?.message || '';
+    } catch(e) {}
+    const shortDetail = (parsedMessage || detail) ? `\n${(parsedMessage || detail).slice(0, 500)}` : '';
+    const zhMap = { 400: '请求体过大或格式错误，请缩小筛选范围或减少对话历史。', 401: 'OpenRouter API Key 无效或未授权。', 402: 'OpenRouter 余额不足或账户未开通计费。', 403: 'OpenRouter 权限不足或模型不可用。', 408: 'OpenRouter 请求超时。', 429: 'OpenRouter 频率限制，请稍后重试。', 500: 'OpenRouter 服务端错误。', 502: '上游模型服务异常。', 503: 'OpenRouter 或上游模型暂时不可用。' };
+    const enMap = { 400: 'Request body is too large or malformed. Narrow filters or reduce chat history.', 401: 'OpenRouter API key is invalid or unauthorized.', 402: 'OpenRouter balance is insufficient or billing is not enabled.', 403: 'OpenRouter permission denied or model unavailable.', 408: 'OpenRouter request timed out.', 429: 'OpenRouter rate limit reached. Try again later.', 500: 'OpenRouter server error.', 502: 'Upstream model error.', 503: 'OpenRouter or upstream model temporarily unavailable.' };
+    const msg = (currentLang === 'zh' ? zhMap : enMap)[response.status] || (currentLang === 'zh' ? 'OpenRouter API 返回异常。' : 'OpenRouter API returned an error.');
+    return `OpenRouter API ${response.status}: ${msg}${shortDetail}`;
+};
+
+const renderAIStreamingText = (bubble, text) => {
+    bubble.textContent = text;
+    const chat = $("aiChatHistory");
+    if (chat) chat.scrollTop = chat.scrollHeight;
+};
+
+const streamGeminiResponse = async (response, bubble) => {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let aiFullText = "";
+    let buffer = "";
+    let lastRender = 0;
+    bubble.innerHTML = "";
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            if (buffer.trim()) {
+                try {
+                    if (buffer.startsWith("data: ") && buffer !== "data: [DONE]") {
+                        const data = JSON.parse(buffer.substring(6));
+                        const textPart = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                        aiFullText += textPart;
+                    }
+                } catch (e) {}
+            }
+            break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+            if (line.startsWith("data: ") && line !== "data: [DONE]") {
+                try {
+                    const data = JSON.parse(line.substring(6));
+                    const textPart = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                    aiFullText += textPart;
+                    const now = Date.now();
+                    if (now - lastRender > 100) {
+                        renderAIStreamingText(bubble, aiFullText);
+                        lastRender = now;
+                    }
+                } catch (e) {
+                    console.warn("Gemini SSE Parse Error", e);
+                }
+            }
+        }
+    }
+
+    renderAIStreamingText(bubble, aiFullText);
+    return aiFullText;
+};
+
+const streamOpenRouterResponse = async (response, bubble) => {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let aiFullText = "";
+    let buffer = "";
+    let lastRender = 0;
+    bubble.innerHTML = "";
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const rawLine of lines) {
+            const line = rawLine.trim();
+            if (!line || line.startsWith(":")) continue;
+            if (!line.startsWith("data: ")) continue;
+
+            const payload = line.substring(6).trim();
+            if (payload === "[DONE]") continue;
+
+            try {
+                const data = JSON.parse(payload);
+                if (data?.error) throw new Error(data.error?.message || "OpenRouter stream error");
+                const deltaText = data?.choices?.[0]?.delta?.content || data?.choices?.[0]?.message?.content || "";
+                if (deltaText) {
+                    aiFullText += deltaText;
+                    const now = Date.now();
+                    if (now - lastRender > 100) {
+                        renderAIStreamingText(bubble, aiFullText);
+                        lastRender = now;
+                    }
+                }
+            } catch (e) {
+                console.warn("OpenRouter SSE Parse Error", e);
+            }
+        }
+    }
+
+    renderAIStreamingText(bubble, aiFullText);
+    return aiFullText;
+};
+
+const requestGeminiStream = async (payload, signal, bubble) => {
+    const cfg = AI_PROVIDER_CONFIG.gemini;
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:streamGenerateContent?alt=sse&key=${cfg.apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal
+    });
+
+    if (!response.ok) {
+        const err = new Error(await getGeminiErrorMessage(response));
+        err.status = response.status;
+        err.provider = "gemini";
+        throw err;
+    }
+    return await streamGeminiResponse(response, bubble);
+};
+
+const convertGeminiHistoryToOpenRouterMessages = (history) => history.map(msg => ({
+    role: msg.role === "model" ? "assistant" : "user",
+    content: msg.parts?.[0]?.text || ""
+})).filter(msg => msg.content.trim());
+
+const requestOpenRouterStream = async ({ systemPrompt, finalPrompt, history, signal, bubble }) => {
+    const cfg = AI_PROVIDER_CONFIG.openrouter;
+    const siteUrl = (window.location.origin && window.location.origin !== "null") ? window.location.origin : "https://local.ads-dashboard";
+    const payload = {
+        model: cfg.model,
+        stream: true,
+        temperature: 0.2,
+        messages: [
+            { role: "system", content: systemPrompt },
+            ...convertGeminiHistoryToOpenRouterMessages(history),
+            { role: "user", content: finalPrompt }
+        ]
+    };
+
+    const response = await fetch(cfg.endpoint, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${cfg.apiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": siteUrl,
+            "X-Title": "LangRong Ads Dashboard"
+        },
+        body: JSON.stringify(payload),
+        signal
+    });
+
+    if (!response.ok) {
+        const err = new Error(await getOpenRouterErrorMessage(response));
+        err.status = response.status;
+        err.provider = "openrouter";
+        throw err;
+    }
+    return await streamOpenRouterResponse(response, bubble);
+};
+
+const showAIFallbackStatus = (bubble, reason) => {
+    const reasonText = escapeHtml(String(reason || '').slice(0, 220));
+    bubble.innerHTML = sanitizeAIHtml(`<div class="alert-banner warn">⚠️ ${currentLang === 'zh' ? 'Gemini 调用失败，已自动切换 OpenRouter 继续生成。' : 'Gemini failed. Automatically switching to OpenRouter.'}<br><span class="small">${reasonText}</span></div>`);
+    const chat = $("aiChatHistory");
+    if (chat) chat.scrollTop = chat.scrollHeight;
+};
+
+const callAIChatAPI = async (userPrompt, isInitialReport = false) => {
     if (aiAbortController) {
         try { aiAbortController.abort(); } catch(e) {}
     }
@@ -4971,80 +5165,47 @@ ${getAiLanguageInstruction()}
     const MAX_HISTORY_MESSAGES = 12;
     if (aiMessageHistory.length > MAX_HISTORY_MESSAGES) aiMessageHistory = aiMessageHistory.slice(-MAX_HISTORY_MESSAGES);
 
-    const payload = {
+    const geminiPayload = {
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: [...aiMessageHistory, { role: "user", parts: [{ text: finalPrompt }] }],
-        generationConfig: { temperature: 0.2 } 
+        generationConfig: { temperature: 0.2 }
     };
 
     const bubble = createChatBubble("ai");
-    bubble.innerHTML = '<span class="ai-loading">🔮 ' + (currentLang === 'zh' ? '信号连接中...' : 'Connecting...') + '</span>';
+    bubble.innerHTML = '<span class="ai-loading">🔮 ' + (currentLang === 'zh' ? 'Gemini 连接中，若被限额将自动切换 OpenRouter...' : 'Connecting to Gemini. Auto-fallback to OpenRouter if limited...') + '</span>';
     $("aiChatHistory").scrollTop = $("aiChatHistory").scrollHeight;
 
+    let aiFullText = "";
+    let providerUsed = "gemini";
+
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-            signal: aiAbortController.signal
-        });
-
-        if (!response.ok) throw new Error(await getGeminiErrorMessage(response));
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let aiFullText = "";
-        let buffer = ""; 
-        let lastRender = 0;
-        bubble.innerHTML = ""; 
-
-        const renderStreamingText = () => {
-            bubble.textContent = aiFullText;
-            $("aiChatHistory").scrollTop = $("aiChatHistory").scrollHeight;
-        };
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                if (buffer.trim()) {
-                    try {
-                        if (buffer.startsWith("data: ") && buffer !== "data: [DONE]") {
-                            const data = JSON.parse(buffer.substring(6));
-                            const textPart = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                            aiFullText += textPart;
-                        }
-                    } catch (e) { }
-                }
-                break;
-            }
-            
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop(); 
-            
-            for (const line of lines) {
-                if (line.startsWith("data: ") && line !== "data: [DONE]") {
-                    try {
-                        const data = JSON.parse(line.substring(6));
-                        const textPart = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                        aiFullText += textPart;
-                        const now = Date.now();
-                        if (now - lastRender > 100) {
-                            renderStreamingText();
-                            lastRender = now;
-                        }
-                    } catch (e) { 
-                        console.warn("SSE Parse Error", e); 
-                    }
-                }
-            }
+        try {
+            aiFullText = await requestGeminiStream(geminiPayload, aiAbortController.signal, bubble);
+        } catch (geminiError) {
+            if (geminiError?.name === 'AbortError') throw geminiError;
+            console.warn("Gemini failed. Falling back to OpenRouter:", geminiError);
+            providerUsed = "openrouter";
+            showAIFallbackStatus(bubble, geminiError?.message || geminiError);
+            await new Promise(resolve => setTimeout(resolve, 450));
+            bubble.innerHTML = '<span class="ai-loading">🔁 ' + (currentLang === 'zh' ? 'OpenRouter 接管生成中...' : 'OpenRouter is taking over...') + '</span>';
+            aiFullText = await requestOpenRouterStream({
+                systemPrompt,
+                finalPrompt,
+                history: aiMessageHistory,
+                signal: aiAbortController.signal,
+                bubble
+            });
         }
-        
+
+        if (!aiFullText || !aiFullText.trim()) {
+            throw new Error(currentLang === 'zh' ? 'AI 返回为空，请重试或缩小筛选范围。' : 'AI returned empty text. Try again or narrow filters.');
+        }
+
         bubble.innerHTML = sanitizeAIHtml(aiFullText);
         processAICharts(bubble);
-        
+
         aiMessageHistory.push({ role: "user", parts: [{ text: finalPrompt }] });
-        aiMessageHistory.push({ role: "model", parts: [{ text: aiFullText }] });
+        aiMessageHistory.push({ role: "model", parts: [{ text: aiFullText }], provider: providerUsed });
         if (aiMessageHistory.length > MAX_HISTORY_MESSAGES) aiMessageHistory = aiMessageHistory.slice(-MAX_HISTORY_MESSAGES);
 
         if (isInitialReport) {
@@ -5054,11 +5215,11 @@ ${getAiLanguageInstruction()}
         }
 
     } catch (error) {
-        console.error("Gemini API Streaming Error:", error);
+        console.error("AI Streaming Error:", error);
         const aborted = error?.name === 'AbortError';
         const msg = aborted
             ? (currentLang === 'zh' ? '已停止生成。' : 'Generation stopped.')
-            : escapeHtml(error?.message || (currentLang === 'zh' ? '流式连接中断。' : 'Streaming connection interrupted.'));
+            : escapeHtml(error?.message || (currentLang === 'zh' ? 'AI 流式连接中断。' : 'AI streaming connection interrupted.'));
         bubble.innerHTML = sanitizeAIHtml(`<div class="alert-banner warn">⚠️ ${msg}</div>`);
     } finally {
         aiAbortController = null;
@@ -5073,6 +5234,8 @@ ${getAiLanguageInstruction()}
         }
     }
 };
+
+const callGeminiChatAPI = callAIChatAPI;
 
 const bindAIEvents = () => {
     $("btnAI")?.addEventListener("click", async () => {
@@ -5129,7 +5292,7 @@ const bindAIEvents = () => {
         let logText = `=== Ads Dashboard Pro Chat Log ===\nTime: ${new Date().toLocaleString()}\nOperator: Amazon PPC Expert\n==================================\n\n`;
         
         aiMessageHistory.forEach(msg => {
-            const role = msg.role === "user" ? "[User / 运营指令]" : "[Gemini AI]";
+            const role = msg.role === "user" ? "[User / 运营指令]" : "[AI Agent]";
             const plainText = msg.parts[0].text.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
             logText += `${role}\n${plainText}\n\n`;
         });
