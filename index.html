@@ -232,7 +232,44 @@
     table { width: 100%; border-collapse: separate; border-spacing: 0; }
     thead th { position: sticky; top: 0; background: var(--th-bg); border-bottom: 1px solid var(--line); font-size: 12.2px; color: var(--muted); text-align: left; padding: 10px 10px; white-space: nowrap; cursor: pointer; user-select: none; z-index: 2; font-weight: 600; transition: background .3s ease; }
     tbody td { padding: 10px 10px; border-bottom: 1px solid var(--line); font-size: 12.8px; vertical-align: top; font-variant-numeric: tabular-nums; color: var(--text); max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #rankTable td:first-child, #businessReportTable td:nth-child(2) { white-space: normal; word-break: break-word; }
+    #rankTable { min-width: 1780px; table-layout: fixed; }
+    #rankTable thead th,
+    #rankTable tbody td { padding: 8px 8px; }
+    #rankTable th:first-child,
+    #rankTable td:first-child {
+      min-width: 230px;
+      width: 230px;
+      max-width: 260px;
+      white-space: normal;
+      word-break: normal;
+      overflow-wrap: normal;
+      line-height: 1.35;
+    }
+    #rankTable th:nth-child(2), #rankTable td:nth-child(2) { width: 95px; }
+    #rankTable th:nth-child(3), #rankTable td:nth-child(3) { width: 96px; }
+    #rankTable th:nth-child(4), #rankTable td:nth-child(4) { width: 88px; }
+    #rankTable th:nth-child(5), #rankTable td:nth-child(5) { width: 88px; }
+    #rankTable th:nth-child(6), #rankTable td:nth-child(6) { width: 76px; }
+    #rankTable th:nth-child(7), #rankTable td:nth-child(7) { width: 76px; }
+    #rankTable th:nth-child(8), #rankTable td:nth-child(8) { width: 70px; }
+    #rankTable th:nth-child(9), #rankTable td:nth-child(9) { width: 70px; }
+    #rankTable th:nth-child(10), #rankTable td:nth-child(10) { width: 70px; }
+    #rankTable th:nth-child(11), #rankTable td:nth-child(11) { width: 84px; }
+    #rankTable th:nth-child(12), #rankTable td:nth-child(12) { width: 84px; }
+    #rankTable th:nth-child(13), #rankTable td:nth-child(13) { width: 145px; }
+    #rankTable th:nth-child(14), #rankTable td:nth-child(14) { width: 65px; }
+    #rankTable th:nth-child(15), #rankTable td:nth-child(15) { width: 78px; }
+    #rankTable th:nth-child(16), #rankTable td:nth-child(16) { width: 78px; }
+    #rankTable th:nth-child(17), #rankTable td:nth-child(17) { width: 95px; }
+    #rankTable th:nth-child(18), #rankTable td:nth-child(18) { width: 80px; }
+    #rankTable th:nth-child(19), #rankTable td:nth-child(19) { width: 95px; }
+    #rankTable td:first-child {
+      font-weight: 650;
+      color: var(--text);
+      overflow: visible;
+      text-overflow: clip;
+    }
+    #businessReportTable td:nth-child(2) { white-space: normal; word-break: break-word; }
     tbody tr:hover { background: var(--hover-bg); }
     tbody tr:last-child td { border-bottom: none; }
     .tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 11.8px; white-space: nowrap; user-select: none; font-weight: 600; }
@@ -833,7 +870,7 @@
       
       <div class="card tableCard">
         <div class="cardTitle">
-          <h2 data-i18n="title_rank">榜单与智能调价引擎</h2>
+          <h2 data-i18n="title_rank">榜单与出价治理引擎</h2>
           <div class="rightTools">
             <div class="seg" role="tablist" aria-label="Type Filter">
               <button id="btnTypeAll" class="segBtn active" data-type="all" type="button" data-i18n="tab_all">全部</button>
@@ -846,11 +883,11 @@
         </div>
         <div class="table-container">
           <table id="rankTable">
-            <thead><tr><th data-sort="name" data-i18n="th_name">名称</th><th data-sort="audit" data-i18n="th_audit">流量审计</th><th data-sort="spend" data-i18n="th_spend">花费</th><th data-sort="sales" data-i18n="th_sales">销售额</th><th data-sort="orders" data-i18n="th_orders">订单数</th><th data-sort="impr" data-i18n="th_impr">展示量</th><th data-sort="clicks" data-i18n="th_clicks">点击量</th><th data-sort="ctr" data-i18n="th_ctr">点击率</th><th data-sort="cpc" data-i18n="th_cpc">点击成本</th><th data-sort="cvr" data-i18n="th_cvr">转化率</th><th data-sort="acos" data-i18n="th_acos">ACOS</th><th data-sort="roas" data-i18n="th_roas">ROAS</th></tr></thead>
+            <thead><tr><th data-sort="name" data-i18n="th_name">名称</th><th data-sort="audit" data-i18n="th_audit">流量审计</th><th data-sort="sampleConfidence" data-i18n="th_sample_confidence">样本置信度</th><th data-sort="spend" data-i18n="th_spend">花费</th><th data-sort="sales" data-i18n="th_sales">销售额</th><th data-sort="orders" data-i18n="th_orders">订单数</th><th data-sort="clicks" data-i18n="th_clicks">点击量</th><th data-sort="cvr" data-i18n="th_cvr">转化率</th><th data-sort="roas" data-i18n="th_roas">ROAS</th><th data-sort="acos" data-i18n="th_acos">ACOS</th><th data-sort="netProfit" data-i18n="th_net_profit">净利润</th><th data-sort="bulkReady" data-i18n="th_bulk_ready">Bulk Ready</th><th data-sort="action" data-i18n="th_action">动作</th><th data-sort="priority" data-i18n="th_priority">优先级</th><th data-sort="cpc" data-i18n="th_current_cpc">当前 CPC</th><th data-sort="suggestedBid" data-i18n="th_suggested_bid">建议出价</th><th data-sort="effectiveMaxCpc" data-i18n="th_effective_max_cpc">有效最高 CPC</th><th data-sort="suggestedBidDelta" data-i18n="th_bid_delta">调价幅度</th><th data-sort="protection" data-i18n="th_protection">保护状态</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;" data-i18n="desc_rank">系统已内嵌**净利润模拟**，导出 Excel 中将附带基于真实利润的 <b>Increase / Decrease</b> AI 调价策略。点击 ASIN 旁的靶心图标可反向破解竞对。</div>
+        <div class="small" style="margin-top:10px;" data-i18n="desc_rank">新增样本置信度、保护状态、建议出价与有效最高 CPC。前端只给动作，Excel 保留证据日志与 Bulk Ready 风控字段。</div>
       </div>
       
       <div class="card tableCard" id="longTailCard">
@@ -1196,16 +1233,25 @@ const I18N = {
       th_sales_pct: "销售额占比",
       th_order_pct: "订单占比 (成交出价)",
       desc_cpc: "说明：根据每个词的实际平均 CPC 归类。<b>订单占比</b>列展示了“成交出价占比”，帮助你找到转化最集中的出价区间。",
-      title_rank: "榜单与智能调价引擎",
+      title_rank: "榜单与出价治理引擎",
       tab_all: "全部",
       tab_kw: "关键词",
       btn_export_rank: "异步防卡死导出 Excel",
       hint_sort_search: "点击表头排序，点击🔍精准搜索",
       th_name: "名称",
       th_audit: "流量审计",
+      th_priority: "优先级",
+      th_current_cpc: "当前 CPC",
+      th_suggested_bid: "建议出价",
+      th_effective_max_cpc: "有效最高 CPC",
+      th_bid_delta: "调价幅度",
+      th_protection: "保护状态",
+      th_sample_confidence: "样本置信度",
+      th_net_profit: "净利润",
+      th_bulk_ready: "Bulk Ready",
       th_impr: "展示量",
       th_clicks: "点击量",
-      desc_rank: "系统已内嵌**净利润模拟**，导出 Excel 中将附带基于真实利润的 <b>Increase / Decrease</b> AI 调价策略。点击 ASIN 旁的靶心图标可反向破解竞对。",
+      desc_rank: "新增样本置信度、保护状态、建议出价与有效最高 CPC。前端只给动作，Excel 保留证据日志与 Bulk Ready 风控字段。",
       title_longtail: "长尾增长引擎 (Long-Tail Growth Engine)",
       hint_longtail_engine: "从广告搜索词中沉淀 Exact / Phrase / Broad / Listing 四类增长动作",
       lbl_words_ge: "单词数 ≥",
@@ -1607,16 +1653,25 @@ const I18N = {
       th_sales_pct: "Sales %",
       th_order_pct: "Orders % (Winning Bid)",
       desc_cpc: "Notes: Categorized by actual Avg CPC. The <b>Orders %</b> column shows where conversions are concentrated.",
-      title_rank: "Performance Rank & AI Bidding",
+      title_rank: "Ranking & Bid Governance Engine",
       tab_all: "All",
       tab_kw: "Keywords",
       btn_export_rank: "Export Excel Async",
       hint_sort_search: "Click header to sort, click 🔍 for exact search",
       th_name: "Name",
       th_audit: "Traffic Audit",
+      th_priority: "Priority",
+      th_current_cpc: "Current CPC",
+      th_suggested_bid: "Suggested Bid",
+      th_effective_max_cpc: "Effective Max CPC",
+      th_bid_delta: "Bid Delta",
+      th_protection: "Protection",
+      th_sample_confidence: "Sample Confidence",
+      th_net_profit: "Net Profit",
+      th_bulk_ready: "Bulk Ready",
       th_impr: "Impressions",
       th_clicks: "Clicks",
-      desc_rank: "System includes **Net Profit Simulation**. Excel export will contain AI-driven <b>Increase/Decrease</b> bidding strategies. Click the target icon next to ASINs for reverse engineering.",
+      desc_rank: "Adds sample confidence, protection status, suggested bid and effective max CPC. The UI shows actions only; Excel keeps evidence and Bulk Ready controls.",
       title_longtail: "Long-Tail Growth Engine",
       hint_longtail_engine: "Convert ad search terms into Exact / Phrase / Broad / Listing growth actions",
       lbl_words_ge: "Words ≥",
@@ -3646,70 +3701,150 @@ ordersKeep: Math.max(0, Math.floor(safeNum($("ruleOrdersKeep")?.value || 2))),
 roasMigrateMin: safeNum($("ruleRoasMigrateMin")?.value || 2) 
 });
 
-const decideAction = (item, rankBy, cachedGlobalMetrics = null) => {
-  const r = getRules();
-  let action = "KEEP";
-  let reason = "Observing";
-  let suggestedBidDelta = "0%";
+const getBidMatchBucket = (item, rankBy="searchTerm") => {
+  const raw = `${item.matchType || item.sourceMatchType || item.targeting || item.name || ""}`.toLowerCase();
+  const name = `${item.name || item.searchTerm || ""}`.toLowerCase();
+  if (isASINLike(name) || isASINLike(raw)) return "asin";
+  if (raw.includes("exact")) return "exact";
+  if (raw.includes("phrase")) return "phrase";
+  if (raw.includes("broad")) return "broad";
+  if (raw.includes("auto") || raw.includes("close") || raw.includes("loose") || raw.includes("substitutes") || raw.includes("complements")) return "auto";
+  if (rankBy === "targeting" && !raw) return "targeting";
+  return "keyword";
+};
 
+const getBidRiskProfile = (term="") => {
+  const t0 = String(term || "").toLowerCase();
+  const hardMismatch = /(prescription|progressive|bifocal|transition|photochromic|contact lens|sunglasses|safety glasses|kids|children|repair|replacement lens|eyeglass frame only)/i.test(t0);
+  const audienceShift = /\b(men|mens|male|man)\b/i.test(t0);
+  const blueLightModifier = /blue\s*light/i.test(t0);
+  return { hardMismatch, audienceShift, blueLightModifier };
+};
+
+const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
+  const r = getRules();
+  const globalMetrics = cachedGlobalMetrics || sumMetrics(AdsStore.view);
+  const globalCvr = clamp(globalMetrics.cvr || 0.05, 0.005, 0.25);
+  const globalCpc = clamp(globalMetrics.cpc || 0.75, 0.15, 3.00);
+  const globalAov = globalMetrics.orders > 0 ? (globalMetrics.sales / globalMetrics.orders) : 20;
+  const aov = item.orders > 0 ? (item.sales / item.orders) : globalAov;
+  const targetAcos = clamp(1 / Math.max(1.5, r.roasKeep || 3), 0.18, 0.35);
+  const bucket = getBidMatchBucket(item, rankBy);
+  const smoothingMap = { exact: 15, phrase: 20, broad: 30, auto: 35, asin: 35, targeting: 25, keyword: 25 };
+  const matchCoefMap = { exact: 0.86, phrase: 0.66, broad: 0.46, auto: 0.54, asin: 0.55, targeting: 0.60, keyword: 0.72 };
+  const typeCapMap = { exact: 1.35, phrase: 1.10, broad: 0.85, auto: 0.95, asin: 0.95, targeting: 1.00, keyword: 1.15 };
+  const effectiveCapMap = { exact: 1.60, phrase: 1.30, broad: 1.00, auto: 1.10, asin: 1.10, targeting: 1.20, keyword: 1.35 };
+  const smoothN = smoothingMap[bucket] || 25;
+  const smoothCvr = (item.orders + globalCvr * smoothN) / Math.max(1, item.clicks + smoothN);
+  const theoreticalCpc = Math.max(0, aov * smoothCvr * targetAcos);
+  const currentCpc = item.cpc > 0 ? item.cpc : globalCpc;
+  const confidenceScore = clamp(
+    Math.round(
+      Math.min(35, (item.clicks / Math.max(10, 1 / globalCvr)) * 25) +
+      Math.min(35, item.orders * 12) +
+      Math.min(20, item.spend / Math.max(8, r.spendNeg || 30) * 20) +
+      (item.sales > 0 ? 10 : 0)
+    ), 0, 100
+  );
+  const confidenceCoef = clamp(0.45 + confidenceScore / 180, 0.45, 1.0);
+  const rawBid = theoreticalCpc * (matchCoefMap[bucket] || 0.65) * confidenceCoef;
+  const risk = getBidRiskProfile(item.name || item.searchTerm || item.targeting || "");
   const endDateStr = $("dateEnd")?.value;
   const daysSinceEnd = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000) : 999;
   const isWithinAttributionWindow = daysSinceEnd <= 14;
   const isStrictAttribution = daysSinceEnd <= 3;
   const isEventProtection = $("eventProtectionToggle")?.checked;
-
   const br = getBusinessContextForItem(item);
   let lifecycleAdjustment = 1.0;
   if (br?.lifecycle === "new") lifecycleAdjustment = 1.5;
   if (br?.lifecycle === "decline") lifecycleAdjustment = 0.8;
-
   const dynamicSpendNeg = (isWithinAttributionWindow ? r.spendNeg * 1.25 : r.spendNeg) * lifecycleAdjustment;
-  const globalMetrics = cachedGlobalMetrics || sumMetrics(AdsStore.view);
-  const globalCvr = globalMetrics.cvr || 0.05;
   const expectedClicksForOneOrder = globalCvr > 0 ? (1 / globalCvr) : 20;
   const enoughBadSample = item.spend >= dynamicSpendNeg && item.clicks >= Math.max(r.clicksNeg, expectedClicksForOneOrder * 1.2) && item.orders <= 0;
+  const lowSample = confidenceScore < 45 || item.clicks < 8;
+  let protection = "Executable";
+  let protectionLabel = currentLang === "zh" ? "可执行" : "Executable";
+  if (isStrictAttribution && isEventProtection) { protection = "Attribution Guard"; protectionLabel = currentLang === "zh" ? "归因保护" : "Attribution Guard"; }
+  else if (isWithinAttributionWindow && isEventProtection) { protection = "Attribution Watch"; protectionLabel = currentLang === "zh" ? "归因观察" : "Attribution Watch"; }
+  else if (lowSample) { protection = "Low Sample"; protectionLabel = currentLang === "zh" ? "样本不足" : "Low Sample"; }
 
-  if (enoughBadSample) {
-    if (isStrictAttribution && isEventProtection) {
+  let action = "HOLD";
+  let reason = currentLang === "zh" ? "保持现有出价" : "Hold current bid";
+  if (risk.hardMismatch && item.orders <= 0 && item.spend >= Math.max(10, r.spendNeg * 0.6)) {
+    action = item.spend >= dynamicSpendNeg && !isWithinAttributionWindow ? "NEGATE" : "REVIEW";
+    reason = currentLang === "zh" ? "疑似错配词，禁止加价，进入风控复核" : "Mismatch risk; block bid increase and review";
+  } else if (enoughBadSample) {
+    if ((isStrictAttribution || isWithinAttributionWindow) && isEventProtection) {
       action = "DECREASE";
-      reason = t('dyn_reason_decrease') + " | 大促/近 3 天归因保护：先降价控损，不直接否定";
-      suggestedBidDelta = "-30%";
+      reason = currentLang === "zh" ? "归因保护期内先降价控损" : "Reduce bid during attribution guard";
     } else {
       action = "NEGATE";
-      reason = isWithinAttributionWindow ? t('dyn_reason_neg_window', Math.abs(item.netProfit || 0).toFixed(2)) : t('dyn_reason_neg_bleed', Math.abs(item.netProfit || 0).toFixed(2));
-      suggestedBidDelta = "-100%";
+      reason = currentLang === "zh" ? "高花费高点击无订单，进入否定候选" : "High spend/clicks with zero orders; negative candidate";
     }
-  } else if (item.roas >= (r.roasKeep / lifecycleAdjustment) && item.netProfit > 10) {
-    action = "SCALE";
-    reason = t('dyn_reason_profit', item.netProfit.toFixed(2));
-    suggestedBidDelta = "+20%";
-  } else if (item.orders > 0 && item.roas < r.roasMigrateMin) {
+  } else if (item.orders >= r.ordersKeep && item.roas >= (r.roasKeep * 1.2 / lifecycleAdjustment) && (item.netProfit || 0) > 5 && confidenceScore >= 60) {
+    action = "INCREASE";
+    reason = currentLang === "zh" ? "稳定盈利且样本置信度达标" : "Stable profit with enough confidence";
+  } else if (item.orders > 0 && item.roas > 0 && item.roas < r.roasMigrateMin) {
     action = "DECREASE";
-    reason = t('dyn_reason_roas_loss');
-    suggestedBidDelta = "-15%";
-  } else if (item.orders > 0 && item.roas < r.roasKeep) {
-    action = "MIGRATE";
-    reason = t('dyn_reason_migrate');
-    suggestedBidDelta = "-10%";
-  } else if (item.spend >= dynamicSpendNeg && item.orders <= 0) {
+    reason = currentLang === "zh" ? "有订单但 ROAS 偏低，先降价保利润" : "Orders exist but ROAS is weak; reduce bid";
+  } else if (item.orders > 0 && item.roas >= r.roasMigrateMin && item.roas < r.roasKeep && rankBy === "searchTerm" && !isASINLike(item.name)) {
+    action = "MIGRATE EXACT";
+    reason = currentLang === "zh" ? "有转化但效率未到放量线，迁移精准低价测试" : "Converted term; migrate to exact with controlled bid";
+  } else if (item.spend >= dynamicSpendNeg * 0.7 && item.orders <= 0) {
     action = "DECREASE";
-    reason = t('dyn_reason_decrease');
-    suggestedBidDelta = "-30%";
+    reason = currentLang === "zh" ? "接近止损线但样本未完全确认，先降价" : "Near loss-control threshold; reduce before negating";
+  } else if (lowSample) {
+    action = "WATCH";
+    reason = currentLang === "zh" ? "样本不足，不做激进调价" : "Insufficient sample; avoid aggressive bid change";
   }
+  if (risk.audienceShift && action === "NEGATE") { action = "REVIEW"; reason = currentLang === "zh" ? "Men 流量不自动否定，需人工复核" : "Men traffic is not auto-negated; manual review required"; }
 
-  let placementBoost = "";
-  if (AdsStore.placement.length > 0 && item.campaign) {
-    const campPlacements = AdsStore.placement.filter(p => p.campaign === item.campaign);
-    if (campPlacements.length > 0) {
-      const tos = sumMetrics(campPlacements.filter(p => p.placement.includes("Top of Search")));
-      const ros = sumMetrics(campPlacements.filter(p => p.placement.includes("Rest of Search")));
-      if (tos.clicks > 10 && ros.clicks > 10 && ros.cvr > 0 && tos.cvr > ros.cvr * 1.5) {
-        placementBoost = ` | TOS Boost +${Math.round((tos.cvr/ros.cvr - 1)*100)}%`;
-      }
-    }
+  const typeCap = typeCapMap[bucket] || 1.10;
+  let suggestedBid = currentCpc;
+  if (action === "INCREASE") {
+    const cap = Math.min(typeCap, currentCpc * 1.15, globalCpc * 1.35);
+    suggestedBid = clamp(Math.max(currentCpc * 1.05, rawBid), 0.15, Math.max(0.15, cap));
+  } else if (action === "DECREASE") {
+    suggestedBid = clamp(Math.min(currentCpc * 0.80, rawBid || currentCpc * 0.8), 0.15, Math.min(typeCap, currentCpc * 0.90));
+  } else if (action === "MIGRATE EXACT") {
+    suggestedBid = clamp(Math.min(currentCpc * 0.90, rawBid || currentCpc * 0.75, 1.15), 0.15, Math.min(1.15, globalCpc * 1.15));
+  } else if (action === "NEGATE") {
+    suggestedBid = 0;
+  } else if (action === "REVIEW") {
+    suggestedBid = clamp(Math.min(currentCpc, rawBid || currentCpc * 0.75), 0.15, Math.min(typeCap, currentCpc));
+  } else {
+    suggestedBid = clamp(Math.min(currentCpc, typeCap), 0.15, typeCap);
   }
-  suggestedBidDelta += placementBoost;
-  return { action, reason, suggestedBidDelta };
+  suggestedBid = Math.round(suggestedBid * 100) / 100;
+
+  const hasTosPlacement = AdsStore.placement.some(p => p.campaign === item.campaign && /top of search/i.test(p.placement || ""));
+  const dynamicMultiplier = bucket === "exact" || bucket === "keyword" ? 2.0 : 1.5;
+  const placementMultiplier = hasTosPlacement ? 1.5 : 1.0;
+  const effectiveMaxCpc = Math.round(suggestedBid * dynamicMultiplier * placementMultiplier * 100) / 100;
+  const effectiveCap = effectiveCapMap[bucket] || 1.25;
+  const bidDeltaPct = currentCpc > 0 && suggestedBid > 0 ? ((suggestedBid / currentCpc - 1) * 100) : (action === "NEGATE" ? -100 : 0);
+  const suggestedBidDelta = action === "NEGATE" ? "-100%" : `${bidDeltaPct >= 0 ? "+" : ""}${Math.round(bidDeltaPct)}%`;
+  const sampleLabel = confidenceScore >= 75 ? (currentLang === "zh" ? "高" : "High") : confidenceScore >= 50 ? (currentLang === "zh" ? "中" : "Medium") : (currentLang === "zh" ? "低" : "Low");
+  const priority = (action === "NEGATE" || action === "INCREASE") && confidenceScore >= 60 ? "P1" : (action === "DECREASE" || action === "MIGRATE EXACT") ? "P2" : "P3";
+  const bulkReady = ["INCREASE", "DECREASE", "NEGATE", "MIGRATE EXACT"].includes(action) && protection === "Executable" && confidenceScore >= 55 && effectiveMaxCpc <= effectiveCap && !!item.campaign && !!item.adGroup && action !== "REVIEW";
+  const evidence = [
+    `Bucket=${bucket}`,
+    `AOV=${aov.toFixed(2)}`,
+    `SmoothCVR=${(smoothCvr*100).toFixed(2)}%`,
+    `TargetACOS=${(targetAcos*100).toFixed(1)}%`,
+    `TheoryCPC=${theoreticalCpc.toFixed(2)}`,
+    `RawBid=${rawBid.toFixed(2)}`,
+    `EffectiveCap=${effectiveCap.toFixed(2)}`,
+    `Protection=${protection}`,
+    risk.hardMismatch ? "MismatchRisk=YES" : "MismatchRisk=NO",
+    risk.audienceShift ? "AudienceShift=MEN" : "AudienceShift=NO"
+  ].join(" | ");
+
+  return { action, reason, suggestedBidDelta, suggestedBid, effectiveMaxCpc, effectiveCap, currentCpc, sampleConfidence: confidenceScore, sampleLabel, protection, protectionLabel, priority, bulkReady, evidence, smoothCvrGovernance: smoothCvr, theoreticalCpc, matchBucket: bucket };
+};
+
+const decideAction = (item, rankBy, cachedGlobalMetrics = null) => {
+  return getBidGovernance(item, rankBy, cachedGlobalMetrics);
 };
 
 const exportRichExcelMultiSheet = async (sheets, filename) => {
@@ -3898,16 +4033,25 @@ exportRichExcelMultiSheet([ { sheetName: "Analysis Report", headers: headers, da
 
 const exportRankExcel = () => { 
   if (!AdsStore.rankRows.length) { alert(t('dyn_msg_export_rank_empty')); return; } 
-  const headers = ["Name", "Audit", "Spend", "Sales", "Orders", "Net Profit", "Impressions", "Clicks", "CTR", "CPC", "CVR", "ACOS", "ROAS", "Action", "Reason", "Suggested Bid Adjust"]; 
-  const dataRows = AdsStore.rankRows.map(r => {
-      return [ 
-          r.name, r.audit, r.spend || 0, r.sales || 0, r.orders, r.netProfit || 0, r.impr, r.clicks, 
-          r.ctr || 0, r.cpc || 0, r.cvr || 0, r.acos === Infinity ? null : r.acos, r.roas || 0, r.action, r.reason, 
-          r.suggestedBidDelta 
-      ];
-  }); 
+  const headers = ["Name", "Audit", "Action", "Priority", "Current CPC", "Suggested Bid", "Effective Max CPC", "Effective CPC Cap", "Bid Delta", "Protection", "Sample Confidence", "Bulk Ready", "Spend", "Sales", "Orders", "Net Profit", "Clicks", "CPC", "CVR", "ACOS", "ROAS", "Campaign", "Ad Group", "Match Bucket", "Reason", "Evidence"]; 
+  const makeRow = (r) => [
+    r.name, r.audit, r.action, r.priority, r.currentCpc || r.cpc || 0, r.suggestedBid || 0, r.effectiveMaxCpc || 0, r.effectiveCap || 0, r.suggestedBidDelta || "0%", r.protectionLabel || r.protection || "", r.sampleConfidence || 0, r.bulkReady ? "YES" : "NO",
+    r.spend || 0, r.sales || 0, r.orders || 0, r.netProfit || 0, r.clicks || 0, r.cpc || 0, r.cvr || 0, r.acos === Infinity ? null : r.acos, r.roas || 0, r.campaign || "", r.adGroup || "", r.matchBucket || "", r.reason || "", r.evidence || ""
+  ];
+  const dataRows = AdsStore.rankRows.map(makeRow);
+  const bidDraftRows = AdsStore.rankRows.filter(r => r.bulkReady && ["INCREASE", "DECREASE"].includes(r.action)).map(r => [r.action, r.name, r.campaign || "", r.adGroup || "", r.currentCpc || r.cpc || 0, r.suggestedBid || 0, r.effectiveMaxCpc || 0, r.suggestedBidDelta || "", r.reason || "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.acos === Infinity ? null : r.acos]);
+  const negRows = AdsStore.rankRows.filter(r => r.action === "NEGATE").map(r => [r.name, r.bulkReady ? "YES" : "NO", r.campaign || "", r.adGroup || "", r.reason || "", r.spend || 0, r.clicks || 0, r.orders || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, r.evidence || ""]);
+  const migrateRows = AdsStore.rankRows.filter(r => r.action === "MIGRATE EXACT").map(r => [r.name, r.bulkReady ? "YES" : "NO", r.campaign || "", r.adGroup || "", r.suggestedBid || 0, r.effectiveMaxCpc || 0, r.reason || "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.evidence || ""]);
+  const protectRows = AdsStore.rankRows.filter(r => !r.bulkReady || r.protection !== "Executable" || r.action === "REVIEW" || r.action === "WATCH").map(makeRow);
+  const sheets = [
+    { sheetName: "Bid Governance Rank", headers, dataRows },
+    { sheetName: "Bid Change Draft", headers: ["Action", "Name", "Campaign", "Ad Group", "Current CPC", "Suggested Bid", "Effective Max CPC", "Bid Delta", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows: bidDraftRows },
+    { sheetName: "Negation Candidates", headers: ["Name", "Bulk Ready", "Campaign", "Ad Group", "Reason", "Spend", "Clicks", "Orders", "ROAS", "ACOS", "Evidence"], dataRows: negRows },
+    { sheetName: "Exact Migration", headers: ["Search Term", "Bulk Ready", "Campaign", "Ad Group", "Suggested Exact Bid", "Effective Max CPC", "Reason", "Spend", "Sales", "Orders", "ROAS", "Evidence"], dataRows: migrateRows },
+    { sheetName: "Protection Watchlist", headers, dataRows: protectRows }
+  ];
   log(t('dyn_msg_export_rank_gen'));
-  exportRichExcelMultiSheet([{ sheetName: "Performance Rank", headers, dataRows }], `Ultimate_Rank_${getTs()}.xlsx`);
+  exportRichExcelMultiSheet(sheets, `Ultimate_Bid_Governance_${getTs()}.xlsx`);
 };
 
 const exportWordFreqExcel = () => {
@@ -4108,8 +4252,9 @@ const buildRankTable = () => {
     const globalMetrics = sumMetrics(AdsStore.view);
     let items = [...AdsStore.rankGroups.entries()].map(([name, list]) => { 
         const main = getMainRow(list);
-        const base = { name, ...sumMetrics(list), campaign: main.campaign || "", adGroup: main.adGroup || "", targeting: main.targeting || "", searchTerm: name }; 
-        const {action, reason, suggestedBidDelta} = decideAction(base, rankBy, globalMetrics); 
+        const base = { name, ...sumMetrics(list), campaign: main.campaign || "", adGroup: main.adGroup || "", targeting: main.targeting || "", searchTerm: name, matchType: main.matchType || "", adProduct: main.adProduct || "" }; 
+        const governance = decideAction(base, rankBy, globalMetrics); 
+        const {action, reason, suggestedBidDelta} = governance; 
         
         let audit = "-";
         if (coreTerms.has(name) && base.roas > 0 && base.roas < (medRoas * 0.5) && base.spend > 30) { audit = t('dyn_audit_bleed'); } 
@@ -4129,7 +4274,7 @@ const buildRankTable = () => {
             }
             if (isDrift && base.clicks >= 5 && base.smoothCvr < medCvr) { audit = t('dyn_audit_drift'); }
         }
-        return { ...base, action, reason, suggestedBidDelta, audit }; 
+        return { ...base, ...governance, action, reason, suggestedBidDelta, audit }; 
     }); 
     if (rankTypeFilter !== "all") items = items.filter(it => detectRowType(it.name, rankBy) === rankTypeFilter); 
     sortRank(items); 
@@ -4140,7 +4285,8 @@ const renderRankTable = () => {
     buildRankTable(); 
     const tbody = $("rankTable").querySelector("tbody");
     const searchBtnHtml = `<span class="action-icon search-btn" title="Exact Search">🔍</span>`; 
-    
+    const actionClass = (a) => a === "INCREASE" || a === "MIGRATE EXACT" ? "good" : a === "NEGATE" || a === "DECREASE" ? "bad" : a === "REVIEW" ? "warn" : "neutral";
+    const protClass = (p) => p === "Executable" ? "good" : (p === "Low Sample" ? "warn" : "neutral");
     renderProgressive(tbody, AdsStore.rankRows, (it) => {
         let auditHtml = '<span style="color:var(--muted)">-</span>';
         if (it.audit === t('dyn_audit_defect')) auditHtml = `<span class="tag bad">${it.audit}</span>`;
@@ -4148,11 +4294,31 @@ const renderRankTable = () => {
         else if (it.audit === t('dyn_audit_drift')) auditHtml = `<span class="tag bad" style="background:var(--softWarn); color:var(--warn); border:1px solid rgba(181,71,8,.2)">${it.audit}</span>`;
         else if (it.audit === t('dyn_audit_diminish')) auditHtml = `<span class="tag warn">${it.audit}</span>`;
         else if (it.audit === t('dyn_audit_bleed')) auditHtml = `<span class="tag bad" style="background:#b42318;color:#fff">${it.audit}</span>`;
-
-        const hoverProfitText = t('dyn_ai_decision', it.action, it.suggestedBidDelta, fmtMoney(it.netProfit), it.reason);
+        const hoverProfitText = `${it.action} | ${it.reason || ""} | ${it.evidence || ""}`;
         const asinHackBtn = isASINLike(it.name) ? `<span class="action-icon ai-trigger" data-action="ai-asin" data-val="${escapeHtml(it.name)}" title="AI 反向破解战略">🎯</span>` : "";
-
-        return ` <tr title="${hoverProfitText}"> <td data-name="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 160)}${searchBtnHtml}${asinHackBtn}</td> <td>${auditHtml}</td> <td>${fmtMoney(it.spend)}</td> <td>${fmtMoney(it.sales)}</td> <td>${fmtInt(it.orders)}</td> <td style="color:var(--muted);font-size:11.8px;">${fmtInt(it.impr)}</td> <td style="color:var(--muted);font-size:11.8px;">${fmtInt(it.clicks)}</td> <td>${fmtPct(it.ctr)}</td> <td>${fmtMoney(it.cpc)}</td> <td>${fmtPct(it.cvr)}</td> <td style="${(it.acos > 0.4 || it.acos === Infinity) ? 'color:#b42318;font-weight:600' : ''}">${fmtPct(it.acos)}</td> <td style="font-weight:600">${it.roas.toFixed(2)}</td> </tr> `;
+        const effStyle = (it.effectiveMaxCpc || 0) > (it.effectiveCap || 999) ? 'color:var(--bad);font-weight:700' : 'color:var(--muted)';
+        const bulkHtml = it.bulkReady ? `<span class="tag good">YES</span>` : `<span class="tag warn">NO</span>`;
+        return ` <tr title="${escapeHtml(hoverProfitText)}"> 
+          <td data-name="${escapeHtml(it.name)}">${escapeHtml(it.name).slice(0, 220)}${searchBtnHtml}${asinHackBtn}</td>
+          <td>${auditHtml}</td>
+          <td>${fmtInt(it.sampleConfidence || 0)} / ${escapeHtml(it.sampleLabel || "-")}</td>
+          <td>${fmtMoney(it.spend)}</td>
+          <td>${fmtMoney(it.sales)}</td>
+          <td>${fmtInt(it.orders)}</td>
+          <td>${fmtInt(it.clicks)}</td>
+          <td>${fmtPct(it.cvr)}</td>
+          <td style="font-weight:600">${(it.roas || 0).toFixed(2)}</td>
+          <td style="${(it.acos > 0.4 || it.acos === Infinity) ? 'color:#b42318;font-weight:600' : ''}">${fmtPct(it.acos)}</td>
+          <td>${fmtMoney(it.netProfit || 0)}</td>
+          <td>${bulkHtml}</td>
+          <td><span class="tag ${actionClass(it.action)}">${escapeHtml(it.action || "HOLD")}</span></td>
+          <td><span class="pill">${escapeHtml(it.priority || "P3")}</span></td>
+          <td>${fmtMoney(it.currentCpc ?? it.cpc)}</td>
+          <td style="font-weight:700">${(it.action === "NEGATE") ? "-" : fmtMoney(it.suggestedBid)}</td>
+          <td style="${effStyle}">${(it.action === "NEGATE") ? "-" : fmtMoney(it.effectiveMaxCpc)}</td>
+          <td>${escapeHtml(it.suggestedBidDelta || "0%")}</td>
+          <td><span class="tag ${protClass(it.protection)}">${escapeHtml(it.protectionLabel || it.protection || "-")}</span></td>
+        </tr> `;
     });
 };
 
