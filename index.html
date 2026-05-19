@@ -306,6 +306,30 @@
         background-size: 800px 104px;
     }
 
+
+
+    /* Root Toxicity & Co-occurrence Matrix */
+    .root-score-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin: 0 0 12px 0; }
+    .root-score-card { background: var(--hover-bg); border:1px solid var(--line); border-radius:14px; padding:10px 12px; min-height:74px; }
+    .root-score-card .root-label { font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:6px; }
+    .root-score-card .root-value { font-size:20px; font-weight:800; letter-spacing:-.2px; color:var(--text); }
+    .root-score-card .root-note { font-size:11.2px; color:var(--muted); margin-top:4px; line-height:1.35; }
+    .scoreBar { min-width: 92px; display:flex; align-items:center; gap:6px; }
+    .scoreTrack { flex:1; height:7px; border-radius:999px; background:var(--line); overflow:hidden; }
+    .scoreFill { height:100%; border-radius:999px; background: var(--muted); }
+    .scoreFill.good { background: var(--good); }
+    .scoreFill.warn { background: var(--warn); }
+    .scoreFill.bad { background: var(--bad); }
+    .scoreText { width:34px; text-align:right; font-variant-numeric: tabular-nums; font-size:11.5px; color:var(--muted); }
+    .rootDecision { display:inline-flex; align-items:center; gap:5px; padding:4px 8px; border-radius:999px; font-size:11.5px; font-weight:700; border:1px solid transparent; white-space:nowrap; }
+    .rootDecision.good { color: var(--good); background: var(--softGood); }
+    .rootDecision.bad { color: var(--bad); background: var(--softBad); }
+    .rootDecision.warn { color: var(--warn); background: var(--softWarn); }
+    .rootDecision.neutral { color: var(--muted); background: var(--chip); border-color: var(--line); }
+    .rootMini { display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; }
+    .rootMini span { border:1px solid var(--line); background:var(--chip); color:var(--muted); border-radius:999px; padding:2px 6px; font-size:10.8px; }
+    @media (max-width: 900px){ .root-score-grid { grid-template-columns: 1fr 1fr; } }
+
     @media (max-width: 1400px){ .app{ max-width: 100vw; } }
     @media (max-width: 1100px){ .app{ grid-template-columns:1fr; max-width:100vw; } .sidebar{ position:relative; height:auto; } .kpi{ grid-column: span 6; } .chartCard{ grid-column: span 12; } }
     @media (max-width: 650px){ .kpi{ grid-column: span 12; } .actions{ justify-content:flex-start; } .row3{ grid-template-columns:1fr; } .miniInput, .miniSelect{ width:100% !important; border-radius:12px !important; } .pareto-item { flex-direction: column; align-items: flex-start; gap: 8px; } }
@@ -831,50 +855,67 @@
       
       <div class="card tableCard" id="longTailCard">
         <div class="cardTitle">
-          <h2 data-i18n="title_longtail">长尾词挖掘 (Long-Tail Keyword Mining)</h2>
+          <div>
+            <h2 data-i18n="title_longtail">长尾增长引擎 (Long-Tail Growth Engine)</h2>
+            <div class="hint" data-i18n="hint_longtail_engine">从广告搜索词中沉淀 Exact / Phrase / Broad / Listing 四类增长动作</div>
+          </div>
           <div class="rightTools">
-              <span class="pill" data-i18n="lbl_words_ge">单词数 ≥</span><input id="ltMinWords" class="miniInput" type="number" step="1" value="3" data-i18n-title="title_min_words" title="Search Term 包含的单词数" />
-              <span class="pill" data-i18n="lbl_orders_ge">订单 ≥</span><input id="ltMinOrders" class="miniInput" type="number" step="1" value="2" data-i18n-title="title_min_orders" title="至少产生订单数" />
-              <span class="pill">ROAS ≥</span><input id="ltMinRoas" class="miniInput" type="number" step="0.1" value="2.0" data-i18n-title="title_min_roas" title="ROAS 门槛" />
-              <button class="btn primary" id="btnExportLongTail" type="button" data-i18n="btn_export_longtail">导出长尾词 Excel</button>
+              <span class="pill" data-i18n="lbl_intent_ge">意图分 ≥</span><input id="ltMinIntent" class="miniInput" type="number" step="1" value="35" data-i18n-title="title_min_intent" title="关键词语义明确度门槛" />
+              <span class="pill" data-i18n="lbl_orders_ge">订单 ≥</span><input id="ltMinOrders" class="miniInput" type="number" step="1" value="1" data-i18n-title="title_min_orders" title="至少产生订单数" />
+              <span class="pill">ROAS ≥</span><input id="ltMinRoas" class="miniInput" type="number" step="0.1" value="1.5" data-i18n-title="title_min_roas" title="ROAS 门槛" />
+              <span class="pill" data-i18n="lbl_score_ge">机会分 ≥</span><input id="ltMinScore" class="miniInput" type="number" step="1" value="45" data-i18n-title="title_min_score" title="长尾机会综合评分门槛" />
+              <button class="btn primary" id="btnExportLongTail" type="button" data-i18n="btn_export_longtail">导出长尾增长 Excel</button>
           </div>
         </div>
-        <div class="table-container" style="max-height:480px;">
+        <div class="table-container" style="max-height:520px;">
           <table id="longTailTable">
-            <thead><tr><th data-i18n="th_st">搜索词 (Search Term)</th><th data-i18n="th_new_radar">新发现雷达 (New Radar)</th><th data-i18n="th_word_count">单词数</th><th data-i18n="th_spend">花费</th><th data-i18n="th_sales">销售额</th><th data-i18n="th_orders">订单数</th><th data-i18n="th_roas">ROAS</th><th data-i18n="th_acos">ACOS</th></tr></thead>
+            <thead><tr><th data-i18n="th_st">搜索词 (Search Term)</th><th data-i18n="lt_th_score">机会分</th><th data-i18n="lt_th_asset">资产类型</th><th data-i18n="lt_th_action">动作</th><th data-i18n="lt_th_coverage">覆盖状态</th><th data-i18n="lt_th_match">建议匹配</th><th data-i18n="lt_th_bid">建议出价</th><th data-i18n="th_spend">花费</th><th data-i18n="th_sales">销售额</th><th data-i18n="th_orders">订单数</th><th data-i18n="th_clicks">点击量</th><th data-i18n="th_cvr">转化率</th><th data-i18n="th_cpc">点击成本</th><th data-i18n="th_roas">ROAS</th><th data-i18n="th_acos">ACOS</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;" data-i18n="desc_longtail">逻辑：筛选出非 ASIN、单词数达标、且有出单记录的精准长尾词。<b>新发现雷达 (New Radar)</b> 采用高精去符号匹配，标记了尚未被“手动精准”广告覆盖的优异词。建议立刻开启精准匹配！</div>
+        <div class="small" style="margin-top:10px;" data-i18n="desc_longtail">逻辑：不再只按“单词数”筛选，而是综合 ROAS、CVR、CPC、订单证据、语义意图、Exact 覆盖缺口与错配风险，输出 Exact / Phrase / Broad / Listing 四类可执行动作。</div>
       </div>
       
-      <div class="card tableCard">
+      <div class="card tableCard" id="rootMatrixCard">
         <div class="cardTitle">
-          <h2 data-i18n="title_root">词根引力与毒性矩阵（Root Toxicity & Co-occurrence）</h2>
+          <div>
+            <h2 data-i18n="title_root">词根引力与毒性矩阵（Root Toxicity & Co-occurrence）</h2>
+            <div class="hint" data-i18n="hint_root_matrix">判断词根本身是否有毒、哪些组合会被解毒、哪些组合会污染核心流量，并输出否定/降价/扩量动作</div>
+          </div>
           <div class="rightTools">
             <div class="seg" role="tablist" aria-label="Word Frequency Mode">
-              <button class="segBtn active" data-wf="token" type="button" data-i18n="tab_1gram">单节点</button>
+              <button class="segBtn active" data-wf="token" type="button" data-i18n="tab_1gram">单词根</button>
               <button class="segBtn" data-wf="bigram" type="button" data-i18n="tab_2gram">双词共现</button>
               <button class="segBtn" data-wf="trigram" type="button" data-i18n="tab_3gram">三词共现</button>
-              <button class="segBtn" data-wf="mag" type="button" data-i18n="tab_mag_ext">纯度数提取</button>
+              <button class="segBtn" data-wf="mag" type="button" data-i18n="tab_mag_ext">度数词根</button>
             </div>
             <span class="pill">Min Freq</span><input id="wfMinFreq" class="miniInput" type="number" step="1" value="3" data-i18n-title="title_min_freq" title="最小出现次数" />
             <span class="pill">Min Spend</span><input id="wfMinSpend" class="miniInput" type="number" step="0.01" value="10" data-i18n-title="title_min_spend" title="最小花费" />
-            
-            <button class="btn primary" id="btnSemanticCluster" type="button" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 6px 12px;">🧠 运行本地语义聚类 (AI)</button>
-            
-            <button class="btn primary" id="btnExportWf" type="button" data-i18n="btn_export_wf">导出词频</button>
+            <button class="btn primary" id="btnExportWf" type="button" data-i18n="btn_export_wf">导出矩阵 Excel</button>
             <span class="hint" data-i18n="hint_sort_only">点击表头排序</span>
           </div>
         </div>
-        <div class="table-container" style="max-height:480px;">
+        <div id="rootMatrixSummary" class="root-score-grid"></div>
+        <div class="table-container" style="max-height:560px;">
           <table id="wfTable">
-            <thead><tr><th data-sort="word" data-i18n="th_root_combo">词根组合 / 语义簇</th><th data-sort="freq" data-i18n="th_freq">频次 / 包含词数</th><th data-sort="spend" data-i18n="th_spend">花费</th><th data-sort="orders" data-i18n="th_orders">订单</th><th data-sort="roas" data-i18n="th_roas">ROAS</th><th data-sort="acos" data-i18n="th_acos">ACOS</th></tr></thead>
+            <thead><tr>
+              <th data-sort="word" data-i18n="th_root_combo">词根 / 共现组合</th>
+              <th data-sort="rootType" data-i18n="th_root_type">类型</th>
+              <th data-sort="freq" data-i18n="th_freq">频次</th>
+              <th data-sort="spend" data-i18n="th_spend">花费</th>
+              <th data-sort="clicks" data-i18n="th_clicks">点击</th>
+              <th data-sort="orders" data-i18n="th_orders">订单</th>
+              <th data-sort="cvr" data-i18n="th_cvr">CVR</th>
+              <th data-sort="roas" data-i18n="th_roas">ROAS</th>
+              <th data-sort="toxicity" data-i18n="th_toxicity">毒性</th>
+              <th data-sort="attraction" data-i18n="th_attraction">引力</th>
+              <th data-sort="lift" data-i18n="th_lift">共现 Lift</th>
+              <th data-sort="riskScore" data-i18n="th_root_action">动作 / 风险</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
-        <div id="clusterProgress" style="display:none; margin-top:8px; font-size:11px; color:#10b981;">模型加载中... 这将在浏览器本地进行，保证数据绝对隐私。首次下载模型约需 15MB。</div>
-        <div class="small" style="margin-top:10px;" data-i18n="desc_root">升级洞察：使用“双词共现 (2-gram)”能够帮你找出老花镜中隐藏的毒性搭配。点击【本地语义聚类】将使用 Transformers.js 进行端侧高维空间聚类。</div>
+        <div class="small" style="margin-top:10px;" data-i18n="desc_root">模块逻辑：先识别老花镜业务词根，再按毒性、引力、共现 Lift 和误杀风险输出动作。Phrase Negative 只允许高毒性且无赚钱组合的词根进入导出，blue light / men / glasses 等条件词默认进入复核或降价。</div>
       </div>
       
       <div class="card tableCard" id="isolationCard">
@@ -1165,28 +1206,45 @@ const I18N = {
       th_impr: "展示量",
       th_clicks: "点击量",
       desc_rank: "系统已内嵌**净利润模拟**，导出 Excel 中将附带基于真实利润的 <b>Increase / Decrease</b> AI 调价策略。点击 ASIN 旁的靶心图标可反向破解竞对。",
-      title_longtail: "长尾词挖掘 (Long-Tail Keyword Mining)",
+      title_longtail: "长尾增长引擎 (Long-Tail Growth Engine)",
+      hint_longtail_engine: "从广告搜索词中沉淀 Exact / Phrase / Broad / Listing 四类增长动作",
       lbl_words_ge: "单词数 ≥",
+      lbl_intent_ge: "意图分 ≥",
+      lbl_score_ge: "机会分 ≥",
       title_min_words: "Search Term 包含的单词数",
+      title_min_intent: "关键词语义明确度门槛",
+      title_min_score: "长尾机会综合评分门槛",
       lbl_orders_ge: "订单 ≥",
       title_min_orders: "至少产生订单数",
       title_min_roas: "ROAS 门槛",
-      btn_export_longtail: "导出长尾词 Excel",
+      btn_export_longtail: "导出长尾增长 Excel",
       th_st: "搜索词 (Search Term)",
       th_new_radar: "新发现雷达 (New Radar)",
-      desc_longtail: "逻辑：筛选出非 ASIN、单词数达标、且有出单记录的精准长尾词。<b>新发现雷达 (New Radar)</b> 采用高精去符号匹配，标记了尚未被“手动精准”广告覆盖的优异词。建议立刻开启精准匹配！",
+      lt_th_score: "机会分",
+      lt_th_asset: "资产类型",
+      lt_th_action: "动作",
+      lt_th_coverage: "覆盖状态",
+      lt_th_match: "建议匹配",
+      lt_th_bid: "建议出价",
+      desc_longtail: "逻辑：不再只按“单词数”筛选，而是综合 ROAS、CVR、CPC、订单证据、语义意图、Exact 覆盖缺口与错配风险，输出 Exact / Phrase / Broad / Listing 四类可执行动作。",
       title_root: "词根引力与毒性矩阵 (Root Toxicity & Co-occurrence)",
-      tab_1gram: "单节点",
+      tab_1gram: "单词根",
       tab_2gram: "双词共现",
       tab_3gram: "三词共现",
-      tab_mag_ext: "纯度数提取",
+      tab_mag_ext: "度数词根",
       title_min_freq: "最小出现次数",
       title_min_spend: "最小花费",
-      btn_export_wf: "导出词频 Excel",
+      btn_export_wf: "导出矩阵 Excel",
       hint_sort_only: "点击表头排序",
-      th_root_combo: "词根组合 / 语义簇",
+      th_root_combo: "词根 / 共现组合",
+      th_root_type: "类型",
+      th_toxicity: "毒性",
+      th_attraction: "引力",
+      th_lift: "共现 Lift",
+      th_root_action: "动作 / 风险",
       th_freq: "频次 / 包含词数",
-      desc_root: "升级洞察：使用“双词共现 (2-gram)”能够帮你找出老花镜中隐藏的毒性搭配。点击【本地语义聚类】将使用 Transformers.js 进行端侧高维空间聚类。",
+      hint_root_matrix: "判断词根本身是否有毒、哪些组合会被解毒、哪些组合会污染核心流量，并输出否定/降价/扩量动作",
+      desc_root: "模块逻辑：先识别老花镜业务词根，再按毒性、引力、共现 Lift 和误杀风险输出动作。Phrase Negative 只允许高毒性且无赚钱组合的词根进入导出，blue light / men / glasses 等条件词默认进入复核或降价。",
       title_isolation: "搜索词防漏漏斗与隔离 (Targeting Funnel Gap)",
       hint_isolation: "监控高转化词是否已被提取至精准匹配 (Exact)，并检测是否存在“名为隔离、实为断流”的假象。",
       lbl_promote_ge: "晋升门槛 (订单 ≥)",
@@ -1253,10 +1311,19 @@ const I18N = {
       dyn_root_bleeder: "🩸 纯消耗组合 (持续吸血)",
       dyn_root_neutral: "中性组合 (Neutral)",
       
-      dyn_lt_no_data: "没有符合条件的长尾词（尝试降低“单词数”或“订单”门槛）",
-      dyn_lt_blue: "💎 蓝海词 (低竞争高转化)",
-      dyn_lt_high: "🎯 极强意图 (超大盘2倍)",
-      dyn_lt_normal: "常规长尾 (Normal)",
+      dyn_lt_no_data: "没有符合条件的长尾资产（尝试降低“意图分 / 机会分 / 订单 / ROAS”门槛）",
+      dyn_lt_blue: "蓝海长尾",
+      dyn_lt_high: "高意图长尾",
+      dyn_lt_normal: "常规长尾",
+      dyn_lt_profit: "赚钱长尾",
+      dyn_lt_test: "小样本潜力",
+      dyn_lt_listing: "Listing 缺口",
+      dyn_lt_risk: "风险复核",
+      dyn_lt_scale: "放量 Exact",
+      dyn_lt_launch: "新增 Exact",
+      dyn_lt_watch: "观察",
+      dyn_lt_phrase: "词组扩展",
+      dyn_lt_broad: "广泛词根",
       
       dyn_day_sun: "周日 (Sun)", dyn_day_mon: "周一 (Mon)", dyn_day_tue: "周二 (Tue)", dyn_day_wed: "周三 (Wed)", dyn_day_thu: "周四 (Thu)", dyn_day_fri: "周五 (Fri)", dyn_day_sat: "周六 (Sat)",
       
@@ -1550,28 +1617,45 @@ const I18N = {
       th_impr: "Impressions",
       th_clicks: "Clicks",
       desc_rank: "System includes **Net Profit Simulation**. Excel export will contain AI-driven <b>Increase/Decrease</b> bidding strategies. Click the target icon next to ASINs for reverse engineering.",
-      title_longtail: "Long-Tail Keyword Mining",
+      title_longtail: "Long-Tail Growth Engine",
+      hint_longtail_engine: "Convert ad search terms into Exact / Phrase / Broad / Listing growth actions",
       lbl_words_ge: "Words ≥",
+      lbl_intent_ge: "Intent ≥",
+      lbl_score_ge: "Score ≥",
       title_min_words: "Word Count in Search Term",
+      title_min_intent: "Keyword semantic specificity threshold",
+      title_min_score: "Long-tail opportunity score threshold",
       lbl_orders_ge: "Orders ≥",
       title_min_orders: "Minimum Orders",
       title_min_roas: "ROAS Threshold",
-      btn_export_longtail: "Export Long-Tail Excel",
+      btn_export_longtail: "Export Growth Excel",
       th_st: "Search Term",
       th_new_radar: "New Radar",
-      desc_longtail: "Logic: Filters non-ASIN, required word count, and converting long-tail terms. <b>New Radar</b> tags excellent terms not yet covered by Exact Match. Turn on Exact Match immediately!",
+      lt_th_score: "Score",
+      lt_th_asset: "Asset Type",
+      lt_th_action: "Action",
+      lt_th_coverage: "Coverage",
+      lt_th_match: "Suggested Match",
+      lt_th_bid: "Suggested Bid",
+      desc_longtail: "Logic: no longer filters only by word count. It scores ROAS, CVR, CPC, order evidence, semantic intent, Exact coverage gap, and mismatch risk, then outputs Exact / Phrase / Broad / Listing actions.",
       title_root: "Root Toxicity & Co-occurrence",
-      tab_1gram: "1-Gram (Tokens)",
+      tab_1gram: "Single Root",
       tab_2gram: "2-Gram (Co-occur)",
       tab_3gram: "3-Gram",
-      tab_mag_ext: "Mag Extract Only",
+      tab_mag_ext: "Diopter Roots",
       title_min_freq: "Min Frequency",
       title_min_spend: "Min Spend",
-      btn_export_wf: "Export Word Freq Excel",
+      btn_export_wf: "Export Matrix Excel",
       hint_sort_only: "Click header to sort",
-      th_root_combo: "Root Combo / Cluster",
+      th_root_combo: "Root / Co-occurrence",
+      th_root_type: "Type",
+      th_toxicity: "Toxicity",
+      th_attraction: "Attraction",
+      th_lift: "Co-occurrence Lift",
+      th_root_action: "Action / Risk",
       th_freq: "Freq / Term Count",
-      desc_root: "Advanced: '2-gram' helps find hidden toxic combos. Click [Run Local Semantic Clustering] to group terms by intent using local Transformers.js embeddings.",
+      hint_root_matrix: "Detect toxic roots, detoxifying combinations, poison amplifiers, and executable PPC actions.",
+      desc_root: "Logic: identify eyewear-specific roots first, then score toxicity, attraction, co-occurrence lift, and overblocking risk. Phrase Negative is allowed only for high-toxic roots with no profitable combinations; blue light / men / glasses default to review or bid-down.",
       title_isolation: "Targeting Funnel Gap & Isolation",
       hint_isolation: "Monitors if high-CVR terms are extracted to Exact, and detects 'Fake Isolation'.",
       lbl_promote_ge: "Promote Threshold (Orders ≥)",
@@ -1980,7 +2064,7 @@ const SYNONYM_MAP = [
   { re: /\bspring\-?hinge\b/g, to: "spring hinge" }, { re: /\bcat\-?eye\b/g, to: "cat eye" }, 
   { re: /\bprogressive\b/g, to: "progressive" } 
 ];
-const PHRASES = ["blue light", "cat eye", "spring hinge", "anti glare", "scratch resistant"];
+const PHRASES = ["reading glasses for women", "readers for women", "women readers", "reading glasses", "reader glasses", "blue light", "cat eye", "spring hinge", "anti glare", "scratch resistant", "computer readers", "computer glasses", "eye glasses", "small print", "large print", "wide face", "daily reading", "transition lenses", "photochromic lenses", "safety glasses", "contact lens"];
 // 只在有度数语境时提取倍率，避免把 4 pack / 3 pairs / Top 20 误判成 +4.00 度数
 const MAG_CONTEXT_RE = /(?:^|[\s,(])(?:\+)?([1-4](?:\.\d{1,2})?)(?:\s*x)?(?=\s*(?:x|power|strength|diopter|magnification|reading|reader|readers|glasses|$|[,)]))/gi;
 const extractMagnificationValues = (text) => {
@@ -1998,7 +2082,7 @@ const extractMagnificationValues = (text) => {
 };
 
 const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const PHRASE_REGEXES = PHRASES.map(p => ({ re: new RegExp("\\b" + escapeRegExp(p).replace(/\s+/g, "\\s+") + "\\b", "g"), to: p.replace(/\s+/g, "_") }));
+const PHRASE_REGEXES = [...PHRASES].sort((a,b) => b.length - a.length).map(p => ({ re: new RegExp("\\b" + escapeRegExp(p).replace(/\s+/g, "\\s+") + "\\b", "g"), to: p.replace(/\s+/g, "_") }));
 
 const normalizeTextBase = (s) => { 
   let x = String(s ?? "").toLowerCase().replace(/[\u2010-\u2015]/g, "-"); 
@@ -2055,57 +2139,215 @@ const ngrams = (tokens, n) => tokens.length < n ? [] : Array.from({length: token
 const extractMagnification = (s) => extractMagnificationValues(s);
 const tokenCache = new Map();
 
+const ROOT_MATRIX = {
+  core: new Set(["reading_glasses_for_women","readers_for_women","women_readers","reading_glasses","reader_glasses","reader","readers","women","lady","ladies","cheater","cheaters"]),
+  style: new Set(["cat_eye","stylish","fashion","trendy","retro","oversized","square","round","floral","colorful","designer","cute","modern"]),
+  function: new Set(["blue_light","anti_glare","scratch_resistant","screen","computer_readers","computer_glasses","eye_glasses","small_print","large_print","daily_reading"]),
+  structure: new Set(["spring_hinge","lightweight","flexible","comfortable","durable","wide_face","nose","temple","hinge"]),
+  mismatch: new Set(["progressive","bifocal","multifocal","prescription","transition","transition_lenses","photochromic","photochromic_lenses","safety_glasses","contact_lens","contact","kids","kid","repair","replacement","lens","lenses","sunglasses","sun_glasses"]),
+  generic: new Set(["glasses","eyeglasses","eyewear","frame","frames","optical","clear","magnify","magnifying"]),
+  watch: new Set(["men","man","mens","male","unisex","cheap","bulk","dollar","large_head","wide"])
+};
+
+const normalizeRootName = (x) => String(x || "").toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_+.]/g, "").trim();
+const rootDisplay = (x) => String(x || "").replace(/_/g, " ").replace(/^MAG_(\d+)_(\d+)$/, "+$1.$2");
+const scoreClass = (v, reverse=false) => reverse ? (v >= 75 ? "bad" : v >= 45 ? "warn" : "good") : (v >= 75 ? "good" : v >= 45 ? "warn" : "bad");
+const scoreBar = (v, reverse=false) => {
+  const n = Math.max(0, Math.min(100, Math.round(safeNum(v))));
+  return `<div class="scoreBar"><div class="scoreTrack"><div class="scoreFill ${scoreClass(n, reverse)}" style="width:${n}%"></div></div><span class="scoreText">${n}</span></div>`;
+};
+const sampleConfidence = (m, freq=1) => {
+  const spendScore = Math.min(1, safeNum(m.spend) / 50);
+  const clickScore = Math.min(1, safeNum(m.clicks) / 40);
+  const freqScore = Math.min(1, safeNum(freq) / 8);
+  return Math.max(0.25, Math.min(1, 0.45 * spendScore + 0.35 * clickScore + 0.20 * freqScore));
+};
+const getRootType = (root) => {
+  const r = normalizeRootName(root);
+  if (/^MAG_/.test(r) || /^\+?\d+(\.\d+)?$/.test(r)) return "diopter";
+  for (const [type, set] of Object.entries(ROOT_MATRIX)) if (set.has(r)) return type;
+  return "neutral";
+};
+const getRootTypeLabel = (type) => {
+  const zh = { core:"核心", style:"款式", function:"功能", structure:"结构", mismatch:"错配", generic:"泛流量", watch:"观察", diopter:"度数", mixed:"混合", neutral:"中性" };
+  const en = { core:"Core", style:"Style", function:"Function", structure:"Structure", mismatch:"Mismatch", generic:"Generic", watch:"Watch", diopter:"Diopter", mixed:"Mixed", neutral:"Neutral" };
+  return (currentLang === "zh" ? zh : en)[type] || type;
+};
+const semanticPenaltyForRoots = (roots) => {
+  let p = 0;
+  roots.forEach(rt => {
+    const type = getRootType(rt);
+    if (type === "mismatch") p += 0.95;
+    else if (type === "generic") p += 0.35;
+    else if (type === "function") p += normalizeRootName(rt) === "blue_light" || normalizeRootName(rt) === "screen" ? 0.25 : 0.15;
+    else if (type === "watch") p += 0.18;
+    else if (type === "core" || type === "style" || type === "diopter") p -= 0.18;
+  });
+  return Math.max(0, Math.min(1, p / Math.max(1, roots.length)));
+};
+const semanticAttractionBoost = (roots) => {
+  let b = 0;
+  roots.forEach(rt => {
+    const type = getRootType(rt);
+    if (type === "core") b += 0.35;
+    else if (type === "style") b += 0.28;
+    else if (type === "diopter") b += 0.26;
+    else if (type === "structure") b += 0.16;
+    else if (type === "mismatch") b -= 0.45;
+    else if (type === "generic") b -= 0.18;
+  });
+  return Math.max(0, Math.min(1, b / Math.max(1, roots.length)));
+};
+const extractMatrixRoots = (term) => {
+  const base = normalizeTextBase(term);
+  const raw = base.split(" ").filter(Boolean).map(singularize);
+  const roots = raw.filter(t => t && !STOP_WORDS.has(t) && !/^\d+(\.\d+)?$/.test(t));
+  for (const mag of extractMagnificationValues(term)) {
+    const [a,b="00"] = String(mag).split(".");
+    roots.push(`MAG_${a}_${(b + "00").slice(0,2)}`);
+  }
+  return [...new Set(roots.map(normalizeRootName).filter(Boolean))];
+};
+const combosOf = (arr, k) => {
+  const a = [...new Set(arr)].sort();
+  const out = [];
+  const rec = (start, combo) => {
+    if (combo.length === k) { out.push(combo.join(" × ")); return; }
+    for (let i=start; i<a.length; i++) rec(i+1, combo.concat(a[i]));
+  };
+  if (a.length >= k) rec(0, []);
+  return out;
+};
+const rootKeyToRoots = (key) => String(key || "").split("×").map(s => normalizeRootName(s.trim())).filter(Boolean);
+const buildRootBaseStats = () => {
+  const mp = new Map();
+  for (const r of AdsStore.view) {
+    const term = r.searchTerm || "";
+    if (!term || isASINLike(term)) continue;
+    const roots = extractMatrixRoots(term);
+    for (const root of roots) {
+      if (!mp.has(root)) mp.set(root, []);
+      mp.get(root).push(r);
+    }
+  }
+  const out = new Map();
+  for (const [root, rows] of mp.entries()) out.set(root, { word: root, freq: rows.length, roots:[root], ...sumMetrics(rows) });
+  return out;
+};
+const scoreRootRow = (item, globalMetrics, baseStats) => {
+  const targetRoas = Math.max(1, safeNum($("ruleRoasKeep")?.value || 3));
+  const targetAcos = Math.min(0.8, Math.max(0.05, 1 / targetRoas));
+  const globalCvr = globalMetrics.cvr || 0.05;
+  const globalSales = Math.max(1, globalMetrics.sales || 1);
+  const aov = globalMetrics.orders > 0 ? globalMetrics.sales / globalMetrics.orders : 16.99;
+  const targetCpc = Math.max(0.05, aov * targetAcos * Math.max(0.015, globalCvr));
+  const conf = sampleConfidence(item, item.freq);
+  const roots = item.roots || rootKeyToRoots(item.word);
+  const roas = safeNum(item.roas);
+  const cvr = safeNum(item.cvr);
+  const wasteScore = item.spend > 0 ? (item.orders > 0 ? Math.max(0, 1 - Math.min(1, roas / targetRoas)) : 1) : 0;
+  const roasDeficit = Math.max(0, Math.min(1, (targetRoas - roas) / targetRoas));
+  const cvrDeficit = Math.max(0, Math.min(1, (globalCvr - cvr) / Math.max(0.001, globalCvr)));
+  const cpcPressure = Math.max(0, Math.min(1, (safeNum(item.cpc) - targetCpc) / Math.max(0.05, targetCpc)));
+  const semanticPenalty = semanticPenaltyForRoots(roots);
+  let toxicity = (30*wasteScore + 25*roasDeficit + 20*cvrDeficit + 15*cpcPressure + 10*semanticPenalty) * conf;
+  if (roots.some(r => getRootType(r) === "mismatch") && item.spend >= 10) toxicity += 18;
+  toxicity = Math.max(0, Math.min(100, toxicity));
+  const roasExcess = Math.max(0, Math.min(1, (roas - targetRoas) / Math.max(1, targetRoas)));
+  const cvrExcess = Math.max(0, Math.min(1, (cvr - globalCvr) / Math.max(0.001, globalCvr)));
+  const orderStability = Math.min(1, safeNum(item.orders) / Math.max(2, safeNum($("ruleOrdersKeep")?.value || 2)));
+  const salesContribution = Math.min(1, safeNum(item.sales) / Math.max(1, globalSales * 0.06));
+  const semanticBoost = semanticAttractionBoost(roots);
+  let attraction = (30*roasExcess + 25*cvrExcess + 20*orderStability + 15*salesContribution + 10*semanticBoost) * conf;
+  if (roots.some(r => ["core","style","diopter"].includes(getRootType(r))) && item.orders >= 1) attraction += 8;
+  attraction = Math.max(0, Math.min(100, attraction));
+  let lift = 1, toxicityDelta = 0;
+  if (roots.length > 1 && baseStats) {
+    const bases = roots.map(r => baseStats.get(r)).filter(Boolean);
+    const avgBaseRoas = bases.length ? bases.reduce((s,b)=>s+safeNum(b.roas),0)/bases.length : 0;
+    const avgBaseToxicity = bases.length ? bases.reduce((s,b)=>s+safeNum(scoreRootRow.__baseTox?.get(b.word) || 0),0)/bases.length : 0;
+    lift = avgBaseRoas > 0.05 ? roas / avgBaseRoas : (roas >= targetRoas ? 3 : 1);
+    toxicityDelta = avgBaseToxicity ? toxicity - avgBaseToxicity : 0;
+  }
+  const rootTypes = [...new Set(roots.map(getRootType))];
+  const rootType = rootTypes.length === 1 ? rootTypes[0] : (rootTypes.some(x=>x === "mismatch") ? "mismatch" : "mixed");
+  return { ...item, roots, rootType, toxicity, attraction, lift, toxicityDelta, targetCpc, confidence: conf };
+};
+const findProfitableCooccurrences = (root, coRows, targetRoas) => coRows.filter(x => x.roots?.includes(root) && x.roots.length > 1 && x.orders >= 2 && x.roas >= targetRoas).slice(0, 4).map(x => rootDisplay(x.word));
+const decideRootAction = (item, coRows, globalMetrics) => {
+  const targetRoas = Math.max(1, safeNum($("ruleRoasKeep")?.value || 3));
+  const rules = getRules();
+  const roots = item.roots || [];
+  const hasCore = roots.some(r => ["core","style","diopter"].includes(getRootType(r)));
+  const hasMismatch = roots.some(r => getRootType(r) === "mismatch");
+  const hasConditional = roots.some(r => ["function","generic","watch"].includes(getRootType(r)));
+  const profitableChildren = roots.length === 1 ? findProfitableCooccurrences(roots[0], coRows, targetRoas) : [];
+  let actionKey = "observe", cls = "neutral", label = currentLang === "zh" ? "观察" : "Observe", risk = currentLang === "zh" ? "中" : "Medium", reason = currentLang === "zh" ? "样本或方向不足，继续观察" : "Insufficient sample or unclear direction; keep watching";
+  if (item.toxicity >= 80 && item.spend >= rules.spendNeg && item.clicks >= rules.clicksNeg && (item.orders === 0 || item.roas <= rules.roasNeg) && hasMismatch && !profitableChildren.length) {
+    actionKey = "phrase_negative"; cls = "bad"; label = currentLang === "zh" ? "词组否定" : "Phrase Negative"; risk = currentLang === "zh" ? "低" : "Low"; reason = currentLang === "zh" ? "高毒性错配词根，且无赚钱共现组合" : "High-toxic mismatch root with no profitable co-occurrence";
+  } else if (item.toxicity >= 74 && item.spend >= rules.spendNeg && (profitableChildren.length || hasConditional || hasCore)) {
+    actionKey = "exact_negative_review"; cls = "warn"; label = currentLang === "zh" ? "精准否定/复核" : "Exact Negative / Review"; risk = currentLang === "zh" ? "高" : "High"; reason = currentLang === "zh" ? `存在误杀风险：${profitableChildren.join(" / ") || "条件词或核心词根"}` : `Overblocking risk: ${profitableChildren.join(" / ") || "conditional or core root"}`;
+  } else if (item.toxicity >= 65 && item.orders > 0 && item.roas < targetRoas) {
+    actionKey = "bid_down"; cls = "warn"; label = currentLang === "zh" ? "降价控量" : "Bid Down"; risk = currentLang === "zh" ? "中" : "Medium"; reason = currentLang === "zh" ? "相关但经济性不达标，优先降价而不是否定" : "Relevant but below target economics; lower bid before negating";
+  } else if (item.attraction >= 78 && item.orders >= Math.max(2, rules.ordersKeep) && item.roas >= targetRoas) {
+    actionKey = roots.length > 1 ? "create_exact" : "scale_root"; cls = "good"; label = roots.length > 1 ? (currentLang === "zh" ? "投放精准" : "Create Exact") : (currentLang === "zh" ? "扩量词根" : "Scale Root"); risk = currentLang === "zh" ? "低" : "Low"; reason = currentLang === "zh" ? "高引力高转化，适合 Exact 或单独广告组放量" : "High-attraction converting root; scale via Exact or dedicated ad group";
+  } else if (item.attraction >= 60 && item.roots.length > 1 && item.lift >= 1.25 && item.orders >= 1) {
+    actionKey = "create_phrase"; cls = "good"; label = currentLang === "zh" ? "投放词组" : "Create Phrase"; risk = currentLang === "zh" ? "中" : "Medium"; reason = currentLang === "zh" ? "共现后表现提升，可用 Phrase 扩中长尾" : "Co-occurrence improves performance; expand with Phrase";
+  } else if (hasConditional && item.toxicity >= 50) {
+    actionKey = "review"; cls = "warn"; label = currentLang === "zh" ? "条件毒性" : "Conditional Toxic"; risk = currentLang === "zh" ? "中" : "Medium"; reason = currentLang === "zh" ? "blue light / men / glasses 等词根需看组合，不建议直接 Phrase 否定" : "Blue light / men / glasses style roots need combo-level review; do not phrase-negative directly";
+  }
+  return { actionKey, label, cls, risk, reason, profitableChildren };
+};
+
 const buildWordStats = () => {
   const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3))); 
   const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10)); 
   const mp = new Map();
-  
-  if (tokenCache.size > CONFIG.CACHE_MAX) { tokenCache.clear(); }
-  
+  if (tokenCache.size > CONFIG.CACHE_MAX) tokenCache.clear();
   for (const r of AdsStore.view) {
-    const term = r.searchTerm || ""; 
-    if (!term || isASINLike(term)) continue; 
-    
-    let words; 
-    const cacheKey = `${WF_MODE}:${term}`;
-    if (tokenCache.has(cacheKey)) { 
-      words = tokenCache.get(cacheKey); 
-    } else { 
-      if (WF_MODE === "token") words = tokenize(term); 
-      else if (WF_MODE === "bigram") words = ngrams(tokenize(term), 2); 
-      else if (WF_MODE === "trigram") words = ngrams(tokenize(term), 3); 
-      else if (WF_MODE === "mag") words = extractMagnification(term); 
-      tokenCache.set(cacheKey, words); 
-    }
-    
-    const uniqueWords = new Set(words); 
-    for (const w of uniqueWords) { 
-      if (!w) continue; 
-      if (!mp.has(w)) mp.set(w, []); 
-      mp.get(w).push(r); 
+    const term = r.searchTerm || "";
+    if (!term || isASINLike(term)) continue;
+    const roots = extractMatrixRoots(term);
+    let keys = [];
+    if (WF_MODE === "token") keys = roots;
+    else if (WF_MODE === "bigram") keys = combosOf(roots, 2);
+    else if (WF_MODE === "trigram") keys = combosOf(roots, 3);
+    else if (WF_MODE === "mag") keys = roots.filter(x => /^MAG_/.test(x));
+    for (const key of [...new Set(keys)]) {
+      if (!key) continue;
+      if (!mp.has(key)) mp.set(key, []);
+      mp.get(key).push(r);
     }
   }
-  
-  let out = []; 
-  for (const [word, rows] of mp.entries()) { 
-    const m = sumMetrics(rows); 
-    if (rows.length < minFreq) continue; 
-    if (m.spend < minSpend) continue; 
-    out.push({ word, freq: rows.length, ...m }); 
+  const baseStats = buildRootBaseStats();
+  const globalMetrics = sumMetrics(AdsStore.view);
+  // first pass base toxicity map for co-occurrence deltas
+  scoreRootRow.__baseTox = new Map();
+  for (const [root, stat] of baseStats.entries()) {
+    const s = scoreRootRow({ ...stat, roots:[root] }, globalMetrics, null);
+    scoreRootRow.__baseTox.set(root, s.toxicity);
   }
-  
-  const {key, dir} = wfSort; const mul = dir==="asc" ? 1 : -1;
-  out.sort((a,b) => { 
+  let out = [];
+  for (const [word, rows] of mp.entries()) {
+    const m = sumMetrics(rows);
+    if (rows.length < minFreq) continue;
+    if (m.spend < minSpend) continue;
+    const roots = rootKeyToRoots(word);
+    out.push(scoreRootRow({ word, freq: rows.length, roots, ...m }, globalMetrics, baseStats));
+  }
+  const coRows = out.filter(x => x.roots.length > 1);
+  out = out.map(x => ({ ...x, decision: decideRootAction(x, coRows, globalMetrics) }));
+  const {key, dir} = wfSort; const mul = dir === "asc" ? 1 : -1;
+  out.sort((a,b) => {
     const getSafeVal = (obj) => {
-        const v = obj[key];
-        if (key==="word") return String(v||"");
-        if (!isFinite(v)) return v === Infinity ? 999999999 : 0;
-        return v ?? 0;
+      if (key === "word" || key === "rootType") return String(obj[key] || "");
+      const v = key === "riskScore" ? (obj.decision?.cls === "bad" ? 3 : obj.decision?.cls === "warn" ? 2 : obj.decision?.cls === "good" ? 1 : 0) : obj[key];
+      if (!isFinite(v)) return v === Infinity ? 999999999 : 0;
+      return v ?? 0;
     };
-    const av = getSafeVal(a);
-    const bv = getSafeVal(b);
-    if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * mul; 
-    return (av === bv ? 0 : (av > bv ? 1 : -1)) * mul; 
+    const av = getSafeVal(a), bv = getSafeVal(b);
+    if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * mul;
+    return (av === bv ? 0 : (av > bv ? 1 : -1)) * mul;
   });
   return out;
 };
@@ -2893,33 +3135,190 @@ const detectAnomalies = (rows) => {
 const renderWordFreq = () => {
 const tbody = $("wfTable")?.querySelector("tbody"); 
 if (!tbody) return; 
-if (!AdsStore.view.length) { tbody.innerHTML = ""; return; } 
+if (!AdsStore.view.length) { tbody.innerHTML = ""; if ($("rootMatrixSummary")) $("rootMatrixSummary").innerHTML = ""; return; } 
 
 const rows = buildWordStats();
-const globalMetrics = sumMetrics(AdsStore.view);
-const globalCvr = globalMetrics.cvr || 0.05;
+const toxic = rows.filter(r => r.decision?.cls === "bad").length;
+const review = rows.filter(r => r.decision?.cls === "warn").length;
+const scale = rows.filter(r => r.decision?.cls === "good").length;
+const topDetox = rows.filter(r => r.roots.length > 1 && r.lift >= 1.25 && r.attraction >= 55).slice(0,3).map(r => rootDisplay(r.word)).join(" / ") || (currentLang === "zh" ? "暂无" : "None");
+if ($("rootMatrixSummary")) {
+  $("rootMatrixSummary").innerHTML = `
+    <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "强毒性候选" : "Toxic Candidates"}</div><div class="root-value">${toxic}</div><div class="root-note">${currentLang === "zh" ? "满足高毒性与低误杀条件" : "High toxicity with low overblocking risk"}</div></div>
+    <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "需复核条件词" : "Review Required"}</div><div class="root-value">${review}</div><div class="root-note">${currentLang === "zh" ? "blue light / men / glasses 等避免误杀" : "Avoid overblocking conditional roots"}</div></div>
+    <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "扩量机会" : "Scale Opportunities"}</div><div class="root-value">${scale}</div><div class="root-note">${currentLang === "zh" ? "高引力词根或赚钱组合" : "High-attraction roots or combos"}</div></div>
+    <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "Top 解毒组合" : "Top Detox Combos"}</div><div class="root-note" style="font-weight:700;color:var(--text);">${escapeHtml(topDetox)}</div><div class="root-note">${currentLang === "zh" ? "组合后 ROAS/CVR 相对提升" : "Combo improves ROAS/CVR lift"}</div></div>`;
+}
 
 renderProgressive(tbody, rows, (r) => {
-    const displayWord = escapeHtml(r.word).replace(/_/g, " "); 
-    let rootTag = t('dyn_root_neutral');
-    if (r.orders > 0 && r.cvr > globalCvr * 1.5 && r.roas >= 2.5) {
-        rootTag = t('dyn_root_golden');
-    } else if (r.clicks >= 15 && r.cvr < globalCvr * 0.5 && r.spend > 15) {
-        rootTag = t('dyn_root_toxic');
-    } else if (r.spend > 20 && r.orders === 0) {
-        rootTag = t('dyn_root_bleeder');
-    }
-    const hoverTooltip = `[ ${displayWord} ]: ${rootTag}\nCVR: ${fmtPct(r.cvr)}\nGlobal CVR: ${fmtPct(globalCvr)}`;
-
-    return `<tr title="${hoverTooltip}"> 
-        <td>${displayWord.slice(0, 180)}</td> 
-        <td>${fmtInt(r.freq)}</td> 
-        <td>${fmtMoney(r.spend)}</td> 
-        <td>${fmtInt(r.orders)}</td> 
-        <td style="${(r.roas >= 2.5) ? 'color:#1a7f37;font-weight:700' : ''}">${(r.roas ?? 0).toFixed(2)}</td> 
-        <td style="${(r.acos > 0.4 || r.acos === Infinity) ? 'color:#b42318;font-weight:600' : ''}">${fmtPct(r.acos)}</td> 
+    const displayWord = escapeHtml(rootDisplay(r.word)).slice(0, 220);
+    const d = r.decision || { cls:"neutral", label:"Observe", risk:"Medium", reason:"" };
+    const liftLabel = r.roots.length > 1 ? `${safeNum(r.lift).toFixed(2)}x${safeNum(r.toxicityDelta) < -8 ? " ↓tox" : safeNum(r.toxicityDelta) > 8 ? " ↑tox" : ""}` : "—";
+    const hoverTooltip = `${rootDisplay(r.word)}\n${d.label} / Risk: ${d.risk}\nToxicity: ${Math.round(r.toxicity)} | Attraction: ${Math.round(r.attraction)} | Lift: ${safeNum(r.lift).toFixed(2)}x`;
+    const chips = (r.roots || []).slice(0, 5).map(x => `<span>${escapeHtml(rootDisplay(x))}</span>`).join("");
+    return `<tr title="${escapeHtml(hoverTooltip)}"> 
+        <td><b>${displayWord}</b><div class="rootMini">${chips}</div></td>
+        <td><span class="tag ${r.rootType === 'mismatch' ? 'bad' : (['core','style','diopter'].includes(r.rootType) ? 'good' : 'warn')}">${escapeHtml(getRootTypeLabel(r.rootType))}</span></td>
+        <td>${fmtInt(r.freq)}</td>
+        <td>${fmtMoney(r.spend)}</td>
+        <td>${fmtInt(r.clicks)}</td>
+        <td>${fmtInt(r.orders)}</td>
+        <td style="${r.cvr >= (sumMetrics(AdsStore.view).cvr || 0.05) ? 'color:var(--good);font-weight:700' : ''}">${fmtPct(r.cvr)}</td>
+        <td style="${(r.roas >= safeNum($("ruleRoasKeep")?.value || 3)) ? 'color:var(--good);font-weight:700' : ''}">${safeNum(r.roas).toFixed(2)}</td>
+        <td>${scoreBar(r.toxicity, true)}</td>
+        <td>${scoreBar(r.attraction, false)}</td>
+        <td>${liftLabel}</td>
+        <td><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span class="rootDecision ${d.cls}">${escapeHtml(d.label)}</span><span class="pill">${currentLang === "zh" ? "风险" : "Risk"}: ${escapeHtml(d.risk)}</span></div></td>
     </tr>`;
 });
+};
+
+const LT_MISMATCH_FORCE = new Set(["prescription","progressive","bifocal","multifocal","transition","transition_lenses","photochromic","photochromic_lenses","contact","contact_lens","safety_glasses","kid","kids","repair","replacement","sunglasses","sun_glasses"]);
+const clampNum = (n, min=0, max=100) => Math.max(min, Math.min(max, safeNum(n)));
+
+const getLongTailIntentProfile = (term) => {
+  const roots = extractMatrixRoots(term || "");
+  const types = [...new Set(roots.map(getRootType))];
+  const base = normalizeTextBase(term || "");
+  const rawWords = base.split(" ").filter(Boolean);
+  let score = Math.min(12, rawWords.length * 3);
+  const hasType = (type) => types.includes(type);
+  const hasRoot = (...names) => roots.some(r => names.includes(normalizeRootName(r)));
+
+  if (hasRoot("women", "woman", "lady", "ladies", "men", "man", "mens", "male", "unisex")) score += 14;
+  if (hasType("core")) score += 12;
+  if (hasType("style")) score += 18;
+  if (hasType("structure")) score += 12;
+  if (hasType("function")) score += hasRoot("blue_light") ? 8 : 10;
+  if (hasType("diopter")) score += 15;
+  if (/\b(computer|office|screen|phone|tablet|book|reading|daily|small\s+print|large\s+print)\b/i.test(base)) score += 8;
+  if (hasType("generic") && roots.length <= 2) score -= 10;
+  if (hasType("watch")) score -= 4;
+  if (hasType("mismatch") || roots.some(r => LT_MISMATCH_FORCE.has(normalizeRootName(r)))) score -= 35;
+
+  const tags = [];
+  if (hasRoot("women", "woman", "lady", "ladies")) tags.push(currentLang === "zh" ? "女款" : "Women");
+  if (hasRoot("men", "man", "mens", "male")) tags.push(currentLang === "zh" ? "男士流量" : "Men Traffic");
+  if (hasType("style")) tags.push(currentLang === "zh" ? "款式" : "Style");
+  if (hasType("structure")) tags.push(currentLang === "zh" ? "结构" : "Structure");
+  if (hasType("function")) tags.push(currentLang === "zh" ? "功能" : "Function");
+  if (hasType("diopter")) tags.push(currentLang === "zh" ? "度数" : "Diopter");
+  if (hasType("mismatch")) tags.push(currentLang === "zh" ? "错配" : "Mismatch");
+  if (!tags.length) tags.push(currentLang === "zh" ? "中性" : "Neutral");
+
+  return { roots, types, intentScore: Math.round(clampNum(score)), tags, hasMismatch: hasType("mismatch") || roots.some(r => LT_MISMATCH_FORCE.has(normalizeRootName(r))) };
+};
+
+const getLongTailCoverage = (term, rows=[]) => {
+  const cleanTerm = cleanTargetForExact(term);
+  if (AdsStore.indexes.exactTerm.has(cleanTerm)) return { key:"exact", label: currentLang === "zh" ? "已覆盖 Exact" : "Already Exact", isGap:false };
+  const hasPhrase = rows.some(r => String(r.matchType || "").toLowerCase().includes("phrase") || String(r.matchType || "").includes("词组"));
+  const hasBroad = rows.some(r => String(r.matchType || "").toLowerCase().includes("broad") || String(r.matchType || "").includes("广泛"));
+  const hasManual = rows.some(checkIsManual);
+  if (hasPhrase) return { key:"phrase", label: currentLang === "zh" ? "已有 Phrase 来源" : "Phrase Source", isGap:true };
+  if (hasBroad) return { key:"broad", label: currentLang === "zh" ? "已有 Broad 来源" : "Broad Source", isGap:true };
+  if (hasManual) return { key:"manual", label: currentLang === "zh" ? "手动来源" : "Manual Source", isGap:true };
+  return { key:"new", label: currentLang === "zh" ? "新机会" : "New Opportunity", isGap:true };
+};
+
+const getListingCoverageGap = (profile, term, m) => {
+  const raw = String($("listingCopyInput")?.value || "").trim();
+  if (!raw) return { checked:false, gap:false, missing:[] };
+  const listing = normalizeTextBase(raw);
+  const important = profile.roots
+    .filter(r => !["generic", "neutral", "watch"].includes(getRootType(r)))
+    .filter(r => !/^MAG_/.test(r))
+    .map(rootDisplay)
+    .map(x => normalizeTextBase(x))
+    .filter(Boolean);
+  const missing = [...new Set(important.filter(x => !listing.includes(x.replace(/\s+/g, " "))))];
+  const gap = missing.length > 0 && m.orders > 0 && m.roas >= 2;
+  return { checked:true, gap, missing };
+};
+
+const scoreLongTailOpportunity = (m, profile, coverage, globalMetrics) => {
+  const keepRoas = safeNum($("ruleRoasKeep")?.value || 3) || 3;
+  const globalCpc = globalMetrics.cpc || 1;
+  const globalCvr = globalMetrics.cvr || 0.05;
+  const roasScore = Math.min(25, (safeNum(m.roas) / keepRoas) * 25);
+  const cvrLift = globalCvr > 0 ? safeNum(m.cvr) / globalCvr : 1;
+  const cvrScore = Math.min(20, cvrLift * 10);
+  let cpcScore = 7;
+  if (safeNum(m.cpc) > 0 && globalCpc > 0) {
+    if (m.cpc <= globalCpc * 0.75) cpcScore = 15;
+    else if (m.cpc <= globalCpc) cpcScore = 11;
+    else if (m.cpc <= globalCpc * 1.25) cpcScore = 7;
+    else cpcScore = 3;
+  }
+  const orderScore = m.orders >= 3 ? 15 : m.orders === 2 ? 12 : m.orders === 1 ? 8 : 0;
+  const intentScore = profile.intentScore * 0.15;
+  const gapScore = coverage.isGap ? 10 : 2;
+  let penalty = 0;
+  if (profile.hasMismatch) penalty += 28;
+  if (m.clicks >= 20 && m.orders === 0) penalty += 12;
+  if (m.spend >= safeNum($("ruleSpendNeg")?.value || 30) && m.roas < safeNum($("ruleRoasNeg")?.value || 1.5)) penalty += 18;
+  return Math.round(clampNum(roasScore + cvrScore + cpcScore + orderScore + intentScore + gapScore - penalty));
+};
+
+const classifyLongTailAsset = (c, globalMetrics) => {
+  const keepRoas = safeNum($("ruleRoasKeep")?.value || 3) || 3;
+  const globalCpc = globalMetrics.cpc || 1;
+  const globalCvr = globalMetrics.cvr || 0.05;
+  if (c.profile.hasMismatch) return { asset: t("dyn_lt_risk"), action: currentLang === "zh" ? "复核" : "Review", match: "Review", cls:"warn" };
+  if (c.listingGap.gap && c.score >= 60) return { asset: t("dyn_lt_listing"), action: "LISTING", match: "Listing", cls:"warn" };
+  if (c.orders >= 2 && c.roas >= keepRoas && c.coverage.isGap) return { asset: t("dyn_lt_profit"), action: "EXACT", match: "Exact", cls:"good" };
+  if (c.orders >= 1 && c.cpc > 0 && c.cpc <= globalCpc * 0.8 && c.cvr >= globalCvr * 1.2) return { asset: t("dyn_lt_blue"), action: "EXACT", match: "Exact", cls:"good" };
+  if (c.orders === 1 && c.roas >= keepRoas && c.clicks <= 15) return { asset: t("dyn_lt_test"), action: currentLang === "zh" ? "测试 Exact" : "TEST EXACT", match: "Exact", cls:"good" };
+  if (c.score >= 70 && c.profile.intentScore >= 65 && c.coverage.isGap) return { asset: t("dyn_lt_high"), action: "EXACT", match: "Exact", cls:"good" };
+  if (c.score >= 55 && c.profile.intentScore >= 55) return { asset: t("dyn_lt_phrase"), action: "PHRASE", match: "Phrase", cls:"warn" };
+  return { asset: t("dyn_lt_normal"), action: t("dyn_lt_watch"), match: "Watch", cls:"neutral" };
+};
+
+const getLongTailSuggestedBid = (m, globalMetrics, classification=null) => {
+  const observedAov = globalMetrics.orders > 0 ? globalMetrics.sales / globalMetrics.orders : 15;
+  const targetAcos = getActionTargetAcos(observedAov);
+  const globalCpc = safeNum(globalMetrics.cpc) || 0.65;
+  const currentCpc = safeNum(m.cpc) || (safeNum(m.clicks) > 0 ? safeNum(m.spend) / safeNum(m.clicks) : 0) || globalCpc;
+  const rpc = safeNum(m.clicks) > 0 ? safeNum(m.sales) / safeNum(m.clicks) : 0;
+  const orders = safeNum(m.orders);
+  const clicks = safeNum(m.clicks);
+  const match = String(classification?.match || "Exact").toLowerCase();
+
+  // Conservative bidding guardrail for long-tail migration:
+  // RPC × target ACOS is only the economic ceiling, not the final upload bid.
+  // Low-sample long-tail terms can show inflated RPC after 1-2 orders, so the final bid is capped by observed CPC, account CPC, match type, and sample size.
+  const rpcCeiling = rpc > 0 ? rpc * targetAcos : currentCpc;
+  const sampleCap = orders >= 3 ? currentCpc * 1.25 : orders >= 2 ? currentCpc * 1.15 : orders === 1 ? currentCpc * 1.00 : currentCpc * 0.75;
+
+  let globalCap = globalCpc * 1.25;
+  let hardCap = Math.min(1.80, Math.max(0.55, globalCpc * 1.55));
+  let actionMultiplier = 1.00;
+
+  if (match.includes("phrase")) {
+    globalCap = globalCpc * 1.05;
+    hardCap = Math.min(1.35, Math.max(0.40, globalCpc * 1.20));
+    actionMultiplier = 0.82;
+  } else if (match.includes("broad")) {
+    globalCap = globalCpc * 0.85;
+    hardCap = Math.min(0.95, Math.max(0.30, globalCpc * 0.95));
+    actionMultiplier = 0.65;
+  } else if (match.includes("watch") || match.includes("review") || match.includes("listing")) {
+    globalCap = globalCpc * 0.75;
+    hardCap = Math.min(0.85, Math.max(0.25, globalCpc * 0.85));
+    actionMultiplier = 0.70;
+  } else if (String(classification?.action || "").toLowerCase().includes("test")) {
+    globalCap = globalCpc * 1.05;
+    hardCap = Math.min(1.25, Math.max(0.40, globalCpc * 1.15));
+    actionMultiplier = 0.88;
+  }
+
+  if (orders <= 1 || clicks < 8) {
+    hardCap = Math.min(hardCap, Math.max(0.35, globalCpc * 1.05), currentCpc * 1.05);
+  }
+
+  const conservativeBid = Math.min(rpcCeiling, sampleCap, globalCap, hardCap) * actionMultiplier;
+  const floor = match.includes("broad") ? 0.15 : 0.20;
+  return Number(Math.max(floor, conservativeBid).toFixed(2));
 };
 
 const renderLongTailMining = () => {
@@ -2927,47 +3326,61 @@ const tbody = $("longTailTable")?.querySelector("tbody");
 if (!tbody) return; 
 if (!AdsStore.view.length) { tbody.innerHTML = ""; return; }
 
-const minWords = Math.max(1, Math.floor(safeNum($("ltMinWords").value))); 
-const minOrders = Math.max(0, Math.floor(safeNum($("ltMinOrders").value))); 
-const minRoas = safeNum($("ltMinRoas").value); 
+const minIntent = Math.max(0, Math.floor(safeNum($("ltMinIntent")?.value ?? 35))); 
+const minOrders = Math.max(0, Math.floor(safeNum($("ltMinOrders")?.value ?? 1))); 
+const minRoas = safeNum($("ltMinRoas")?.value ?? 1.5); 
+const minScore = Math.max(0, Math.floor(safeNum($("ltMinScore")?.value ?? 45))); 
 const groups = groupBy(AdsStore.view, r => r.searchTerm); 
 const candidates = [];
 const globalMetrics = sumMetrics(AdsStore.view); 
-const globalCpc = globalMetrics.cpc || 1.0; 
-const globalCvr = globalMetrics.cvr || 0.05;
-
-const targetAcos = getActionTargetAcos(globalMetrics.orders > 0 ? globalMetrics.sales / globalMetrics.orders : 15); 
 
 for (const [term, rows] of groups.entries()) {
-  if (isASINLike(term)) continue; 
-  let wordCount = (term || "").replace(/-/g, " ").trim().split(/\s+/).filter(Boolean).length;
-  if (term.includes("glasses") || term.includes("frame")) wordCount -= 0.5;
-  if (wordCount < minWords) continue; 
+  if (!term || isASINLike(term)) continue; 
   const m = sumMetrics(rows); 
+  const profile = getLongTailIntentProfile(term);
+  if (profile.intentScore < minIntent) continue;
   if (m.orders < minOrders) continue; 
   if (m.roas < minRoas) continue; 
-  
-  const cleanTerm = cleanTargetForExact(term);
-  const isNewRadar = !AdsStore.indexes.exactTerm.has(cleanTerm);
-  candidates.push({ term, wordCount, newRadar: isNewRadar, ...m });
+  const coverage = getLongTailCoverage(term, rows);
+  const listingGap = getListingCoverageGap(profile, term, m);
+  const score = scoreLongTailOpportunity(m, profile, coverage, globalMetrics);
+  if (score < minScore) continue;
+  const main = rows.slice().sort((a,b)=>safeNum(b.sales)-safeNum(a.sales) || safeNum(b.spend)-safeNum(a.spend))[0] || {};
+  const row = { term, wordCount: normalizeTextBase(term).split(" ").filter(Boolean).length, profile, coverage, listingGap, score, suggestedBid: 0, campaign: main.campaign || "", adGroup: main.adGroup || "", targeting: main.targeting || "", matchType: main.matchType || "", sourceRows: rows, ...m };
+  row.classification = classifyLongTailAsset(row, globalMetrics);
+  row.suggestedBid = getLongTailSuggestedBid(row, globalMetrics, row.classification);
+  candidates.push(row);
 }
-candidates.sort((a,b) => b.sales - a.sales); 
+candidates.sort((a,b) => b.score - a.score || b.sales - a.sales || b.orders - a.orders); 
 AdsStore.longTailRows = candidates; 
 
 if (candidates.length === 0) { 
-  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">${t('dyn_lt_no_data')}</td></tr>`; 
+  tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;color:var(--muted);padding:20px;">${t('dyn_lt_no_data')}</td></tr>`; 
   return;
 }
 
-renderProgressive(tbody, candidates.slice(0, 50), (c) => {
-  let intentTag = t('dyn_lt_normal');
-  if (c.cpc < globalCpc * 0.8 && c.cvr > globalCvr * 1.2) intentTag = t('dyn_lt_blue');
-  else if (c.cvr > globalCvr * 2) intentTag = t('dyn_lt_high');
-  const rpc = c.clicks > 0 ? c.sales / c.clicks : 0;
-  const suggestedBid = rpc > 0 ? rpc * targetAcos : c.cpc;
-  const tooltip = `[ ${escapeHtml(c.term)} ] ${intentTag}\nCVR: ${fmtPct(c.cvr)} \nBid Suggest: ${fmtMoney(suggestedBid)}`;
+renderProgressive(tbody, candidates.slice(0, 80), (c) => {
+  const scoreCls = c.score >= 75 ? "good" : c.score >= 55 ? "warn" : "neutral";
+  const cls = c.classification.cls || "neutral";
+  const tooltip = `${escapeHtml(c.term)}\nScore: ${c.score} | Intent: ${c.profile.intentScore}\nAction: ${c.classification.action} | Match: ${c.classification.match}\nCoverage: ${c.coverage.label}`;
 
-  return `<tr title="${tooltip}"><td title="${escapeHtml(c.term)}">${escapeHtml(c.term).slice(0, 80)}</td><td>${c.newRadar ? '<span class="tag good">New Radar</span>' : '<span style="color:var(--muted)">-</span>'}</td><td>${c.wordCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtMoney(c.sales)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td><td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:#b42318;font-weight:600' : ''}">${fmtPct(c.acos)}</td></tr>`;
+  return `<tr title="${tooltip}">
+    <td title="${escapeHtml(c.term)}"><b>${escapeHtml(c.term).slice(0, 90)}</b></td>
+    <td><span class="rootDecision ${scoreCls}">${c.score}</span></td>
+    <td><span class="tag ${cls}">${escapeHtml(c.classification.asset)}</span></td>
+    <td><span class="rootDecision ${cls}">${escapeHtml(c.classification.action)}</span></td>
+    <td>${c.coverage.isGap ? '<span class="tag good">New</span>' : '<span class="tag neutral">Exact</span>'} <span class="small">${escapeHtml(c.coverage.label)}</span></td>
+    <td>${escapeHtml(c.classification.match)}</td>
+    <td>${fmtMoney(c.suggestedBid)}</td>
+    <td>${fmtMoney(c.spend)}</td>
+    <td>${fmtMoney(c.sales)}</td>
+    <td>${fmtInt(c.orders)}</td>
+    <td>${fmtInt(c.clicks)}</td>
+    <td style="${c.cvr >= (globalMetrics.cvr || 0.05) ? 'color:var(--good);font-weight:700' : ''}">${fmtPct(c.cvr)}</td>
+    <td>${fmtMoney(c.cpc)}</td>
+    <td style="${c.roas >= safeNum($("ruleRoasKeep")?.value || 3) ? 'color:var(--good);font-weight:700' : ''}">${safeNum(c.roas).toFixed(2)}</td>
+    <td style="${(c.acos > 0.4 || c.acos === Infinity) ? 'color:var(--bad);font-weight:600' : ''}">${fmtPct(c.acos)}</td>
+  </tr>`;
 });
 };
 
@@ -3499,38 +3912,72 @@ const exportRankExcel = () => {
 
 const exportWordFreqExcel = () => {
   const rows = buildWordStats(); if (!rows.length) return; 
-  const globalCvr = sumMetrics(AdsStore.view).cvr || 0.05;
-  const headers = ["Word (Root)", "Freq", "Impressions", "Clicks", "CTR", "CPC", "Spend", "Sales", "Orders", "Net Profit", "CVR", "ROAS", "ACOS", "Root Attribute", "Action"];
-  const dataRows = rows.slice(0, 30000).map(r => {
-      let rootTag = "Neutral"; if (r.orders > 0 && r.cvr > globalCvr * 1.5 && r.roas >= 2.5) rootTag = "Golden Root"; else if (r.clicks >= 15 && r.cvr < globalCvr * 0.5 && r.spend > 15) rootTag = "Toxic Root"; else if (r.spend > 20 && r.orders === 0) rootTag = "Bleeder Root";
-      return [ r.word.replace(/_/g, " "), r.freq, r.impr || 0, r.clicks || 0, r.ctr || 0, r.cpc || 0, r.spend || 0, r.sales || 0, r.orders, r.netProfit || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, rootTag, "" ];
+  const headers = ["Root / Co-occurrence", "Root Type", "Freq", "Impressions", "Clicks", "CTR", "CPC", "Spend", "Sales", "Orders", "Net Profit", "CVR", "ROAS", "ACOS", "Toxicity Score", "Attraction Score", "Co-occurrence Lift", "Toxicity Delta", "Decision", "Risk", "Reason", "Profitable Children / Notes"];
+  const dataRows = rows.slice(0, 30000).map(r => [
+    rootDisplay(r.word), getRootTypeLabel(r.rootType), r.freq, r.impr || 0, r.clicks || 0, r.ctr || 0, r.cpc || 0, r.spend || 0, r.sales || 0, r.orders, r.netProfit || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos,
+    Math.round(r.toxicity || 0), Math.round(r.attraction || 0), r.roots?.length > 1 ? safeNum(r.lift) : null, r.roots?.length > 1 ? safeNum(r.toxicityDelta) : null,
+    r.decision?.label || "Observe", r.decision?.risk || "Medium", r.decision?.reason || "", (r.decision?.profitableChildren || []).join(" / ")
+  ]);
+  exportRichExcelMultiSheet([{ sheetName: "Root Toxicity Matrix", headers, dataRows }], `Root_Toxicity_Matrix_${getTs()}.xlsx`);
+};
+
+const buildLongTailExpansionSheets = (rows) => {
+  const rootMap = new Map();
+  const addRoot = (root, c) => {
+    const type = getRootType(root);
+    if (["mismatch", "generic", "watch", "neutral"].includes(type)) return;
+    const phrase = rootDisplay(root).replace(/^\+/, "").trim();
+    if (!phrase || phrase.length < 3) return;
+    if (!rootMap.has(phrase)) rootMap.set(phrase, { phrase, type, sourceTerms: new Set(), rows: [] });
+    const item = rootMap.get(phrase);
+    item.sourceTerms.add(c.term);
+    item.rows.push(...(c.sourceRows || []));
+  };
+  rows.forEach(c => {
+    if (c.profile?.hasMismatch) return;
+    if (c.score < 55 || c.orders < 1) return;
+    (c.profile?.roots || []).forEach(root => addRoot(root, c));
   });
-  exportRichExcelMultiSheet([{ sheetName: "Word Frequency Matrix", headers, dataRows }], `Ultimate_WordFreq_${getTs()}.xlsx`);
+  return [...rootMap.values()].map(x => {
+    const m = sumMetrics(x.rows);
+    return { ...x, ...m, sourceTermsText: [...x.sourceTerms].slice(0, 6).join(" / ") };
+  }).sort((a,b)=>b.sales-a.sales || b.orders-a.orders);
 };
 
 const exportLongTailExcel = () => {
   if (!AdsStore.longTailRows.length) return; 
-  const globalMetrics = sumMetrics(AdsStore.view); const globalCpc = globalMetrics.cpc || 1.0; const globalCvr = globalMetrics.cvr || 0.05;
-  const headers = ["Search Term", "New Radar", "Word Count", "Spend", "Sales", "Orders", "Net Profit", "Clicks", "CPC", "CVR", "ROAS", "ACOS", "Deep Diagnosis", "Suggested Exact Bid"];
-  const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Product Targeting Expression", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
-  const bulkDataRows = [];
-  
-  const targetAcos = getActionTargetAcos(globalMetrics.orders > 0 ? globalMetrics.sales / globalMetrics.orders : 15);
+  const rows = AdsStore.longTailRows.slice(0, 30000);
+  const headers = ["Search Term", "Opportunity Score", "Intent Score", "Asset Type", "Action", "Coverage", "Suggested Match", "Suggested Bid", "Spend", "Sales", "Orders", "Net Profit", "Clicks", "CPC", "CVR", "ROAS", "ACOS", "Campaign", "Ad Group", "Source Match Type", "Listing Gap Missing Roots"];
+  const toData = (c) => [
+    c.term, c.score, c.profile?.intentScore || 0, c.classification?.asset || "", c.classification?.action || "", c.coverage?.label || "", c.classification?.match || "", c.suggestedBid || 0,
+    c.spend || 0, c.sales || 0, c.orders || 0, c.netProfit || 0, c.clicks || 0, c.cpc || 0, c.cvr || 0, c.roas || 0, c.acos === Infinity ? null : c.acos, c.campaign || "", c.adGroup || "", c.matchType || "", (c.listingGap?.missing || []).join(" / ")
+  ];
+  const allData = rows.map(toData);
+  const exactLaunch = rows.filter(c => c.classification?.match === "Exact" && c.coverage?.isGap && !c.profile?.hasMismatch).map(toData);
+  const testExact = rows.filter(c => String(c.classification?.action || "").toLowerCase().includes("test") || String(c.classification?.action || "").includes("测试")).map(toData);
+  const listingGap = rows.filter(c => c.listingGap?.gap).map(toData);
 
-  const dataRows = AdsStore.longTailRows.slice(0, 30000).map(c => {
-      let intentTag = "Normal"; 
-      if (c.cpc < globalCpc * 0.8 && c.cvr > globalCvr * 1.2) intentTag = "Blue Ocean"; 
-      else if (c.cvr > globalCvr * 2) intentTag = "High Intent";
-      
-      const rpc = c.clicks > 0 ? c.sales / c.clicks : 0; 
-      const suggestedBid = rpc > 0 ? rpc * targetAcos : c.cpc;
-      
-      if (c.newRadar) { 
-        bulkDataRows.push([ "Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", "[Target Campaign]", "[Target Ad Group]", c.term, "", "exact", "", "", "", suggestedBid, "enabled" ]); 
-      }
-      return [ c.term, c.newRadar ? "Yes" : "No", c.wordCount, c.spend || 0, c.sales || 0, c.orders, c.netProfit || 0, c.clicks || 0, c.cpc || 0, c.cvr || 0, c.roas || 0, c.acos === Infinity ? null : c.acos, intentTag, suggestedBid || 0 ];
-  });
-  exportRichExcelMultiSheet([ { sheetName: "Long Tail Mining", headers: headers, dataRows: dataRows }, { sheetName: "Bulk Upload", headers: bulkHeaders, dataRows: bulkDataRows } ], `Ultimate_LongTail_${getTs()}.xlsx`);
+  const expansion = buildLongTailExpansionSheets(rows);
+  const expansionHeaders = ["Root / Phrase", "Root Type", "Source Terms", "Spend", "Sales", "Orders", "Clicks", "CPC", "CVR", "ROAS", "ACOS", "Suggested Action"];
+  const phraseRows = expansion.filter(x => x.orders >= 1 && x.roas >= 1.5).map(x => [x.phrase, getRootTypeLabel(x.type), x.sourceTermsText, x.spend || 0, x.sales || 0, x.orders || 0, x.clicks || 0, x.cpc || 0, x.cvr || 0, x.roas || 0, x.acos === Infinity ? null : x.acos, "Create Phrase"]);
+  const broadRows = expansion.filter(x => x.orders >= 2 && x.roas >= 2).map(x => [x.phrase, getRootTypeLabel(x.type), x.sourceTermsText, x.spend || 0, x.sales || 0, x.orders || 0, x.clicks || 0, x.cpc || 0, x.cvr || 0, x.roas || 0, x.acos === Infinity ? null : x.acos, "Create Broad Root"]);
+
+  const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Product Targeting Expression", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
+  const bulkExact = rows.filter(c => c.classification?.match === "Exact" && c.coverage?.isGap && !c.profile?.hasMismatch).map(c => ["Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", "[Target Campaign]", "[Target Ad Group]", c.term, "", "exact", "", "", "", c.suggestedBid || 0, "enabled"]);
+  const bulkPhrase = phraseRows.map(r => ["Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", "[Target Campaign]", "[Target Ad Group]", r[0], "", "phrase", "", "", "", "", "enabled"]);
+  const bulkBroad = broadRows.map(r => ["Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", "[Target Campaign]", "[Target Ad Group]", r[0], "", "broad", "", "", "", "", "enabled"]);
+
+  exportRichExcelMultiSheet([
+    { sheetName: "Long Tail Growth", headers, dataRows: allData },
+    { sheetName: "Exact Launch", headers, dataRows: exactLaunch },
+    { sheetName: "Test Exact", headers, dataRows: testExact },
+    { sheetName: "Phrase Expansion", headers: expansionHeaders, dataRows: phraseRows },
+    { sheetName: "Broad Root Expansion", headers: expansionHeaders, dataRows: broadRows },
+    { sheetName: "Listing Gap", headers, dataRows: listingGap },
+    { sheetName: "Bulk Exact", headers: bulkHeaders, dataRows: bulkExact },
+    { sheetName: "Bulk Phrase", headers: bulkHeaders, dataRows: bulkPhrase },
+    { sheetName: "Bulk Broad", headers: bulkHeaders, dataRows: bulkBroad }
+  ], `Ultimate_LongTail_Growth_${getTs()}.xlsx`);
 };
 
 const renderKPIs = (total) => {
@@ -3854,12 +4301,18 @@ const runLocalSemanticClustering = async () => {
             const hoverTooltip = `[ Semantic Cluster ]\n${rootTag}\nTerms in cluster:\n${r.fullList}`;
 
             return `<tr title="${escapeHtml(hoverTooltip)}"> 
-                <td style="color:#10b981; font-weight:600;">${displayWord}</td> 
-                <td>${fmtInt(r.freq)} Terms</td> 
-                <td>${fmtMoney(r.spend)}</td> 
-                <td>${fmtInt(r.orders)}</td> 
-                <td style="${(r.roas >= 2.5) ? 'color:#1a7f37;font-weight:700' : ''}">${(r.roas ?? 0).toFixed(2)}</td> 
-                <td style="${(r.acos > 0.4 || r.acos === Infinity) ? 'color:#b42318;font-weight:600' : ''}">${fmtPct(r.acos)}</td> 
+                <td style="color:#10b981; font-weight:600;">${displayWord}</td>
+                <td><span class="tag good">Cluster</span></td>
+                <td>${fmtInt(r.freq)}</td>
+                <td>${fmtMoney(r.spend)}</td>
+                <td>${fmtInt(r.clicks || 0)}</td>
+                <td>${fmtInt(r.orders)}</td>
+                <td>${fmtPct(r.cvr || 0)}</td>
+                <td style="${(r.roas >= 2.5) ? 'color:#1a7f37;font-weight:700' : ''}">${(r.roas ?? 0).toFixed(2)}</td>
+                <td>${scoreBar((r.spend > 20 && r.orders === 0) ? 85 : 35, true)}</td>
+                <td>${scoreBar((r.orders > 0 && r.roas >= 2.5) ? 80 : 35, false)}</td>
+                <td>—</td>
+                <td><span class="rootDecision neutral">${escapeHtml(rootTag)}</span></td>
             </tr>`;
         });
 
@@ -4722,7 +5175,7 @@ const bindEvents = () => {
       } 
     });
 
-    const simpleFilterIds = ["dateStart","dateEnd","filterAdProduct","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef", "eventProtectionToggle"];
+    const simpleFilterIds = ["dateStart","dateEnd","filterAdProduct","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinIntent","ltMinScore","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef", "eventProtectionToggle"];
     simpleFilterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 
     $("filterSource").addEventListener("change", () => updateChildDropdowns("filterSource"));
@@ -4807,6 +5260,7 @@ const bindEvents = () => {
     $("btnExportActionKeywordBroad")?.addEventListener("click", () => exportActionKeywordTemplateExcel("broad"));
     $("btnRefreshActionPlan")?.addEventListener("click", renderActionCommandCenter);
     ["actionFilterType", "actionTopMode", "actionBroadRootMode", "actionMinSpend", "actionMaxRows"].forEach(id => { $(id)?.addEventListener("input", debounce(renderActionCommandCenter, 200)); $(id)?.addEventListener("change", renderActionCommandCenter); });
+    $("listingCopyInput")?.addEventListener("input", debounce(() => { renderLongTailMining(); renderActionCommandCenter(); }, 300));
 
     $("btnRuleReset").addEventListener("click", () => {
       const defaults = { ruleSpendNeg:30, ruleClicksNeg:20, ruleRoasNeg:1.5, ruleRoasKeep:3, ruleOrdersKeep:2, ruleRoasMigrateMin:2 };
