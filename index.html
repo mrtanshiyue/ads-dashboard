@@ -242,7 +242,7 @@
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     .miniInput { width: 110px !important; padding: 8px 10px !important; border-radius: 999px !important; font-size: 12.2px !important; }
     .miniSelect { width: 150px !important; padding: 8px 10px !important; border-radius: 999px !important; font-size: 12.2px !important; }
-    #autoManualTable th:last-child, #autoManualTable td:last-child, #longTailTable th:last-child, #longTailTable td:last-child, #weekdayTable th:last-child, #weekdayTable td:last-child, #cpcDistTable th:last-child, #cpcDistTable td:last-child, #lengthTable th:last-child, #lengthTable td:last-child, #matchTypeTable th:last-child, #matchTypeTable td:last-child, #conflictTable th:last-child, #conflictTable td:last-child, #businessReportTable th:last-child, #businessReportTable td:last-child, #placementTable th:last-child, #placementTable td:last-child, #isolationTable th:last-child, #isolationTable td:last-child, #magTable th:last-child, #magTable td:last-child, #sqpTable th:last-child, #sqpTable td:last-child { text-align: left; }
+    #autoManualTable th:last-child, #autoManualTable td:last-child, #longTailTable th:last-child, #longTailTable td:last-child, #weekdayTable th:last-child, #weekdayTable td:last-child, #cpcDistTable th:last-child, #cpcDistTable td:last-child, #lengthTable th:last-child, #lengthTable td:last-child, #matchTypeTable th:last-child, #matchTypeTable td:last-child, #businessReportTable th:last-child, #businessReportTable td:last-child, #placementTable th:last-child, #placementTable td:last-child, #isolationTable th:last-child, #isolationTable td:last-child, #magTable th:last-child, #magTable td:last-child, #sqpTable th:last-child, #sqpTable td:last-child { text-align: left; }
     .bar-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; font-size: 11.5px; width: 100%; max-width: 200px; }
     .bar-track { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; display: flex; }
     .action-icon { cursor: pointer; margin-left: 8px; opacity: 0.5; font-size: 14px; vertical-align: middle; transition: opacity 0.2s, transform 0.2s; display: inline-block; user-select: none; }
@@ -877,23 +877,6 @@
         <div class="small" style="margin-top:10px;" data-i18n="desc_root">升级洞察：使用“双词共现 (2-gram)”能够帮你找出老花镜中隐藏的毒性搭配。点击【本地语义聚类】将使用 Transformers.js 进行端侧高维空间聚类。</div>
       </div>
       
-      <div class="card tableCard" id="conflictCard">
-        <div class="cardTitle">
-          <h2 data-i18n="title_conflict">内部竞争/关键词冲突检测 (Conflict & Cannibalization)</h2>
-          <div class="hint" data-i18n="hint_conflict">同一 Search Term 出现于多个广告组（权重分散）</div>
-          <div class="rightTools">
-              <span class="pill" style="background:var(--softWarn); color:var(--warn); border-color:transparent" data-i18n="lbl_conflict_action">建议：点击冲突词 → 筛选 → 关掉表现差的组</span>
-          </div>
-        </div>
-        <div class="table-container" style="max-height:480px;">
-          <table id="conflictTable">
-            <thead><tr><th data-i18n="th_st">搜索词 (Search Term)</th><th data-i18n="th_conflict_count">冲突位置数 (Count)</th><th style="width:300px;" data-i18n="th_locations">涉及广告组 (Locations)</th><th data-i18n="th_spend_total">总花费</th><th data-i18n="th_orders_total">总订单</th><th data-i18n="th_roas">ROAS</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="small" style="margin-top:10px;" data-i18n="desc_conflict">原理：列出在 2 个或以上不同广告组中消耗预算的词。*(底层重构：现已加入 Match Type 漏斗校验，排除广泛拓词与精准打排名的正常交叠)*</div>
-      </div>
-      
       <div class="card tableCard" id="isolationCard">
         <div class="cardTitle">
           <h2 data-i18n="title_isolation">搜索词防漏漏斗与隔离 (Targeting Funnel Gap)</h2>
@@ -1204,14 +1187,6 @@ const I18N = {
       th_root_combo: "词根组合 / 语义簇",
       th_freq: "频次 / 包含词数",
       desc_root: "升级洞察：使用“双词共现 (2-gram)”能够帮你找出老花镜中隐藏的毒性搭配。点击【本地语义聚类】将使用 Transformers.js 进行端侧高维空间聚类。",
-      title_conflict: "内部竞争/关键词冲突检测 (Conflict & Cannibalization)",
-      hint_conflict: "同一 Search Term 出现于多个广告组 (权重分散)",
-      lbl_conflict_action: "建议：点击冲突词 → 筛选 → 关掉表现差的组",
-      th_conflict_count: "冲突位置数 (Count)",
-      th_locations: "涉及广告组 (Locations)",
-      th_spend_total: "总花费",
-      th_orders_total: "总订单",
-      desc_conflict: "原理：列出在 2 个或以上不同广告组中消耗预算的词。*(底层重构：现已加入 Match Type 漏斗校验，排除广泛拓词与精准打排名的正常交叠)*",
       title_isolation: "搜索词防漏漏斗与隔离 (Targeting Funnel Gap)",
       hint_isolation: "监控高转化词是否已被提取至精准匹配 (Exact)，并检测是否存在“名为隔离、实为断流”的假象。",
       lbl_promote_ge: "晋升门槛 (订单 ≥)",
@@ -1288,7 +1263,6 @@ const I18N = {
       dyn_audit_defect: "页面缺陷", dyn_audit_potential: "潜力词", dyn_audit_drift: "匹配跑偏", dyn_audit_diminish: "效益递减", dyn_audit_bleed: "核心失血",
       dyn_ai_decision: "AI 决策: {0} ({1})\n---------------------\n净利预估: {2}\n原因: {3}",
       
-      dyn_cf_no_data: "未检测到明显的内部竞争（条件：同等匹配类型下，在 2 个不同组分别消耗 > $2）",
       dyn_iso_no_data: "🎉 太棒了！所有符合条件的高转化词均已完成精准隔离，且没有发现假隔离。",
       dyn_iso_unisolated: "未提取 (Un-isolated)",
       dyn_iso_action_un: "提取 Exact + 来源组精准否定",
@@ -1598,14 +1572,6 @@ const I18N = {
       th_root_combo: "Root Combo / Cluster",
       th_freq: "Freq / Term Count",
       desc_root: "Advanced: '2-gram' helps find hidden toxic combos. Click [Run Local Semantic Clustering] to group terms by intent using local Transformers.js embeddings.",
-      title_conflict: "Conflict & Cannibalization Detection",
-      hint_conflict: "Same Search Term appearing in multiple Ad Groups (diluting weight)",
-      lbl_conflict_action: "Action: Click Term → Filter → Pause poor performers",
-      th_conflict_count: "Conflict Count",
-      th_locations: "Involved Ad Groups",
-      th_spend_total: "Total Spend",
-      th_orders_total: "Total Orders",
-      desc_conflict: "Logic: Lists terms spending in 2+ different ad groups. *(Match Type funnel validation included to ignore normal Broad-Exact overlap)*",
       title_isolation: "Targeting Funnel Gap & Isolation",
       hint_isolation: "Monitors if high-CVR terms are extracted to Exact, and detects 'Fake Isolation'.",
       lbl_promote_ge: "Promote Threshold (Orders ≥)",
@@ -1682,7 +1648,6 @@ const I18N = {
       dyn_audit_defect: "Listing Defect", dyn_audit_potential: "Potential", dyn_audit_drift: "Match Drift", dyn_audit_diminish: "Diminishing Returns", dyn_audit_bleed: "Core Bleeding",
       dyn_ai_decision: "AI Decision: {0} ({1})\n---------------------\nEst. Net Profit: {2}\nReason: {3}",
       
-      dyn_cf_no_data: "No obvious cannibalization detected (Condition: Same match type spending >$2 in 2+ different ad groups).",
       dyn_iso_no_data: "🎉 Great! All eligible high-converting terms are isolated, with no fake isolation found.",
       dyn_iso_unisolated: "Un-isolated",
       dyn_iso_action_un: "Extract Exact + Source Neg Exact",
@@ -3156,59 +3121,6 @@ tbody.innerHTML = row("th_spend", sA.spend, sM.spend, fmtMoney) +
                   row("th_cpc", sA.cpc, sM.cpc, fmtMoney);
 };
 
-const renderConflictAnalysis = () => {
-const tbody = $("conflictTable")?.querySelector("tbody"); 
-if (!tbody) return; 
-if (!AdsStore.view.length) { tbody.innerHTML = ""; return; }
-
-const map = new Map();
-for (const r of AdsStore.view) {
-  if (!r.searchTerm || isASINLike(r.searchTerm)) continue; 
-  
-  let matchGroup = "Auto";
-  if (r.matchType.toLowerCase().includes("exact")) matchGroup = "Exact";
-  else if (r.matchType.toLowerCase().includes("broad") || r.matchType.toLowerCase().includes("phrase")) matchGroup = "Broad/Phrase";
-
-  const loc = `${r.campaign} > ${r.adGroup} [${matchGroup}]`;
-  const conflictKey = `${r.searchTerm}::${matchGroup}`; 
-
-  if (!map.has(conflictKey)) { map.set(conflictKey, { term: r.searchTerm, locMap: new Map(), spend: 0, orders: 0, sales: 0 }); }
-  const entry = map.get(conflictKey);
-  entry.locMap.set(loc, SafeMath.add(entry.locMap.get(loc) || 0, r.spend));
-  entry.spend = SafeMath.add(entry.spend, r.spend); 
-  entry.orders += r.orders; 
-  entry.sales = SafeMath.add(entry.sales, r.sales);
-}
-
-const conflicts = [];
-for (const [key, data] of map.entries()) {
-  const activeLocs = Array.from(data.locMap.entries()).filter(([l, sp]) => sp > 2.0).map(x => x[0]);
-  if (activeLocs.length > 1 && data.spend > 5) {
-    conflicts.push({ term: data.term, count: activeLocs.length, locs: activeLocs, spend: data.spend, orders: data.orders, roas: data.spend > 0 ? data.sales / data.spend : 0 });
-  }
-}
-conflicts.sort((a,b) => b.spend - a.spend);
-
-if (conflicts.length === 0) { 
-  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">${t('dyn_cf_no_data')}</td></tr>`; 
-  return; 
-}
-
-tbody.innerHTML = conflicts.slice(0, 50).map(c => {
-  const displayLocs = c.locs.slice(0, 2).map(l => `<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(l)}</div>`).join(""); 
-  const moreCount = c.locs.length > 2 ? `<div style="font-size:10px;color:var(--muted)">+${c.locs.length - 2} more...</div>` : ""; 
-  const fullLocs = c.locs.join("\n");
-  return `<tr data-term="${escapeHtml(c.term)}" style="cursor:pointer" title="Filter this term"><td style="font-weight:600;color:var(--text)">${escapeHtml(c.term)}</td><td><span class="tag bad" style="font-size:11px">${c.count}</span></td><td title="${escapeHtml(fullLocs)}">${displayLocs}${moreCount}</td><td>${fmtMoney(c.spend)}</td><td>${fmtInt(c.orders)}</td><td>${c.roas.toFixed(2)}</td></tr>`;
-}).join("");
-};
-
-$("conflictTable")?.addEventListener("click", (e) => { 
-const tr = e.target.closest("tr"); 
-if (!tr || !tr.dataset.term) return; 
-$("filterSearchTerm").value = tr.dataset.term; 
-applyFilters(); 
-});
-
 const renderIsolationAnalysis = () => {
 const tbody = $("isolationTable")?.querySelector("tbody"); 
 if (!tbody) return; 
@@ -4648,7 +4560,7 @@ const applyFilters = (initial=false) => {
     $("rankTable").querySelector("tbody").innerHTML = ""; 
     $("anomalyAlerts").style.display = "none"; 
     renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); 
-    renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); 
+    renderLengthAnalysis(); renderBusinessReport(); 
     renderIsolationAnalysis(); renderActiveDimTab(); clearGrowthCommandModules(); 
     return; 
   }
@@ -4755,7 +4667,7 @@ const applyFilters = (initial=false) => {
           requestAnimationFrame(() => { 
               renderKPIs(total); detectAnomalies(AdsStore.view); renderTrend(AdsStore.view); 
               renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); 
-              renderLengthAnalysis(); renderConflictAnalysis(); renderBusinessReport(); renderIsolationAnalysis();
+              renderLengthAnalysis(); renderBusinessReport(); renderIsolationAnalysis();
               renderGrowthCommandModules();
 
               const activeStrat = document.querySelector('.seg[aria-label="Strat Filter"] .segBtn.active');
