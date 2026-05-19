@@ -513,7 +513,7 @@
     <div id="aiInsightsBox" style="display:none; margin-bottom:16px; animation: fadeInDown 0.4s ease;">
       <div class="card" style="border-left: 4px solid #aa00ff; background: var(--hover-bg); position: relative;">
         <div class="cardTitle" style="margin-bottom: 0; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px;">
-          <h2 style="color: #aa00ff; display: flex; align-items: center; gap: 6px; margin:0;" data-i18n="ai_title">✨ Gemini + OpenRouter AI Agent 引擎</h2>
+          <h2 style="color: #aa00ff; display: flex; align-items: center; gap: 6px; margin:0;" data-i18n="ai_title">✨ Gemini + OpenRouter + Groq AI Agent 引擎</h2>
           <div style="display:flex; gap: 8px; align-items: center;">
             <button class="btn" id="btnAILog" type="button" style="display:none; padding: 4px 10px; font-size: 11px;" data-i18n="btn_ai_log">📝 导出对话日志</button>
             <button class="btn" id="btnAIBulk" type="button" style="display:none; padding: 4px 10px; font-size: 11px; color: var(--good); border-color: rgba(26,127,55,0.3); background: var(--softGood);" data-i18n-title="title_ai_bulk" title="AI 仅生成 Bulk 草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid" data-i18n="btn_ai_bulk">⚡ 导出 AI Bulk 草稿</button>
@@ -1015,7 +1015,7 @@ const I18N = {
       lbl_import_logs: "导入日志",
       btn_check: "依赖自检",
       btn_ai: "召唤 AI 参谋 (Streaming)",
-      ai_title: "✨ Gemini + OpenRouter AI Agent 引擎",
+      ai_title: "✨ Gemini + OpenRouter + Groq AI Agent 引擎",
       btn_ai_log: "📝 导出对话日志",
       title_ai_bulk: "AI 仅生成 Bulk 草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid",
       btn_ai_bulk: "⚡ 导出 AI Bulk 草稿",
@@ -1409,7 +1409,7 @@ const I18N = {
       lbl_import_logs: "Import Logs",
       btn_check: "Dependency Check",
       btn_ai: "Summon AI Agent (Streaming)",
-      ai_title: "✨ Gemini + OpenRouter AI Agent Engine",
+      ai_title: "✨ Gemini + OpenRouter + Groq AI Agent Engine",
       btn_ai_log: "📝 Export Chat Log",
       title_ai_bulk: "AI generates a Bulk draft only. Confirm Campaign, Ad Group, Match Type, and Bid before upload.",
       btn_ai_bulk: "⚡ Export AI Bulk Draft",
@@ -5197,10 +5197,18 @@ const AI_PROVIDER_CONFIG = {
         model: "openrouter/auto",
         endpoint: "https://openrouter.ai/api/v1/chat/completions",
         apiKey: atob("c2stb3ItdjEtOGNkYTBkZDQ0NWFkZWJjMjQ5Nzg2NDc3N2U0MTlmOTE5ODE3YjU1MGYyNWI0NGM2YjZhMjA0ZDNmMDQ3MDM5OA==")
+    },
+    groq: {
+        label: "Groq Llama 3.3 70B",
+        model: "llama-3.3-70b-versatile",
+        endpoint: "https://api.groq.com/openai/v1/chat/completions",
+        apiKey: atob("Z3NrX1VPMndLWE5mSVNZY2ZrNlNBS0t2V0dkeWIzRllLalhyRFpkckN1M0JBT3JBNll2bnNqRlY=")
     }
 };
 
-const getOpenRouterErrorMessage = async (response) => {
+const getOpenAICompatibleErrorMessage = async (response, providerKey = "openrouter") => {
+    const cfg = AI_PROVIDER_CONFIG[providerKey] || {};
+    const providerLabel = cfg.label || providerKey || "AI Provider";
     let detail = '';
     try { detail = await response.text(); } catch(e) {}
     let parsedMessage = '';
@@ -5209,11 +5217,14 @@ const getOpenRouterErrorMessage = async (response) => {
         parsedMessage = parsed?.error?.message || parsed?.message || '';
     } catch(e) {}
     const shortDetail = (parsedMessage || detail) ? `\n${(parsedMessage || detail).slice(0, 500)}` : '';
-    const zhMap = { 400: '请求体过大或格式错误，请缩小筛选范围或减少对话历史。', 401: 'OpenRouter API Key 无效或未授权。', 402: 'OpenRouter 余额不足或账户未开通计费。', 403: 'OpenRouter 权限不足或模型不可用。', 408: 'OpenRouter 请求超时。', 429: 'OpenRouter 频率限制，请稍后重试。', 500: 'OpenRouter 服务端错误。', 502: '上游模型服务异常。', 503: 'OpenRouter 或上游模型暂时不可用。' };
-    const enMap = { 400: 'Request body is too large or malformed. Narrow filters or reduce chat history.', 401: 'OpenRouter API key is invalid or unauthorized.', 402: 'OpenRouter balance is insufficient or billing is not enabled.', 403: 'OpenRouter permission denied or model unavailable.', 408: 'OpenRouter request timed out.', 429: 'OpenRouter rate limit reached. Try again later.', 500: 'OpenRouter server error.', 502: 'Upstream model error.', 503: 'OpenRouter or upstream model temporarily unavailable.' };
-    const msg = (currentLang === 'zh' ? zhMap : enMap)[response.status] || (currentLang === 'zh' ? 'OpenRouter API 返回异常。' : 'OpenRouter API returned an error.');
-    return `OpenRouter API ${response.status}: ${msg}${shortDetail}`;
+    const zhMap = { 400: '请求体过大或格式错误，请缩小筛选范围或减少对话历史。', 401: 'API Key 无效或未授权。', 402: '余额不足或账户未开通计费。', 403: '权限不足或模型不可用。', 408: '请求超时。', 429: '频率或额度限制，请稍后重试。', 500: '服务端错误。', 502: '上游模型服务异常。', 503: '服务暂时不可用。' };
+    const enMap = { 400: 'Request body is too large or malformed. Narrow filters or reduce chat history.', 401: 'API key is invalid or unauthorized.', 402: 'Balance is insufficient or billing is not enabled.', 403: 'Permission denied or model unavailable.', 408: 'Request timed out.', 429: 'Rate or quota limit reached. Try again later.', 500: 'Server error.', 502: 'Upstream model error.', 503: 'Service temporarily unavailable.' };
+    const msg = (currentLang === 'zh' ? zhMap : enMap)[response.status] || (currentLang === 'zh' ? 'API 返回异常。' : 'API returned an error.');
+    return `${providerLabel} API ${response.status}: ${msg}${shortDetail}`;
 };
+
+const getOpenRouterErrorMessage = (response) => getOpenAICompatibleErrorMessage(response, "openrouter");
+const getGroqErrorMessage = (response) => getOpenAICompatibleErrorMessage(response, "groq");
 
 const renderAIStreamingText = (bubble, text) => {
     bubble.textContent = text;
@@ -5270,7 +5281,7 @@ const streamGeminiResponse = async (response, bubble) => {
     return aiFullText;
 };
 
-const streamOpenRouterResponse = async (response, bubble) => {
+const streamOpenAICompatibleResponse = async (response, bubble, providerLabel = "OpenAI-compatible") => {
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
     let aiFullText = "";
@@ -5296,7 +5307,7 @@ const streamOpenRouterResponse = async (response, bubble) => {
 
             try {
                 const data = JSON.parse(payload);
-                if (data?.error) throw new Error(data.error?.message || "OpenRouter stream error");
+                if (data?.error) throw new Error(data.error?.message || `${providerLabel} stream error`);
                 const deltaText = data?.choices?.[0]?.delta?.content || data?.choices?.[0]?.message?.content || "";
                 if (deltaText) {
                     aiFullText += deltaText;
@@ -5307,7 +5318,7 @@ const streamOpenRouterResponse = async (response, bubble) => {
                     }
                 }
             } catch (e) {
-                console.warn("OpenRouter SSE Parse Error", e);
+                console.warn(`${providerLabel} SSE Parse Error`, e);
             }
         }
     }
@@ -5315,6 +5326,9 @@ const streamOpenRouterResponse = async (response, bubble) => {
     renderAIStreamingText(bubble, aiFullText);
     return aiFullText;
 };
+
+const streamOpenRouterResponse = (response, bubble) => streamOpenAICompatibleResponse(response, bubble, "OpenRouter");
+const streamGroqResponse = (response, bubble) => streamOpenAICompatibleResponse(response, bubble, "Groq");
 
 const requestGeminiStream = async (payload, signal, bubble) => {
     const cfg = AI_PROVIDER_CONFIG.gemini;
@@ -5339,8 +5353,9 @@ const convertGeminiHistoryToOpenRouterMessages = (history) => history.map(msg =>
     content: msg.parts?.[0]?.text || ""
 })).filter(msg => msg.content.trim());
 
-const requestOpenRouterStream = async ({ systemPrompt, finalPrompt, history, signal, bubble }) => {
-    const cfg = AI_PROVIDER_CONFIG.openrouter;
+const requestOpenAICompatibleStream = async (providerKey, { systemPrompt, finalPrompt, history, signal, bubble }) => {
+    const cfg = AI_PROVIDER_CONFIG[providerKey];
+    if (!cfg) throw new Error(`Unknown AI provider: ${providerKey}`);
     const siteUrl = (window.location.origin && window.location.origin !== "null") ? window.location.origin : "https://local.ads-dashboard";
     const payload = {
         model: cfg.model,
@@ -5353,30 +5368,41 @@ const requestOpenRouterStream = async ({ systemPrompt, finalPrompt, history, sig
         ]
     };
 
+    const headers = {
+        "Authorization": `Bearer ${cfg.apiKey}`,
+        "Content-Type": "application/json"
+    };
+    if (providerKey === "openrouter") {
+        headers["HTTP-Referer"] = siteUrl;
+        headers["X-Title"] = "LangRong Ads Dashboard";
+    }
+
     const response = await fetch(cfg.endpoint, {
         method: "POST",
-        headers: {
-            "Authorization": `Bearer ${cfg.apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": siteUrl,
-            "X-Title": "LangRong Ads Dashboard"
-        },
+        headers,
         body: JSON.stringify(payload),
         signal
     });
 
     if (!response.ok) {
-        const err = new Error(await getOpenRouterErrorMessage(response));
+        const err = new Error(await getOpenAICompatibleErrorMessage(response, providerKey));
         err.status = response.status;
-        err.provider = "openrouter";
+        err.provider = providerKey;
         throw err;
     }
-    return await streamOpenRouterResponse(response, bubble);
+    return await streamOpenAICompatibleResponse(response, bubble, cfg.label || providerKey);
 };
 
-const showAIFallbackStatus = (bubble, reason) => {
+const requestOpenRouterStream = (args) => requestOpenAICompatibleStream("openrouter", args);
+const requestGroqStream = (args) => requestOpenAICompatibleStream("groq", args);
+
+const showAIFallbackStatus = (bubble, fromProvider, toProvider, reason) => {
+    const fromLabel = AI_PROVIDER_CONFIG[fromProvider]?.label || fromProvider || 'AI';
+    const toLabel = AI_PROVIDER_CONFIG[toProvider]?.label || toProvider || 'Backup AI';
     const reasonText = escapeHtml(String(reason || '').slice(0, 220));
-    bubble.innerHTML = sanitizeAIHtml(`<div class="alert-banner warn">⚠️ ${currentLang === 'zh' ? 'Gemini 调用失败，已自动切换 OpenRouter 继续生成。' : 'Gemini failed. Automatically switching to OpenRouter.'}<br><span class="small">${reasonText}</span></div>`);
+    const zhMsg = `${fromLabel} 调用失败，已自动切换 ${toLabel} 继续生成。`;
+    const enMsg = `${fromLabel} failed. Automatically switching to ${toLabel}.`;
+    bubble.innerHTML = sanitizeAIHtml(`<div class="alert-banner warn">⚠️ ${currentLang === 'zh' ? zhMsg : enMsg}<br><span class="small">${reasonText}</span></div>`);
     const chat = $("aiChatHistory");
     if (chat) chat.scrollTop = chat.scrollHeight;
 };
@@ -5443,7 +5469,7 @@ ${getAiLanguageInstruction()}
     };
 
     const bubble = createChatBubble("ai");
-    bubble.innerHTML = '<span class="ai-loading">🔮 ' + (currentLang === 'zh' ? 'Gemini 连接中，若被限额将自动切换 OpenRouter...' : 'Connecting to Gemini. Auto-fallback to OpenRouter if limited...') + '</span>';
+    bubble.innerHTML = '<span class="ai-loading">🔮 ' + (currentLang === 'zh' ? 'Gemini 连接中，若受限将自动切换 OpenRouter，再切 Groq...' : 'Connecting to Gemini. Auto-fallback to OpenRouter, then Groq if limited...') + '</span>';
     $("aiChatHistory").scrollTop = $("aiChatHistory").scrollHeight;
 
     let aiFullText = "";
@@ -5456,16 +5482,32 @@ ${getAiLanguageInstruction()}
             if (geminiError?.name === 'AbortError') throw geminiError;
             console.warn("Gemini failed. Falling back to OpenRouter:", geminiError);
             providerUsed = "openrouter";
-            showAIFallbackStatus(bubble, geminiError?.message || geminiError);
+            showAIFallbackStatus(bubble, "gemini", "openrouter", geminiError?.message || geminiError);
             await new Promise(resolve => setTimeout(resolve, 450));
             bubble.innerHTML = '<span class="ai-loading">🔁 ' + (currentLang === 'zh' ? 'OpenRouter 接管生成中...' : 'OpenRouter is taking over...') + '</span>';
-            aiFullText = await requestOpenRouterStream({
-                systemPrompt,
-                finalPrompt,
-                history: aiMessageHistory,
-                signal: aiAbortController.signal,
-                bubble
-            });
+            try {
+                aiFullText = await requestOpenRouterStream({
+                    systemPrompt,
+                    finalPrompt,
+                    history: aiMessageHistory,
+                    signal: aiAbortController.signal,
+                    bubble
+                });
+            } catch (openRouterError) {
+                if (openRouterError?.name === 'AbortError') throw openRouterError;
+                console.warn("OpenRouter failed. Falling back to Groq:", openRouterError);
+                providerUsed = "groq";
+                showAIFallbackStatus(bubble, "openrouter", "groq", openRouterError?.message || openRouterError);
+                await new Promise(resolve => setTimeout(resolve, 450));
+                bubble.innerHTML = '<span class="ai-loading">⚡ ' + (currentLang === 'zh' ? 'Groq 接管生成中...' : 'Groq is taking over...') + '</span>';
+                aiFullText = await requestGroqStream({
+                    systemPrompt,
+                    finalPrompt,
+                    history: aiMessageHistory,
+                    signal: aiAbortController.signal,
+                    bubble
+                });
+            }
         }
 
         if (!aiFullText || !aiFullText.trim()) {
