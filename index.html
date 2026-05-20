@@ -431,6 +431,22 @@
     @media (max-width: 650px){ .archMiniList,.archGuardrailGrid{grid-template-columns:1fr;} .architectureHero{grid-template-columns:1fr;} }
 
 
+    /* Negative keyword popup */
+    .negKeywordSummary { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:12px; }
+    .negKeywordToolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-start; margin-bottom:12px; }
+    .negKeywordTable { min-width: 980px; table-layout: fixed; }
+    .negKeywordTable th:first-child, .negKeywordTable td:first-child { width: 280px; white-space: normal; word-break: break-word; font-weight: 700; }
+    .negKeywordTable th:nth-child(2), .negKeywordTable td:nth-child(2) { width: 95px; }
+    .negKeywordTable th:nth-child(3), .negKeywordTable td:nth-child(3) { width: 86px; }
+    .negKeywordTable th:nth-child(4), .negKeywordTable td:nth-child(4) { width: 80px; }
+    .negKeywordTable th:nth-child(5), .negKeywordTable td:nth-child(5) { width: 80px; }
+    .negKeywordTable th:nth-child(6), .negKeywordTable td:nth-child(6) { width: 80px; }
+    .negKeywordTable th:nth-child(7), .negKeywordTable td:nth-child(7) { width: 80px; }
+    .negKeywordTable th:nth-child(8), .negKeywordTable td:nth-child(8) { width: 260px; white-space: normal; word-break: break-word; }
+    .negKeywordTable th:nth-child(9), .negKeywordTable td:nth-child(9) { width: 90px; text-align:center; }
+    @media (max-width: 900px){ .negKeywordSummary { grid-template-columns: 1fr 1fr; } }
+
+
 
     /* ================= Architecture UX 2.0: Command Center ================= */
     .archCommandCenter { display:flex; flex-direction:column; gap:12px; }
@@ -953,6 +969,22 @@
         <div id="architectureContent" class="architectureBody"></div>
       </div>
     </div>
+
+    <div id="negativeKeywordModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="negativeKeywordTitle">
+      <div class="architectureModal" style="max-width:1180px;">
+        <div class="architectureModalHeader">
+          <div>
+            <h2 id="negativeKeywordTitle">否定关键词清单</h2>
+            <div class="small" id="negativeKeywordSubtitle">基于当前筛选数据生成</div>
+          </div>
+          <div class="architectureModalActions">
+            <button class="btn primary" id="btnCopyNegativeKeywordTerms" type="button">复制全部关键词</button>
+            <button class="search-clear-btn" id="btnCloseNegativeKeywordModal" type="button" title="关闭">✕</button>
+          </div>
+        </div>
+        <div id="negativeKeywordContent" class="architectureBody"></div>
+      </div>
+    </div>
     
     <section class="grid">
       <div class="card chartCard" style="grid-column: span 12; display: flex; flex-direction: column; gap: 8px;">
@@ -1239,6 +1271,7 @@
               <button id="btnTypeKw" class="segBtn" data-type="keyword" type="button" data-i18n="tab_kw">关键词</button>
               <button id="btnTypeAsin" class="segBtn" data-type="asin" type="button">ASIN</button>
             </div>
+            <button class="btn" id="btnShowExactNegatives" type="button">精准否定词</button>
             <button class="btn primary" id="btnExportRank" type="button" data-i18n="btn_export_rank">异步防卡死导出 Excel</button>
             <span class="hint" data-i18n="hint_sort_search">点击表头排序，点击🔍精准搜索</span>
           </div>
@@ -1290,6 +1323,7 @@
             </div>
             <span class="pill">Min Freq</span><input id="wfMinFreq" class="miniInput" type="number" step="1" value="3" data-i18n-title="title_min_freq" title="最小出现次数" />
             <span class="pill">Min Spend</span><input id="wfMinSpend" class="miniInput" type="number" step="0.01" value="10" data-i18n-title="title_min_spend" title="最小花费" />
+            <button class="btn" id="btnShowPhraseNegatives" type="button">词组否定词</button>
             <button class="btn primary" id="btnExportWf" type="button" data-i18n="btn_export_wf">导出矩阵 Excel</button>
             <span class="hint" data-i18n="hint_sort_only">点击表头排序</span>
           </div>
@@ -6249,70 +6283,132 @@ JSON_DATA:
 ${JSON.stringify(input, null, 2)}`;
 };
 
+const ensureArchitectureAISection = (data) => {
+  const modal = $("architectureModal");
+  const content = $("architectureContent");
+  if (!content) return { details: null, result: null };
+  const sourceData = data || lastArchitectureData || buildAdArchitectureData();
+  if (!content.innerHTML.trim()) {
+    lastArchitectureData = sourceData;
+    lastArchitecturePlainText = buildArchitecturePlainText(sourceData);
+    content.innerHTML = renderAdArchitecture(sourceData) + renderArchitectureAISection();
+  }
+  if (modal && modal.style.display !== "flex") modal.style.display = "flex";
+  let details = $("architectureAIDetails");
+  if (!details) {
+    content.insertAdjacentHTML("beforeend", renderArchitectureAISection());
+    details = $("architectureAIDetails");
+  }
+  let result = $("architectureAIResult");
+  if (!result && details) {
+    details.insertAdjacentHTML("beforeend", `<div class="archDetailsBody"><div class="architectureAIBox"><div id="architectureAIResult" class="architectureAIResult"></div></div></div>`);
+    result = $("architectureAIResult");
+  }
+  if (details) {
+    details.open = true;
+    details.classList.add("archAIActive");
+    setTimeout(() => {
+      try { details.scrollIntoView({ behavior: "smooth", block: "start" }); } catch(e) { details.scrollIntoView(); }
+    }, 40);
+  }
+  return { details, result };
+};
+
 const runArchitectureAI = async () => {
   const data = lastArchitectureData || buildAdArchitectureData();
   if (!data) { alert(t("arch_no_data")); return; }
   lastArchitectureData = data;
-  const aiDetails = $("architectureAIDetails");
-  if (aiDetails) aiDetails.open = true;
-  const result = $("architectureAIResult");
+  const { details: aiDetails, result } = ensureArchitectureAISection(data);
   const btn = $("btnGenerateAIArchitecture");
-  if (!result || !btn) return;
+  if (!result) {
+    alert(currentLang === "zh" ? "AI 输出区域没有成功初始化，请重新打开广告架构弹窗。" : "AI output area did not initialize. Reopen the architecture modal.");
+    return;
+  }
+  if (!btn) return;
 
   if (architectureAbortController) {
     try { architectureAbortController.abort(); } catch(e) {}
     architectureAbortController = null;
+    btn.disabled = false;
+    btn.removeAttribute("aria-busy");
     btn.innerHTML = t("btn_arch_ai");
+    result.innerHTML = `<div class="alert-banner warn">⚠️ ${currentLang === "zh" ? "已停止生成。" : "Generation stopped."}</div>`;
     return;
   }
 
-  architectureAbortController = new AbortController();
-  btn.disabled = false;
-  btn.innerHTML = currentLang === "zh" ? "停止生成" : "Stop";
-  result.innerHTML = `<div class="ai-loader-container"><div class="ai-spinner"></div><div><b>${currentLang === "zh" ? "AI 正在接管广告架构生成..." : "AI is generating the full ad architecture..."}</b><div class="small">Gemini → OpenRouter → Groq ${currentLang === "zh" ? "自动切换" : "auto-fallback"}</div></div></div>`;
-
-  const systemPrompt = getArchitectureAISystemPrompt();
-  const finalPrompt = buildArchitectureAIPrompt(data);
-  const geminiPayload = { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: "user", parts: [{ text: finalPrompt }] }], generationConfig: { temperature: 0.18 } };
-
-  let aiText = "";
-  let providerUsed = "Gemini";
   try {
-    try {
-      aiText = await requestGeminiStream(geminiPayload, architectureAbortController.signal, result);
-      providerUsed = AI_PROVIDER_CONFIG.gemini.label || "Gemini";
-    } catch (geminiError) {
-      if (geminiError?.name === "AbortError") throw geminiError;
-      providerUsed = AI_PROVIDER_CONFIG.openrouter.label || "OpenRouter";
-      result.innerHTML = `<div class="alert-banner warn">⚠️ Gemini ${currentLang === "zh" ? "失败，切换 OpenRouter" : "failed, switching to OpenRouter"}<br><span class="small">${escapeHtml(String(geminiError?.message || geminiError).slice(0, 220))}</span></div>`;
-      await new Promise(resolve => setTimeout(resolve, 350));
-      try {
-        aiText = await requestOpenRouterStream({ systemPrompt, finalPrompt, history: [], signal: architectureAbortController.signal, bubble: result });
-      } catch (openRouterError) {
-        if (openRouterError?.name === "AbortError") throw openRouterError;
-        providerUsed = AI_PROVIDER_CONFIG.groq.label || "Groq";
-        result.innerHTML = `<div class="alert-banner warn">⚠️ OpenRouter ${currentLang === "zh" ? "失败，切换 Groq" : "failed, switching to Groq"}<br><span class="small">${escapeHtml(String(openRouterError?.message || openRouterError).slice(0, 220))}</span></div>`;
-        await new Promise(resolve => setTimeout(resolve, 350));
-        aiText = await requestGroqStream({ systemPrompt, finalPrompt, history: [], signal: architectureAbortController.signal, bubble: result });
-      }
+    architectureAbortController = new AbortController();
+    btn.disabled = false;
+    btn.setAttribute("aria-busy", "true");
+    btn.innerHTML = currentLang === "zh" ? "停止生成" : "Stop";
+    result.innerHTML = `<div class="ai-loader-container"><div class="ai-spinner"></div><div><b>${currentLang === "zh" ? "AI 正在生成完整广告架构..." : "AI is generating the full ad architecture..."}</b><div class="small">${currentLang === "zh" ? "已展开到 AI 输出区。Gemini → OpenRouter → Groq 自动切换；如果 API 失败，会在这里显示原因。" : "AI output is now expanded. Gemini → OpenRouter → Groq auto-fallback; API errors will appear here."}</div></div></div>`;
+    if (aiDetails) {
+      aiDetails.open = true;
+      try { aiDetails.scrollIntoView({ behavior: "smooth", block: "start" }); } catch(e) {}
     }
-    if (!aiText || !aiText.trim()) throw new Error(currentLang === "zh" ? "AI 返回为空" : "AI returned empty content");
-    lastArchitectureAIText = aiText;
-    lastArchitectureAIHtml = sanitizeAIHtml(aiText);
-    lastArchitectureAIProvider = providerUsed;
-    result.innerHTML = lastArchitectureAIHtml;
-    lastArchitecturePlainText = `${buildArchitecturePlainText(data)}\n\n【API AI Full Architecture - ${providerUsed}】\n${archPlainTextFromHtml(aiText)}`;
-    log(t("arch_ai_done"), "good");
-  } catch (e) {
-    const aborted = e?.name === "AbortError";
-    const msg = aborted ? (currentLang === "zh" ? "已停止生成。" : "Generation stopped.") : `${t("arch_ai_failed")}: ${String(e?.message || e).slice(0, 360)}`;
-    result.innerHTML = `<div class="alert-banner warn">⚠️ ${escapeHtml(msg)}</div>`;
+
+    if (typeof requestGeminiStream !== "function" || typeof requestOpenRouterStream !== "function" || typeof requestGroqStream !== "function") {
+      throw new Error(currentLang === "zh" ? "AI API 函数未加载完成，请刷新页面后重试" : "AI API functions are not loaded. Refresh the page and retry.");
+    }
+
+    const systemPrompt = getArchitectureAISystemPrompt();
+    const finalPrompt = buildArchitectureAIPrompt(data);
+    const geminiPayload = { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: "user", parts: [{ text: finalPrompt }] }], generationConfig: { temperature: 0.18 } };
+
+    let aiText = "";
+    let providerUsed = "Gemini";
+    try {
+      try {
+        aiText = await requestGeminiStream(geminiPayload, architectureAbortController.signal, result);
+        providerUsed = AI_PROVIDER_CONFIG.gemini.label || "Gemini";
+      } catch (geminiError) {
+        if (geminiError?.name === "AbortError") throw geminiError;
+        providerUsed = AI_PROVIDER_CONFIG.openrouter.label || "OpenRouter";
+        result.innerHTML = `<div class="alert-banner warn">⚠️ Gemini ${currentLang === "zh" ? "失败，切换 OpenRouter" : "failed, switching to OpenRouter"}<br><span class="small">${escapeHtml(String(geminiError?.message || geminiError).slice(0, 420))}</span></div>`;
+        await new Promise(resolve => setTimeout(resolve, 350));
+        try {
+          aiText = await requestOpenRouterStream({ systemPrompt, finalPrompt, history: [], signal: architectureAbortController.signal, bubble: result });
+        } catch (openRouterError) {
+          if (openRouterError?.name === "AbortError") throw openRouterError;
+          providerUsed = AI_PROVIDER_CONFIG.groq.label || "Groq";
+          result.innerHTML = `<div class="alert-banner warn">⚠️ OpenRouter ${currentLang === "zh" ? "失败，切换 Groq" : "failed, switching to Groq"}<br><span class="small">${escapeHtml(String(openRouterError?.message || openRouterError).slice(0, 420))}</span></div>`;
+          await new Promise(resolve => setTimeout(resolve, 350));
+          aiText = await requestGroqStream({ systemPrompt, finalPrompt, history: [], signal: architectureAbortController.signal, bubble: result });
+        }
+      }
+      if (!aiText || !aiText.trim()) throw new Error(currentLang === "zh" ? "AI 返回为空" : "AI returned empty content");
+      lastArchitectureAIText = aiText;
+      lastArchitectureAIHtml = sanitizeAIHtml(aiText);
+      lastArchitectureAIProvider = providerUsed;
+      result.innerHTML = lastArchitectureAIHtml;
+      lastArchitecturePlainText = `${buildArchitecturePlainText(data)}\n\n【API AI Full Architecture - ${providerUsed}】\n${archPlainTextFromHtml(aiText)}`;
+      log(t("arch_ai_done"), "good");
+    } catch (e) {
+      const aborted = e?.name === "AbortError";
+      const msg = aborted ? (currentLang === "zh" ? "已停止生成。" : "Generation stopped.") : `${t("arch_ai_failed")}: ${String(e?.message || e).slice(0, 520)}`;
+      result.innerHTML = `<div class="alert-banner warn">⚠️ ${escapeHtml(msg)}</div>`;
+    }
+  } catch (outerError) {
+    result.innerHTML = `<div class="alert-banner warn">⚠️ ${escapeHtml(String(outerError?.message || outerError).slice(0, 520))}</div>`;
   } finally {
     architectureAbortController = null;
     btn.disabled = false;
+    btn.removeAttribute("aria-busy");
     btn.innerHTML = t("btn_arch_ai");
   }
 };
+
+try {
+  window.runArchitectureAI = runArchitectureAI;
+  document.addEventListener("click", (e) => {
+    const aiBtn = e.target?.closest?.("#btnGenerateAIArchitecture, [data-arch-action='ai']");
+    if (!aiBtn) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    runArchitectureAI();
+  }, true);
+} catch(e) {}
+
 
 const archFindBlueprint = (data, token) => (data.blueprint || []).find(x => String(x.layer || "").includes(token)) || {};
 
@@ -6646,6 +6742,406 @@ const copyArchitectureAllTermsToClipboard = async (kind) => {
   await writeArchitectureClipboard(terms.join("\n"), currentLang === "zh" ? `已复制全部 ${terms.length} 个${getArchitectureKindLabel(kind)}` : `Copied all ${terms.length} ${getArchitectureKindLabel(kind)}`);
 };
 
+
+// ==================== Negative Keyword Drilldown Popups ====================
+let lastNegativeKeywordTerms = [];
+
+const formatRootNegativeTerm = (word) => {
+  const roots = rootKeyToRoots(word || "");
+  if (roots.length) return roots.map(rootDisplay).join(" ").replace(/\s+/g, " ").trim();
+  return rootDisplay(word || "").replace(/×/g, " ").replace(/\s+/g, " ").trim();
+};
+
+const getCurrentNegativeSourceRows = () => {
+  const view = Array.isArray(AdsStore.view) ? AdsStore.view : [];
+  return view.length ? view : (Array.isArray(AdsStore.all) ? AdsStore.all : []);
+};
+
+const normalizeNegativeKeyword = (term) => cleanArchitectureKeyword(String(term || "").replace(/^\+/, "").replace(/\s+/g, " ").trim());
+
+const uniqueKeywordRows = (rows) => {
+  const seen = new Set();
+  const out = [];
+  for (const r of rows || []) {
+    const term = normalizeNegativeKeyword(r.term || r.name || "");
+    if (!term || architecturePlaceholderPatterns.some(rx => rx.test(term))) continue;
+    const key = `${String(r.matchType || "").toLowerCase()}:${term.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ ...r, term });
+  }
+  return out;
+};
+
+const isBrandLikeNegativeTerm = (term) => /\b(ytdbns|langrong|朗容|brand\s*name)\b/i.test(String(term || ""));
+const hasAnyOrder = (m) => safeNum(m.orders) > 0;
+const getNegativeBoundary = () => {
+  const rules = getRules();
+  return {
+    spendNeg: Math.max(1, safeNum(rules.spendNeg || $("ruleSpendNeg")?.value || 30)),
+    clicksNeg: Math.max(1, safeNum(rules.clicksNeg || $("ruleClicksNeg")?.value || 20)),
+    roasNeg: Math.max(0.1, safeNum(rules.roasNeg || $("ruleRoasNeg")?.value || 1.5)),
+    roasKeep: Math.max(1, safeNum(rules.roasKeep || $("ruleRoasKeep")?.value || 3))
+  };
+};
+
+const getNegativeTermProfile = (term) => {
+  const roots = extractMatrixRoots(term || "");
+  const types = [...new Set(roots.map(getRootType))];
+  const hasMismatch = types.includes("mismatch");
+  const hasGeneric = types.includes("generic");
+  const hasWatch = types.includes("watch");
+  const hasFunction = types.includes("function");
+  const hasCore = types.includes("core") || types.includes("style") || types.includes("diopter");
+  const isBrand = isBrandLikeNegativeTerm(term);
+  const mismatchRoots = roots.filter(r => getRootType(r) === "mismatch").map(rootDisplay).filter(Boolean);
+  const watchRoots = roots.filter(r => ["watch","generic","function"].includes(getRootType(r))).map(rootDisplay).filter(Boolean);
+  return { roots, types, hasMismatch, hasGeneric, hasWatch, hasFunction, hasCore, isBrand, mismatchRoots, watchRoots };
+};
+
+const getPhraseCandidateFromTerm = (term, profile) => {
+  const raw = String(term || "").toLowerCase().replace(/\s+/g, " ").trim();
+  const mismatch = (profile?.mismatchRoots || []).find(Boolean);
+  if (mismatch) return mismatch;
+  const watch = (profile?.watchRoots || []).find(x => !/^(glasses|eyeglasses|eyewear|frame|frames|blue light|screen)$/.test(String(x || "").toLowerCase()));
+  if (watch) return watch;
+  const words = raw.split(/\s+/).filter(Boolean);
+  if (words.length >= 2 && words.length <= 6) return raw;
+  return "";
+};
+
+const isNegativeWasteStrong = (m, b) => {
+  const spend = safeNum(m.spend), clicks = safeNum(m.clicks), orders = safeNum(m.orders), roas = safeNum(m.roas);
+  return spend >= b.spendNeg && clicks >= b.clicksNeg && (orders === 0 || roas <= b.roasNeg);
+};
+
+const isNegativeWasteSoft = (m, b) => {
+  const spend = safeNum(m.spend), clicks = safeNum(m.clicks), orders = safeNum(m.orders), roas = safeNum(m.roas);
+  return (orders === 0 && (spend >= b.spendNeg * 0.45 || clicks >= b.clicksNeg * 0.55)) || (spend >= b.spendNeg * 0.75 && roas > 0 && roas <= b.roasNeg);
+};
+
+const buildSearchTermNegativeBaseRows = () => {
+  const rows = getCurrentNegativeSourceRows();
+  if (!rows.length) return [];
+  const b = getNegativeBoundary();
+  const groups = groupBy(rows, r => String(r.searchTerm || "").trim());
+  const out = [];
+  for (const [term, list] of groups.entries()) {
+    if (!term || isASINLike(term) || extractAsinFromText(term)) continue;
+    const main = getMainRow(list);
+    const m = sumMetrics(list);
+    const profile = getNegativeTermProfile(term);
+    const strong = isNegativeWasteStrong(m, b);
+    const soft = isNegativeWasteSoft(m, b);
+    const noSales = safeNum(m.orders) === 0;
+    const lowRoas = safeNum(m.roas) > 0 && safeNum(m.roas) <= b.roasNeg;
+    if (!strong && !soft && !(profile.hasMismatch && (safeNum(m.spend) >= Math.max(3, b.spendNeg * 0.25) || safeNum(m.clicks) >= Math.max(3, b.clicksNeg * 0.35)))) continue;
+    const riskNote = profile.isBrand
+      ? (currentLang === "zh" ? "疑似品牌词，仅人工复核，不建议自动否定" : "Brand-like term; manual review only")
+      : profile.hasMismatch
+        ? (currentLang === "zh" ? "明显错配意图" : "Clear mismatch intent")
+        : profile.hasWatch || profile.hasGeneric || profile.hasFunction
+          ? (currentLang === "zh" ? "泛流量/条件词，优先精准止损" : "Generic/conditional intent; exact first")
+          : (currentLang === "zh" ? "搜索词层面浪费" : "Search-term level waste");
+    out.push({
+      term,
+      name: term,
+      matchType: "EXACT",
+      source: currentLang === "zh" ? "搜索词治理" : "Search Term Governance",
+      freq: list.length || 0,
+      spend: m.spend || 0,
+      clicks: m.clicks || 0,
+      orders: m.orders || 0,
+      roas: m.roas || 0,
+      acos: m.acos,
+      campaign: main.campaign || "",
+      adGroup: main.adGroup || "",
+      reason: strong
+        ? (currentLang === "zh" ? `达到强止损线：花费/点击达标，${noSales ? "0单" : "ROAS低于阈值"}` : `Strong stop-loss: spend/click threshold met, ${noSales ? "zero orders" : "low ROAS"}`)
+        : (currentLang === "zh" ? `达到复核止损线：${riskNote}` : `Review stop-loss: ${riskNote}`),
+      risk: riskNote,
+      strong,
+      soft,
+      profile,
+      sortScore: (strong ? 100000 : 0) + safeNum(m.spend) * 10 + safeNum(m.clicks)
+    });
+  }
+  return out.sort((a,b) => (b.sortScore || 0) - (a.sortScore || 0));
+};
+
+const buildZeroOrderNegativeReviewRows = (mode = "exact") => {
+  const rows = getCurrentNegativeSourceRows();
+  if (!rows.length) return [];
+  const groups = groupBy(rows, r => String(r.searchTerm || "").trim());
+  const out = [];
+  for (const [term, list] of groups.entries()) {
+    if (!term || isASINLike(term) || extractAsinFromText(term) || isBrandLikeNegativeTerm(term)) continue;
+    const m = sumMetrics(list);
+    if (safeNum(m.orders) > 0) continue;
+    if (safeNum(m.spend) <= 0 && safeNum(m.clicks) <= 0) continue;
+    const profile = getNegativeTermProfile(term);
+    const main = getMainRow(list);
+    let finalTerm = term;
+    if (mode === "phrase") {
+      finalTerm = getPhraseCandidateFromTerm(term, profile);
+      if (!finalTerm) continue;
+      const wordCount = String(finalTerm).split(/\s+/).filter(Boolean).length;
+      if (!profile.hasMismatch && profile.hasCore && wordCount <= 2) continue;
+    }
+    out.push({
+      term: finalTerm,
+      matchType: mode === "phrase" ? "PHRASE" : "EXACT",
+      source: currentLang === "zh" ? "0单花费复核兜底" : "Zero-order spend review fallback",
+      freq: list.length || 0,
+      spend: m.spend || 0,
+      clicks: m.clicks || 0,
+      orders: m.orders || 0,
+      roas: m.roas || 0,
+      acos: m.acos,
+      campaign: main.campaign || "",
+      adGroup: main.adGroup || "",
+      reason: mode === "phrase"
+        ? (currentLang === "zh" ? `当前严格规则无结果，兜底展示0单花费词，建议人工复核后再 Phrase 否定：${term}` : `No strict result; fallback zero-order spend term. Review before Phrase Negative: ${term}`)
+        : (currentLang === "zh" ? "当前严格规则无结果，兜底展示0单有花费/点击词，建议人工复核后精准否定" : "No strict result; fallback zero-order spend/click term. Review before Exact Negative"),
+      risk: currentLang === "zh" ? "复核" : "Review",
+      sortScore: safeNum(m.spend) * 10 + safeNum(m.clicks)
+    });
+  }
+  return uniqueKeywordRows(out).sort((a,b) => (b.sortScore || 0) - (a.sortScore || 0));
+};
+
+const addArchitectureNegativeFallbackRows = (rows, mode) => {
+  let data = null;
+  try { data = buildAdArchitectureData(); } catch(e) { data = null; }
+  if (!data) return rows;
+  const negRows = Array.isArray(data.negRows) ? data.negRows : [];
+  const extra = [];
+  for (const r of negRows) {
+    const term = normalizeNegativeKeyword(r.name || r.term || "");
+    if (!term || isASINLike(term) || extractAsinFromText(term)) continue;
+    const advice = String(r.matchAdvice || r.actionLabel || r.actionKey || "").toLowerCase();
+    if (mode === "exact" && advice.includes("phrase")) continue;
+    if (mode === "phrase" && advice.includes("exact")) continue;
+    extra.push({
+      term,
+      matchType: mode === "phrase" ? "PHRASE" : "EXACT",
+      source: currentLang === "zh" ? "广告架构动作池" : "Architecture Action Pool",
+      freq: 1,
+      spend: r.spend || 0,
+      clicks: r.clicks || 0,
+      orders: r.orders || 0,
+      roas: r.roas || 0,
+      acos: r.acos,
+      campaign: r.campaign || "",
+      adGroup: r.adGroup || "",
+      reason: r.reason || r.matchAdvice || (mode === "phrase" ? "Negative Phrase" : "Negative Exact"),
+      risk: r.protectionLabel || r.protection || "",
+      sortScore: 90000 + safeNum(r.spend) * 10 + safeNum(r.clicks)
+    });
+  }
+  return rows.concat(extra);
+};
+
+const buildPhraseNegativeCandidates = () => {
+  const sourceRows = getCurrentNegativeSourceRows();
+  if (!sourceRows.length) return [];
+  const b = getNegativeBoundary();
+  const out = [];
+
+  // 1) 根词矩阵严格候选：原模块判定为 phrase_negative 的词根/组合
+  try {
+    const rootRows = buildWordStats();
+    for (const r of rootRows) {
+      const action = r.decision?.actionKey || "";
+      const isStrict = action === "phrase_negative";
+      const isReviewToxic = ["exact_negative_review", "review"].includes(action) && safeNum(r.toxicity) >= 60 && safeNum(r.spend) >= Math.max(5, b.spendNeg * 0.35) && safeNum(r.orders) === 0;
+      if (!isStrict && !isReviewToxic) continue;
+      const term = formatRootNegativeTerm(r.word);
+      if (!term) continue;
+      out.push({
+        term,
+        matchType: "PHRASE",
+        source: currentLang === "zh" ? "词根矩阵" : "Root Matrix",
+        freq: r.freq || 0,
+        spend: r.spend || 0,
+        clicks: r.clicks || 0,
+        orders: r.orders || 0,
+        roas: r.roas || 0,
+        acos: r.acos,
+        reason: isStrict ? (r.decision?.reason || "") : (currentLang === "zh" ? "毒性较高但存在误杀风险，建议先复核再词组否定" : "High toxicity with overblocking risk; review before phrase negative"),
+        risk: r.decision?.risk || "",
+        sortScore: (isStrict ? 120000 : 70000) + safeNum(r.toxicity) * 100 + safeNum(r.spend)
+      });
+    }
+  } catch(e) { console.warn("buildWordStats phrase fallback failed", e); }
+
+  // 2) 搜索词级候选：明显错配或高浪费的长尾，适合放入 Phrase Negative 复核池
+  for (const r of buildSearchTermNegativeBaseRows()) {
+    if (r.profile?.isBrand) continue;
+    const phrase = getPhraseCandidateFromTerm(r.term, r.profile);
+    if (!phrase) continue;
+    const words = phrase.split(/\s+/).filter(Boolean).length;
+    const hasClearMismatch = r.profile?.hasMismatch;
+    const canUpgradeToPhrase = hasClearMismatch || (words >= 2 && !r.profile?.hasCore && safeNum(r.orders) === 0 && (safeNum(r.spend) >= b.spendNeg * 0.65 || safeNum(r.clicks) >= b.clicksNeg));
+    if (!canUpgradeToPhrase) continue;
+    out.push({
+      ...r,
+      term: phrase,
+      matchType: "PHRASE",
+      source: currentLang === "zh" ? "搜索词升级为词组否定" : "Search Term → Phrase Negative",
+      reason: hasClearMismatch
+        ? (currentLang === "zh" ? `明显错配词根，可作为 Phrase Negative 复核：${r.term}` : `Clear mismatch root; review as Phrase Negative: ${r.term}`)
+        : (currentLang === "zh" ? `高浪费长尾，建议先复核再升级 Phrase：${r.term}` : `High-waste long-tail; review before upgrading to Phrase: ${r.term}`),
+      sortScore: (hasClearMismatch ? 110000 : 60000) + safeNum(r.spend) * 10 + safeNum(r.clicks)
+    });
+  }
+
+  let finalRows = uniqueKeywordRows(addArchitectureNegativeFallbackRows(out, "phrase"))
+    .filter(r => !isBrandLikeNegativeTerm(r.term))
+    .sort((a,b) => (b.sortScore || 0) - (a.sortScore || 0));
+  if (!finalRows.length) finalRows = buildZeroOrderNegativeReviewRows("phrase");
+  return finalRows;
+};
+
+const buildExactNegativeCandidates = () => {
+  const sourceRows = getCurrentNegativeSourceRows();
+  if (!sourceRows.length) return [];
+  const out = [];
+
+  // 1) 榜单与出价治理强候选：复用原治理引擎，但不再只依赖它，避免弹窗为空
+  try {
+    const rankBy = "searchTerm";
+    const globalMetrics = sumMetrics(sourceRows);
+    const groups = groupBy(sourceRows, r => String(r.searchTerm || "").trim());
+    for (const [name, list] of groups.entries()) {
+      if (!name || isASINLike(name) || extractAsinFromText(name)) continue;
+      const main = getMainRow(list);
+      const base = {
+        name,
+        ...sumMetrics(list),
+        campaign: main.campaign || "",
+        adGroup: main.adGroup || "",
+        targeting: main.targeting || "",
+        searchTerm: name,
+        matchType: main.matchType || "",
+        adProduct: main.adProduct || ""
+      };
+      const governance = decideAction(base, rankBy, globalMetrics);
+      if (governance.action !== "NEGATE") continue;
+      out.push({
+        term: name,
+        matchType: "EXACT",
+        source: currentLang === "zh" ? "榜单治理强止损" : "Bid Governance Strong Stop-loss",
+        freq: list.length || 0,
+        spend: base.spend || 0,
+        clicks: base.clicks || 0,
+        orders: base.orders || 0,
+        roas: base.roas || 0,
+        acos: base.acos,
+        campaign: base.campaign || "",
+        adGroup: base.adGroup || "",
+        reason: governance.reason || "NEGATE",
+        risk: governance.protectionLabel || governance.protection || "",
+        sortScore: 120000 + safeNum(base.spend) * 10 + safeNum(base.clicks)
+      });
+    }
+  } catch(e) { console.warn("governance exact candidate failed", e); }
+
+  // 2) 搜索词级兜底：只要达到止损/复核线，就显示出来，便于人工核对复制
+  for (const r of buildSearchTermNegativeBaseRows()) {
+    if (r.profile?.isBrand) continue;
+    out.push({ ...r, matchType: "EXACT", source: r.source || (currentLang === "zh" ? "搜索词治理" : "Search Term Governance") });
+  }
+
+  let finalRows = uniqueKeywordRows(addArchitectureNegativeFallbackRows(out, "exact"))
+    .filter(r => !isBrandLikeNegativeTerm(r.term))
+    .sort((a,b) => (b.sortScore || 0) - (a.sortScore || 0));
+  if (!finalRows.length) finalRows = buildZeroOrderNegativeReviewRows("exact");
+  return finalRows;
+};
+
+const buildNegativeKeywordPopupRows = (mode) => mode === "phrase" ? buildPhraseNegativeCandidates() : buildExactNegativeCandidates();
+
+const renderNegativeKeywordPopupContent = (mode, rows) => {
+  const zh = currentLang === "zh";
+  const totalSpend = rows.reduce((s,r)=>s + safeNum(r.spend), 0);
+  const totalClicks = rows.reduce((s,r)=>s + safeNum(r.clicks), 0);
+  const totalOrders = rows.reduce((s,r)=>s + safeNum(r.orders), 0);
+  const title = mode === "phrase" ? (zh ? "需要词组否定的关键词" : "Phrase Negative Keywords") : (zh ? "需要精准否定的关键词" : "Exact Negative Keywords");
+  const note = mode === "phrase"
+    ? (zh ? "来源：词根引力与毒性矩阵。只展示规则引擎判定为高毒性、低误杀风险的词根/组合，复制后建议作为 Negative Phrase 复核上传" : "Source: Root Toxicity Matrix. Only high-toxicity, low-overblocking roots/combos are shown for Negative Phrase review")
+    : (zh ? "来源：榜单与出价治理引擎。按当前筛选数据重新聚合 Search Term，只展示达到止损线且可执行的 Negative Exact 候选" : "Source: Bid Governance Engine. Current filtered search terms are regrouped; only executable Negative Exact candidates are shown");
+  const empty = mode === "phrase" ? (zh ? "当前筛选下没有达到词组否定边界的关键词。不要为了凑数量强行加 Phrase Negative" : "No phrase-negative candidates under the current filters. Do not force Phrase Negatives") : (zh ? "当前筛选下没有达到精准否定边界的关键词" : "No exact-negative candidates under the current filters");
+  if ($("negativeKeywordTitle")) $("negativeKeywordTitle").textContent = title;
+  if ($("negativeKeywordSubtitle")) $("negativeKeywordSubtitle").textContent = note;
+  if (!rows.length) {
+    return `<div class="alert-banner warn"><span class="alert-icon">⚠️</span><div>${escapeHtml(empty)}</div></div>`;
+  }
+  const bodyRows = rows.map((r, idx) => `
+    <tr>
+      <td>${escapeHtml(r.term)}</td>
+      <td><span class="tag ${mode === "phrase" ? "warn" : "bad"}">${escapeHtml(r.matchType)}</span></td>
+      <td>${fmtInt(r.freq || 0)}</td>
+      <td>${fmtMoney(r.spend || 0)}</td>
+      <td>${fmtInt(r.clicks || 0)}</td>
+      <td>${fmtInt(r.orders || 0)}</td>
+      <td>${safeNum(r.roas || 0).toFixed(2)}</td>
+      <td>${escapeHtml(r.reason || "-")}${r.campaign || r.adGroup ? `<div class="small">${escapeHtml([r.campaign, r.adGroup].filter(Boolean).join(" / "))}</div>` : ""}</td>
+      <td><button class="btn" type="button" data-neg-copy-one="${idx}" style="padding:5px 9px;font-size:11.5px;">${zh ? "复制" : "Copy"}</button></td>
+    </tr>`).join("");
+  return `
+    <div class="negKeywordSummary">
+      <div class="architectureMetric"><div class="label">${zh ? "候选数量" : "Candidates"}</div><div class="value">${fmtInt(rows.length)}</div><div class="meta">${mode === "phrase" ? "Negative Phrase" : "Negative Exact"}</div></div>
+      <div class="architectureMetric"><div class="label">${zh ? "覆盖花费" : "Covered Spend"}</div><div class="value">${fmtMoney(totalSpend)}</div><div class="meta">${zh ? "当前筛选范围" : "Current filters"}</div></div>
+      <div class="architectureMetric"><div class="label">${zh ? "覆盖点击" : "Covered Clicks"}</div><div class="value">${fmtInt(totalClicks)}</div><div class="meta">${zh ? "用于判断浪费" : "Waste evidence"}</div></div>
+      <div class="architectureMetric"><div class="label">${zh ? "覆盖订单" : "Covered Orders"}</div><div class="value">${fmtInt(totalOrders)}</div><div class="meta">${zh ? "越低越适合否定" : "Lower is safer"}</div></div>
+    </div>
+    <div class="negKeywordToolbar">
+      <button class="btn primary" type="button" data-neg-copy-all="1">${zh ? "复制全部关键词" : "Copy All Keywords"}</button>
+      <span class="small">${zh ? "复制结果只有关键词，每行一个；不复制标题、指标和说明" : "Copy output is keywords only, one per line; no labels or metrics"}</span>
+    </div>
+    <div class="table-container" style="max-height:580px;">
+      <table class="negKeywordTable">
+        <thead><tr>
+          <th>${zh ? "关键词" : "Keyword"}</th>
+          <th>${zh ? "否定类型" : "Negative"}</th>
+          <th>${zh ? "频次" : "Freq"}</th>
+          <th>${zh ? "花费" : "Spend"}</th>
+          <th>${zh ? "点击" : "Clicks"}</th>
+          <th>${zh ? "订单" : "Orders"}</th>
+          <th>ROAS</th>
+          <th>${zh ? "原因 / 来源" : "Reason / Source"}</th>
+          <th>${zh ? "操作" : "Action"}</th>
+        </tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>`;
+};
+
+const showNegativeKeywordModal = (mode) => {
+  const modal = $("negativeKeywordModal");
+  const content = $("negativeKeywordContent");
+  if (!modal || !content) return;
+  const rows = buildNegativeKeywordPopupRows(mode);
+  lastNegativeKeywordTerms = rows.map(r => r.term).filter(Boolean);
+  content.innerHTML = renderNegativeKeywordPopupContent(mode, rows);
+  modal.setAttribute("data-neg-mode", mode);
+  modal.style.display = "flex";
+};
+
+const closeNegativeKeywordModal = () => {
+  const modal = $("negativeKeywordModal");
+  if (modal) modal.style.display = "none";
+};
+
+const copyNegativeKeywordTerms = async (idx = null) => {
+  let terms = lastNegativeKeywordTerms || [];
+  if (idx !== null && idx !== undefined) terms = [terms[Number(idx)]].filter(Boolean);
+  terms = getArchitectureCleanKeywordList([terms]);
+  if (!terms.length) { alert(currentLang === "zh" ? "当前没有可复制关键词" : "No keywords to copy"); return; }
+  await writeArchitectureClipboard(terms.join("\n"), currentLang === "zh" ? `已复制 ${terms.length} 个关键词` : `Copied ${terms.length} keywords`);
+};
+
 const buildArchitectureExportSheets = (data) => {
   const zh = currentLang === "zh";
   const inferIntent = (r) => {
@@ -6962,6 +7458,18 @@ const bindEvents = () => {
       applyFilters();
     });
     $("btnCheck").addEventListener("click", () => { if(libsCheck()) alert(t('dyn_libs_ok')); });
+    $("btnShowPhraseNegatives")?.addEventListener("click", () => showNegativeKeywordModal("phrase"));
+    $("btnShowExactNegatives")?.addEventListener("click", () => showNegativeKeywordModal("exact"));
+    $("btnCloseNegativeKeywordModal")?.addEventListener("click", closeNegativeKeywordModal);
+    $("btnCopyNegativeKeywordTerms")?.addEventListener("click", () => copyNegativeKeywordTerms());
+    $("negativeKeywordContent")?.addEventListener("click", (e) => {
+      const one = e.target?.closest?.("[data-neg-copy-one]");
+      if (one) { copyNegativeKeywordTerms(one.getAttribute("data-neg-copy-one")); return; }
+      const all = e.target?.closest?.("[data-neg-copy-all]");
+      if (all) { copyNegativeKeywordTerms(); return; }
+    });
+    $("negativeKeywordModal")?.addEventListener("click", (e) => { if (e.target && e.target.id === "negativeKeywordModal") closeNegativeKeywordModal(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("negativeKeywordModal")?.style.display === "flex") closeNegativeKeywordModal(); });
     $("btnArchitecture")?.addEventListener("click", showArchitectureModal);
     $("btnCloseArchitecture")?.addEventListener("click", closeArchitectureModal);
     $("btnGenerateAIArchitecture")?.addEventListener("click", runArchitectureAI);
