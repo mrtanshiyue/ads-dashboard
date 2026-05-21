@@ -1324,11 +1324,13 @@
             <span class="pill">Min Freq</span><input id="wfMinFreq" class="miniInput" type="number" step="1" value="3" data-i18n-title="title_min_freq" title="最小出现次数" />
             <span class="pill">Min Spend</span><input id="wfMinSpend" class="miniInput" type="number" step="0.01" value="10" data-i18n-title="title_min_spend" title="最小花费" />
             <button class="btn" id="btnShowPhraseNegatives" type="button">词组否定词</button>
+            <button class="btn" id="btnSemanticCluster" type="button" title="本地语义聚类，最多 3000 个搜索词">语义聚类</button>
             <button class="btn primary" id="btnExportWf" type="button" data-i18n="btn_export_wf">导出矩阵 Excel</button>
             <span class="hint" data-i18n="hint_sort_only">点击表头排序</span>
           </div>
         </div>
         <div id="rootMatrixSummary" class="root-score-grid"></div>
+        <div id="clusterProgress" class="small alert-banner warn" style="display:none;margin:8px 0;"></div>
         <div class="table-container" style="max-height:560px;">
           <table id="wfTable">
             <thead><tr>
@@ -1370,7 +1372,7 @@
                 <th data-i18n="th_spend_unisolated">未隔离花费</th>
                 <th data-i18n="th_orders">订单数</th>
                 <th data-i18n="th_roas">ROAS</th>
-                <th data-i18n="th_action">建议操作 (Action)</th>
+                <th data-i18n="th_iso_action">建议操作 (Action)</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -1711,7 +1713,7 @@ const I18N = {
       th_source: "当前来源 (Source)",
       th_status: "隔离状态 (Status)",
       th_spend_unisolated: "未隔离花费",
-      th_action: "建议操作 (Action)",
+      th_iso_action: "建议操作 (Action)",
       desc_isolation: "红灯预警 <b>⚠️ 假隔离(曝光不足)</b> 意味着你虽然把它加入了 Exact 匹配，但由于 Exact 组竞价过低，实际上流量还是全在自动/广泛里跑！此时必须去 Exact 组加价！<br/><b>【深度隔离闭环】</b>：点击右上角导出，系统将自动生成包含 <b>新建 Exact</b> 和 <b>来源组精准否定 (Negative Exact)</b> 的批量上传表格。",
       
       // JS Dynamic Strings
@@ -2146,7 +2148,7 @@ const I18N = {
       th_source: "Current Source",
       th_status: "Isolation Status",
       th_spend_unisolated: "Unisolated Spend",
-      th_action: "Suggested Action",
+      th_iso_action: "Suggested Action",
       desc_isolation: "Red Alert <b>⚠️ Fake Isolation (Low Impr)</b> means you added it to Exact, but bids are too low so traffic still flows to Auto/Broad! Increase Exact bids!<br/><b>[Deep Isolation Loop]</b>: Export creates Bulk sheet with <b>Create Exact</b> + <b>Negative Exact in Source</b>.",
       
       // JS Dynamic Strings
@@ -2881,21 +2883,27 @@ const PLACEMENT_MAP_ALIASES = {
   orders: ["7天总订单数","7天总订单数(#)","7天总订单数（#）","7DayTotalOrders(#)","7-daytotalorders","7daytotalorders","14天总订单数","14天总订单数(#)","14DayTotalOrders(#)","14-daytotalorders","14daytotalorders","TotalOrders","Est.TotalOrders", "Orders"] 
 };
 const SQP_MAP_ALIASES = {
-  query: ["Search Query", "搜索词", "SearchQuery"],
-  searchVolume: ["Search Volume", "搜索量"],
-  imprShare: ["Impressions: Brand Share", "展示量：品牌占有率", "展示量: 品牌占有率"],
-  clickShare: ["Clicks: Brand Share", "点击量：品牌占有率", "点击量: 品牌占有率"],
-  cartShare: ["Cart Adds: Brand Share", "加入购物车：品牌占有率", "加入购物车: 品牌占有率"],
-  purchShare: ["Purchases: Brand Share", "购买量：品牌占有率", "购买量: 品牌占有率"],
-  brandCvr: ["Purchases: Brand Conversion Rate", "购买量：品牌转化率", "购买量: 品牌转化率"]
+  query: ["Search Query", "搜索词", "SearchQuery", "Search Query Text", "查询词"],
+  searchVolume: ["Search Query Volume", "Search Volume", "搜索查询量", "搜索量", "Query Volume"],
+  imprShare: ["Impressions: Brand Share", "Impression: Brand Share", "Impressions Brand Share", "展示量：品牌占有率", "展示量: 品牌占有率", "展示量品牌占有率"],
+  clickShare: ["Clicks: Brand Share", "Click: Brand Share", "Clicks Brand Share", "点击量：品牌占有率", "点击量: 品牌占有率", "点击量品牌占有率"],
+  cartShare: ["Cart Adds: Brand Share", "Cart Add: Brand Share", "Cart Adds Brand Share", "加入购物车：品牌占有率", "加入购物车: 品牌占有率", "加购品牌占有率"],
+  purchShare: ["Purchases: Brand Share", "Purchase: Brand Share", "Purchases Brand Share", "购买量：品牌占有率", "购买量: 品牌占有率", "购买量品牌占有率"],
+  brandCvr: ["Purchases: Brand Conversion Rate", "Purchase Rate: Brand", "Brand Conversion Rate", "购买量：品牌转化率", "购买量: 品牌转化率", "品牌转化率"]
 };
 
+const cleanHeaderCompact = (h) => cleanHeader(h).replace(/[\s_\-–—:：()（）\[\]{}#%]+/g, "");
+
 const pickCol = (header, aliases) => { 
-  const normHeader = header.map(cleanHeader); 
+  const normHeader = header.map(cleanHeader);
+  const compactHeader = header.map(cleanHeaderCompact);
   for (const a of aliases) { 
     const target = cleanHeader(a); 
     const idx = normHeader.indexOf(target); 
     if (idx >= 0) return header[idx]; 
+    const compactTarget = cleanHeaderCompact(a);
+    const compactIdx = compactHeader.indexOf(compactTarget);
+    if (compactIdx >= 0) return header[compactIdx];
   } 
   return null; 
 };
@@ -2939,6 +2947,10 @@ const normalizeRow = (raw, map, sourceFile) => {
   const orders = safeNum(raw[map.orders7d]); 
   const st = String(raw[map.searchTerm] ?? "").trim();
   const acosVal = sales > 0 ? spend / sales : (spend > 0 ? Infinity : 0);
+  const rawAcos = map.acos ? parsePercent(raw[map.acos]) : acosVal;
+  const normalizedAcos = sales > 0 ? (rawAcos || acosVal) : (spend > 0 ? Infinity : 0);
+  const rawRoas = map.roas ? safeNum(raw[map.roas]) : (spend > 0 ? Math.max(0, sales) / spend : 0);
+  const normalizedRoas = spend > 0 ? Math.max(0, rawRoas || (sales / spend)) : 0;
 
   return {
     sourceFile: intern(sourceFile), 
@@ -2956,8 +2968,8 @@ const normalizeRow = (raw, map, sourceFile) => {
     ctr: map.ctr ? parsePercent(raw[map.ctr]) : (impr > 0 ? clicks / impr : 0), 
     cpc: map.cpc ? safeNum(raw[map.cpc]) : (clicks > 0 ? spend / clicks : 0), 
     cvr: map.cvr ? Math.min(1, parsePercent(raw[map.cvr])) : (clicks > 0 ? Math.min(1, orders / clicks) : 0), 
-    acos: map.acos ? parsePercent(raw[map.acos]) : acosVal, 
-    roas: map.roas ? safeNum(raw[map.roas]) : (spend > 0 ? Math.max(0, sales) / spend : 0),
+    acos: normalizedAcos, 
+    roas: normalizedRoas,
   };
 };
 
@@ -3162,7 +3174,7 @@ const importMultipleFiles = async (files) => {
   if (dedupeMode === "on" && AdsStore.biz.length) { 
     const beforeBr = AdsStore.biz.length; const seenBr = new Set(); 
     AdsStore.biz = AdsStore.biz.filter(r => { 
-      const key = `${r.sourceFile}|${r.asin}`; 
+      const key = `${r.sourceFile}|${r.date || ""}|${r.asin}`; 
       if (seenBr.has(key)) return false; 
       seenBr.add(key); return true; 
     }); 
@@ -4808,8 +4820,10 @@ const runLocalSemanticClustering = async () => {
     }
     
     const progressDiv = $("clusterProgress");
+    if (!progressDiv) { alert("语义聚类进度容器缺失，请刷新页面或检查 HTML。 "); return; }
     progressDiv.style.display = "block";
-    progressDiv.textContent = "⚙️ 正在加载 Transformers.js 模型 (全本地运行，保护隐私)...";
+    progressDiv.style.color = "var(--warn)";
+    progressDiv.textContent = "⚙️ 正在加载 Transformers.js 模型 (本地浏览器运行，首次会下载模型)...";
 
     try {
         // 动态注入 ESM 版本的 transformers.js
@@ -5626,6 +5640,12 @@ const archPills = (items, emptyText = "-") => {
   const list = archLimit(items, 16);
   if (!list.length) return `<span class="small">${escapeHtml(emptyText)}</span>`;
   return `<div class="architectureList">${list.map(x => `<span class="pill">${escapeHtml(x)}</span>`).join("")}</div>`;
+};
+
+const archPlainTextFromHtml = (html) => {
+  const box = document.createElement("div");
+  box.innerHTML = String(html || "").replace(/```html/g, "").replace(/```/g, "");
+  return (box.innerText || box.textContent || "").replace(/\n{3,}/g, "\n\n").trim();
 };
 const archTable = (headers, rows, emptyText = "-", extraClass = "") => {
   if (!rows || !rows.length) return `<div class="archEmpty">${escapeHtml(emptyText)}</div>`;
@@ -7716,7 +7736,7 @@ const createChatBubble = (sender) => {
 const sanitizeAIHtml = (inputHtml) => {
     const template = document.createElement("template");
     template.innerHTML = String(inputHtml || "").replace(/```html/g, "").replace(/```/g, "");
-    const allowedTags = new Set(["DIV","SPAN","P","BR","UL","OL","LI","STRONG","B","EM","I","CODE","TABLE","THEAD","TBODY","TR","TH","TD","BUTTON","CHART-CONFIG","CANVAS"]);
+    const allowedTags = new Set(["DIV","SPAN","P","BR","UL","OL","LI","STRONG","B","EM","I","CODE","H1","H2","H3","H4","TABLE","THEAD","TBODY","TR","TH","TD","BUTTON","CHART-CONFIG","CANVAS"]);
     const allowedAttrs = new Set(["class","data-action","data-val","type","id","colspan","rowspan"]);
     const allowedClasses = new Set(["tag","good","bad","warn","alert-banner","ai-trigger","ai-chart-container","small"]);
     const walk = (node) => {
@@ -8318,6 +8338,11 @@ const toggleLanguage = () => {
     localStorage.setItem("app_lang", currentLang);
     applyLanguageToDOM();
     initThemeButton();
+    try {
+      populateDropdowns();
+      if (AdsStore.all.length || AdsStore.biz.length || AdsStore.placement.length || AdsStore.sqp.length) applyFilters(true);
+      else clearGrowthCommandModules();
+    } catch(e) { console.warn("Language refresh skipped", e); }
 };
 
 return {
