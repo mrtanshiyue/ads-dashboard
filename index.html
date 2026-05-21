@@ -728,6 +728,135 @@
     @media (max-width: 1400px){ .app{ max-width: 100vw; } }
     @media (max-width: 1100px){ .app{ grid-template-columns:1fr; max-width:100vw; } .sidebar{ position:relative; height:auto; } .kpi{ grid-column: span 6; } .chartCard{ grid-column: span 12; } }
     @media (max-width: 650px){ .kpi{ grid-column: span 12; } .actions{ justify-content:flex-start; } .row3{ grid-template-columns:1fr; } .miniInput, .miniSelect{ width:100% !important; border-radius:12px !important; } .pareto-item { flex-direction: column; align-items: flex-start; gap: 8px; } }
+
+
+    /* ================= Action Command Center: Compact Mode ================= */
+    #growthCommandSection .action-compact-card {
+      padding: 10px 12px 12px !important;
+      border-radius: 18px;
+    }
+    #growthCommandSection .action-compact-card > .cardTitle {
+      align-items: center !important;
+      padding-bottom: 8px !important;
+      margin-bottom: 10px !important;
+      gap: 10px !important;
+    }
+    #growthCommandSection .action-compact-card > .cardTitle h2 {
+      font-size: 15.5px !important;
+      line-height: 1.18;
+    }
+    #growthCommandSection .action-compact-card > .cardTitle .hint {
+      font-size: 11.6px;
+      line-height: 1.28;
+      margin-top: 2px;
+    }
+    #growthCommandSection .action-compact-card > .cardTitle .rightTools {
+      gap: 7px;
+      flex-wrap: nowrap;
+    }
+    #growthCommandSection .action-compact-card .rightTools .btn,
+    #growthCommandSection .actionKeywordExportCompact .btn {
+      padding: 7px 12px;
+      font-size: 12px;
+      min-height: 32px;
+    }
+    .actionControlBar {
+      display: grid;
+      grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(210px, 1fr) minmax(110px, .55fr) minmax(120px, .55fr);
+      gap: 8px;
+      align-items: end;
+      margin-bottom: 8px;
+    }
+    .actionControlBar .fieldRow { gap: 4px; min-width: 0; }
+    .actionControlBar label,
+    .actionKeywordExportCompact label {
+      font-size: 11.5px;
+      line-height: 1.2;
+    }
+    .actionControlBar input,
+    .actionControlBar select,
+    .actionKeywordExportCompact select {
+      min-height: 34px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-size: 12.2px;
+    }
+    .actionKeywordExportCompact {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.1fr) minmax(180px, .75fr) minmax(260px, 1.15fr) repeat(3, minmax(118px, .62fr));
+      gap: 8px;
+      align-items: end;
+      padding: 10px !important;
+      margin-bottom: 8px !important;
+      box-shadow: none !important;
+      background: var(--hover-bg) !important;
+      border-style: dashed !important;
+      border-radius: 16px !important;
+    }
+    .actionKeywordExportCompact .exportTitle {
+      min-width: 0;
+      align-self: center;
+    }
+    .actionKeywordExportCompact .exportTitle h2 {
+      font-size: 13px !important;
+      line-height: 1.2;
+      margin: 0 0 3px 0;
+    }
+    .actionKeywordExportCompact .exportTitle .hint,
+    .actionKeywordExportCompact .uploadHintCompact {
+      font-size: 11.2px;
+      line-height: 1.32;
+      color: var(--muted);
+    }
+    .actionKeywordExportCompact .fieldRow { gap: 4px; min-width: 0; }
+    .actionKeywordExportCompact .btn { width: 100%; justify-content: center; }
+    #actionKpiGrid {
+      gap: 8px !important;
+      margin-bottom: 8px !important;
+    }
+    #actionKpiGrid .kpi {
+      padding: 8px 10px !important;
+      min-height: 72px;
+      border-radius: 14px;
+    }
+    #actionKpiGrid .kpi .label { font-size: 11.2px; }
+    #actionKpiGrid .kpi .value {
+      margin-top: 4px !important;
+      font-size: 18px !important;
+      line-height: 1.05;
+    }
+    #actionKpiGrid .kpi .meta {
+      margin-top: 3px !important;
+      font-size: 11px !important;
+      line-height: 1.25;
+    }
+    #actionExecutiveSummary.alert-banner {
+      padding: 8px 12px;
+      margin-bottom: 8px !important;
+      border-radius: 12px;
+      font-size: 12.2px;
+      line-height: 1.35;
+      align-items: center;
+    }
+    #actionExecutiveSummary .alert-icon { font-size: 16px; }
+    #growthCommandSection .table-container { border-radius: 14px; }
+    #actionPlanTable thead th { padding: 8px 10px; }
+    #actionPlanTable tbody td { padding: 8px 10px; }
+    @media (max-width: 1280px) {
+      #growthCommandSection .action-compact-card > .cardTitle .rightTools { flex-wrap: wrap; justify-content: flex-start; }
+      .actionControlBar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .actionKeywordExportCompact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .actionKeywordExportCompact .exportTitle,
+      .actionKeywordExportCompact .uploadHintCompact { grid-column: span 3; }
+    }
+    @media (max-width: 760px) {
+      .actionControlBar,
+      .actionKeywordExportCompact { grid-template-columns: 1fr; }
+      .actionKeywordExportCompact .exportTitle,
+      .actionKeywordExportCompact .uploadHintCompact { grid-column: auto; }
+      #growthCommandSection .action-compact-card > .cardTitle { align-items: flex-start !important; }
+    }
+
   </style>
 </head>
 
@@ -1001,7 +1130,7 @@
 
 
     <section class="grid" id="growthCommandSection">
-      <div class="card tableCard" style="grid-column: span 12;">
+      <div class="card tableCard action-compact-card" style="grid-column: span 12;">
         <div class="cardTitle" style="align-items:center; border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:14px;">
           <div>
             <h2 style="font-size:16px;" data-i18n="title_action_center">广告动作清单中心 Simple (Action Command Center)</h2>
@@ -1014,7 +1143,7 @@
           </div>
         </div>
 
-        <div class="row3" style="margin-bottom:12px;">
+        <div class="actionControlBar">
           <div class="fieldRow">
             <label data-i18n="lbl_action_filter">动作过滤</label>
             <div class="selectWrap">
@@ -1047,8 +1176,6 @@
               </select>
             </div>
           </div>
-        </div>
-        <div class="row2" style="margin-bottom:12px;">
           <div class="fieldRow">
             <label data-i18n="lbl_action_min_spend">最小花费门槛</label>
             <input id="actionMinSpend" type="number" step="1" value="0" />
@@ -1059,33 +1186,24 @@
           </div>
         </div>
 
-        <div class="card" style="box-shadow:none; background:var(--hover-bg); border-style:dashed; margin-bottom:12px;">
-          <div class="cardTitle" style="margin-bottom:8px;">
-            <div>
-              <h2 style="font-size:14px;" data-i18n="title_keyword_template_export">关键词上传模板导出</h2>
-              <div class="hint" data-i18n="hint_keyword_template_export">按照你提供的模板导出：关键词 / 匹配类型 / 竞价，可分别上传精准、词组、广泛</div>
+        <div class="card actionKeywordExportCompact">
+          <div class="exportTitle">
+            <h2 data-i18n="title_keyword_template_export">关键词上传模板导出</h2>
+            <div class="hint" data-i18n="hint_keyword_template_export">按模板导出：关键词 / 匹配类型 / 竞价</div>
+          </div>
+          <div class="fieldRow">
+            <label data-i18n="lbl_keyword_export_scope">关键词导出范围</label>
+            <div class="selectWrap">
+              <select id="actionKeywordExportScope">
+                <option value="view" selected data-i18n="opt_keyword_export_view">当前显示范围</option>
+                <option value="all" data-i18n="opt_keyword_export_all">全部可执行建议</option>
+              </select>
             </div>
           </div>
-          <div class="row2" style="margin-bottom:10px;">
-            <div class="fieldRow">
-              <label data-i18n="lbl_keyword_export_scope">关键词导出范围</label>
-              <div class="selectWrap">
-                <select id="actionKeywordExportScope">
-                  <option value="view" selected data-i18n="opt_keyword_export_view">当前显示范围</option>
-                  <option value="all" data-i18n="opt_keyword_export_all">全部可执行建议</option>
-                </select>
-              </div>
-            </div>
-            <div class="fieldRow">
-              <label data-i18n="lbl_keyword_upload_entry">上传入口说明</label>
-              <div class="small" data-i18n="hint_keyword_upload_entry">该三列表适用于广告组内关键词批量导入，不是 Amazon Ads Bulk Operations 总入口；建议在单一 Campaign / Ad Group 内使用</div>
-            </div>
-          </div>
-          <div class="row3">
-            <button class="btn primary" id="btnExportActionKeywordExact" type="button" data-i18n="btn_export_kw_exact">导出精准关键词</button>
-            <button class="btn primary" id="btnExportActionKeywordPhrase" type="button" data-i18n="btn_export_kw_phrase">导出词组关键词</button>
-            <button class="btn primary" id="btnExportActionKeywordBroad" type="button" data-i18n="btn_export_kw_broad">导出广泛关键词</button>
-          </div>
+          <div class="uploadHintCompact" data-i18n="hint_keyword_upload_entry">适用于广告组内关键词批量导入，不是 Amazon Ads Bulk Operations 总入口；建议在单一 Campaign / Ad Group 内使用</div>
+          <button class="btn primary" id="btnExportActionKeywordExact" type="button" data-i18n="btn_export_kw_exact">导出精准关键词</button>
+          <button class="btn primary" id="btnExportActionKeywordPhrase" type="button" data-i18n="btn_export_kw_phrase">导出词组关键词</button>
+          <button class="btn primary" id="btnExportActionKeywordBroad" type="button" data-i18n="btn_export_kw_broad">导出广泛关键词</button>
         </div>
 
         <div class="grid" id="actionKpiGrid" style="margin-bottom:12px;"></div>
