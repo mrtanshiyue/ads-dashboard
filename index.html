@@ -270,6 +270,34 @@
       text-overflow: clip;
     }
     #businessReportTable td:nth-child(2) { white-space: normal; word-break: break-word; }
+    #placementTable { min-width: 980px; table-layout: fixed; }
+    #placementTable th:nth-child(1), #placementTable td:nth-child(1) { width: 150px; }
+    #placementTable th:nth-child(2), #placementTable td:nth-child(2) { width: 200px; }
+    #placementTable th:nth-child(n+3), #placementTable td:nth-child(n+3) { width: 90px; }
+    /* Stabilize Structure Deep Dive header: long hints must not push the tab bar to a new row */
+    #multiDimCard .cardTitle {
+      display: grid !important;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      column-gap: 16px;
+      row-gap: 8px;
+      align-items: start !important;
+      flex-wrap: nowrap !important;
+    }
+    #multiDimCard .cardTitle > div:first-child { min-width: 0; overflow: hidden; }
+    #multiDimCard #dimHint { display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #multiDimCard .cardTitle .rightTools { min-width: 0; justify-content: flex-end; overflow-x:auto; overflow-y:hidden; padding-bottom:2px; }
+    #multiDimCard .cardTitle .seg { flex-wrap: nowrap; min-width:max-content; }
+    #multiDimCard .cardTitle .segBtn { white-space: nowrap; }
+    #multiDimCard table thead th { cursor:pointer; }
+    #multiDimCard table thead th.sort-active { color: var(--accent); }
+    #multiDimCard table thead th.sort-active[data-sort-dir="asc"]::after { content: " ▲"; font-size: 10px; color: var(--accent); }
+    #multiDimCard table thead th.sort-active[data-sort-dir="desc"]::after { content: " ▼"; font-size: 10px; color: var(--accent); }
+    #multiDimCard table thead th:hover { color: var(--accent); }
+    @media (max-width: 1280px){
+      #multiDimCard .cardTitle { grid-template-columns: 1fr; }
+      #multiDimCard .cardTitle .rightTools { justify-content:flex-start; }
+      #multiDimCard #dimHint { white-space:normal; }
+    }
     tbody tr:hover { background: var(--hover-bg); }
     tbody tr:last-child td { border-bottom: none; }
     .tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 11.8px; white-space: nowrap; user-select: none; font-weight: 600; }
@@ -1612,7 +1640,7 @@
         <div class="cardTitle" style="align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 16px;">
           <div style="display:flex; flex-direction:column; gap:4px;">
               <h2 style="font-size: 16px;" data-i18n="title_structure">多维结构透视 (Structure Deep Dive)</h2>
-              <div class="hint" id="dimHint" style="color:var(--accent); font-weight:600;" data-i18n="hint_dim_auto">手动: Broad/Phrase/Exact; 自动: 其他（已采用精准鉴别算法）</div>
+              <div class="hint" id="dimHint" style="color:var(--accent); font-weight:600;" data-i18n="hint_dim_automanual" title="手动: Broad/Phrase/Exact; 自动: 其他（已采用精准鉴别算法）">手动: Broad/Phrase/Exact; 自动: 其他（已采用精准鉴别算法）</div>
           </div>
           <div class="rightTools">
             <div class="seg" role="tablist" aria-label="Dimension Filter">
@@ -1620,6 +1648,8 @@
               <button class="segBtn" data-dim="magnification" type="button" data-i18n="tab_mag">度数效能矩阵 (Mag)</button>
               <button class="segBtn" data-dim="placement" type="button" data-i18n="tab_placement">广告位效能</button>
               <button class="segBtn" data-dim="matchtype" type="button" data-i18n="tab_match_type">匹配类型</button>
+              <button class="segBtn" data-dim="cpc" type="button" data-i18n="tab_cpc">CPC 区间</button>
+              <button class="segBtn" data-dim="length" type="button" data-i18n="tab_length">词长效能</button>
               <button class="segBtn" data-dim="weekday" type="button" data-i18n="tab_weekday">周表现分析</button>
               <button class="segBtn" data-dim="sqp" type="button" data-i18n="tab_sqp" style="color: #aa00ff;">SQP 漏斗分析</button>
             </div>
@@ -1656,7 +1686,7 @@
                 <thead>
                   <tr>
                     <th data-i18n="th_placement">广告位 (Placement)</th><th style="width:200px;" data-i18n="th_spend_pct">花费占比</th><th data-i18n="th_spend">花费</th><th data-i18n="th_sales">销售额</th>
-                    <th data-i18n="th_orders">订单数</th><th data-i18n="th_roas">ROAS</th><th data-i18n="th_acos">ACOS</th><th data-i18n="th_cpc">CPC</th><th data-i18n="th_cvr">CVR</th><th data-i18n="th_ctr">点击率 (CTR)</th>
+                    <th data-i18n="th_orders">订单数</th><th data-i18n="th_roas">ROAS</th><th data-i18n="th_acos">ACOS</th><th data-i18n="th_cpc">CPC</th><th data-i18n="th_cvr">CVR</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -1708,6 +1738,26 @@
             </div>
             <div class="small" style="margin-top:12px;" data-i18n="desc_sqp">洞察：基于导入的 SQP (Search Query Performance) 报表。自动识别从【展示】到【购买】的漏斗断层，标记价格劣势或页面跳失预警。</div>
         </div>
+
+        <div id="view-length" class="dim-view">
+          <div class="table-container" style="max-height:300px">
+            <table id="lengthTable">
+              <thead><tr><th data-i18n="th_word_count">单词数</th><th style="width:200px;" data-i18n="th_spend_pct">花费占比</th><th data-i18n="th_spend">花费</th><th data-i18n="th_sales">销售额</th><th data-i18n="th_orders">订单数</th><th data-i18n="th_roas">ROAS</th><th data-i18n="th_acos">ACOS</th><th data-i18n="th_cvr">CVR</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="small" style="margin-top:10px;" data-i18n="desc_length">洞察：通常 3-5 个词的“中长尾”转化率更高。如果 1-2 个词花费巨大且 ROAS 低，考虑将其设为精确匹配或否定。*(已在底层过滤 ASIN 以防数据倾斜)*</div>
+        </div>
+
+        <div id="view-cpc" class="dim-view">
+          <div class="table-container" style="max-height:300px">
+            <table id="cpcDistTable">
+              <thead><tr><th data-i18n="th_cpc_range">CPC 区间</th><th style="width:160px;" data-i18n="th_sales_pct">销售额占比</th><th style="width:160px;" data-i18n="th_order_pct">订单占比 (成交出价)</th><th data-i18n="th_spend">花费</th><th data-i18n="th_sales">销售额</th><th data-i18n="th_orders">订单数</th><th data-i18n="th_roas">ROAS</th><th data-i18n="th_acos">ACOS</th><th data-i18n="th_cvr">CVR</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="small" style="margin-top:10px;" data-i18n="desc_cpc">说明：根据每个词的实际平均 CPC 归类。<b>订单占比</b>列展示了“成交出价占比”，帮助你找到转化最集中的出价区间。</div>
+        </div>
       </div>
     </section>
     
@@ -1731,41 +1781,6 @@
     </div>
     
     <section class="grid">
-      
-      <div class="card tableCard" id="stratCard">
-        <div class="cardTitle" style="align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 16px;">
-          <div style="display:flex; flex-direction:column; gap:4px;">
-              <h2 style="font-size: 16px;" data-i18n="title_strat">细分效能探索 (Stratification Analysis)</h2>
-              <div class="hint" id="stratHint" style="color:var(--accent); font-weight:600;" data-i18n="hint_strat_length">短尾(泛) vs 长尾(准) | 分析单词数量对 ROAS 的影响</div>
-          </div>
-          <div class="rightTools">
-            <div class="seg" role="tablist" aria-label="Strat Filter">
-              <button class="segBtn active" data-strat="length" type="button" data-i18n="tab_length">词长效能</button>
-              <button class="segBtn" data-strat="cpc" type="button" data-i18n="tab_cpc">CPC 区间</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="view-length" class="dim-view" style="display:block;">
-          <div class="table-container">
-            <table id="lengthTable">
-              <thead><tr><th data-i18n="th_word_count">单词数</th><th style="width:200px;" data-i18n="th_spend_pct">花费占比</th><th data-i18n="th_spend">花费</th><th data-i18n="th_sales">销售额</th><th data-i18n="th_orders">订单数</th><th data-i18n="th_roas">ROAS</th><th data-i18n="th_acos">ACOS</th><th data-i18n="th_cvr">CVR</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div class="small" style="margin-top:10px;" data-i18n="desc_length">洞察：通常 3-5 个词的“中长尾”转化率更高。如果 1-2 个词花费巨大且 ROAS 低，考虑将其设为精确匹配或否定。*(已在底层过滤 ASIN 以防数据倾斜)*</div>
-        </div>
-
-        <div id="view-cpc" class="dim-view">
-          <div class="table-container">
-            <table id="cpcDistTable">
-              <thead><tr><th data-i18n="th_cpc_range">CPC 区间</th><th style="width:160px;" data-i18n="th_sales_pct">销售额占比</th><th style="width:160px;" data-i18n="th_order_pct">订单占比 (成交出价)</th><th data-i18n="th_spend">花费</th><th data-i18n="th_sales">销售额</th><th data-i18n="th_orders">订单数</th><th data-i18n="th_roas">ROAS</th><th data-i18n="th_acos">ACOS</th><th data-i18n="th_cvr">CVR</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div class="small" style="margin-top:10px;" data-i18n="desc_cpc">说明：根据每个词的实际平均 CPC 归类。<b>订单占比</b>列展示了“成交出价占比”，帮助你找到转化最集中的出价区间。</div>
-        </div>
-      </div>
       
       <div class="card tableCard">
         <div class="cardTitle">
@@ -2085,13 +2100,17 @@ const I18N = {
       keyword_match_exact: "精准",
       keyword_match_phrase: "词组",
       keyword_match_broad: "广泛",
-      title_structure: "多维结构透视 (Structure Deep Dive)",
+      title_structure: "多维结构透视 (Structure & Stratification Deep Dive)",
       hint_dim_auto: "手动: Broad/Phrase/Exact; 自动: 其他 (已采用精准鉴别算法)",
+      hint_dim_automanual: "手动: Broad/Phrase/Exact; 自动: 其他 (已采用精准鉴别算法)",
       hint_dim_placement: "Top of Search / Rest of Search / Product Pages 表现对比 (需导入广告位报告)",
       hint_dim_matchtype: "Exact / Phrase / Broad / Auto / Product Targeting 效能对比",
       hint_dim_weekday: "发现一周中的最佳销售日/亏损日 (Mon-Sun)",
       hint_dim_mag: "专属老花镜变体深度矩阵 (1.0x - 6.0x)",
+      hint_dim_magnification: "专属老花镜变体深度矩阵 (1.0x - 6.0x)",
       hint_dim_sqp: "SQP 漏斗转换分析与流失预警",
+      hint_dim_length: "短尾(泛) vs 长尾(准) | 分析单词数量对 ROAS 的影响",
+      hint_dim_cpc: "发现 ROAS 最高的“甜点”出价区间 (Sweet Spot)",
       tab_auto_manual: "自动/手动对比",
       tab_mag: "度数效能矩阵 (Mag)",
       tab_placement: "广告位效能",
@@ -2516,13 +2535,17 @@ const I18N = {
       keyword_match_exact: "Exact",
       keyword_match_phrase: "Phrase",
       keyword_match_broad: "Broad",
-      title_structure: "Structure Deep Dive",
+      title_structure: "Structure & Stratification Deep Dive",
       hint_dim_auto: "Manual: Broad/Phrase/Exact; Auto: Others (using precise detection)",
+      hint_dim_automanual: "Manual: Broad/Phrase/Exact; Auto: Others (using precise detection)",
       hint_dim_placement: "Top of Search / Rest of Search / Product Pages Performance",
       hint_dim_matchtype: "Exact / Phrase / Broad / Auto / Product Targeting Performance",
       hint_dim_weekday: "Discover best/worst sales days (Mon-Sun)",
       hint_dim_mag: "Exclusive Reading Glasses Magnification Matrix (1.0x - 6.0x)",
+      hint_dim_magnification: "Exclusive Reading Glasses Magnification Matrix (1.0x - 6.0x)",
       hint_dim_sqp: "SQP Funnel Conversion & Drop-off Analysis",
+      hint_dim_length: "Short-tail vs Long-tail | Analyze word count impact on ROAS",
+      hint_dim_cpc: "Discover the highest ROAS Sweet Spot for CPC ranges",
       tab_auto_manual: "Auto vs Manual",
       tab_mag: "Magnification (Mag)",
       tab_placement: "Placement Performance",
@@ -3895,7 +3918,7 @@ const renderPlacementAnalysis = () => {
   const tbody = $("placementTable")?.querySelector("tbody");
   if (!tbody) return;
   if (!AdsStore.placement.length) { 
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:30px;">${t('dyn_no_placement')}</td></tr>`; 
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px;">${t('dyn_no_placement')}</td></tr>`; 
       return; 
   }
   const validCampaigns = AdsStore.all.length > 0 ? new Set(AdsStore.view.map(x => x.campaign)) : null;
@@ -3908,7 +3931,7 @@ const renderPlacementAnalysis = () => {
       return true; 
   });
 
-  if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:30px;">${t('dyn_no_placement_filter')}</td></tr>`; return; }
+  if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px;">${t('dyn_no_placement_filter')}</td></tr>`; return; }
   const groups = groupBy(filtered, r => r.placement); 
   const data = [...groups.entries()].map(([placement, rows]) => { return { placement, ...sumMetrics(rows) }; });
   const totalSpend = sumMetrics(filtered).spend || 1; 
@@ -3917,7 +3940,7 @@ const renderPlacementAnalysis = () => {
   tbody.innerHTML = data.map(d => {
       if (d.impr === 0 && d.spend === 0) return ""; const spendPct = (d.spend / totalSpend) * 100;
       const barHtml = `<div class="bar-row"><div style="width:40px;text-align:right;color:var(--muted);margin-right:6px;">${spendPct.toFixed(1)}%</div><div class="bar-track"><div style="width:${spendPct}%;background:var(--accent)"></div></div></div>`;
-      return `<tr><td style="font-weight:600; color:var(--text);">${escapeHtml(d.placement)}</td><td>${barHtml}</td><td>${fmtMoney(d.spend)}</td><td>${fmtMoney(d.sales)}</td><td>${fmtInt(d.orders)}</td><td style="${d.roas >= 3 ? 'color:#1a7f37;font-weight:700' : ''}">${d.roas.toFixed(2)}</td><td style="${(d.acos > 0.4 || d.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(d.acos)}</td><td>${fmtMoney(d.cpc)}</td><td>${fmtPct(d.cvr)}</td><td>${fmtPct(d.ctr)}</td></tr>`;
+      return `<tr><td style="font-weight:600; color:var(--text);">${escapeHtml(d.placement)}</td><td>${barHtml}</td><td>${fmtMoney(d.spend)}</td><td>${fmtMoney(d.sales)}</td><td>${fmtInt(d.orders)}</td><td style="${d.roas >= 3 ? 'color:#1a7f37;font-weight:700' : ''}">${d.roas.toFixed(2)}</td><td style="${(d.acos > 0.4 || d.acos === Infinity) ? 'color:#b42318;' : ''}">${fmtPct(d.acos)}</td><td>${fmtMoney(d.cpc)}</td><td>${fmtPct(d.cvr)}</td></tr>`;
   }).join("");
 };
 
@@ -5377,9 +5400,66 @@ const renderActiveDimTab = () => {
     if (dim === 'automanual') renderAutoManual();
     if (dim === 'placement') renderPlacementAnalysis();
     if (dim === 'matchtype') renderMatchTypeAnalysis();
+    if (dim === 'cpc') renderCPCDistribution();
+    if (dim === 'length') renderLengthAnalysis();
     if (dim === 'weekday') renderWeekdayAnalysis();
     if (dim === 'magnification') renderMagnificationAnalysis(); 
     if (dim === 'sqp') renderSqpAnalysis(); 
+};
+
+const multiDimSortState = {};
+
+const getTableSortValue = (cell) => {
+    const raw = (cell?.innerText || "").trim().replace(/\s+/g, " ");
+    const normalized = raw.replace(/[,$%]/g, "").replace(/−/g, "-").trim();
+    const numericMatch = normalized.match(/^[<>]?\s*(-?\d+(?:\.\d+)?)/);
+    if (numericMatch) return { type: "number", value: parseFloat(numericMatch[1]) };
+    return { type: "text", value: raw.toLowerCase() };
+};
+
+const sortMultiDimTableByHeader = (th) => {
+    const table = th.closest("table");
+    const tbody = table?.querySelector("tbody");
+    if (!table || !tbody) return;
+
+    const colIndex = Array.from(th.parentElement.children).indexOf(th);
+    if (colIndex < 0) return;
+
+    const rows = Array.from(tbody.querySelectorAll("tr")).filter(row => row.cells.length > colIndex && !row.querySelector("td[colspan]"));
+    if (rows.length <= 1) return;
+
+    const tableKey = table.id || "multiDimTable";
+    const stateKey = `${tableKey}:${colIndex}`;
+    const firstVal = getTableSortValue(rows[0].cells[colIndex]);
+    const nextDir = multiDimSortState[stateKey] === "asc" ? "desc" : (multiDimSortState[stateKey] === "desc" ? "asc" : (firstVal.type === "number" ? "desc" : "asc"));
+
+    rows.sort((ra, rb) => {
+        const a = getTableSortValue(ra.cells[colIndex]);
+        const b = getTableSortValue(rb.cells[colIndex]);
+        let cmp = 0;
+        if (a.type === "number" && b.type === "number") cmp = a.value - b.value;
+        else cmp = String(a.value).localeCompare(String(b.value), currentLang === "zh" ? "zh-Hans-CN" : "en", { numeric: true, sensitivity: "base" });
+        return nextDir === "asc" ? cmp : -cmp;
+    });
+
+    tbody.append(...rows);
+    multiDimSortState[stateKey] = nextDir;
+
+    table.querySelectorAll("thead th").forEach(h => { h.classList.remove("sort-active"); h.removeAttribute("data-sort-dir"); h.removeAttribute("aria-sort"); });
+    th.classList.add("sort-active");
+    th.setAttribute("data-sort-dir", nextDir);
+    th.setAttribute("aria-sort", nextDir === "asc" ? "ascending" : "descending");
+};
+
+const initMultiDimTableSorting = () => {
+    const card = $("multiDimCard");
+    if (!card || card.dataset.sortReady === "1") return;
+    card.dataset.sortReady = "1";
+    card.addEventListener("click", (e) => {
+        const th = e.target?.closest?.("thead th");
+        if (!th || !card.contains(th)) return;
+        sortMultiDimTableByHeader(th);
+    });
 };
 
 const regexCache = new Map();
@@ -7944,13 +8024,6 @@ const applyFilters = (initial=false) => {
               renderLengthAnalysis(); renderBusinessReport(); renderIsolationAnalysis();
               renderGrowthCommandModules();
 
-              const activeStrat = document.querySelector('.seg[aria-label="Strat Filter"] .segBtn.active');
-              if (activeStrat) {
-                  const strat = activeStrat.dataset.strat;
-                  document.querySelectorAll('#stratCard .dim-view').forEach(v => v.style.display = 'none');
-                  const targetView = $('view-' + strat);
-                  if (targetView) targetView.style.display = 'block';
-              }
 
               renderActiveDimTab(); 
               if (initial) { 
@@ -8042,6 +8115,8 @@ const bindEvents = () => {
       renderWordFreq(); 
     }));
 
+    initMultiDimTableSorting();
+
     document.addEventListener("click", (e) => { 
         const btn = e.target.closest(".segBtn"); if (!btn) return; 
         if (btn.dataset.dim) {
@@ -8050,18 +8125,11 @@ const bindEvents = () => {
             const targetView = $('view-' + btn.dataset.dim); 
             if(targetView) { 
                 targetView.style.display = 'block'; 
-                $('dimHint').textContent = t('hint_dim_' + btn.dataset.dim) || ""; 
+                const dimHintText = t('hint_dim_' + btn.dataset.dim) || "";
+                $('dimHint').textContent = dimHintText;
+                $('dimHint').setAttribute('title', dimHintText);
                 renderActiveDimTab(); 
             } 
-        }
-        if (btn.dataset.strat) { 
-          document.querySelectorAll('.seg[aria-label="Strat Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.strat === btn.dataset.strat)); 
-          document.querySelectorAll('#stratCard .dim-view').forEach(v => v.style.display = 'none'); 
-          const targetView = $('view-' + btn.dataset.strat); 
-          if(targetView) { 
-              targetView.style.display = 'block'; 
-              $('stratHint').textContent = t('hint_strat_' + btn.dataset.strat) || ""; 
-          } 
         }
         if (btn.dataset.type) { rankTypeFilter = btn.dataset.type; document.querySelectorAll('.seg[aria-label="Type Filter"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.type === btn.dataset.type)); renderRankTable(); }
         if (btn.dataset.wf) { WF_MODE = btn.dataset.wf; document.querySelectorAll('.seg[aria-label="Word Frequency Mode"] .segBtn').forEach(b => b.classList.toggle("active", b.dataset.wf === WF_MODE)); renderWordFreq(); } 
