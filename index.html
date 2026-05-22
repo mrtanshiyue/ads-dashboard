@@ -1023,6 +1023,47 @@
     #growthCommandSection .table-container { border-radius: 14px; }
     #actionPlanTable thead th { padding: 8px 10px; }
     #actionPlanTable tbody td { padding: 8px 10px; }
+
+    /* Action Command Center density + metric-first column order */
+    #growthCommandSection .action-compact-card { padding: 8px 10px 10px !important; }
+    #growthCommandSection .action-compact-card > .cardTitle { padding-bottom: 6px !important; margin-bottom: 8px !important; }
+    #growthCommandSection .action-compact-card > .cardTitle .hint { line-height: 1.18 !important; max-width: 760px; }
+    #growthCommandSection .action-compact-card .rightTools .btn { min-height: 28px !important; padding: 5px 10px !important; }
+    .actionControlBar { gap: 6px !important; margin-bottom: 6px !important; }
+    .actionControlBar input, .actionControlBar select { min-height: 30px !important; padding: 6px 9px !important; }
+    .actionKeywordExportCompact { padding: 7px 8px !important; margin-bottom: 6px !important; gap: 6px !important; align-items: center !important; }
+    .actionKeywordExportCompact .exportTitle h2 { font-size: 12.5px !important; margin-bottom: 1px !important; }
+    .actionKeywordExportCompact .exportTitle .hint, .actionKeywordExportCompact .uploadHintCompact { font-size: 10.8px !important; line-height: 1.18 !important; }
+    .actionKeywordExportCompact .btn { min-height: 28px !important; padding: 5px 9px !important; }
+    .actionKeywordExportCompact select { min-height: 30px !important; padding: 6px 9px !important; }
+    #actionKpiGrid { gap: 6px !important; margin-bottom: 6px !important; }
+    #actionKpiGrid .kpi { min-height: 54px !important; padding: 6px 8px !important; }
+    #actionKpiGrid .kpi .value { font-size: 16px !important; margin-top: 2px !important; }
+    #actionKpiGrid .kpi .meta { margin-top: 2px !important; font-size: 10.5px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #actionExecutiveSummary.alert-banner { padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 11.8px !important; line-height: 1.25 !important; }
+    #growthCommandSection .table-container { max-height: 560px !important; }
+    #actionPlanTable { min-width: 1470px; table-layout: fixed; }
+    #actionPlanTable th:nth-child(1), #actionPlanTable td:nth-child(1) { width: 76px; }
+    #actionPlanTable th:nth-child(2), #actionPlanTable td:nth-child(2) { width: 250px; }
+    #actionPlanTable th:nth-child(3), #actionPlanTable td:nth-child(3) { width: 95px; }
+    #actionPlanTable th:nth-child(4), #actionPlanTable td:nth-child(4),
+    #actionPlanTable th:nth-child(5), #actionPlanTable td:nth-child(5) { width: 82px; }
+    #actionPlanTable th:nth-child(6), #actionPlanTable td:nth-child(6),
+    #actionPlanTable th:nth-child(7), #actionPlanTable td:nth-child(7) { width: 66px; }
+    #actionPlanTable th:nth-child(8), #actionPlanTable td:nth-child(8),
+    #actionPlanTable th:nth-child(9), #actionPlanTable td:nth-child(9),
+    #actionPlanTable th:nth-child(10), #actionPlanTable td:nth-child(10) { width: 72px; }
+    #actionPlanTable th:nth-child(11), #actionPlanTable td:nth-child(11) { width: 130px; }
+    #actionPlanTable th:nth-child(12), #actionPlanTable td:nth-child(12) { width: 150px; }
+    #actionPlanTable th:nth-child(13), #actionPlanTable td:nth-child(13) { width: 92px; }
+    #actionPlanTable th:nth-child(14), #actionPlanTable td:nth-child(14) { width: 170px; }
+    #actionPlanTable th:nth-child(15), #actionPlanTable td:nth-child(15) { width: 150px; }
+    #actionPlanTable th:nth-child(16), #actionPlanTable td:nth-child(16) { width: 175px; }
+    #actionPlanTable td:nth-child(2) { white-space: normal; line-height: 1.32; }
+    #actionPlanTable td:nth-child(16) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .actionConfidenceLine { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; white-space: nowrap; max-width: 100%; overflow: hidden; }
+    .actionConfidenceLine .tag, .actionConfidenceLine .pill { flex: 0 0 auto; }
+
     @media (max-width: 1280px) {
       #growthCommandSection .action-compact-card > .cardTitle .rightTools { flex-wrap: wrap; justify-content: flex-start; }
       .actionControlBar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1477,9 +1518,9 @@
 
     <section class="grid" id="growthCommandSection">
       <div class="card tableCard action-compact-card" style="grid-column: span 12;">
-        <div class="cardTitle" style="align-items:center; border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:14px;">
+        <div class="cardTitle" style="align-items:center; border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:8px;">
           <div>
-            <h2 style="font-size:16px;" data-i18n="title_action_center">广告动作清单中心 Simple (Action Command Center)</h2>
+            <h2 style="font-size:15px;" data-i18n="title_action_center">广告动作清单中心 Simple (Action Command Center)</h2>
             <div class="hint" data-i18n="hint_action_center">只输出 6 类动作：否定、加价、降价、投放精准、投放词组、投放广泛；新增今日 Top 20 与广泛词根提炼</div>
           </div>
           <div class="rightTools">
@@ -1552,13 +1593,13 @@
           <button class="btn primary" id="btnExportActionKeywordBroad" type="button" data-i18n="btn_export_kw_broad">导出广泛关键词</button>
         </div>
 
-        <div class="grid" id="actionKpiGrid" style="margin-bottom:12px;"></div>
-        <div id="actionExecutiveSummary" class="alert-banner good" style="display:none; margin-bottom:12px;"></div>
+        <div class="grid" id="actionKpiGrid" style="margin-bottom:6px;"></div>
+        <div id="actionExecutiveSummary" class="alert-banner good" style="display:none; margin-bottom:6px;"></div>
 
         <div class="table-container" style="max-height:520px;">
           <table id="actionPlanTable">
             <thead><tr>
-              <th data-i18n="action_th_action">动作</th><th data-i18n="action_th_object">对象</th><th data-i18n="action_th_intent">意图</th><th data-i18n="action_th_source_match">来源匹配</th><th data-i18n="action_th_operation">建议匹配/操作</th><th data-i18n="action_th_bid">建议出价</th><th>Campaign</th><th>Ad Group</th><th data-i18n="action_th_confidence">置信度/风险</th><th data-i18n="action_th_reason">简单理由</th><th>Spend</th><th>Sales</th><th>Orders</th><th>Clicks</th><th>CVR</th><th>ROAS</th><th>ACOS</th>
+              <th data-i18n="action_th_action">动作</th><th data-i18n="action_th_object">对象</th><th data-i18n="action_th_intent">意图</th><th>Spend</th><th>Sales</th><th>Orders</th><th>Clicks</th><th>CVR</th><th>ROAS</th><th>ACOS</th><th data-i18n="action_th_source_match">来源匹配</th><th data-i18n="action_th_operation">建议匹配/操作</th><th data-i18n="action_th_bid">建议出价</th><th>Campaign</th><th>Ad Group</th><th data-i18n="action_th_confidence">置信度/风险</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -5998,25 +6039,25 @@ const renderActionCommandCenter = () => {
   }
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="17" class="small">${escapeHtml(t("action_no_suggestions"))}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="16" class="small">${escapeHtml(t("action_no_suggestions"))}</td></tr>`;
     return;
   }
 
   renderProgressive(tbody, rows, r => {
     const tagClass = r.actionKey === "negate" ? "bad" : r.actionKey === "decrease" ? "warn" : "good";
-    const guardNote = r.negativeGuard?.reason ? `<div class="small" title="${escapeHtml(r.negativeGuard.reason)}">${escapeHtml(r.negativeGuard.label || "")}：${escapeHtml(r.negativeGuard.reason).slice(0, 80)}</div>` : `<div class="small">${escapeHtml(r.sampleLabel || "")}</div>`;
+    const riskText = r.negativeGuard?.label || r.executionRisk || r.sampleLabel || "-";
+    const confidenceRiskTitle = [r.confidenceLabel ? `${r.confidenceLabel} ${((safeNum(r.confidenceScore) * 100).toFixed(0))}%` : "", r.negativeGuard?.label || "", r.negativeGuard?.reason || "", r.executionRisk || "", r.sampleLabel || "", r.reason || ""].filter(Boolean).join(" | ");
     return `<tr>
       <td><span class="tag ${tagClass}">${escapeHtml(r.actionLabel)}</span></td>
       <td title="${escapeHtml(r.name)}"><b>${escapeHtml(r.name).slice(0, 110)}</b>${r.sourceName && r.sourceName !== r.name ? `<div class="small">${escapeHtml(t("action_source_prefix"))}${escapeHtml(r.sourceName).slice(0, 90)}</div>` : ""}</td>
       <td><span class="tag ${escapeHtml(r.intentTagClass || "warn")}">${escapeHtml(r.intentLabel || "-")}</span></td>
+      <td>${fmtMoney(r.spend)}</td><td>${fmtMoney(r.sales)}</td><td>${fmtInt(r.orders)}</td><td>${fmtInt(r.clicks)}</td><td>${fmtPct(r.cvr)}</td><td>${(r.roas || 0).toFixed(2)}</td><td>${r.acos === Infinity ? "∞" : fmtPct(r.acos)}</td>
       <td>${escapeHtml(r.sourceMatch || "-")}</td>
       <td>${escapeHtml(r.matchAdvice || "-")}</td>
       <td>${r.suggestedBid ? "$" + escapeHtml(r.suggestedBid) : "-"}</td>
       <td title="${escapeHtml(r.campaign)}">${escapeHtml(r.campaign).slice(0, 75)}</td>
       <td title="${escapeHtml(r.adGroup)}">${escapeHtml(r.adGroup).slice(0, 65)}</td>
-      <td><span class="tag ${escapeHtml(r.confidenceTagClass || "warn")}">${escapeHtml(r.confidenceLabel || "-")} ${(safeNum(r.confidenceScore)*100).toFixed(0)}%</span>${guardNote}</td>
-      <td title="${escapeHtml(r.reason)}">${escapeHtml(r.reason).slice(0, 110)}</td>
-      <td>${fmtMoney(r.spend)}</td><td>${fmtMoney(r.sales)}</td><td>${fmtInt(r.orders)}</td><td>${fmtInt(r.clicks)}</td><td>${fmtPct(r.cvr)}</td><td>${(r.roas || 0).toFixed(2)}</td><td>${r.acos === Infinity ? "∞" : fmtPct(r.acos)}</td>
+      <td title="${escapeHtml(confidenceRiskTitle)}"><span class="actionConfidenceLine"><span class="tag ${escapeHtml(r.confidenceTagClass || "warn")}">${escapeHtml(r.confidenceLabel || "-")} ${(safeNum(r.confidenceScore)*100).toFixed(0)}%</span><span class="pill">${escapeHtml(riskText)}</span></span></td>
     </tr>`;
   });
 };
@@ -6060,8 +6101,8 @@ const buildSponsoredProductsBulkRows = (rows) => {
 };
 
 const buildActionExportSheets = (rows) => {
-  const headers = ["Action", "Object", "Source Search Term", "Intent", "Type", "Source Match", "Suggested Match/Operation", "Suggested Bid", "Campaign", "Ad Group", "Confidence", "Execution Risk", "Negative Guard", "Reason", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS", "AI Decision JSON"];
-  const dataRows = rows.map(r => [r.actionLabel, r.name, r.sourceName || r.name, r.intentLabel || "", r.objectType, r.sourceMatch, r.matchAdvice, r.suggestedBid || "", r.campaign, r.adGroup, r.confidenceScore || 0, r.executionRisk || "", r.negativeGuard?.label || "", r.reason, r.spend || 0, r.sales || 0, r.orders || 0, r.clicks || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, JSON.stringify(r.decisionSchema || {})]);
+  const headers = ["Action", "Object", "Source Search Term", "Intent", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS", "Type", "Source Match", "Suggested Match/Operation", "Suggested Bid", "Campaign", "Ad Group", "Confidence", "Execution Risk", "Negative Guard", "Reason", "AI Decision JSON"];
+  const dataRows = rows.map(r => [r.actionLabel, r.name, r.sourceName || r.name, r.intentLabel || "", r.spend || 0, r.sales || 0, r.orders || 0, r.clicks || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, r.objectType, r.sourceMatch, r.matchAdvice, r.suggestedBid || "", r.campaign, r.adGroup, r.confidenceScore || 0, r.executionRisk || "", r.negativeGuard?.label || "", r.reason, JSON.stringify(r.decisionSchema || {})]);
   const { bulkHeaders, bulkRows, bidDraftRows } = buildSponsoredProductsBulkRows(rows);
   const rules = getRules();
   const ruleRows = [
