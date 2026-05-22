@@ -704,8 +704,9 @@
 
 
     /* Root Toxicity & Co-occurrence Matrix */
-    .root-score-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin: 0 0 12px 0; }
+    .root-score-grid { display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap:10px; margin: 0 0 12px 0; }
     .root-score-card { background: var(--hover-bg); border:1px solid var(--line); border-radius:14px; padding:10px 12px; min-height:74px; }
+    .root-score-card.focus { background: color-mix(in srgb, var(--accent) 8%, var(--hover-bg)); border-color: color-mix(in srgb, var(--accent) 24%, var(--line)); }
     .root-score-card .root-label { font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:6px; }
     .root-score-card .root-value { font-size:20px; font-weight:800; letter-spacing:-.2px; color:var(--text); }
     .root-score-card .root-note { font-size:11.2px; color:var(--muted); margin-top:4px; line-height:1.35; }
@@ -723,7 +724,8 @@
     .rootDecision.neutral { color: var(--muted); background: var(--chip); border-color: var(--line); }
     .rootMini { display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; }
     .rootMini span { border:1px solid var(--line); background:var(--chip); color:var(--muted); border-radius:999px; padding:2px 6px; font-size:10.8px; }
-    @media (max-width: 900px){ .root-score-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 1200px){ .root-score-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 650px){ .root-score-grid { grid-template-columns: 1fr; } }
 
     @media (max-width: 1400px){ .app{ max-width: 100vw; } }
     @media (max-width: 1100px){ .app{ grid-template-columns:1fr; max-width:100vw; } .sidebar{ position:relative; height:auto; } .kpi{ grid-column: span 6; } .chartCard{ grid-column: span 12; } }
@@ -956,7 +958,7 @@
             <option value="adGroup" data-i18n="opt_rank_adgroup">广告组（Ad Group）</option>
           </select>
         </div>
-        <div class="small" data-i18n="desc_root_rule">Root 规则：去停用词 + 同义词归一 + 保留倍率（如 2.0）+ 合并短语（blue light / cat eye / spring hinge）</div>
+        <div class="small" data-i18n="desc_root_rule">Root 规则：去停用词 + 同义词归一 + 单独保留度数（如 +2.00）+ 合并短语（blue light / cat eye / spring hinge）</div>
       </div>
       <div class="row2">
         <div class="fieldRow"><label data-i18n="lbl_top_n">Top N</label><input id="rankTopN" type="number" step="1" value="120" /></div>
@@ -1430,14 +1432,14 @@
         <div class="cardTitle">
           <div>
             <h2 data-i18n="title_root">词根引力与毒性矩阵（Root Toxicity & Co-occurrence）</h2>
-            <div class="hint" data-i18n="hint_root_matrix">判断词根本身是否有毒、哪些组合会被解毒、哪些组合会污染核心流量，并输出否定/降价/扩量动作</div>
+            <div class="hint" data-i18n="hint_root_matrix">按亚马逊搜索词报告逻辑，判断词根是否浪费预算、哪些共现组合会解毒，并把度数流量单独拆成可投放/降价/复核动作</div>
           </div>
           <div class="rightTools">
             <div class="seg" role="tablist" aria-label="Word Frequency Mode">
               <button class="segBtn active" data-wf="token" type="button" data-i18n="tab_1gram">单词根</button>
               <button class="segBtn" data-wf="bigram" type="button" data-i18n="tab_2gram">双词共现</button>
               <button class="segBtn" data-wf="trigram" type="button" data-i18n="tab_3gram">三词共现</button>
-              <button class="segBtn" data-wf="mag" type="button" data-i18n="tab_mag_ext">度数词根</button>
+              <button class="segBtn" data-wf="mag" type="button" data-i18n="tab_mag_ext">单纯度数</button>
             </div>
             <span class="pill">Min Freq</span><input id="wfMinFreq" class="miniInput" type="number" step="1" value="3" data-i18n-title="title_min_freq" title="最小出现次数" />
             <span class="pill">Min Spend</span><input id="wfMinSpend" class="miniInput" type="number" step="0.01" value="10" data-i18n-title="title_min_spend" title="最小花费" />
@@ -1468,7 +1470,7 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="small" style="margin-top:10px;" data-i18n="desc_root">模块逻辑：先识别老花镜业务词根，再按毒性、引力、共现 Lift 和误杀风险输出动作。Phrase Negative 只允许高毒性且无赚钱组合的词根进入导出，blue light / men / glasses 等条件词默认进入复核或降价。</div>
+        <div class="small" style="margin-top:10px;" data-i18n="desc_root">模块逻辑：先识别老花镜业务词根，再按毒性、引力、共现 Lift、样本置信度和误杀风险输出动作。单纯度数只做度数分层投放、降价或 Exact 复核，不作为全局 Phrase Negative；Phrase Negative 仅保留高毒性、低误杀、无赚钱共现的错配词根。</div>
       </div>
       
       <div class="card tableCard" id="isolationCard">
@@ -1553,7 +1555,7 @@ const I18N = {
       opt_rank_targeting: "投放 (Targeting)",
       opt_rank_campaign: "广告活动 (Campaign)",
       opt_rank_adgroup: "广告组 (Ad Group)",
-      desc_root_rule: "Root 规则：去停用词 + 同义词归一 + 保留倍率（如 2.0）+ 合并短语（blue light / cat eye / spring hinge）",
+      desc_root_rule: "Root 规则：去停用词 + 同义词归一 + 单独保留度数（如 +2.00）+ 合并短语（blue light / cat eye / spring hinge）",
       lbl_top_n: "Top N",
       lbl_max_rows: "最大导入行数 (防卡死)",
       lbl_profit_engine: "自动判定规则与利润引擎配置",
@@ -1808,7 +1810,7 @@ const I18N = {
       tab_1gram: "单词根",
       tab_2gram: "双词共现",
       tab_3gram: "三词共现",
-      tab_mag_ext: "度数词根",
+      tab_mag_ext: "单纯度数",
       title_min_freq: "最小出现次数",
       title_min_spend: "最小花费",
       btn_export_wf: "导出矩阵 Excel",
@@ -1820,8 +1822,8 @@ const I18N = {
       th_lift: "共现 Lift",
       th_root_action: "动作 / 风险",
       th_freq: "频次 / 包含词数",
-      hint_root_matrix: "判断词根本身是否有毒、哪些组合会被解毒、哪些组合会污染核心流量，并输出否定/降价/扩量动作",
-      desc_root: "模块逻辑：先识别老花镜业务词根，再按毒性、引力、共现 Lift 和误杀风险输出动作。Phrase Negative 只允许高毒性且无赚钱组合的词根进入导出，blue light / men / glasses 等条件词默认进入复核或降价。",
+      hint_root_matrix: "按亚马逊搜索词报告逻辑，判断词根是否浪费预算、哪些共现组合会解毒，并把度数流量单独拆成可投放/降价/复核动作",
+      desc_root: "模块逻辑：先识别老花镜业务词根，再按毒性、引力、共现 Lift、样本置信度和误杀风险输出动作。单纯度数只做度数分层投放、降价或 Exact 复核，不作为全局 Phrase Negative；Phrase Negative 仅保留高毒性、低误杀、无赚钱共现的错配词根。",
       title_isolation: "搜索词防漏漏斗与隔离 (Targeting Funnel Gap)",
       hint_isolation: "监控高转化词是否已被提取至精准匹配 (Exact)，并检测是否存在“名为隔离、实为断流”的假象。",
       lbl_promote_ge: "晋升门槛 (订单 ≥)",
@@ -1988,7 +1990,7 @@ const I18N = {
       opt_rank_targeting: "Targeting",
       opt_rank_campaign: "Campaign",
       opt_rank_adgroup: "Ad Group",
-      desc_root_rule: "Root Rule: Remove Stop Words + Synonym Normalization + Keep Mag (e.g. 2.0) + Merge Phrases",
+      desc_root_rule: "Root Rule: Remove Stop Words + Synonym Normalization + Keep Pure Diopter (e.g. +2.00) + Merge Phrases",
       lbl_top_n: "Top N",
       lbl_max_rows: "Max Rows (Prevent Crash)",
       lbl_profit_engine: "Auto Rules & Profit Engine Configuration",
@@ -2243,7 +2245,7 @@ const I18N = {
       tab_1gram: "Single Root",
       tab_2gram: "2-Gram (Co-occur)",
       tab_3gram: "3-Gram",
-      tab_mag_ext: "Diopter Roots",
+      tab_mag_ext: "Pure Diopter",
       title_min_freq: "Min Frequency",
       title_min_spend: "Min Spend",
       btn_export_wf: "Export Matrix Excel",
@@ -2255,8 +2257,8 @@ const I18N = {
       th_lift: "Co-occurrence Lift",
       th_root_action: "Action / Risk",
       th_freq: "Freq / Term Count",
-      hint_root_matrix: "Detect toxic roots, detoxifying combinations, poison amplifiers, and executable PPC actions.",
-      desc_root: "Logic: identify eyewear-specific roots first, then score toxicity, attraction, co-occurrence lift, and overblocking risk. Phrase Negative is allowed only for high-toxic roots with no profitable combinations; blue light / men / glasses default to review or bid-down.",
+      hint_root_matrix: "Detect wasted roots, detoxing co-occurrences and pure diopter demand, then turn them into scale, bid-down or review actions.",
+      desc_root: "Logic: score reading-glasses roots by toxicity, attraction, co-occurrence lift, confidence and overblocking risk. Pure diopter roots are handled as diopter-layer scale, bid-down or Exact-review actions, not global Phrase Negatives. Phrase Negative is reserved for high-toxic mismatch roots with no profitable combos.",
       title_isolation: "Targeting Funnel Gap & Isolation",
       hint_isolation: "Monitors if high-CVR terms are extracted to Exact, and detects 'Fake Isolation'.",
       lbl_promote_ge: "Promote Threshold (Orders ≥)",
@@ -2666,20 +2668,55 @@ const SYNONYM_MAP = [
   { re: /\bprogressive\b/g, to: "progressive" } 
 ];
 const PHRASES = ["reading glasses for women", "readers for women", "women readers", "reading glasses", "reader glasses", "blue light", "cat eye", "spring hinge", "anti glare", "scratch resistant", "computer readers", "computer glasses", "eye glasses", "small print", "large print", "wide face", "daily reading", "transition lenses", "photochromic lenses", "safety glasses", "contact lens"];
-// 只在有度数语境时提取倍率，避免把 4 pack / 3 pairs / Top 20 误判成 +4.00 度数
-const MAG_CONTEXT_RE = /(?:^|[\s,(])(?:\+)?([1-4](?:\.\d{1,2})?)(?:\s*x)?(?=\s*(?:x|power|strength|diopter|magnification|reading|reader|readers|glasses|$|[,)]))/gi;
+// 只在有度数语境时提取倍率，避免把 4 pack / 3 pairs / Top 20 误判成 +4.00 度数。
+// 老花镜广告里度数是强意图层，必须单独拆出来：+1.50、1.5x、1.50 strength、150 readers 都归一到 MAG_1_50。
+const MAG_CONTEXT_RE = /(?:^|[\s,(])(?:\+)?([0-4](?:\.\d{1,2})?)(?:\s*x)?(?=\s*(?:x|power|strength|diopter|diopters|magnification|reading|reader|readers|glasses|$|[,)]))/gi;
+const MAG_COMPACT_RE = /(?:^|[\s,(])\+?([1-4])(?:\s|-)?(00|25|50|75)(?=\s*(?:x|power|strength|diopter|diopters|magnification|reading|reader|readers|glasses|$|[,)]))/gi;
+const MAG_LOOSE_RE = /(?:^|[\s,(])(\+)?([1-4](?:\.\d{1,2})?)(?=(?:\s+[a-z]+){0,5}\s+(?:x|power|strength|diopter|diopters|magnification|reading|reader|readers|glasses)\b)/gi;
+const DIOPTER_MIN = 0.5;
+const DIOPTER_MAX = 4;
+const normalizeMagnificationValue = (n) => {
+  const raw = safeNum(n);
+  if (!isFinite(raw) || raw < DIOPTER_MIN || raw > DIOPTER_MAX) return "";
+  // 美国站 reading glasses 常见 0.25 档位；四舍五入到 0.25 避免 1.499/1.5 混乱。
+  const q = Math.round(raw * 4) / 4;
+  if (q < DIOPTER_MIN || q > DIOPTER_MAX) return "";
+  return q.toFixed(2);
+};
+const magValueToRoot = (value) => {
+  const v = normalizeMagnificationValue(value);
+  if (!v) return "";
+  const [a,b="00"] = v.split(".");
+  return `MAG_${parseInt(a,10)}_${(b + "00").slice(0,2)}`;
+};
+const rootToMagValue = (root) => {
+  const m = String(root || "").match(/^mag_(\d+)_(\d{1,2})$/i);
+  if (!m) return "";
+  return `${m[1]}.${(m[2] + "00").slice(0,2)}`;
+};
+const isDiopterRoot = (root) => getRootType(root) === "diopter";
+const isPureDiopterRootSet = (roots=[]) => roots.length === 1 && roots.every(isDiopterRoot);
 const extractMagnificationValues = (text) => {
   const s = String(text || "").toLowerCase();
-  const blockedAroundNumber = /\b(?:pack|packs|pair|pairs|set|sets|count|pcs|piece|pieces)\b/;
+  const blockedAroundNumber = /\b(?:pack|packs|pair|pairs|set|sets|count|pcs|piece|pieces|mm|cm|inch|inches|oz|lb|lbs)\b/;
   const out = [];
-  for (const m of s.matchAll(MAG_CONTEXT_RE)) {
-    const idx = m.index || 0;
-    const context = s.slice(Math.max(0, idx - 12), Math.min(s.length, idx + 32));
-    if (blockedAroundNumber.test(context)) continue;
-    const n = parseFloat(m[1]);
-    if (isFinite(n) && n > 0 && n <= 4) out.push(String(n));
-  }
-  return [...new Set(out)];
+  const push = (value, idx, span=38) => {
+    const context = s.slice(Math.max(0, idx - 16), Math.min(s.length, idx + span));
+    if (blockedAroundNumber.test(context)) return;
+    const v = normalizeMagnificationValue(value);
+    if (v) out.push(v);
+  };
+  for (const m of s.matchAll(MAG_CONTEXT_RE)) push(m[1], m.index || 0, 38);
+  for (const m of s.matchAll(MAG_COMPACT_RE)) push(`${m[1]}.${m[2]}`, m.index || 0, 38);
+  for (const m of s.matchAll(MAG_LOOSE_RE)) push(m[2], m.index || 0, 58);
+  return [...new Set(out)].sort((a,b)=>safeNum(a)-safeNum(b));
+};
+const getDiopterSegmentLabel = (root) => {
+  const v = safeNum(rootToMagValue(root));
+  if (!v) return currentLang === "zh" ? "度数" : "Diopter";
+  if (v <= 1.25) return currentLang === "zh" ? "低度数" : "Low power";
+  if (v <= 2.25) return currentLang === "zh" ? "主流度数" : "Core power";
+  return currentLang === "zh" ? "高度数" : "High power";
 };
 
 const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -2703,7 +2740,7 @@ const searchTermToRoot = (term) => {
     .filter(t => !/^\d+(\.\d+)?$/.test(t) && !STOP_WORDS.has(t))
     .map(t => singularize(t))
     .filter(t => t && !STOP_WORDS.has(t)); 
-  const root = [...new Set(kept), ...new Set(mags.map(v=>`+${v}`))].join(" | ").trim(); 
+  const root = [...new Set(kept), ...new Set(mags.map(v=>`+${normalizeMagnificationValue(v) || v}`))].join(" | ").trim(); 
   const res = root || "(blank)"; 
   if (rootCache.size > CONFIG.CACHE_MAX) { rootCache.clear(); } 
   rootCache.set(term, res); 
@@ -2751,7 +2788,15 @@ const ROOT_MATRIX = {
 };
 
 const normalizeRootName = (x) => String(x || "").toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_+.]/g, "").trim();
-const rootDisplay = (x) => String(x || "").replace(/_/g, " ").replace(/^MAG_(\d+)_(\d+)$/, "+$1.$2");
+const rootDisplay = (x) => String(x || "")
+  .split("×")
+  .map(part => {
+    const raw = part.trim();
+    const m = raw.match(/^mag_(\d+)_(\d{1,2})$/i);
+    if (m) return `+${m[1]}.${(m[2] + "00").slice(0,2)}`;
+    return raw.replace(/_/g, " ");
+  })
+  .join(" × ");
 const scoreClass = (v, reverse=false) => reverse ? (v >= 75 ? "bad" : v >= 45 ? "warn" : "good") : (v >= 75 ? "good" : v >= 45 ? "warn" : "bad");
 const scoreBar = (v, reverse=false) => {
   const n = Math.max(0, Math.min(100, Math.round(safeNum(v))));
@@ -2765,7 +2810,7 @@ const sampleConfidence = (m, freq=1) => {
 };
 const getRootType = (root) => {
   const r = normalizeRootName(root);
-  if (/^MAG_/.test(r) || /^\+?\d+(\.\d+)?$/.test(r)) return "diopter";
+  if (/^mag_/i.test(r) || /^\+?\d+(\.\d+)?$/.test(r)) return "diopter";
   for (const [type, set] of Object.entries(ROOT_MATRIX)) if (set.has(r)) return type;
   return "neutral";
 };
@@ -2804,8 +2849,8 @@ const extractMatrixRoots = (term) => {
   const raw = base.split(" ").filter(Boolean).map(singularize);
   const roots = raw.filter(t => t && !STOP_WORDS.has(t) && !/^\d+(\.\d+)?$/.test(t));
   for (const mag of extractMagnificationValues(term)) {
-    const [a,b="00"] = String(mag).split(".");
-    roots.push(`MAG_${a}_${(b + "00").slice(0,2)}`);
+    const magRoot = magValueToRoot(mag);
+    if (magRoot) roots.push(magRoot);
   }
   return [...new Set(roots.map(normalizeRootName).filter(Boolean))];
 };
@@ -2851,8 +2896,14 @@ const scoreRootRow = (item, globalMetrics, baseStats) => {
   const cvrDeficit = Math.max(0, Math.min(1, (globalCvr - cvr) / Math.max(0.001, globalCvr)));
   const cpcPressure = Math.max(0, Math.min(1, (safeNum(item.cpc) - targetCpc) / Math.max(0.05, targetCpc)));
   const semanticPenalty = semanticPenaltyForRoots(roots);
+  const pureDiopter = isPureDiopterRootSet(roots);
   let toxicity = (30*wasteScore + 25*roasDeficit + 20*cvrDeficit + 15*cpcPressure + 10*semanticPenalty) * conf;
   if (roots.some(r => getRootType(r) === "mismatch") && item.spend >= 10) toxicity += 18;
+  if (pureDiopter) {
+    // 度数本身通常是强购买意图，不应像错配词一样直接判死刑；只在高点击/高花费无订单时提高警戒。
+    toxicity -= 10;
+    if (item.orders === 0 && item.clicks >= Math.max(12, safeNum($("ruleClicksNeg")?.value || 20) * 0.6) && item.spend >= Math.max(8, targetCpc * 18)) toxicity += 10;
+  }
   toxicity = Math.max(0, Math.min(100, toxicity));
   const roasExcess = Math.max(0, Math.min(1, (roas - targetRoas) / Math.max(1, targetRoas)));
   const cvrExcess = Math.max(0, Math.min(1, (cvr - globalCvr) / Math.max(0.001, globalCvr)));
@@ -2861,6 +2912,7 @@ const scoreRootRow = (item, globalMetrics, baseStats) => {
   const semanticBoost = semanticAttractionBoost(roots);
   let attraction = (30*roasExcess + 25*cvrExcess + 20*orderStability + 15*salesContribution + 10*semanticBoost) * conf;
   if (roots.some(r => ["core","style","diopter"].includes(getRootType(r))) && item.orders >= 1) attraction += 8;
+  if (pureDiopter && item.orders >= 1) attraction += 8;
   attraction = Math.max(0, Math.min(100, attraction));
   let lift = 1, toxicityDelta = 0;
   if (roots.length > 1 && baseStats) {
@@ -2880,11 +2932,18 @@ const decideRootAction = (item, coRows, globalMetrics) => {
   const rules = getRules();
   const roots = item.roots || [];
   const hasCore = roots.some(r => ["core","style","diopter"].includes(getRootType(r)));
+  const pureDiopter = isPureDiopterRootSet(roots);
   const hasMismatch = roots.some(r => getRootType(r) === "mismatch");
   const hasConditional = roots.some(r => ["function","generic","watch"].includes(getRootType(r)));
   const profitableChildren = roots.length === 1 ? findProfitableCooccurrences(roots[0], coRows, targetRoas) : [];
   let actionKey = "observe", cls = "neutral", label = currentLang === "zh" ? "观察" : "Observe", risk = currentLang === "zh" ? "中" : "Medium", reason = currentLang === "zh" ? "样本或方向不足，继续观察" : "Insufficient sample or unclear direction; keep watching";
-  if (item.toxicity >= 80 && item.spend >= rules.spendNeg && item.clicks >= rules.clicksNeg && (item.orders === 0 || item.roas <= rules.roasNeg) && hasMismatch && !profitableChildren.length) {
+  if (pureDiopter && item.attraction >= 62 && item.orders >= Math.max(1, Math.min(2, rules.ordersKeep)) && item.roas >= Math.max(1.5, targetRoas * 0.75)) {
+    actionKey = "diopter_scale"; cls = "good"; label = currentLang === "zh" ? "度数扩量" : "Scale Diopter"; risk = currentLang === "zh" ? "低" : "Low"; reason = currentLang === "zh" ? `${getDiopterSegmentLabel(roots[0])}有订单证据，建议单独 Exact / Phrase 分层放量，并按该度数设置独立预算与出价` : `${getDiopterSegmentLabel(roots[0])} has order evidence; scale in a dedicated Exact / Phrase layer with its own budget and bid`;
+  } else if (pureDiopter && item.orders > 0 && item.roas < targetRoas) {
+    actionKey = "diopter_bid_down"; cls = "warn"; label = currentLang === "zh" ? "度数降价" : "Diopter Bid Down"; risk = currentLang === "zh" ? "中" : "Medium"; reason = currentLang === "zh" ? "度数相关性强但经济性不足，优先降低该度数 Exact/Phrase 出价，不要全局否定" : "Relevant diopter traffic with weak economics; reduce the Exact/Phrase bid instead of global negation";
+  } else if (pureDiopter && item.orders === 0 && item.spend >= rules.spendNeg && item.clicks >= Math.max(12, rules.clicksNeg * 0.6)) {
+    actionKey = "diopter_exact_review"; cls = "warn"; label = currentLang === "zh" ? "度数Exact复核" : "Diopter Exact Review"; risk = currentLang === "zh" ? "中" : "Medium"; reason = currentLang === "zh" ? "单纯度数消耗无转化，建议只在对应广告组做 Exact 否定或降价复核，禁止直接 Phrase 否定整个度数层" : "Pure diopter spend with no orders; review Exact negative or bid-down only within the related ad group, not global Phrase negative";
+  } else if (item.toxicity >= 80 && item.spend >= rules.spendNeg && item.clicks >= rules.clicksNeg && (item.orders === 0 || item.roas <= rules.roasNeg) && hasMismatch && !profitableChildren.length) {
     actionKey = "phrase_negative"; cls = "bad"; label = currentLang === "zh" ? "词组否定" : "Phrase Negative"; risk = currentLang === "zh" ? "低" : "Low"; reason = currentLang === "zh" ? "高毒性错配词根，且无赚钱共现组合" : "High-toxic mismatch root with no profitable co-occurrence";
   } else if (item.toxicity >= 74 && item.spend >= rules.spendNeg && (profitableChildren.length || hasConditional || hasCore)) {
     actionKey = "exact_negative_review"; cls = "warn"; label = currentLang === "zh" ? "精准否定/复核" : "Exact Negative / Review"; risk = currentLang === "zh" ? "高" : "High"; reason = currentLang === "zh" ? `存在误杀风险：${profitableChildren.join(" / ") || "条件词或核心词根"}` : `Overblocking risk: ${profitableChildren.join(" / ") || "conditional or core root"}`;
@@ -2913,7 +2972,7 @@ const buildWordStats = () => {
     if (WF_MODE === "token") keys = roots;
     else if (WF_MODE === "bigram") keys = combosOf(roots, 2);
     else if (WF_MODE === "trigram") keys = combosOf(roots, 3);
-    else if (WF_MODE === "mag") keys = roots.filter(x => /^MAG_/.test(x));
+    else if (WF_MODE === "mag") keys = extractMagnificationValues(term).map(magValueToRoot).map(normalizeRootName).filter(Boolean); // 单纯度数：只聚合 +1.00 / +1.50 这类度数词根
     for (const key of [...new Set(keys)]) {
       if (!key) continue;
       if (!mp.has(key)) mp.set(key, []);
@@ -3753,12 +3812,25 @@ const toxic = rows.filter(r => r.decision?.cls === "bad").length;
 const review = rows.filter(r => r.decision?.cls === "warn").length;
 const scale = rows.filter(r => r.decision?.cls === "good").length;
 const topDetox = rows.filter(r => r.roots.length > 1 && r.lift >= 1.25 && r.attraction >= 55).slice(0,3).map(r => rootDisplay(r.word)).join(" / ") || (currentLang === "zh" ? "暂无" : "None");
+const diopterRows = rows.filter(r => isPureDiopterRootSet(r.roots || []));
+const topDiopterWin = [...diopterRows].filter(r => r.orders > 0).sort((a,b)=> (b.attraction - a.attraction) || (b.roas - a.roas)).slice(0,3).map(r => `${rootDisplay(r.word)} ${safeNum(r.roas).toFixed(1)}x`).join(" / ") || (currentLang === "zh" ? "暂无" : "None");
+const topDiopterWaste = [...diopterRows].filter(r => r.orders === 0 && r.spend > 0).sort((a,b)=> b.spend - a.spend).slice(0,3).map(r => `${rootDisplay(r.word)} ${fmtMoney(r.spend)}`).join(" / ") || (currentLang === "zh" ? "暂无" : "None");
 if ($("rootMatrixSummary")) {
-  $("rootMatrixSummary").innerHTML = `
-    <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "强毒性候选" : "Toxic Candidates"}</div><div class="root-value">${toxic}</div><div class="root-note">${currentLang === "zh" ? "满足高毒性与低误杀条件" : "High toxicity with low overblocking risk"}</div></div>
-    <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "需复核条件词" : "Review Required"}</div><div class="root-value">${review}</div><div class="root-note">${currentLang === "zh" ? "blue light / men / glasses 等避免误杀" : "Avoid overblocking conditional roots"}</div></div>
-    <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "扩量机会" : "Scale Opportunities"}</div><div class="root-value">${scale}</div><div class="root-note">${currentLang === "zh" ? "高引力词根或赚钱组合" : "High-attraction roots or combos"}</div></div>
-    <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "Top 解毒组合" : "Top Detox Combos"}</div><div class="root-note" style="font-weight:700;color:var(--text);">${escapeHtml(topDetox)}</div><div class="root-note">${currentLang === "zh" ? "组合后 ROAS/CVR 相对提升" : "Combo improves ROAS/CVR lift"}</div></div>`;
+  if (WF_MODE === "mag") {
+    $("rootMatrixSummary").innerHTML = `
+      <div class="root-score-card focus"><div class="root-label">${currentLang === "zh" ? "单纯度数词根" : "Pure Diopter Roots"}</div><div class="root-value">${fmtInt(rows.length)}</div><div class="root-note">${currentLang === "zh" ? "只聚合 +1.00 / +1.50 等度数，不混入 reading glasses 词根" : "Aggregates +1.00 / +1.50 etc. without generic roots"}</div></div>
+      <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "度数扩量" : "Diopter Scale"}</div><div class="root-value">${fmtInt(rows.filter(r=>r.decision?.actionKey === "diopter_scale").length)}</div><div class="root-note">${currentLang === "zh" ? "建议单独 Exact/Phrase 分层" : "Dedicated Exact/Phrase layer"}</div></div>
+      <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "度数降价/复核" : "Bid Down / Review"}</div><div class="root-value">${fmtInt(rows.filter(r=>["diopter_bid_down","diopter_exact_review"].includes(r.decision?.actionKey)).length)}</div><div class="root-note">${currentLang === "zh" ? "只处理对应度数，不做全局 Phrase 否定" : "Handle the exact diopter, not global phrase negation"}</div></div>
+      <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "赚钱度数" : "Winning Powers"}</div><div class="root-note" style="font-weight:700;color:var(--text);">${escapeHtml(topDiopterWin)}</div><div class="root-note">${currentLang === "zh" ? "按引力与 ROAS 排序" : "Sorted by attraction and ROAS"}</div></div>
+      <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "烧钱度数" : "Wasted Powers"}</div><div class="root-note" style="font-weight:700;color:var(--text);">${escapeHtml(topDiopterWaste)}</div><div class="root-note">${currentLang === "zh" ? "高花费无订单优先复核" : "High spend without orders"}</div></div>`;
+  } else {
+    $("rootMatrixSummary").innerHTML = `
+      <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "强毒性候选" : "Toxic Candidates"}</div><div class="root-value">${toxic}</div><div class="root-note">${currentLang === "zh" ? "满足高毒性与低误杀条件" : "High toxicity with low overblocking risk"}</div></div>
+      <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "需复核条件词" : "Review Required"}</div><div class="root-value">${review}</div><div class="root-note">${currentLang === "zh" ? "blue light / men / glasses / 度数等避免误杀" : "Avoid overblocking conditional and diopter roots"}</div></div>
+      <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "扩量机会" : "Scale Opportunities"}</div><div class="root-value">${scale}</div><div class="root-note">${currentLang === "zh" ? "高引力词根或赚钱组合" : "High-attraction roots or combos"}</div></div>
+      <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "度数层" : "Diopter Layer"}</div><div class="root-value">${diopterRows.length ? fmtInt(diopterRows.length) : "—"}</div><div class="root-note">${currentLang === "zh" ? "切到“单纯度数”查看 +1.00/+1.50 表现" : "Switch to Pure Diopter for +1.00/+1.50 performance"}</div></div>
+      <div class="root-score-card"><div class="root-label">${currentLang === "zh" ? "Top 解毒组合" : "Top Detox Combos"}</div><div class="root-note" style="font-weight:700;color:var(--text);">${escapeHtml(topDetox)}</div><div class="root-note">${currentLang === "zh" ? "组合后 ROAS/CVR 相对提升" : "Combo improves ROAS/CVR lift"}</div></div>`;
+  }
 }
 
 renderProgressive(tbody, rows, (r) => {
@@ -3766,7 +3838,9 @@ renderProgressive(tbody, rows, (r) => {
     const d = r.decision || { cls:"neutral", label:"Observe", risk:"Medium", reason:"" };
     const liftLabel = r.roots.length > 1 ? `${safeNum(r.lift).toFixed(2)}x${safeNum(r.toxicityDelta) < -8 ? " ↓tox" : safeNum(r.toxicityDelta) > 8 ? " ↑tox" : ""}` : "—";
     const hoverTooltip = `${rootDisplay(r.word)}\n${d.label} / Risk: ${d.risk}\nToxicity: ${Math.round(r.toxicity)} | Attraction: ${Math.round(r.attraction)} | Lift: ${safeNum(r.lift).toFixed(2)}x`;
-    const chips = (r.roots || []).slice(0, 5).map(x => `<span>${escapeHtml(rootDisplay(x))}</span>`).join("");
+    const chipsBase = (r.roots || []).slice(0, 5).map(x => `<span>${escapeHtml(rootDisplay(x))}</span>`).join("");
+    const diopterChip = isPureDiopterRootSet(r.roots || []) ? `<span>${escapeHtml(getDiopterSegmentLabel(r.roots[0]))}</span>` : "";
+    const chips = chipsBase + diopterChip;
     return `<tr title="${escapeHtml(hoverTooltip)}"> 
         <td><b>${displayWord}</b><div class="rootMini">${chips}</div></td>
         <td><span class="tag ${r.rootType === 'mismatch' ? 'bad' : (['core','style','diopter'].includes(r.rootType) ? 'good' : 'warn')}">${escapeHtml(getRootTypeLabel(r.rootType))}</span></td>
@@ -4612,9 +4686,9 @@ const exportRankExcel = () => {
 
 const exportWordFreqExcel = () => {
   const rows = buildWordStats(); if (!rows.length) return; 
-  const headers = ["Root / Co-occurrence", "Root Type", "Freq", "Impressions", "Clicks", "CTR", "CPC", "Spend", "Sales", "Orders", "Net Profit", "CVR", "ROAS", "ACOS", "Toxicity Score", "Attraction Score", "Co-occurrence Lift", "Toxicity Delta", "Decision", "Risk", "Reason", "Profitable Children / Notes"];
+  const headers = ["Root / Co-occurrence", "Root Scope", "Root Type", "Freq", "Impressions", "Clicks", "CTR", "CPC", "Spend", "Sales", "Orders", "Net Profit", "CVR", "ROAS", "ACOS", "Toxicity Score", "Attraction Score", "Co-occurrence Lift", "Toxicity Delta", "Decision", "Risk", "Reason", "Profitable Children / Notes"];
   const dataRows = rows.slice(0, 30000).map(r => [
-    rootDisplay(r.word), getRootTypeLabel(r.rootType), r.freq, r.impr || 0, r.clicks || 0, r.ctr || 0, r.cpc || 0, r.spend || 0, r.sales || 0, r.orders, r.netProfit || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos,
+    rootDisplay(r.word), isPureDiopterRootSet(r.roots || []) ? "Pure Diopter" : (r.roots?.length > 1 ? "Co-occurrence" : "Single Root"), getRootTypeLabel(r.rootType), r.freq, r.impr || 0, r.clicks || 0, r.ctr || 0, r.cpc || 0, r.spend || 0, r.sales || 0, r.orders, r.netProfit || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos,
     Math.round(r.toxicity || 0), Math.round(r.attraction || 0), r.roots?.length > 1 ? safeNum(r.lift) : null, r.roots?.length > 1 ? safeNum(r.toxicityDelta) : null,
     r.decision?.label || "Observe", r.decision?.risk || "Medium", r.decision?.reason || "", (r.decision?.profitableChildren || []).join(" / ")
   ]);
