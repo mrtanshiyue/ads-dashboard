@@ -1384,7 +1384,7 @@
       <div class="fieldRow" style="margin-top: 4px; padding: 6px; background: var(--softGood); border-radius: 8px; border: 1px solid rgba(26,127,55,0.2);">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--good); margin: 0;">
           <input type="checkbox" id="eventProtectionToggle" checked style="width:16px; height:16px; margin:0; appearance:auto; -webkit-appearance:checkbox;">
-          <b data-i18n="lbl_event_protection">开启大促归因保护 (Spring Sale 等防杀机制)</b>
+          <b data-i18n="lbl_event_protection">开启大促归因保护 2.0（活动识别 + 广告类型窗口）</b>
         </label>
       </div>
       <div class="row2">
@@ -1972,7 +1972,7 @@ const I18N = {
       lbl_neg_roas: "否定 ROAS ≤",
       lbl_keep_orders: "保留订单 ≥",
       lbl_migrate_roas: "迁移 ROAS ≥",
-      lbl_event_protection: "开启大促归因保护 (Spring Sale 等防杀机制)",
+      lbl_event_protection: "开启大促归因保护 2.0（活动识别 + 广告类型窗口）",
       lbl_export_scope: "导出范围",
       opt_scope_rank: "当前榜单 (Top N)",
       opt_scope_view: "当前视图 (全部分组)",
@@ -2407,7 +2407,7 @@ const I18N = {
       lbl_neg_roas: "Negate ROAS ≤",
       lbl_keep_orders: "Keep Orders ≥",
       lbl_migrate_roas: "Migrate ROAS ≥",
-      lbl_event_protection: "Enable Event Attribution Protection (Spring Sale etc.)",
+      lbl_event_protection: "Enable Event Attribution Protection 2.0 (event signal + ad-type window)",
       lbl_export_scope: "Export Scope",
       opt_scope_rank: "Current Rank (Top N)",
       opt_scope_view: "Current View (All Groups)",
@@ -4653,6 +4653,122 @@ const getBidRiskProfile = (term="") => {
   return { hardMismatch, audienceShift, blueLightModifier };
 };
 
+
+// 大促归因保护 2.0：只保护“活动/新鲜点击”风险，不再把所有近 14 天数据一刀切保护
+const EVENT_ATTRIBUTION_RE = /\b(big\s*)?spring\s*sale\b|\bprime\s*day\b|\bblack\s*friday\b|\bcyber\s*monday\b|\bholiday\b|\bchristmas\b|\bpromo(?:tion)?\b|\bcoupon\b|\blightning\s*deal\b|\b7\s*day\s*deal\b|\bbest\s*deal\b|\bdeal\b|\bsale\b/i;
+const ATTRIBUTION_DAY_MS = 86400000;
+
+const normalizeAdProductCode = (x) => {
+  const s = String(x || "").toUpperCase();
+  if (s.includes("SPONSORED BRANDS") || s === "SB") return "SB";
+  if (s.includes("SPONSORED DISPLAY") || s === "SD") return "SD";
+  return "SP";
+};
+
+const getAttributionWindowDays = (adProducts = []) => {
+  const products = Array.isArray(adProducts) ? adProducts : [adProducts];
+  const codes = new Set(products.map(normalizeAdProductCode).filter(Boolean));
+  if (codes.has("SB") || codes.has("SD")) return 14;
+  return 7;
+};
+
+const toDateOnly = (value) => {
+  const iso = toISODate(value);
+  if (!iso) return null;
+  return new Date(`${iso}T00:00:00Z`);
+};
+
+const getLatestDateFromRows = (rows = []) => {
+  const dates = rows.map(r => r.date).filter(Boolean).sort();
+  return dates.length ? dates[dates.length - 1] : "";
+};
+
+const getRowDateSpan = (rows = []) => {
+  const dates = [...new Set(rows.map(r => r.date).filter(Boolean))].sort();
+  return { dates, days: dates.length, start: dates[0] || "", end: dates[dates.length - 1] || "" };
+};
+
+const calcRecentSpendShare = (rows = [], item = {}, endDateStr = "", windowDays = 7) => {
+  const endDate = toDateOnly(endDateStr || getLatestDateFromRows(rows));
+  const totalSpend = safeNum(item.spend || rows.reduce((s, r) => s + safeNum(r.spend), 0));
+  if (!rows.length || !endDate || totalSpend <= 0) return 0;
+  const lookbackDays = Math.max(1, Math.min(7, windowDays));
+  const cutoff = new Date(endDate.getTime() - (lookbackDays - 1) * ATTRIBUTION_DAY_MS);
+  const recentSpend = rows.reduce((s, r) => {
+    const d = toDateOnly(r.date);
+    if (!d || d < cutoff || d > endDate) return s;
+    return s + safeNum(r.spend);
+  }, 0);
+  return clamp(recentSpend / totalSpend, 0, 1);
+};
+
+const getEventAttributionProfile = (item = {}) => {
+  const enabled = Boolean($("eventProtectionToggle")?.checked);
+  const rows = Array.isArray(item.rows) ? item.rows : [];
+  const adProducts = new Set();
+  if (item.adProduct) adProducts.add(item.adProduct);
+  if (Array.isArray(item.adProducts)) item.adProducts.forEach(x => adProducts.add(x));
+  rows.forEach(r => { if (r.adProduct) adProducts.add(r.adProduct); });
+  const windowDays = getAttributionWindowDays([...adProducts]);
+
+  const endDateStr = $("dateEnd")?.value || getLatestDateFromRows(rows);
+  const endDate = toDateOnly(endDateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayUtc = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  const daysSinceEnd = endDate ? Math.max(0, Math.floor((todayUtc.getTime() - endDate.getTime()) / ATTRIBUTION_DAY_MS)) : 999;
+  const span = getRowDateSpan(rows);
+  const recentSpendShare = calcRecentSpendShare(rows, item, endDateStr, windowDays);
+
+  const eventText = [
+    item.campaign, item.adGroup, item.sourceFile,
+    ...rows.flatMap(r => [r.campaign, r.adGroup, r.sourceFile])
+  ].filter(Boolean).join(" ");
+  const eventSignal = EVENT_ATTRIBUTION_RE.test(eventText);
+
+  // 没有 Spring Sale / Prime Day / Deal / Coupon 等活动信号时，不再做全局 14 天保护；只对 0-3 天的新鲜点击做轻保护
+  const freshClickFallback = !eventSignal && daysSinceEnd <= 3 && recentSpendShare >= 0.70 && span.days <= Math.max(3, windowDays);
+  const active = enabled && daysSinceEnd <= windowDays && (eventSignal || freshClickFallback);
+  const strict = active && daysSinceEnd <= 3;
+  const watch = active && daysSinceEnd > 3 && daysSinceEnd <= Math.min(7, windowDays);
+  const semiRelease = active && daysSinceEnd > 7 && daysSinceEnd <= windowDays;
+  const blocksNegative = strict || watch;
+  const spendMultiplier = strict ? 1.35 : watch ? 1.20 : 1.00;
+
+  let protection = "Executable";
+  let protectionLabel = currentLang === "zh" ? "可执行" : "Executable";
+  let stageLabel = currentLang === "zh" ? "正常执行" : "Executable";
+  if (strict) {
+    protection = eventSignal ? "Event Attribution Guard" : "Fresh Click Guard";
+    protectionLabel = currentLang === "zh" ? "大促归因保护" : "Event Guard";
+    stageLabel = currentLang === "zh" ? "0-3天严格保护" : "0-3d strict guard";
+  } else if (watch) {
+    protection = "Event Attribution Watch";
+    protectionLabel = currentLang === "zh" ? "大促归因观察" : "Event Watch";
+    stageLabel = currentLang === "zh" ? "4-7天观察保护" : "4-7d attribution watch";
+  } else if (semiRelease) {
+    protection = "Event Semi-Release";
+    protectionLabel = currentLang === "zh" ? "大促半释放" : "Semi-Release";
+    stageLabel = currentLang === "zh" ? "8-14天半释放" : "8-14d semi-release";
+  }
+
+  return {
+    enabled, active, eventSignal, freshClickFallback, strict, watch, semiRelease,
+    blocksNegative, blocksBulk: blocksNegative,
+    spendMultiplier, windowDays, daysSinceEnd, recentSpendShare,
+    reportDays: span.days, reportStart: span.start, reportEnd: span.end,
+    protection, protectionLabel, stageLabel
+  };
+};
+
+const getEventProtectionReason = (profile = {}) => {
+  if (!profile.active) return "";
+  const pct = `${Math.round((profile.recentSpendShare || 0) * 100)}%`;
+  return currentLang === "zh"
+    ? `大促归因保护：${profile.stageLabel}，${profile.windowDays}天归因窗口，最近花费占比${pct}，先降价控损不直接否定`
+    : `Event attribution guard: ${profile.stageLabel}, ${profile.windowDays}d window, recent spend share ${pct}; reduce bid before negating`;
+};
+
 const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
   const r = getRules();
   const globalMetrics = cachedGlobalMetrics || sumMetrics(AdsStore.view);
@@ -4681,34 +4797,28 @@ const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
   const confidenceCoef = clamp(0.45 + confidenceScore / 180, 0.45, 1.0);
   const rawBid = theoreticalCpc * (matchCoefMap[bucket] || 0.65) * confidenceCoef;
   const risk = getBidRiskProfile(item.name || item.searchTerm || item.targeting || "");
-  const endDateStr = $("dateEnd")?.value;
-  const daysSinceEnd = endDateStr ? ((new Date() - new Date(endDateStr)) / 86400000) : 999;
-  const isWithinAttributionWindow = daysSinceEnd <= 14;
-  const isStrictAttribution = daysSinceEnd <= 3;
-  const isEventProtection = $("eventProtectionToggle")?.checked;
+  const eventProfile = getEventAttributionProfile(item);
   const br = getBusinessContextForItem(item);
   let lifecycleAdjustment = 1.0;
   if (br?.lifecycle === "new") lifecycleAdjustment = 1.5;
   if (br?.lifecycle === "decline") lifecycleAdjustment = 0.8;
-  const dynamicSpendNeg = (isWithinAttributionWindow ? r.spendNeg * 1.25 : r.spendNeg) * lifecycleAdjustment;
+  const dynamicSpendNeg = (r.spendNeg * eventProfile.spendMultiplier) * lifecycleAdjustment;
   const expectedClicksForOneOrder = globalCvr > 0 ? (1 / globalCvr) : 20;
   const enoughBadSample = item.spend >= dynamicSpendNeg && item.clicks >= Math.max(r.clicksNeg, expectedClicksForOneOrder * 1.2) && item.orders <= 0;
   const lowSample = confidenceScore < 45 || item.clicks < 8;
-  let protection = "Executable";
-  let protectionLabel = currentLang === "zh" ? "可执行" : "Executable";
-  if (isStrictAttribution && isEventProtection) { protection = "Attribution Guard"; protectionLabel = currentLang === "zh" ? "归因保护" : "Attribution Guard"; }
-  else if (isWithinAttributionWindow && isEventProtection) { protection = "Attribution Watch"; protectionLabel = currentLang === "zh" ? "归因观察" : "Attribution Watch"; }
-  else if (lowSample) { protection = "Low Sample"; protectionLabel = currentLang === "zh" ? "样本不足" : "Low Sample"; }
+  let protection = eventProfile.protection;
+  let protectionLabel = eventProfile.protectionLabel;
+  if (!eventProfile.active && lowSample) { protection = "Low Sample"; protectionLabel = currentLang === "zh" ? "样本不足" : "Low Sample"; }
 
   let action = "HOLD";
   let reason = currentLang === "zh" ? "保持现有出价" : "Hold current bid";
   if (risk.hardMismatch && item.orders <= 0 && item.spend >= Math.max(10, r.spendNeg * 0.6)) {
-    action = item.spend >= dynamicSpendNeg && !isWithinAttributionWindow ? "NEGATE" : "REVIEW";
+    action = item.spend >= dynamicSpendNeg && !eventProfile.blocksNegative ? "NEGATE" : "REVIEW";
     reason = currentLang === "zh" ? "疑似错配词，禁止加价，进入风控复核" : "Mismatch risk; block bid increase and review";
   } else if (enoughBadSample) {
-    if ((isStrictAttribution || isWithinAttributionWindow) && isEventProtection) {
+    if (eventProfile.blocksNegative) {
       action = "DECREASE";
-      reason = currentLang === "zh" ? "归因保护期内先降价控损" : "Reduce bid during attribution guard";
+      reason = getEventProtectionReason(eventProfile) || (currentLang === "zh" ? "归因保护期内先降价控损" : "Reduce bid during attribution guard");
     } else {
       action = "NEGATE";
       reason = currentLang === "zh" ? "高花费高点击无订单，进入否定候选" : "High spend/clicks with zero orders; negative candidate";
@@ -4758,7 +4868,8 @@ const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
   const suggestedBidDelta = action === "NEGATE" ? "-100%" : `${bidDeltaPct >= 0 ? "+" : ""}${Math.round(bidDeltaPct)}%`;
   const sampleLabel = confidenceScore >= 75 ? (currentLang === "zh" ? "高" : "High") : confidenceScore >= 50 ? (currentLang === "zh" ? "中" : "Medium") : (currentLang === "zh" ? "低" : "Low");
   const priority = (action === "NEGATE" || action === "INCREASE") && confidenceScore >= 60 ? "P1" : (action === "DECREASE" || action === "MIGRATE EXACT") ? "P2" : "P3";
-  const bulkReady = ["INCREASE", "DECREASE", "NEGATE", "MIGRATE EXACT"].includes(action) && protection === "Executable" && confidenceScore >= 55 && effectiveMaxCpc <= effectiveCap && !!item.campaign && !!item.adGroup && action !== "REVIEW";
+  const bulkBlocked = eventProfile.blocksBulk || protection === "Low Sample";
+  const bulkReady = ["INCREASE", "DECREASE", "NEGATE", "MIGRATE EXACT"].includes(action) && !bulkBlocked && confidenceScore >= 55 && effectiveMaxCpc <= effectiveCap && !!item.campaign && !!item.adGroup && action !== "REVIEW";
   const evidence = [
     `Bucket=${bucket}`,
     `AOV=${aov.toFixed(2)}`,
@@ -4768,11 +4879,16 @@ const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
     `RawBid=${rawBid.toFixed(2)}`,
     `EffectiveCap=${effectiveCap.toFixed(2)}`,
     `Protection=${protection}`,
+    `EventSignal=${eventProfile.eventSignal ? "YES" : "NO"}`,
+    `AttrWindow=${eventProfile.windowDays}d`,
+    `DaysSinceEnd=${eventProfile.daysSinceEnd}`,
+    `RecentSpendShare=${Math.round((eventProfile.recentSpendShare || 0) * 100)}%`,
+    `EventStage=${eventProfile.stageLabel}`,
     risk.hardMismatch ? "MismatchRisk=YES" : "MismatchRisk=NO",
     risk.audienceShift ? "AudienceShift=MEN" : "AudienceShift=NO"
   ].join(" | ");
 
-  return { action, reason, suggestedBidDelta, suggestedBid, effectiveMaxCpc, effectiveCap, currentCpc, sampleConfidence: confidenceScore, sampleLabel, protection, protectionLabel, priority, bulkReady, evidence, smoothCvrGovernance: smoothCvr, theoreticalCpc, matchBucket: bucket };
+  return { action, reason, suggestedBidDelta, suggestedBid, effectiveMaxCpc, effectiveCap, currentCpc, sampleConfidence: confidenceScore, sampleLabel, protection, protectionLabel, priority, bulkReady, bulkBlocked, evidence, smoothCvrGovernance: smoothCvr, theoreticalCpc, matchBucket: bucket, eventProfile };
 };
 
 const decideAction = (item, rankBy, cachedGlobalMetrics = null) => {
@@ -4875,12 +4991,18 @@ const exportProductTargetingExcel = () => {
     const spList = list.filter(x => String(x.adProduct || "SP").toUpperCase() === "SP");
     const main = (spList.length ? spList : list).reduce((p,c) => (c.spend > p.spend ? c : p), (spList.length ? spList : list)[0]);
     const canBulkSp = spList.length > 0 && !!(main.campaign && main.adGroup);
+    const eventProfile = getEventAttributionProfile({ name: asin, ...m, rows: list, campaign: main.campaign || "", adGroup: main.adGroup || "", adProduct: main.adProduct || "", adProducts: [...new Set(list.map(x => x.adProduct).filter(Boolean))] });
     let decision = "WATCH";
     let reason = currentLang === "zh" ? "ASIN 流量观察" : "ASIN traffic watch";
-    if (m.spend >= r.spendNeg && m.clicks >= Math.max(r.clicksNeg, expectedClicksForOneOrder) && m.orders === 0) {
-      decision = "NEGATIVE_PRODUCT_TARGETING";
-      reason = currentLang === "zh" ? "ASIN 消耗达标但无转化，建议否定商品投放" : "ASIN spend/click threshold hit with zero orders; add negative product targeting";
-      if (canBulkSp) bulkRows.push(["Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", main.campaign || "[Campaign Name Required]", main.adGroup || "[Ad Group Name Required]", "", `asin=\"${asin}\"`, "negative exact", "", "", "", "", "enabled"]);
+    if (m.spend >= r.spendNeg * eventProfile.spendMultiplier && m.clicks >= Math.max(r.clicksNeg, expectedClicksForOneOrder) && m.orders === 0) {
+      if (eventProfile.blocksNegative) {
+        decision = "ATTRIBUTION_GUARD_REVIEW";
+        reason = getEventProtectionReason(eventProfile) || (currentLang === "zh" ? "归因保护期内 ASIN 否定暂缓" : "ASIN negative paused during attribution guard");
+      } else {
+        decision = "NEGATIVE_PRODUCT_TARGETING";
+        reason = currentLang === "zh" ? "ASIN 消耗达标但无转化，建议否定商品投放" : "ASIN spend/click threshold hit with zero orders; add negative product targeting";
+        if (canBulkSp) bulkRows.push(["Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", main.campaign || "[Campaign Name Required]", main.adGroup || "[Ad Group Name Required]", "", `asin=\"${asin}\"`, "negative exact", "", "", "", "", "enabled"]);
+      }
     } else if (m.roas >= r.roasKeep && m.orders >= r.ordersKeep) {
       decision = "PRODUCT_TARGETING_SCALE";
       reason = currentLang === "zh" ? "ASIN 已验证转化，建议独立商品投放放量" : "Validated ASIN; isolate and scale as product targeting";
@@ -4929,9 +5051,9 @@ const itemsToExport = isViewScope ? (() => {
   const globalMetrics = sumMetrics(AdsStore.view);
   return [...(AdsStore.rankGroups || new Map()).entries()].map(([name, list]) => { 
     const main = getMainRow(list);
-    const it = { name, ...sumMetrics(list), campaign: main.campaign || "", adGroup: main.adGroup || "", targeting: main.targeting || "", searchTerm: name, campaigns: [...new Set(list.map(r=>r.campaign))] }; 
+    const it = { name, ...sumMetrics(list), rows: list, campaign: main.campaign || "", adGroup: main.adGroup || "", targeting: main.targeting || "", searchTerm: name, matchType: main.matchType || "", adProduct: main.adProduct || "", adProducts: [...new Set(list.map(r => r.adProduct).filter(Boolean))], campaigns: [...new Set(list.map(r=>r.campaign))] }; 
     const a = decideAction(it, rankBy, globalMetrics); 
-    return { ...it, action:a.action, reason:a.reason }; 
+    return { ...it, action:a.action, reason:a.reason, protection:a.protection, protectionLabel:a.protectionLabel, bulkBlocked:a.bulkBlocked }; 
   }).sort((a,b)=> (b.spend||0) - (a.spend||0)); 
 })() : AdsStore.rankRows.slice();
 
@@ -5323,7 +5445,7 @@ const buildRankTable = () => {
     const globalMetrics = sumMetrics(AdsStore.view);
     let items = [...AdsStore.rankGroups.entries()].map(([name, list]) => { 
         const main = getMainRow(list);
-        const base = { name, ...sumMetrics(list), campaign: main.campaign || "", adGroup: main.adGroup || "", targeting: main.targeting || "", searchTerm: name, matchType: main.matchType || "", adProduct: main.adProduct || "" }; 
+        const base = { name, ...sumMetrics(list), rows: list, campaign: main.campaign || "", adGroup: main.adGroup || "", targeting: main.targeting || "", searchTerm: name, matchType: main.matchType || "", adProduct: main.adProduct || "", adProducts: [...new Set(list.map(r => r.adProduct).filter(Boolean))] }; 
         const governance = decideAction(base, rankBy, globalMetrics); 
         const {action, reason, suggestedBidDelta} = governance; 
         
@@ -6006,16 +6128,23 @@ const buildActionPlan = (options = {}) => {
     const isBrand = ACTION_BRAND_RE.test(lower);
     const isMismatch = ACTION_MISMATCH_RE.test(lower);
     const isRelevantCore = ACTION_CORE_RE.test(lower) || ACTION_STYLE_RE.test(lower);
-    const nearNegSpend = it.spend >= Math.max(5, rules.spendNeg * 0.55);
+    const eventProfile = getEventAttributionProfile(it);
+    const stopLossSpend = rules.spendNeg * eventProfile.spendMultiplier;
+    const nearNegSpend = it.spend >= Math.max(5, stopLossSpend * 0.55);
     const nearNegClicks = it.clicks >= Math.max(5, rules.clicksNeg * 0.55);
     const currentCpc = it.cpc || (it.clicks > 0 ? it.spend / it.clicks : 0);
     const broadRoot = controls.broadRoot ? extractBroadRootTerm(raw) : raw;
     const broadRootWords = countTermWords(broadRoot);
 
     // 1) 否定：烧钱 0 单，或者明显类目错配 0 单。品牌词不自动否定，只允许降价和人工复核。
-    const hitNegativeThreshold = it.orders <= 0 && ((it.spend >= rules.spendNeg && it.clicks >= rules.clicksNeg) || (isMismatch && nearNegSpend));
+    const hitNegativeThreshold = it.orders <= 0 && ((it.spend >= stopLossSpend && it.clicks >= rules.clicksNeg) || (isMismatch && nearNegSpend));
     if (hitNegativeThreshold) {
-      if (isBrand) {
+      const eventReason = getEventProtectionReason(eventProfile);
+      if (eventProfile.blocksNegative && !isBrand) {
+        const guard = evaluateNegativeConflictGuard(it, items);
+        const baseReason = isMismatch ? t("action_reason_neg_mismatch") : t("action_reason_neg_threshold");
+        rows.push(makeSimpleAction(it, "decrease", "降价", "Attribution Guard Bid Decrease", getSuggestedBid(it, "decrease", targetAcos), `${eventReason} | ${baseReason}${guard.reason ? " | " + guard.reason : ""}`, false, { guard }));
+      } else if (isBrand) {
         const guard = evaluateNegativeConflictGuard(it, items);
         rows.push(makeSimpleAction(it, "decrease", "降价", "Brand Defense Review", getSuggestedBid(it, "decrease", targetAcos), t("action_reason_brand_protect") + (guard.reason ? " | " + guard.reason : ""), false, { guard }));
       } else if (isAsin) {
@@ -7541,7 +7670,9 @@ const buildSearchTermNegativeBaseRows = () => {
     const main = getMainRow(list);
     const m = sumMetrics(list);
     const profile = getNegativeTermProfile(term);
-    const strong = isNegativeWasteStrong(m, b);
+    const eventProfile = getEventAttributionProfile({ name: term, ...m, rows: list, campaign: main.campaign || "", adGroup: main.adGroup || "", adProduct: main.adProduct || "", adProducts: [...new Set(list.map(r => r.adProduct).filter(Boolean))] });
+    if (eventProfile.blocksNegative) continue;
+    const strong = isNegativeWasteStrong({ ...m, spend: m.spend / Math.max(1, eventProfile.spendMultiplier) }, b);
     const soft = isNegativeWasteSoft(m, b);
     const noSales = safeNum(m.orders) === 0;
     const lowRoas = safeNum(m.roas) > 0 && safeNum(m.roas) <= b.roasNeg;
@@ -7591,6 +7722,8 @@ const buildZeroOrderNegativeReviewRows = (mode = "exact") => {
     if (safeNum(m.spend) <= 0 && safeNum(m.clicks) <= 0) continue;
     const profile = getNegativeTermProfile(term);
     const main = getMainRow(list);
+    const eventProfile = getEventAttributionProfile({ name: term, ...m, rows: list, campaign: main.campaign || "", adGroup: main.adGroup || "", adProduct: main.adProduct || "", adProducts: [...new Set(list.map(r => r.adProduct).filter(Boolean))] });
+    if (eventProfile.blocksNegative) continue;
     let finalTerm = term;
     if (mode === "phrase") {
       finalTerm = getPhraseCandidateFromTerm(term, profile);
@@ -7655,6 +7788,8 @@ const addArchitectureNegativeFallbackRows = (rows, mode) => {
 const buildPhraseNegativeCandidates = () => {
   const sourceRows = getCurrentNegativeSourceRows();
   if (!sourceRows.length) return [];
+  const globalEventProfile = getEventAttributionProfile({ name: "__negative_phrase_scope__", ...sumMetrics(sourceRows), rows: sourceRows, adProducts: [...new Set(sourceRows.map(r => r.adProduct).filter(Boolean))] });
+  if (globalEventProfile.blocksNegative) return [];
   const b = getNegativeBoundary();
   const out = [];
 
@@ -7729,12 +7864,14 @@ const buildExactNegativeCandidates = () => {
       const base = {
         name,
         ...sumMetrics(list),
+        rows: list,
         campaign: main.campaign || "",
         adGroup: main.adGroup || "",
         targeting: main.targeting || "",
         searchTerm: name,
         matchType: main.matchType || "",
-        adProduct: main.adProduct || ""
+        adProduct: main.adProduct || "",
+        adProducts: [...new Set(list.map(r => r.adProduct).filter(Boolean))]
       };
       const governance = decideAction(base, rankBy, globalMetrics);
       if (governance.action !== "NEGATE") continue;
