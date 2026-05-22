@@ -655,6 +655,185 @@
     @media (max-width: 1100px){ .archAdMeta{grid-template-columns:1fr 1fr;} .archQuickCopyBar,.archAIHintGrid{grid-template-columns:1fr;} }
     @media (max-width: 650px){ .archAdMeta{grid-template-columns:1fr;} .archFocusStrip{flex-direction:column;} }
 
+
+
+    /* ================= Executive Overview 2.0 ================= */
+    .execOverviewCard {
+      grid-column: span 12;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: hidden;
+    }
+    .execOverviewHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .execOverviewTitle h2 { margin: 0; font-size: 16px; letter-spacing: -.2px; font-weight: 850; }
+    .execOverviewTitle .hint { margin-top: 4px; line-height: 1.4; }
+    .execOverviewMeta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: var(--hover-bg);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11.6px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .execHero {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.25fr) repeat(3, minmax(150px, .75fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+    .execVerdictCard {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--card)), var(--card));
+      padding: 15px 16px;
+      min-height: 132px;
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      gap: 14px;
+      align-items: center;
+    }
+    .execVerdictCard:after {
+      content: "";
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      right: -58px;
+      top: -58px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+    }
+    .execEyebrow { color: var(--muted); font-size: 11.2px; letter-spacing: .05em; text-transform: uppercase; font-weight: 900; }
+    .execVerdict { margin-top: 5px; font-size: 25px; line-height: 1.05; font-weight: 950; color: var(--accent); letter-spacing: -.45px; }
+    .execNextMove { margin-top: 8px; font-size: 12.9px; line-height: 1.48; color: var(--text); font-weight: 650; max-width: 760px; }
+    .execScoreRing {
+      position: relative;
+      z-index: 1;
+      width: 88px;
+      height: 88px;
+      border-radius: 999px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: color-mix(in srgb, var(--accent) 10%, var(--card));
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+      box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--accent) 7%, transparent);
+      flex-shrink: 0;
+    }
+    .execScoreRing b { font-size: 21px; color: var(--accent); line-height: 1; }
+    .execScoreRing span { margin-top: 4px; font-size: 10.5px; color: var(--muted); font-weight: 800; }
+    .execMiniCard {
+      border: 1px solid var(--line);
+      background: var(--hover-bg);
+      border-radius: 18px;
+      padding: 12px;
+      min-height: 132px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .execMiniCard .k { color: var(--muted); font-size: 11px; font-weight: 850; }
+    .execMiniCard .v { font-size: 20px; font-weight: 950; letter-spacing: -.25px; color: var(--text); }
+    .execMiniCard .m { margin-top: auto; color: var(--muted); font-size: 11.5px; line-height: 1.38; }
+    .execMiniCard.good { background: var(--softGood); border-color: color-mix(in srgb, var(--good) 18%, transparent); }
+    .execMiniCard.warn { background: var(--softWarn); border-color: color-mix(in srgb, var(--warn) 18%, transparent); }
+    .execMiniCard.bad { background: var(--softBad); border-color: color-mix(in srgb, var(--bad) 18%, transparent); }
+    .execMiniCard.good .v { color: var(--good); }
+    .execMiniCard.warn .v { color: var(--warn); }
+    .execMiniCard.bad .v { color: var(--bad); }
+    .execKpiGrid {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 9px;
+    }
+    .execKpiCard {
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 16px;
+      padding: 10px 11px;
+      min-height: 86px;
+      box-shadow: 0 5px 14px rgba(0,0,0,.025);
+      min-width: 0;
+    }
+    .execKpiCard .top { display: flex; align-items: center; justify-content: space-between; gap: 6px; color: var(--muted); font-size: 10.8px; font-weight: 850; }
+    .execKpiCard .value { margin-top: 6px; font-size: 18px; line-height: 1.05; font-weight: 950; letter-spacing: -.25px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .execKpiCard .meta { margin-top: 6px; color: var(--muted); font-size: 10.8px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .execKpiTag { border-radius: 999px; padding: 2px 6px; border: 1px solid var(--line); background: var(--hover-bg); color: var(--muted); font-size: 10px; font-weight: 900; }
+    .execKpiCard.good .value, .execKpiTag.good { color: var(--good); }
+    .execKpiCard.warn .value, .execKpiTag.warn { color: var(--warn); }
+    .execKpiCard.bad .value, .execKpiTag.bad { color: var(--bad); }
+    .execBodyGrid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .55fr); gap: 12px; align-items: stretch; }
+    .execTrendPanel, .execInsightPanel {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--card);
+      overflow: hidden;
+    }
+    .execPanelHead {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--line);
+      background: var(--hover-bg);
+    }
+    .execPanelHead b { display: block; font-size: 13.5px; }
+    .execPanelHead span { display: block; margin-top: 3px; color: var(--muted); font-size: 11.5px; }
+    .execLegend { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .execLegend .pill { font-size: 10.8px; padding: 3px 7px; background: var(--card); }
+    .execChartWrap { height: 318px !important; padding: 10px 12px 12px; }
+    .execInsightPanel { padding: 12px; }
+    .execInsightStack { display: flex; flex-direction: column; gap: 9px; }
+    .execInsightCard {
+      border: 1px solid var(--line);
+      background: var(--hover-bg);
+      border-radius: 15px;
+      padding: 10px 11px;
+      line-height: 1.42;
+    }
+    .execInsightCard .head { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 5px; }
+    .execInsightCard b { font-size: 12.7px; }
+    .execInsightCard .num { font-size: 16px; font-weight: 950; color: var(--accent); }
+    .execInsightCard .txt { color: var(--muted); font-size: 11.6px; }
+    .execInsightCard.good { border-color: color-mix(in srgb, var(--good) 16%, var(--line)); background: var(--softGood); }
+    .execInsightCard.warn { border-color: color-mix(in srgb, var(--warn) 16%, var(--line)); background: var(--softWarn); }
+    .execInsightCard.bad { border-color: color-mix(in srgb, var(--bad) 16%, var(--line)); background: var(--softBad); }
+    .execInsightCard.good .num { color: var(--good); }
+    .execInsightCard.warn .num { color: var(--warn); }
+    .execInsightCard.bad .num { color: var(--bad); }
+    @media (max-width: 1380px) {
+      .execHero { grid-template-columns: 1fr 1fr; }
+      .execVerdictCard { grid-column: span 2; }
+      .execKpiGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .execBodyGrid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .execOverviewHeader { flex-direction: column; }
+      .execOverviewMeta { width: 100%; justify-content: flex-start; white-space: normal; }
+      .execHero { grid-template-columns: 1fr; }
+      .execVerdictCard { grid-column: auto; grid-template-columns: 1fr; }
+      .execKpiGrid { grid-template-columns: 1fr 1fr; }
+      .execChartWrap { height: 280px !important; }
+    }
+
     /* ================= AI Agent 专属与排版对齐样式 ================= */
     @keyframes pulseText { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     .ai-loading { animation: pulseText 1.5s infinite ease-in-out; color: #aa00ff; font-weight: 600; }
@@ -859,6 +1038,154 @@
       #growthCommandSection .action-compact-card > .cardTitle { align-items: flex-start !important; }
     }
 
+
+    /* ================= Executive Overview 2.1 Compact Density Fix ================= */
+    .execOverviewCard {
+      padding: 12px !important;
+      gap: 10px !important;
+    }
+    .execOverviewHeader {
+      padding-bottom: 9px !important;
+      gap: 10px !important;
+    }
+    .execOverviewTitle h2 { font-size: 15px !important; }
+    .execOverviewTitle .hint {
+      margin-top: 2px !important;
+      font-size: 11.4px !important;
+      line-height: 1.28 !important;
+    }
+    .execOverviewMeta {
+      min-height: 28px !important;
+      padding: 5px 10px !important;
+      font-size: 11px !important;
+    }
+    .execHero {
+      grid-template-columns: minmax(360px, 1.35fr) repeat(3, minmax(145px, .65fr)) !important;
+      gap: 8px !important;
+      align-items: stretch !important;
+    }
+    .execVerdictCard {
+      min-height: 92px !important;
+      border-radius: 16px !important;
+      padding: 10px 12px !important;
+      gap: 10px !important;
+      align-items: center !important;
+    }
+    .execVerdictCard:after {
+      width: 108px !important;
+      height: 108px !important;
+      right: -42px !important;
+      top: -42px !important;
+    }
+    .execEyebrow {
+      font-size: 10.8px !important;
+      letter-spacing: .035em !important;
+    }
+    .execVerdict {
+      margin-top: 3px !important;
+      font-size: 21px !important;
+      line-height: 1.05 !important;
+      letter-spacing: -.35px !important;
+    }
+    .execNextMove {
+      margin-top: 5px !important;
+      font-size: 11.8px !important;
+      line-height: 1.34 !important;
+      max-width: 560px !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
+      overflow: hidden !important;
+    }
+    .execScoreRing {
+      width: 62px !important;
+      height: 62px !important;
+      box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--accent) 7%, transparent) !important;
+    }
+    .execScoreRing b { font-size: 18px !important; }
+    .execScoreRing span {
+      margin-top: 2px !important;
+      font-size: 9.6px !important;
+    }
+    .execMiniCard {
+      min-height: 92px !important;
+      border-radius: 16px !important;
+      padding: 10px 11px !important;
+      gap: 5px !important;
+      justify-content: flex-start !important;
+    }
+    .execMiniCard .k {
+      font-size: 10.7px !important;
+      line-height: 1.2 !important;
+    }
+    .execMiniCard .v {
+      font-size: 18px !important;
+      line-height: 1.12 !important;
+      margin-top: 2px !important;
+    }
+    .execMiniCard .m {
+      margin-top: 4px !important;
+      font-size: 10.8px !important;
+      line-height: 1.25 !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
+      overflow: hidden !important;
+    }
+    .execKpiGrid {
+      gap: 7px !important;
+    }
+    .execKpiCard {
+      min-height: 70px !important;
+      border-radius: 14px !important;
+      padding: 8px 9px !important;
+    }
+    .execKpiCard .top {
+      font-size: 10.3px !important;
+      gap: 4px !important;
+    }
+    .execKpiCard .value {
+      margin-top: 4px !important;
+      font-size: 15.8px !important;
+    }
+    .execKpiCard .meta {
+      margin-top: 4px !important;
+      font-size: 10.2px !important;
+      line-height: 1.2 !important;
+    }
+    .execKpiTag {
+      padding: 1px 5px !important;
+      font-size: 9px !important;
+    }
+    .execPanelHead {
+      padding: 9px 11px !important;
+    }
+    .execPanelHead b { font-size: 12.8px !important; }
+    .execPanelHead span { margin-top: 2px !important; font-size: 10.8px !important; }
+    .execChartWrap { height: 258px !important; padding: 8px 10px 10px !important; }
+    .execInsightPanel { padding: 10px !important; }
+    .execInsightStack { gap: 7px !important; }
+    .execInsightCard {
+      padding: 8px 9px !important;
+      border-radius: 13px !important;
+      line-height: 1.3 !important;
+    }
+    .execInsightCard .head { margin-bottom: 3px !important; }
+    .execInsightCard b { font-size: 12px !important; }
+    .execInsightCard .num { font-size: 14.5px !important; }
+    .execInsightCard .txt { font-size: 10.8px !important; line-height: 1.28 !important; }
+    @media (max-width: 1380px) {
+      .execHero { grid-template-columns: 1fr 1fr !important; }
+      .execVerdictCard { grid-column: span 2 !important; }
+      .execKpiGrid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    }
+    @media (max-width: 760px) {
+      .execHero { grid-template-columns: 1fr !important; }
+      .execVerdictCard { grid-column: auto !important; grid-template-columns: 1fr auto !important; }
+      .execMiniCard { min-height: 76px !important; }
+      .execKpiGrid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    }
+
   </style>
 </head>
 
@@ -1059,8 +1386,6 @@
       <div id="globalProgressBar" style="height: 100%; width: 0%; background: #aa00ff; transition: width 0.2s ease;"></div>
     </div>
 
-    <div id="anomalyAlerts" style="display:none; flex-direction:column; gap:8px; margin-bottom:4px;"></div>
-    
     <div id="aiInsightsBox" style="display:none; margin-bottom:16px; animation: fadeInDown 0.4s ease;">
       <div class="card" style="border-left: 4px solid #aa00ff; background: var(--hover-bg); position: relative;">
         <div class="cardTitle" style="margin-bottom: 0; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px;">
@@ -1118,14 +1443,33 @@
     </div>
     
     <section class="grid">
-      <div class="card chartCard" style="grid-column: span 12; display: flex; flex-direction: column; gap: 8px;">
-        <div class="cardTitle" style="margin-bottom: 8px;">
-          <h2 data-i18n="title_exec_overview">大盘总览与联动趋势 (Executive Overview)</h2>
-          <div class="hint" data-i18n="hint_exec_overview">大盘核心 KPI 与每日消耗/产出走势对比</div>
+      <div class="card chartCard execOverviewCard">
+        <div class="execOverviewHeader">
+          <div class="execOverviewTitle">
+            <h2 data-i18n="title_exec_overview">大盘总览与联动趋势 (Executive Overview)</h2>
+            <div class="hint" data-i18n="hint_exec_overview">大盘核心 KPI 与每日消耗/产出走势对比</div>
+          </div>
+          <div class="execOverviewMeta" id="execOverviewMeta">—</div>
         </div>
-        <div class="grid" id="kpiGrid" style="margin-bottom: 12px;"></div>
-        <hr style="border: 0; border-top: 1px dashed var(--line); margin: 12px 0;" />
-        <div class="chartWrap tall" style="height: 320px;"><canvas id="trendChart"></canvas></div>
+
+        <div id="execHero" class="execHero"></div>
+        <div id="kpiGrid" class="execKpiGrid"></div>
+
+        <div class="execBodyGrid">
+          <div class="execTrendPanel">
+            <div class="execPanelHead">
+              <div>
+                <b id="execTrendTitle">趋势联动</b>
+                <span id="execTrendSubtitle">Spend / Sales / TACoS</span>
+              </div>
+              <div class="execLegend" id="execTrendLegend"></div>
+            </div>
+            <div class="chartWrap tall execChartWrap"><canvas id="trendChart"></canvas></div>
+          </div>
+          <div class="execInsightPanel">
+            <div id="execInsightStack" class="execInsightStack"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1619,7 +1963,7 @@ const I18N = {
       btn_send: "发送",
       btn_ai_stop: "停止生成",
       title_exec_overview: "大盘总览与联动趋势 (Executive Overview)",
-      hint_exec_overview: "大盘核心 KPI 与每日消耗/产出走势对比",
+      hint_exec_overview: "经营判定、预算效率、止损池、扩量池与 Spend / Sales / TACoS 联动",
       title_action_center: "广告动作清单中心 Simple (Action Command Center)",
       hint_action_center: "只输出 6 类动作：否定、加价、降价、投放精准、投放词组、投放广泛；新增今日 Top 20 与广泛词根提炼",
       btn_action_refresh: "刷新建议",
@@ -1880,10 +2224,6 @@ const I18N = {
       dyn_score_healthy: "🟢 结构健康 (Score: {0}) - 净利正向且自然流量充足。",
       dyn_score_med: "🟡 中度承压 (Score: {0}) - 利润受压或对广告过度依赖。",
       dyn_score_danger: "🔴 极高风险 (Score: {0}) - 严重依赖广告且面临系统性亏损，建议即刻止血！",
-      dyn_alert_health: "<strong>📊 综合生意体检评分：</strong> {0}",
-      dyn_alert_waste: "<strong>🚨 极端浪费预警：</strong> 核心词 <code>{0}</code> 在当前时间段内花费高达 <strong>${1}</strong> 且 0 转化，建议立即排查相关性或加入否定！",
-      dyn_alert_entropy: "<strong>🌪️ 流量熵值失控：</strong> 广告组 <code>{0}</code> 触发了 {1} 个碎片化无效搜索词，建议添加词组否定或降低竞价！",
-      dyn_alert_pareto: "<strong>🌪️ 帕累托耗散预警：</strong> 计划 <code>{0}</code> 头部 20% 词仅占不到 40% 花费，长尾严重吸血，建议调低基础出价！",
       
       dyn_root_golden: "🌟 黄金搭档 (高溢价强转化)",
       dyn_root_toxic: "☠️ 剧毒组合 (点击涣散低转化)",
@@ -2054,7 +2394,7 @@ const I18N = {
       btn_send: "Send",
       btn_ai_stop: "Stop",
       title_exec_overview: "Executive Overview & TACOS",
-      hint_exec_overview: "Core KPIs and daily spend/sales trend",
+      hint_exec_overview: "Business verdict, budget efficiency, stop-loss pool, scale pool, and Spend / Sales / TACoS trend",
       title_action_center: "Simple Action Command Center",
       hint_action_center: "Outputs 6 execution actions only: negate, increase bid, decrease bid, create exact, create phrase, create broad; includes Top 20 and broad root mining",
       btn_action_refresh: "Refresh Suggestions",
@@ -2315,10 +2655,6 @@ const I18N = {
       dyn_score_healthy: "🟢 Healthy Structure (Score: {0}) - Positive net profit & sufficient organic traffic.",
       dyn_score_med: "🟡 Under Pressure (Score: {0}) - Profit compressed or over-reliant on ads.",
       dyn_score_danger: "🔴 High Risk (Score: {0}) - Highly dependent on ads with systemic loss. Stop bleeding immediately!",
-      dyn_alert_health: "<strong>📊 Overall Business Health:</strong> {0}",
-      dyn_alert_waste: "<strong>🚨 Extreme Waste Alert:</strong> Core term <code>{0}</code> spent <strong>${1}</strong> with 0 conversions. Investigate relevance or negate!",
-      dyn_alert_entropy: "<strong>🌪️ Traffic Entropy Out of Control:</strong> Ad group <code>{0}</code> triggered {1} fragmented search terms. Add phrase negatives or lower bids!",
-      dyn_alert_pareto: "<strong>🌪️ Pareto Dissipation Alert:</strong> Campaign <code>{0}</code> top 20% terms account for <40% spend. Long tail is bleeding you, lower base bids!",
       
       dyn_root_golden: "🌟 Golden Combo (High Yield)",
       dyn_root_toxic: "☠️ Toxic Combo (High Clicks, Low CVR)",
@@ -2624,11 +2960,6 @@ const libsCheck = () => {
   if (typeof window.idbKeyval === "undefined") missing.push("idbKeyval"); 
   if (missing.length) {
     log(t('dyn_missing_libs', missing.join(", ")), "warn");
-    const box = $("anomalyAlerts");
-    if (box) {
-      box.style.display = "flex";
-      box.innerHTML = `<div class="alert-banner warn"><span class="alert-icon">⚠️</span><div>${escapeHtml(t('dyn_missing_libs', missing.join(", ")))}<br/><span class="small">建议把 CDN 依赖下载到本地 /libs/ 后再长期部署，避免导入、图表和 Excel 导出失效。</span></div></div>`;
-    }
   } else log(t('dyn_libs_ok'), "good"); 
   return !missing.length; 
 };
@@ -3705,103 +4036,10 @@ $("btnTestWebhook")?.addEventListener("click", () => pushToWebhook("This is a te
 let currentAlertsText = ""; // 存留一份纯文本用于 Push
 
 const detectAnomalies = (rows) => {
-  const container = $("anomalyAlerts"); 
-  if (!container) return; 
-  if (!rows || rows.length === 0) { container.style.display = "none"; container.innerHTML = ""; return; }
-  
-  const alerts = []; 
-  let pushTextLines = [];
-  
-  const groups = AdsStore.rankGroups || groupBy(rows, r => r.searchTerm); 
-  let topBleeder = null; 
-  let maxWasted = 0;
-  
-  let score = 100;
-  const totalMetrics = sumMetrics(rows);
-  let bizSales = 0; let bizUnits = 0;
-  for(let i=0; i<AdsStore.biz.length; i++) { 
-    bizSales += AdsStore.biz[i].sales; 
-    bizUnits += AdsStore.biz[i].units; 
-  }
-  
-  let globalSpta = 0; let globalTacos = 0;
-  if (bizUnits > 0) {
-      globalSpta = totalMetrics.orders / bizUnits;
-      globalTacos = totalMetrics.spend / bizSales;
-      if (globalSpta > 0.8) score -= 30;
-      if (globalTacos > 0.25) score -= 15;
-  } else {
-      score -= 20; 
-  }
-  
-  if (totalMetrics.netProfit < 0) score -= 40;
-  if (totalMetrics.acos > 0.4) score -= 10;
-  score = Math.max(0, score);
-
-  let healthHtml = '';
-  if (score >= 80) healthHtml = t('dyn_score_healthy', score);
-  else if (score >= 50) healthHtml = t('dyn_score_med', score);
-  else healthHtml = t('dyn_score_danger', score);
-
-  alerts.unshift({ type: score < 50 ? 'bad' : (score < 80 ? 'warn' : 'good'), msg: t('dyn_alert_health', healthHtml) });
-  pushTextLines.push(`Overall Health Score: ${score}`);
-
-  for (const [term, list] of groups.entries()) { 
-    if (isASINLike(term)) continue; 
-    let spend = 0, orders = 0; 
-    for (const r of list) { spend += r.spend; orders += r.orders; } 
-    if (orders === 0 && spend > maxWasted) { maxWasted = spend; topBleeder = term; } 
-  }
-  
-  if (maxWasted > 30) { 
-      const msg = t('dyn_alert_waste', escapeHtml(topBleeder), maxWasted.toFixed(2));
-      alerts.push({ type: 'bad', msg: msg }); 
-      pushTextLines.push(`Waste Alert: ${topBleeder} spent $${maxWasted.toFixed(2)} with 0 conversions.`);
-  }
-  
-  const adGroupGroups = groupBy(rows, r => `${r.campaign}|${r.adGroup}`);
-  for (const [ag, list] of adGroupGroups.entries()) {
-      const stSet = new Set(list.map(r=>r.searchTerm).filter(Boolean));
-      const m = sumMetrics(list);
-      if (stSet.size > 50 && (m.clicks / stSet.size) < 1.5 && m.spend > 20 && m.roas < 1.0) {
-          alerts.push({ type: 'warn', msg: t('dyn_alert_entropy', escapeHtml(ag.split('|')[1]), stSet.size) });
-          pushTextLines.push(`Entropy Alert: Ad group ${ag.split('|')[1]} triggered ${stSet.size} low-click terms.`);
-          break; 
-      }
-  }
-
-  const campGroups = groupBy(rows, r => r.campaign);
-  for (const [camp, list] of campGroups.entries()) {
-      const stMap = groupBy(list, r=>r.searchTerm);
-      const termStats = [...stMap.entries()].map(([t, rs])=>({t, spend:sumMetrics(rs).spend})).sort((a,b)=>b.spend-a.spend);
-      const totalCSpend = sumMetrics(list).spend;
-      if (termStats.length > 20 && totalCSpend > 50) {
-          const head20Spend = termStats.slice(0, Math.ceil(termStats.length * 0.2)).reduce((s, x)=>s+x.spend, 0);
-          if (head20Spend < totalCSpend * 0.4 && sumMetrics(list).roas < 1.0) {
-               alerts.push({ type: 'warn', msg: t('dyn_alert_pareto', escapeHtml(camp)) });
-               pushTextLines.push(`Pareto Alert: Campaign ${camp} long-tail is bleeding.`);
-               break; 
-          }
-      }
-  }
-  
-  currentAlertsText = pushTextLines.join("\n");
-
-  if (alerts.length > 0) { 
-    container.innerHTML = alerts.map(a => `<div class="alert-banner ${a.type === 'warn' ? 'warn' : (a.type === 'good' ? 'good' : '')}"> <span class="alert-icon">${a.type === 'warn' ? '⚠️' : (a.type === 'good' ? '✨' : '🚨')}</span> <div>${a.msg}</div> </div>`).join(""); 
-    
-    // Add push button dynamically if webhook exists
-    if ($("webhookUrl")?.value.trim() && (score < 50 || maxWasted > 30)) {
-        container.innerHTML += `<button class="btn primary" style="align-self:flex-start; padding: 4px 10px; font-size:11px;" onclick="AdsDashboardApp.pushCurrentAlerts()">🚀 Push Anomalies to Webhook</button>`;
-    }
-    
-    container.style.display = "flex"; 
-  } else { 
-    container.style.display = "none"; 
-    container.innerHTML = ""; 
-  }
+  // Executive Overview 的红色预警横幅已彻底下线。
+  // 保留函数空壳，避免主渲染流程调用时报错；不再生成“综合体检/极端浪费/熵值/帕累托”提示。
+  currentAlertsText = "";
 };
-
 const renderWordFreq = () => {
 const tbody = $("wfTable")?.querySelector("tbody"); 
 if (!tbody) return; 
@@ -4754,77 +4992,216 @@ const exportLongTailExcel = () => {
   ], `Ultimate_LongTail_Growth_${getTs()}.xlsx`);
 };
 
-const renderKPIs = (total) => {
-const acosMetaText = total.bizSales > 0 ? t('dyn_meta_tacos', fmtPct(total.spend / total.bizSales)) : `Spend / Sales`;
-const profitMetaText = total.netProfit >= 0 ? t('dyn_meta_profit_pos') : t('dyn_meta_profit_neg');
+const getExecutiveDateScope = (rows) => {
+  const dates = (rows || []).map(r => r.date).filter(Boolean).sort();
+  return { start: dates[0] || "", end: dates[dates.length - 1] || "", days: dates.length, dates: new Set(dates) };
+};
 
-const kpis = [ 
-    { key: "spend", label: t('dyn_kpi_spend'), value: fmtMoney(total.spend), meta: t('dyn_meta_cpc', fmtMoney(total.cpc)) }, 
-    { key: "sales", label: t('dyn_kpi_sales'), value: fmtMoney(total.sales), meta: t('dyn_meta_roas', total.roas.toFixed(2)) }, 
-    { key: "profit", label: t('dyn_kpi_profit'), value: fmtMoney(total.netProfit), meta: profitMetaText }, 
-    { key: "orders", label: t('dyn_kpi_orders'), value: fmtInt(total.orders), meta: t('dyn_meta_cvr', fmtPct(total.cvr)) }, 
-    { key: "acos", label:"ACOS", value: fmtPct(total.acos), meta: acosMetaText }, 
-    { key: "roas", label:"ROAS", value: total.roas.toFixed(2), meta: `Sales / Spend` }, 
-    { key: "cpc", label:"CPC", value: fmtMoney(total.cpc), meta: `Spend / Clicks` }, 
-    { key: "cvr", label:"CVR", value: fmtPct(total.cvr), meta: `Orders / Clicks` } 
-];
-$("kpiGrid").innerHTML = kpis.map(k => {
-    let valColor = "var(--text)";
-    if (k.key === "profit" && total.netProfit < 0) valColor = "var(--bad)";
-    else if (k.key === "profit" && total.netProfit > 0) valColor = "var(--good)";
-    return ` <div class="card kpi"> <div class="label"><span>${k.label}</span><span class="pill">KPI</span></div> <div class="value" style="color:${valColor}">${k.value}</div> <div class="meta"><span>${k.meta}</span></div> </div> `;
-}).join("");
+const getExecutiveBizSales = (rows, scope) => {
+  if (!AdsStore.biz || !AdsStore.biz.length) return sumMetrics(rows || []).sales;
+  let sales = 0;
+  const start = scope?.start || $("dateStart")?.value || "";
+  const end = scope?.end || $("dateEnd")?.value || "";
+  for (const r of AdsStore.biz) {
+    if (r.date && (!start || r.date >= start) && (!end || r.date <= end)) sales = SafeMath.add(sales, r.sales || 0);
+  }
+  return Math.max(sales, sumMetrics(rows || []).sales);
+};
+
+const getExecutiveTermGroups = (rows) => {
+  const groups = groupBy(rows || [], r => (r.searchTerm || r.targeting || "(blank)").trim() || "(blank)");
+  return [...groups.entries()].map(([name, list]) => {
+    const m = sumMetrics(list);
+    const main = getMainRow(list);
+    return { name, list, ...m, campaign: main.campaign || "", adGroup: main.adGroup || "", matchType: main.matchType || "" };
+  });
+};
+
+const getExecutiveData = (rows, total) => {
+  rows = rows || [];
+  total = total || sumMetrics(rows);
+  const rules = typeof getRules === "function" ? getRules() : { spendNeg: 30, clicksNeg: 20, roasKeep: 3, roasMigrateMin: 2, ordersKeep: 2 };
+  const keepRoas = Math.max(1, safeNum(rules.roasKeep || 3));
+  const migrateRoas = Math.max(1, safeNum(rules.roasMigrateMin || 2));
+  const targetAcos = clamp(1 / keepRoas, 0.18, 0.35);
+  const scope = getExecutiveDateScope(rows);
+  const bizSales = getExecutiveBizSales(rows, scope);
+  const organicSales = Math.max(0, SafeMath.sub(bizSales, total.sales || 0));
+  const tacos = bizSales > 0 ? (total.spend || 0) / bizSales : 0;
+  const adSalesShare = bizSales > 0 ? (total.sales || 0) / bizSales : 1;
+  const terms = getExecutiveTermGroups(rows);
+  const wasted = terms.filter(x => x.orders <= 0 && x.spend >= Math.max(5, (rules.spendNeg || 30) * 0.55));
+  const wasteSpend = wasted.reduce((s, x) => SafeMath.add(s, x.spend || 0), 0);
+  const wasteShare = total.spend > 0 ? wasteSpend / total.spend : 0;
+  const winners = terms.filter(x => x.orders >= Math.max(1, rules.ordersKeep || 2) && x.roas >= keepRoas);
+  const repair = terms.filter(x => x.orders > 0 && x.roas > 0 && x.roas < migrateRoas);
+  const exactGaps = winners.filter(x => !String(x.matchType || "").toLowerCase().includes("exact"));
+  const lowCvr = total.clicks >= 30 && total.cvr > 0 && total.cvr < 0.025;
+  let score = 52;
+  if ((total.netProfit || 0) > 0) score += 14; else if ((total.spend || 0) > 0) score -= 14;
+  if ((total.roas || 0) >= keepRoas) score += 18; else if ((total.roas || 0) >= migrateRoas) score += 6; else if ((total.spend || 0) > 0) score -= 14;
+  if (total.acos !== Infinity && total.acos <= targetAcos) score += 10; else if (total.acos !== Infinity && total.acos <= targetAcos * 1.25) score += 3; else if ((total.spend || 0) > 0) score -= 8;
+  if (wasteShare >= 0.35) score -= 16; else if (wasteShare >= 0.2) score -= 8;
+  if (winners.length >= 5) score += 6;
+  if (lowCvr) score -= 6;
+  score = Math.round(clamp(score, 0, 100));
+  let health = "warn", verdict = currentLang === "zh" ? "效率修复盘" : "Efficiency Repair";
+  if (score >= 75) { health = "good"; verdict = currentLang === "zh" ? "可控放量盘" : "Controlled Scaling"; }
+  else if (score >= 60) { health = "good"; verdict = currentLang === "zh" ? "稳态优化盘" : "Stable Optimization"; }
+  else if (score < 45) { health = "bad"; verdict = currentLang === "zh" ? "止血优先盘" : "Stop-loss First"; }
+  let nextMove;
+  if (wasteShare >= 0.25) nextMove = currentLang === "zh" ? `先处理 ${fmtInt(wasted.length)} 个烧钱词/对象，优先降价或精准否定，避免把预算继续交给低意图流量` : `Handle ${fmtInt(wasted.length)} waste terms first. Bid down or negate exact to stop low-intent spend`;
+  else if (exactGaps.length >= 3) nextMove = currentLang === "zh" ? `把 ${fmtInt(exactGaps.length)} 个已验证高 ROAS 词迁移到 Exact，单独控预算和出价，再从 Phrase/Broad 做漏斗扩量` : `Move ${fmtInt(exactGaps.length)} proven terms into Exact, then scale with Phrase/Broad funnel`;
+  else if ((total.roas || 0) >= keepRoas && winners.length > 0) nextMove = currentLang === "zh" ? `当前盘面可以小步放量，优先加价高 ROAS Exact，Broad 只扩有订单词根` : `Scale carefully: raise proven Exact bids first; Broad only for converting roots`;
+  else nextMove = currentLang === "zh" ? `不要盲目加预算，先修复 ACOS、CVR 和无订单消耗，再决定是否扩量` : `Do not add budget blindly. Fix ACOS, CVR, and zero-order spend before scaling`;
+  return { rows, total, rules, scope, bizSales, organicSales, tacos, adSalesShare, terms, wasted, wasteSpend, wasteShare, winners, repair, exactGaps, targetAcos, keepRoas, migrateRoas, score, health, verdict, nextMove };
+};
+
+const execTrendSeries = (rows) => {
+  if (!rows || !rows.length) return [];
+  const byDate = groupBy(rows, r => r.date);
+  const adDates = [...byDate.keys()].filter(Boolean).sort();
+  const bizByDate = new Map();
+  for (const r of AdsStore.biz || []) if (r.date) bizByDate.set(r.date, SafeMath.add(bizByDate.get(r.date) || 0, r.sales || 0));
+  return adDates.map(d => {
+    const adMetrics = sumMetrics(byDate.get(d));
+    const bizSales = bizByDate.has(d) ? Math.max(bizByDate.get(d), adMetrics.sales) : adMetrics.sales;
+    const organicSales = Math.max(0, SafeMath.sub(bizSales, adMetrics.sales));
+    const tacos = bizSales > 0 ? adMetrics.spend / bizSales : 0;
+    return { date: d, ...adMetrics, bizSales, organicSales, tacos };
+  });
+};
+
+const getTrendDelta = (series, key) => {
+  if (!series || series.length < 4) return null;
+  const half = Math.max(1, Math.floor(series.length / 2));
+  const prev = series.slice(0, half);
+  const curr = series.slice(half);
+  const avg = (arr) => arr.reduce((s, x) => s + safeNum(x[key]), 0) / Math.max(1, arr.length);
+  const a = avg(prev), b = avg(curr);
+  if (!isFinite(a) || Math.abs(a) < 0.000001) return null;
+  return (b - a) / Math.abs(a);
+};
+
+const execStatusTag = (kind) => kind === "good" ? "good" : kind === "bad" ? "bad" : "warn";
+
+const renderKPIs = (total) => {
+  const data = getExecutiveData(AdsStore.view, total);
+  const zh = currentLang === "zh";
+  const scopeText = data.scope.start && data.scope.end ? `${data.scope.start} → ${data.scope.end} · ${fmtInt(data.scope.days)} ${zh ? "天" : "days"}` : (zh ? "未选择日期范围" : "No date range");
+  if ($("execOverviewMeta")) $("execOverviewMeta").textContent = scopeText;
+
+  const healthLabel = data.health === "good" ? (zh ? "健康" : "Healthy") : data.health === "bad" ? (zh ? "高压" : "High Risk") : (zh ? "观察" : "Watch");
+  const tacosClass = data.tacos <= data.targetAcos ? "good" : data.tacos <= data.targetAcos * 1.25 ? "warn" : "bad";
+  const wasteClass = data.wasteShare <= 0.12 ? "good" : data.wasteShare <= 0.25 ? "warn" : "bad";
+  const profitClass = data.total.netProfit >= 0 ? "good" : "bad";
+  const scaleClass = data.winners.length >= 5 ? "good" : data.winners.length >= 1 ? "warn" : "bad";
+
+  if ($("execHero")) {
+    $("execHero").innerHTML = `
+      <div class="execVerdictCard">
+        <div>
+          <div class="execEyebrow">${zh ? "经营判定" : "Business Verdict"}</div>
+          <div class="execVerdict">${escapeHtml(data.verdict)}</div>
+          <div class="execNextMove">${escapeHtml(data.nextMove)}</div>
+        </div>
+        <div class="execScoreRing"><b>${fmtInt(data.score)}</b><span>${healthLabel}</span></div>
+      </div>
+      <div class="execMiniCard ${profitClass}"><div class="k">${zh ? "利润信号" : "Profit Signal"}</div><div class="v">${fmtMoney(data.total.netProfit)}</div><div class="m">${data.total.netProfit >= 0 ? (zh ? "可继续优化结构" : "Structure can be optimized") : (zh ? "先止损，不加预算" : "Stop loss before budget increase")}</div></div>
+      <div class="execMiniCard ${wasteClass}"><div class="k">${zh ? "浪费消耗占比" : "Waste Spend Share"}</div><div class="v">${fmtPct(data.wasteShare)}</div><div class="m">${zh ? `烧钱对象 ${fmtInt(data.wasted.length)} 个` : `${fmtInt(data.wasted.length)} waste objects`}</div></div>
+      <div class="execMiniCard ${scaleClass}"><div class="k">${zh ? "可放量资产" : "Scale Assets"}</div><div class="v">${fmtInt(data.winners.length)}</div><div class="m">${zh ? `Exact 缺口 ${fmtInt(data.exactGaps.length)} 个` : `${fmtInt(data.exactGaps.length)} Exact gaps`}</div></div>`;
+  }
+
+  const kpis = [
+    { label: zh ? "广告花费" : "Spend", value: fmtMoney(data.total.spend), meta: `${zh ? "CPC" : "CPC"} ${fmtMoney(data.total.cpc)}`, status: "neutral" },
+    { label: zh ? "广告销售" : "Ad Sales", value: fmtMoney(data.total.sales), meta: `${zh ? "广告占比" : "Ad share"} ${fmtPct(data.adSalesShare)}`, status: "neutral" },
+    { label: zh ? "总销售参考" : "Total Sales Ref", value: fmtMoney(data.bizSales), meta: AdsStore.biz.length ? (zh ? "来自业务报告" : "From business report") : (zh ? "未导入业务报告" : "No business report"), status: AdsStore.biz.length ? "good" : "warn" },
+    { label: "ACOS", value: fmtPct(data.total.acos), meta: `${zh ? "目标" : "Target"} ${fmtPct(data.targetAcos)}`, status: data.total.acos <= data.targetAcos ? "good" : data.total.acos <= data.targetAcos * 1.25 ? "warn" : "bad" },
+    { label: "TACoS", value: fmtPct(data.tacos), meta: `${zh ? "广告费/总销售" : "Spend / total sales"}`, status: tacosClass },
+    { label: "ROAS", value: (data.total.roas || 0).toFixed(2), meta: `${zh ? "保留线" : "Keep line"} ${data.keepRoas.toFixed(1)}`, status: data.total.roas >= data.keepRoas ? "good" : data.total.roas >= data.migrateRoas ? "warn" : "bad" },
+    { label: "CVR", value: fmtPct(data.total.cvr), meta: `${fmtInt(data.total.orders)} ${zh ? "单 /" : "orders /"} ${fmtInt(data.total.clicks)} ${zh ? "点" : "clicks"}`, status: data.total.cvr >= 0.05 ? "good" : data.total.cvr >= 0.025 ? "warn" : "bad" },
+    { label: "CTR", value: fmtPct(data.total.ctr), meta: `${fmtInt(data.total.impr)} ${zh ? "展现" : "impressions"}`, status: data.total.ctr >= 0.005 ? "good" : data.total.ctr >= 0.002 ? "warn" : "bad" }
+  ];
+  if ($("kpiGrid")) {
+    $("kpiGrid").innerHTML = kpis.map(k => `
+      <div class="execKpiCard ${execStatusTag(k.status)}">
+        <div class="top"><span>${escapeHtml(k.label)}</span><span class="execKpiTag ${execStatusTag(k.status)}">${k.status === "good" ? "OK" : k.status === "bad" ? "RISK" : "WATCH"}</span></div>
+        <div class="value">${k.value}</div>
+        <div class="meta">${escapeHtml(k.meta)}</div>
+      </div>`).join("");
+  }
+
+  const insightCards = [
+    { cls: tacosClass, title: zh ? "预算效率" : "Budget Efficiency", num: fmtPct(data.tacos), txt: data.tacos <= data.targetAcos ? (zh ? "TACoS 在目标线内，预算没有明显失控" : "TACoS is within target") : (zh ? "TACoS 高于目标，先查无订单消耗与低 CVR 词" : "TACoS above target; check zero-order spend and low-CVR terms") },
+    { cls: wasteClass, title: zh ? "止损池" : "Stop-loss Pool", num: fmtMoney(data.wasteSpend), txt: zh ? `${fmtInt(data.wasted.length)} 个对象达到浪费预警，优先进入否定/降价复核` : `${fmtInt(data.wasted.length)} objects need bid-down or negative review` },
+    { cls: scaleClass, title: zh ? "扩量池" : "Scale Pool", num: fmtInt(data.winners.length), txt: zh ? `${fmtInt(data.exactGaps.length)} 个高 ROAS 词还没沉淀到 Exact，属于直接增长机会` : `${fmtInt(data.exactGaps.length)} high-ROAS terms still need Exact isolation` },
+    { cls: data.repair.length ? "warn" : "good", title: zh ? "修复池" : "Repair Pool", num: fmtInt(data.repair.length), txt: zh ? "有订单但 ROAS 不达标的词，不建议直接否定，先降价和收窄匹配" : "Ordered but weak ROAS terms should be bid-down first, not killed" }
+  ];
+  if ($("execInsightStack")) {
+    $("execInsightStack").innerHTML = insightCards.map(x => `
+      <div class="execInsightCard ${x.cls}">
+        <div class="head"><b>${escapeHtml(x.title)}</b><span class="num">${x.num}</span></div>
+        <div class="txt">${escapeHtml(x.txt)}</div>
+      </div>`).join("");
+  }
 };
 
 const renderTrend = (rows) => {
-if (!rows || rows.length === 0) return; 
-const byDate = groupBy(rows, r=>r.date); 
+  if (!rows || rows.length === 0) return;
+  const series = execTrendSeries(rows);
+  if (!series.length) return;
+  const zh = currentLang === "zh";
+  const dataMap = (key, transform = v => v) => series.map(s => transform(s[key]));
+  const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || "rgba(229,229,234,.6)";
+  const salesDelta = getTrendDelta(series, "sales");
+  const spendDelta = getTrendDelta(series, "spend");
+  if ($("execTrendTitle")) $("execTrendTitle").textContent = zh ? "Spend / Sales / TACoS 联动趋势" : "Spend / Sales / TACoS Trend";
+  if ($("execTrendSubtitle")) {
+    const deltaText = (d, label) => d === null ? "" : `${label} ${d >= 0 ? "+" : ""}${(d * 100).toFixed(1)}%`;
+    $("execTrendSubtitle").textContent = [deltaText(spendDelta, zh ? "花费" : "Spend"), deltaText(salesDelta, zh ? "销售" : "Sales")].filter(Boolean).join(" · ") || (zh ? "按日期观察花费、销售和 TACoS 是否同向改善" : "Watch if spend, sales, and TACoS improve together");
+  }
+  if ($("execTrendLegend")) {
+    $("execTrendLegend").innerHTML = `
+      <span class="pill">${zh ? "广告销售" : "Ad Sales"}</span>
+      <span class="pill">${zh ? "自然/业务销售" : "Organic / Biz"}</span>
+      <span class="pill">${zh ? "花费" : "Spend"}</span>
+      <span class="pill">TACoS</span>`;
+  }
 
-const bizMap = new Map();
-for (const r of AdsStore.biz) {
-  if (r.date) bizMap.set(r.date, SafeMath.add(bizMap.get(r.date) || 0, r.sales));
-}
-
-const series = [...byDate.keys()].sort().map(d => {
-    const adMetrics = sumMetrics(byDate.get(d));
-    let dailyBizSales = bizMap.has(d) ? bizMap.get(d) : adMetrics.sales; 
-    const organicSales = Math.max(0, SafeMath.sub(dailyBizSales, adMetrics.sales));
-      const tacos = dailyBizSales > 0 ? (adMetrics.spend / dailyBizSales) * 100 : 0;
-      return { date: d, ...adMetrics, organicSales, tacos };
-  });
-
-  const dataMap = (key, transform = v => v) => series.map(s => transform(s[key])); 
-  const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || "rgba(229,229,234,.6)"; 
-
-  const datasets = [ 
-    { type: "bar", label: t('dyn_chart_organic'), data:dataMap("organicSales"), backgroundColor:"rgba(48, 209, 88, 0.4)", stack: 'Stack 0' },
-    { type: "bar", label: t('dyn_chart_ad'), data:dataMap("sales"), backgroundColor:"rgba(10, 132, 255, 0.6)", stack: 'Stack 0' },
-    { type: "line", label: t('dyn_chart_spend'), data:dataMap("spend"), tension:.25, borderColor: "rgba(255, 69, 58, 1)", borderWidth:2, pointRadius: 0 }, 
-    { type: "line", label:"TACoS %", data:dataMap("tacos"), tension:.25, borderDash: [5, 5], borderColor: "#ff9f0a", borderWidth:2, pointRadius: 0, yAxisID:"y1" }
+  const datasets = [
+    { type: "bar", label: zh ? "广告销售" : "Ad Sales", data: dataMap("sales"), backgroundColor: "rgba(10, 132, 255, 0.62)", stack: "sales" },
+    { type: "bar", label: zh ? "自然/业务销售" : "Organic / Biz Sales", data: dataMap("organicSales"), backgroundColor: "rgba(48, 209, 88, 0.40)", stack: "sales" },
+    { type: "line", label: zh ? "广告花费" : "Spend", data: dataMap("spend"), tension: .28, borderColor: "rgba(255, 69, 58, 1)", borderWidth: 2, pointRadius: 0, yAxisID: "y" },
+    { type: "line", label: "TACoS %", data: dataMap("tacos", v => v * 100), tension: .28, borderDash: [5, 5], borderColor: "rgba(255, 159, 10, 1)", borderWidth: 2, pointRadius: 0, yAxisID: "y1" }
   ];
 
   const canvas = $("trendChart");
   if (!canvas) return;
-
-  if (trendChart) { 
-      trendChart.data.labels = series.map(s=>s.date);
-      trendChart.data.datasets = datasets;
-      trendChart.options.scales.y.grid.color = gridColor;
-      trendChart.update();
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ctx.dataset.yAxisID === "y1" ? `${ctx.dataset.label}: ${safeNum(ctx.raw).toFixed(2)}%` : `${ctx.dataset.label}: ${fmtMoney(ctx.raw)}`
+        }
+      }
+    },
+    scales: {
+      y: { stacked: true, grid: { color: gridColor }, ticks: { callback: (v) => fmtMoney(v) } },
+      y1: { position: "right", grid: { drawOnChartArea: false }, ticks: { callback: (v) => `${v}%` } },
+      x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }
+    }
+  };
+  if (trendChart) {
+    trendChart.data.labels = series.map(s => s.date);
+    trendChart.data.datasets = datasets;
+    trendChart.options = options;
+    trendChart.update();
   } else {
-      try { 
-          trendChart = new Chart(canvas.getContext("2d"), { 
-              data:{ labels:series.map(s=>s.date), datasets }, 
-              options:{ 
-                  responsive:true, maintainAspectRatio:false, interaction:{ mode:"index", intersect:false }, 
-                  scales:{ 
-                      y:{ stacked: true, grid:{ color: gridColor } }, 
-                      y1:{ position:"right", grid:{ drawOnChartArea:false } }, 
-                      x:{ stacked: true, grid:{ display:false } } 
-                  } 
-              } 
-          }); 
-      } catch(e) {} 
+    try { trendChart = new Chart(canvas.getContext("2d"), { data: { labels: series.map(s => s.date), datasets }, options }); } catch(e) {}
   }
 };
 
@@ -7410,10 +7787,11 @@ const exportArchitectureExcel = async () => {
 const applyFilters = (initial=false) => {
   if (!AdsStore.all.length && !AdsStore.biz.length && !AdsStore.placement.length && !AdsStore.sqp.length) { 
     setSubtitle(t('app_subtitle_init')); 
-    $("kpiGrid").innerHTML = ""; 
+    ["kpiGrid", "execHero", "execInsightStack", "execTrendLegend"].forEach(id => { if ($(id)) $(id).innerHTML = ""; });
+    if ($("execOverviewMeta")) $("execOverviewMeta").textContent = "—";
+    if ($("execTrendSubtitle")) $("execTrendSubtitle").textContent = "";
     if (trendChart) { trendChart.destroy(); trendChart = null; } 
     $("rankTable").querySelector("tbody").innerHTML = ""; 
-    $("anomalyAlerts").style.display = "none"; 
     renderRankTable(); renderWordFreq(); renderLongTailMining(); renderCPCDistribution(); 
     renderLengthAnalysis(); renderBusinessReport(); 
     renderIsolationAnalysis(); renderActiveDimTab(); clearGrowthCommandModules(); 
