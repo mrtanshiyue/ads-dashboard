@@ -931,6 +931,23 @@
     .rootDecision.neutral { color: var(--muted); background: var(--chip); border-color: var(--line); }
     .rootMini { display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; }
     .rootMini span { border:1px solid var(--line); background:var(--chip); color:var(--muted); border-radius:999px; padding:2px 6px; font-size:10.8px; }
+    #wfTable { min-width: 1180px; table-layout: fixed; }
+    #wfTable th:nth-child(1), #wfTable td:nth-child(1) { width: 250px; }
+    #wfTable th:nth-child(2), #wfTable td:nth-child(2) { width: 95px; }
+    #wfTable th:nth-child(3), #wfTable td:nth-child(3) { width: 68px; }
+    #wfTable th:nth-child(4), #wfTable td:nth-child(4) { width: 82px; }
+    #wfTable th:nth-child(5), #wfTable td:nth-child(5) { width: 72px; }
+    #wfTable th:nth-child(6), #wfTable td:nth-child(6) { width: 72px; }
+    #wfTable th:nth-child(7), #wfTable td:nth-child(7) { width: 78px; }
+    #wfTable th:nth-child(8), #wfTable td:nth-child(8) { width: 78px; }
+    #wfTable th:nth-child(9), #wfTable td:nth-child(9),
+    #wfTable th:nth-child(10), #wfTable td:nth-child(10) { width: 122px; }
+    #wfTable th:nth-child(11), #wfTable td:nth-child(11) { width: 88px; }
+    #wfTable th:nth-child(12), #wfTable td:nth-child(12) { width: 235px; min-width: 235px; white-space: nowrap; }
+    #wfTable td:nth-child(12) { overflow: hidden; text-overflow: ellipsis; }
+    .rootActionRiskLine { display:inline-flex; align-items:center; gap:6px; flex-wrap:nowrap; white-space:nowrap; max-width:100%; overflow:hidden; vertical-align:middle; }
+    .rootActionRiskLine .rootDecision,
+    .rootActionRiskLine .pill { flex:0 0 auto; white-space:nowrap; }
     @media (max-width: 1200px){ .root-score-grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 650px){ .root-score-grid { grid-template-columns: 1fr; } }
 
@@ -4155,7 +4172,7 @@ renderProgressive(tbody, rows, (r) => {
         <td>${scoreBar(r.toxicity, true)}</td>
         <td>${scoreBar(r.attraction, false)}</td>
         <td>${liftLabel}</td>
-        <td><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span class="rootDecision ${d.cls}">${escapeHtml(d.label)}</span><span class="pill">${currentLang === "zh" ? "风险" : "Risk"}: ${escapeHtml(d.risk)}</span></div></td>
+        <td><div class="rootActionRiskLine"><span class="rootDecision ${d.cls}">${escapeHtml(d.label)}</span><span class="pill">${currentLang === "zh" ? "风险" : "Risk"}: ${escapeHtml(d.risk)}</span></div></td>
     </tr>`;
 });
 };
@@ -6154,7 +6171,7 @@ const buildActionPlan = (options = {}) => {
         if (guard.level === "block") {
           rows.push(makeSimpleAction(it, "decrease", "降价", "Guarded Bid Decrease", getSuggestedBid(it, "decrease", targetAcos), `${t("action_reason_decrease_sample")} | ${guard.reason}`, false, { guard }));
         } else {
-          const negType = it.hasExact ? "Negative Exact" : (guard.level === "review" ? "Review Negative Exact" : "Negative Phrase");
+          const negType = it.hasExact ? "Negative Exact / Product" : (guard.level === "review" ? "Review Negative Exact / Product" : "Negative Phrase");
           const baseReason = isMismatch ? t("action_reason_neg_mismatch") : t("action_reason_neg_threshold");
           rows.push(makeSimpleAction(it, "negate", "否定", negType, "", guard.reason ? `${baseReason} | ${guard.reason}` : baseReason, guard.level === "safe", { guard }));
         }
@@ -6539,7 +6556,7 @@ const buildAdArchitectureData = () => {
       match: "Auto",
       budget: budgetMode === getArchitectureText("进攻型", "Offensive") ? "8-10%" : "10-15%",
       bid: archMoney(Math.max(0.18, globalCpc * 0.60)),
-      objective: getArchitectureText("低价采集新搜索词，不负责主力成交", "Low-bid search-term harvesting, not the main sales engine"),
+      objective: getArchitectureText("紧密自动低价采词，不负责主力成交；用于发现搜索趋势和手动广告关键词", "Close automatic low-bid harvesting; not the main sales engine; used to discover shopping trends and manual-campaign keywords"),
       seed: getArchitectureText("核心 ASIN / 当前主推 SKU", "Core ASIN / current hero SKU"),
       negative: archActionList(exactLaunch, 8).join(" / ") || getArchitectureText("把已沉淀 Exact 的词做精准否定，防止 Auto 抢预算", "Add proven Exact terms as negative exact to prevent Auto budget cannibalization")
     },
@@ -6549,8 +6566,8 @@ const buildAdArchitectureData = () => {
       adGroup: "EXACT | Winners | Profit Control",
       match: "Exact",
       budget: budgetMode === getArchitectureText("进攻型", "Offensive") ? "38-45%" : "28-35%",
-      bid: getArchitectureText("按建议出价执行，上限看利润 ACOS", "Use suggested bids; cap by target profit ACOS"),
-      objective: getArchitectureText("承接已出单高意图词，主攻转化与排名", "Capture proven high-intent converters for conversion and rank"),
+      bid: archMoney(Math.max(0.25, globalCpc * 1.15)),
+      objective: getArchitectureText("承接已出单高意图词，主攻转化与排名；同词多匹配时 Exact 出价最高", "Capture proven high-intent converters for conversion and rank; when the same term runs in multiple match types, Exact gets the highest bid"),
       seed: archActionList(exactLaunch, 10).join(" / ") || getArchitectureText("当前暂无足够 Exact 迁移词", "No strong Exact migration terms yet"),
       negative: getArchitectureText("不做 Phrase 否定；只清理明显错配 Exact", "No phrase negatives; only clean obvious exact mismatches")
     },
@@ -6561,7 +6578,7 @@ const buildAdArchitectureData = () => {
       match: "Phrase",
       budget: "15-22%",
       bid: archMoney(Math.max(0.18, globalCpc * 0.85)),
-      objective: getArchitectureText("拓展相近长尾，同时保留语义约束", "Expand adjacent long-tail demand with semantic control"),
+      objective: getArchitectureText("拓展中长尾变体，同时保留语义约束；同词多匹配时 Phrase 出价低于 Exact、高于 Broad", "Expand mid/long-tail variants with semantic control; when the same term runs in multiple match types, Phrase bids below Exact and above Broad"),
       seed: archActionList(phraseLaunch, 10).join(" / ") || getArchitectureText("优先从有订单的 2-6 词搜索词沉淀", "Start from 2-6 word converting search terms"),
       negative: archActionList(negRows.filter(r => String(r.matchAdvice || "").toLowerCase().includes("phrase")), 8).join(" / ") || getArchitectureText("错配词根走 Phrase Negative，核心词根避免误杀", "Use phrase negatives for mismatch roots; avoid blocking core roots")
     },
@@ -6571,8 +6588,8 @@ const buildAdArchitectureData = () => {
       adGroup: "BROAD | Root Only | Low Bid",
       match: "Broad",
       budget: "6-10%",
-      bid: archMoney(Math.max(0.15, globalCpc * 0.70)),
-      objective: getArchitectureText("只投词根，不投整句 Broad，控制探索成本", "Root-only Broad tests; avoid full-sentence Broad waste"),
+      bid: archMoney(Math.max(0.15, globalCpc * 0.60)),
+      objective: getArchitectureText("白名单低价词根探索，只投安全词根，不投整句 Broad，控制探索成本", "Whitelisted low-bid root exploration only; avoid full-sentence Broad waste"),
       seed: archActionList([...broadLaunch, ...topBroadRoots], 10).join(" / ") || getArchitectureText("暂无安全 Broad 词根，先不强行开", "No safe Broad roots; do not force launch"),
       negative: archActionList(negRows, 10).join(" / ") || getArchitectureText("先复用当前否定清单", "Reuse current negative list first")
     },
@@ -6583,7 +6600,7 @@ const buildAdArchitectureData = () => {
       match: "Product Targeting",
       budget: profitableAsins.length ? "8-12%" : "3-6%",
       bid: archMoney(Math.max(0.18, globalCpc * 0.75)),
-      objective: getArchitectureText("只保留有转化证据的竞品 ASIN，亏损 ASIN 直接否定", "Keep converting competitor ASINs; negate loss-making ASINs"),
+      objective: getArchitectureText("竞品 ASIN 攻防层；只保留有转化证据的 ASIN，亏损 ASIN 直接否定", "Competitor ASIN attack/defense layer; keep converting ASINs and negate loss-making ASINs"),
       seed: archActionList(profitableAsins, 8).join(" / ") || getArchitectureText("当前筛选没有赚钱 ASIN 证据", "No profitable ASIN evidence in current filter"),
       negative: archActionList(lossAsins, 8).join(" / ") || getArchitectureText("高点击 0 单 ASIN 进入否定商品投放", "High-click zero-order ASINs go to negative product targeting")
     },
@@ -6637,13 +6654,13 @@ const getArchitectureIntentMap = (data) => {
 const getArchitectureUploadSopRows = () => {
   const zh = currentLang === "zh";
   return zh ? [
-    ["1", "先建 Campaign / Ad Group", "按 Campaign Setup Blueprint 建结构，不要把 Auto、Broad、Exact 混在一个预算池"],
-    ["2", "再看 Intent Map", "确认每个层级的投放意图：采词、承接、扩词、词根、ASIN、防御"],
+    ["1", "先建 Campaign / Ad Group", "按 Campaign Setup Blueprint 建结构，不要把 Auto、Exact、Phrase、Broad、Product Targeting 混在一个预算池"],
+    ["2", "再看 Intent Map", "确认每个层级的投放意图：Auto 采词、Exact 承接、Phrase 扩词、Broad 低价白名单探索、Product Targeting 竞品 ASIN 攻防"],
     ["3", "只上传 PASS 项", "Keyword Review Gate 里 REVIEW 不直接上传，先人工确认 Campaign、Ad Group、Match、Bid"],
     ["4", "最后做否定与调价", "先止损再放量，避免一边加预算一边漏血"]
   ] : [
-    ["1", "Create Campaign / Ad Group first", "Use Campaign Setup Blueprint; do not mix Auto, Broad and Exact in one budget pool"],
-    ["2", "Read Intent Map", "Confirm the purpose of each layer: harvest, capture, expand, root mining, ASIN, defense"],
+    ["1", "Create Campaign / Ad Group first", "Use Campaign Setup Blueprint; do not mix Auto, Exact, Phrase, Broad, and Product Targeting in one budget pool"],
+    ["2", "Read Intent Map", "Confirm each layer: Auto harvest, Exact capture, Phrase expansion, Broad low-bid whitelist mining, Product Targeting ASIN attack/defense"],
     ["3", "Upload PASS only", "Do not upload REVIEW rows before confirming Campaign, Ad Group, Match and Bid"],
     ["4", "Negate and bid last", "Stop waste before scaling to avoid leaking spend while increasing budget"]
   ];
@@ -6655,7 +6672,9 @@ const getArchitectureGuardrailRows = (data) => {
     [zh ? "否定边界" : "Negative Boundary", `${zh ? "Spend ≥" : "Spend ≥"} ${archMoney(data.rules?.spendNeg || 0)} · ${zh ? "Clicks ≥" : "Clicks ≥"} ${fmtInt(data.rules?.clicksNeg || 0)} · ROAS ≤ ${(data.rules?.roasNeg || 0).toFixed(2)}`],
     [zh ? "保留边界" : "Keep Boundary", `ROAS ≥ ${(data.rules?.roasKeep || 0).toFixed(2)} · ${zh ? "Orders ≥" : "Orders ≥"} ${fmtInt(data.rules?.ordersKeep || 0)}`],
     [zh ? "迁移边界" : "Migration Boundary", `ROAS ≥ ${(data.rules?.roasMigrateMin || 0).toFixed(2)} · ${zh ? "至少有成交证据" : "conversion evidence required"}`],
-    [zh ? "Broad 边界" : "Broad Boundary", zh ? "只投安全词根，不投完整长句；Blue Light 只做辅助词" : "Safe roots only; no full-sentence Broad; blue light is supporting only"],
+    [zh ? "出价层级" : "Bid Hierarchy", zh ? "同一关键词跨匹配时：Exact 最高，Phrase 次之，Broad 更低；Auto 仅采词低价跑" : "For the same keyword across match types: Exact highest, Phrase second, Broad lower; Auto stays low-bid for harvesting"],
+    [zh ? "Broad 边界" : "Broad Boundary", zh ? "白名单低价探索；只投安全词根，不投完整长句；Blue Light 只做辅助词" : "Whitelisted low-bid exploration; safe roots only; no full-sentence Broad; blue light is supporting only"],
+    [zh ? "Product Targeting 边界" : "Product Targeting Boundary", zh ? "赚钱 ASIN 单独建组控预算，亏损 ASIN 做 Negative Product Targeting" : "Isolate profitable ASINs in controlled ad groups; add loss ASINs as Negative Product Targeting"],
     [zh ? "Bulk 边界" : "Bulk Boundary", zh ? "Bulk 草稿只使用规则护栏通过项，上传前必须人工确认" : "Bulk draft uses guarded rows only; manual check required before upload"]
   ];
 };
@@ -6699,7 +6718,8 @@ const getArchitectureAdMatrix = (data) => {
   const exactSeeds = archListFromRows([...(data?.exactLaunch || []), ...(data?.increaseRows || [])], 18);
   const phraseSeeds = archListFromRows(data?.phraseLaunch || [], 18);
   const broadSeeds = archListFromRows([...(data?.broadLaunch || []), ...(data?.topBroadRoots || [])], 18);
-  const auto = find("AUTO"), exact = find("EXACT"), phrase = find("PHRASE"), broad = find("BROAD");
+  const productSeeds = archListFromRows(data?.profitableAsins || [], 18);
+  const auto = find("AUTO"), exact = find("EXACT"), phrase = find("PHRASE"), broad = find("BROAD"), product = find("PRODUCT");
   const noneExact = zh ? "没有明确错配词时，Exact 不强行否定，避免误杀成交长尾" : "Do not force negatives in Exact unless a clear mismatch exists";
   const noPhraseForExact = zh ? "Exact 广告不建议添加词组否定；只做精准错配清理" : "Avoid phrase negatives in Exact; clean exact mismatches only";
   return [
@@ -6716,7 +6736,7 @@ const getArchitectureAdMatrix = (data) => {
       launchTerms: [zh ? "核心 ASIN / 当前主推 SKU" : "Core ASIN / hero SKU"],
       negativeExact: archLimit(neg.autoProtectExact, 14),
       negativePhrase: archLimit(neg.negativePhrase, 14),
-      uploadRule: zh ? "Auto 只保留采词预算；已进入 Exact 的词在 Auto 里做 Negative Exact" : "Keep Auto as harvesting budget; add proven Exact terms as Negative Exact in Auto"
+      uploadRule: zh ? "Auto 只保留采词预算；已进入 Exact 的词在 Auto 里做 Negative Exact / Product" : "Keep Auto as harvesting budget; add proven Exact terms as Negative Exact in Auto"
     },
     {
       type: zh ? "手动精准" : "Manual Exact",
@@ -6763,6 +6783,25 @@ const getArchitectureAdMatrix = (data) => {
       negativeExact: archLimit(neg.negativeExact, 14),
       negativePhrase: archLimit(neg.negativePhrase, 18),
       uploadRule: zh ? "Broad 只做低价采词；必须先放否定词组再开跑" : "Broad is low-bid mining only; add phrase negatives before launch"
+    },
+    {
+      type: zh ? "商品投放" : "Product Targeting",
+      shortType: "Product",
+      layer: "SP_PRODUCT_TARGETING",
+      campaign: product.campaign || "",
+      adGroup: product.adGroup || "",
+      match: "Product Targeting",
+      role: zh ? "竞品 ASIN 攻防层；赚钱 ASIN 单独控预算，亏损 ASIN 做否定商品投放" : "Competitor ASIN attack/defense; isolate profitable ASINs and negate loss ASINs",
+      budget: product.budget || "3-12%",
+      bid: product.bid || "-",
+      launchTerms: productSeeds,
+      launchLabel: zh ? "可攻防的竞品 ASIN" : "Competitor ASIN Targets",
+      negativeExact: archLimit(neg.negativeProduct, 18),
+      negativePhrase: [],
+      negativeExactLabel: zh ? "需要否定的 ASIN / 商品" : "Negative Product Targets",
+      negativePhraseLabel: zh ? "无需词组否定" : "No Phrase Negative",
+      negativePhraseEmpty: zh ? "Product Targeting 不使用 Phrase Negative；亏损 ASIN 走 Negative Product Targeting" : "Product Targeting does not use Phrase Negative; loss ASINs go to Negative Product Targeting",
+      uploadRule: zh ? "只攻有成交证据的 ASIN；高点击 0 单 ASIN 必须隔离否定，避免详情页流量漏血" : "Target ASINs with conversion evidence only; isolate high-click zero-order ASINs as negative product targets"
     }
   ].map(x => ({
     ...x,
@@ -6793,8 +6832,8 @@ const renderAdArchitecture = (data) => {
   ].map(([k,v]) => `<div class="stat"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v)}</div></div>`).join("");
 
   const focusText = zh
-    ? `先复制否定词，再复制投放词。Auto 负责采词，Exact 负责承接，Phrase 负责扩词，Broad 只做低价词根探索。完整表格默认收起，核对时再展开。`
-    : `Copy negatives first, then launch terms. Auto harvests, Exact captures, Phrase expands, Broad mines roots at low bid. Full table stays collapsed by default.`;
+    ? `先复制否定词，再复制投放词。Auto 负责采词，Exact 负责承接，Phrase 负责中长尾扩词，Broad 只做低价白名单词根探索，Product Targeting 负责竞品 ASIN 攻防。完整表格默认收起，核对时再展开。`
+    : `Copy negatives first, then launch terms. Auto harvests, Exact captures, Phrase expands long-tail demand, Broad mines whitelisted roots at low bid, and Product Targeting handles ASIN attack/defense. Full table stays collapsed by default.`;
   const qualityText = bulkCount
     ? (zh ? `当前可生成 ${fmtInt(bulkCount)} 条 Bulk 草稿，上传前仍需人工确认 Campaign / Ad Group / Bid` : `${fmtInt(bulkCount)} Bulk draft rows available; confirm Campaign / Ad Group / Bid before upload`)
     : (zh ? "当前 Bulk 草稿偏少，优先看否定与结构方向，不要强行上传" : "Few Bulk rows detected; prioritize negatives and structure, do not force upload");
@@ -6804,7 +6843,8 @@ const renderAdArchitecture = (data) => {
       Auto: zh ? [["采词层", "warn"], ["低价", ""], ["迁移赢家", "good"]] : [["Harvest", "warn"], ["Low bid", ""], ["Migrate winners", "good"]],
       Exact: zh ? [["主力层", "good"], ["成交词", "good"], ["控 ACOS", ""]] : [["Core", "good"], ["Winners", "good"], ["ACOS control", ""]],
       Phrase: zh ? [["扩词层", ""], ["中长尾", ""], ["配套否定", "warn"]] : [["Expansion", ""], ["Long-tail", ""], ["Negatives", "warn"]],
-      Broad: zh ? [["探索层", "warn"], ["只投词根", ""], ["先加否定", "bad"]] : [["Discovery", "warn"], ["Roots only", ""], ["Negatives first", "bad"]]
+      Broad: zh ? [["探索层", "warn"], ["只投词根", ""], ["先加否定", "bad"]] : [["Discovery", "warn"], ["Roots only", ""], ["Negatives first", "bad"]],
+      Product: zh ? [["ASIN 攻防", ""], ["单独控预算", "warn"], ["亏损即否定", "bad"]] : [["ASIN Attack", ""], ["Isolated budget", "warn"], ["Negate losers", "bad"]]
     };
     return (map[shortType] || []).map(([x,cls]) => `<span class="archStatusPill ${cls}">${escapeHtml(x)}</span>`).join("");
   };
@@ -6837,10 +6877,10 @@ const renderAdArchitecture = (data) => {
         <div class="box"><b>${zh ? "匹配/类型" : "Match"}</b><span>${escapeHtml(r.match || "-")}</span></div>
         <div class="box"><b>${zh ? "预算 / 出价" : "Budget / Bid"}</b><span>${escapeHtml(r.budget || "-")} · ${escapeHtml(r.bid || "-")}</span></div>
       </div>
-      ${termPanel(idx, "launch", zh ? "需要投放的词 / 对象" : "Launch Terms / Objects", "Launch", r.launchTerms, zh ? "当前筛选下暂无投放对象" : "No launch object")}
+      ${termPanel(idx, "launch", r.launchLabel || (zh ? "需要投放的词 / 对象" : "Launch Terms / Objects"), "Launch", r.launchTerms, zh ? "当前筛选下暂无投放对象" : "No launch object")}
       <div class="archNegSplit">
-        ${termPanel(idx, "negativeExact", zh ? "需要否定的关键词" : "Negative Exact Keywords", "Exact", r.negativeExact, r.negativeExactEmpty, true)}
-        ${termPanel(idx, "negativePhrase", zh ? "需要否定的词组" : "Negative Phrase Keywords", "Phrase", r.negativePhrase, r.negativePhraseEmpty, true)}
+        ${termPanel(idx, "negativeExact", r.negativeExactLabel || (zh ? "需要否定的关键词" : "Negative Exact Keywords"), "Exact", r.negativeExact, r.negativeExactEmpty, true)}
+        ${termPanel(idx, "negativePhrase", r.negativePhraseLabel || (zh ? "需要否定的词组" : "Negative Phrase Keywords"), "Phrase", r.negativePhrase, r.negativePhraseEmpty, true)}
       </div>
       <div class="archExecutionHint small"><b>${zh ? "执行原则" : "Rule"}:</b> ${escapeHtml(r.uploadRule)}</div>
     </div>
@@ -6868,8 +6908,8 @@ const renderAdArchitecture = (data) => {
       <div class="archAdMatrixIntro">
         <div class="archAdMatrixHero">
           <div class="eyebrow">${zh ? "当前筛选广告架构" : "Current Filter Ad Structure"}</div>
-          <div class="main">${zh ? "Auto / Exact / Phrase / Broad 执行矩阵" : "Auto / Exact / Phrase / Broad Execution Matrix"}</div>
-          <div class="sub">${zh ? "直接围绕四类广告回答：投什么、否定什么、预算怎么控、哪个层级负责什么。" : "Directly answers: what to launch, what to negate, how to control budget, and what each layer owns."}</div>
+          <div class="main">${zh ? "Auto / Exact / Phrase / Broad / Product Targeting 执行矩阵" : "Auto / Exact / Phrase / Broad / Product Targeting Execution Matrix"}</div>
+          <div class="sub">${zh ? "直接围绕五类广告回答：投什么、否定什么、预算怎么控、哪个层级负责什么。" : "Directly answers: what to launch, what to negate, how to control budget, and what each layer owns across keyword and ASIN targeting."}</div>
         </div>
         <div class="archAdMatrixStats">${stats}</div>
       </div>
@@ -6883,7 +6923,7 @@ const renderAdArchitecture = (data) => {
         <div class="cardTitle" style="margin-bottom:10px;">
           <div>
             <h3>${zh ? "广告类型执行矩阵" : "Ad Type Execution Matrix"}</h3>
-            <div class="sectionLead">${zh ? "四张卡就是执行入口。每块词表都能单独复制，复制结果为纯关键词，每行一个。" : "The four cards are the execution entry. Each term list can be copied separately as one keyword per line."}</div>
+            <div class="sectionLead">${zh ? "五张卡就是执行入口。每块词表都能单独复制，复制结果为纯关键词或 ASIN，每行一个。" : "The five cards are the execution entry. Each term list can be copied separately as one keyword or ASIN per line."}</div>
           </div>
           <div class="rightTools">
             <span class="pill"><b>${zh ? "Bulk 草稿" : "Bulk Draft"}</b> ${fmtInt(bulkCount)}</span>
@@ -6893,7 +6933,7 @@ const renderAdArchitecture = (data) => {
         </div>
         <div class="archQuickCopyBar">
           <button class="archMiniCopyBtn" type="button" data-arch-copy-all="launch">${zh ? "复制全部投放词/对象" : "Copy All Launch Terms"}</button>
-          <button class="archMiniCopyBtn" type="button" data-arch-copy-all="negativeExact">${zh ? "复制全部否定关键词" : "Copy All Negative Exact"}</button>
+          <button class="archMiniCopyBtn" type="button" data-arch-copy-all="negativeExact">${zh ? "复制全部否定关键词" : "Copy All Negative Exact / Product"}</button>
           <button class="archMiniCopyBtn" type="button" data-arch-copy-all="negativePhrase">${zh ? "复制全部否定词组" : "Copy All Negative Phrase"}</button>
         </div>
         <div class="archAdGrid">${cardHtml}</div>
@@ -6907,7 +6947,7 @@ const renderAdArchitecture = (data) => {
           </span>
         </summary>
         <div class="archDetailsBody">
-          ${archTable([zh ? "广告类型" : "Ad Type", "Campaign", "Ad Group", zh ? "匹配类型" : "Match Type", zh ? "预算" : "Budget", zh ? "建议出价" : "Suggested Bid", zh ? "投放意图" : "Intent", zh ? "投放词 / 对象" : "Launch Terms / Objects", zh ? "否定关键词 Exact" : "Negative Exact", zh ? "否定词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"], matrixRows, "-", "archMatrixTable")}
+          ${archTable([zh ? "广告类型" : "Ad Type", "Campaign", "Ad Group", zh ? "匹配类型" : "Match Type", zh ? "预算" : "Budget", zh ? "建议出价" : "Suggested Bid", zh ? "投放意图" : "Intent", zh ? "投放词 / 对象" : "Launch Terms / Objects", zh ? "否定关键词 Exact" : "Negative Exact / Product", zh ? "否定词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"], matrixRows, "-", "archMatrixTable")}
         </div>
       </details>
 
@@ -6931,13 +6971,13 @@ const buildArchitecturePlainText = (data) => {
   line.push(`${zh ? "核心数据" : "Core Metrics"}: Spend ${archMoney(data.total.spend)} | Sales ${archMoney(data.total.sales)} | Orders ${fmtInt(data.total.orders)} | ROAS ${(data.total.roas || 0).toFixed(2)} | ACOS ${archPct(data.total.acos)} | ${zh ? "目标 ACOS" : "Target ACOS"} ${archPct(data.targetAcos)}`);
   line.push(`${zh ? "当前模式" : "Mode"}: ${data.budgetMode}`);
   line.push("");
-  line.push(zh ? "一、广告类型执行矩阵" : "1. Ad Type Execution Matrix");
+  line.push(zh ? "一、五类广告执行矩阵" : "1. Five Ad Type Execution Matrix");
   getArchitectureAdMatrix(data).forEach(r => {
     line.push(`- ${r.type}: ${r.role}`);
     line.push(`  Campaign: ${r.campaign} / ${r.adGroup}`);
     line.push(`  ${zh ? "匹配/预算/出价" : "Match/Budget/Bid"}: ${r.match} / ${r.budget} / ${r.bid || "-"}`);
     line.push(`  ${zh ? "投放词/对象" : "Launch Terms/Objects"}: ${archJoinTerms(r.launchTerms)}`);
-    line.push(`  ${zh ? "需要否定的关键词 Exact" : "Negative Exact"}: ${archJoinTerms(r.negativeExact, r.negativeExactEmpty)}`);
+    line.push(`  ${zh ? "需要否定的关键词/ASIN Exact/PAT" : "Negative Exact / Product"}: ${archJoinTerms(r.negativeExact, r.negativeExactEmpty)}`);
     line.push(`  ${zh ? "需要否定的词组 Phrase" : "Negative Phrase"}: ${archJoinTerms(r.negativePhrase, r.negativePhraseEmpty)}`);
     line.push(`  ${zh ? "执行原则" : "Rule"}: ${r.uploadRule}`);
   });
@@ -6958,10 +6998,10 @@ const buildArchitecturePlainText = (data) => {
   line.push(zh ? "四、规则护栏" : "4. Rule Guardrails");
   getArchitectureGuardrailRows(data).forEach(([k,v]) => line.push(`- ${k}: ${v}`));
   line.push("");
-  line.push(zh ? "四、动作池摘要" : "4. Action Pool Summary");
+  line.push(zh ? "五、动作池摘要" : "5. Action Pool Summary");
   line.push(`Exact: ${data.exactLaunch.length} | Phrase: ${data.phraseLaunch.length} | Broad: ${(data.broadLaunch.length + data.topBroadRoots.length)} | Negative: ${data.negRows.length} | Bid Down: ${data.decreaseRows.length} | ASIN: ${(data.profitableAsins.length + data.lossAsins.length)}`);
   line.push("");
-  line.push(zh ? "五、上传提醒" : "5. Upload Reminder");
+  line.push(zh ? "六、上传提醒" : "6. Upload Reminder");
   line.push(zh ? "广告架构 Excel 是策略说明；Bulk 草稿才是上传草稿。REVIEW 行不要上传，必须先人工确认意图、Campaign、Ad Group、匹配类型、SKU/ASIN、Bid 和预算。" : "Architecture Excel explains strategy; Bulk draft is the upload draft. Do not upload REVIEW rows before confirming intent, Campaign, Ad Group, Match Type, SKU/ASIN, Bid and Budget.");
   return line.join("\n");
 };
@@ -6975,8 +7015,8 @@ const renderArchitectureAISection = () => {
     zh ? "Bulk 上传前人工确认" : "Manual review before Bulk upload"
   ].map(x => `<span class="pill">${escapeHtml(x)}</span>`).join("");
   const empty = zh
-    ? "AI 区域默认收起，避免干扰执行。点击右上角“AI 完整架构”后会自动展开，并按 Auto / Exact / Phrase / Broad 给出更完整的结构判断。"
-    : "AI stays collapsed by default to keep execution clean. Click AI Full Architecture and it will expand with an Auto / Exact / Phrase / Broad structure read.";
+    ? "AI 区域默认收起，避免干扰执行。点击右上角“AI 完整架构”后会自动展开，并按 Auto / Exact / Phrase / Broad / Product Targeting 给出更完整的结构判断。"
+    : "AI stays collapsed by default to keep execution clean. Click AI Full Architecture and it will expand with an Auto / Exact / Phrase / Broad / Product Targeting structure read.";
   const provider = lastArchitectureAIProvider ? `<span class="pill"><b>AI:</b> ${escapeHtml(lastArchitectureAIProvider)}</span>` : `<span class="pill">${zh ? "未生成" : "Not generated"}</span>`;
   return `
     <details class="archDetails archAICompact" id="architectureAIDetails">
@@ -7090,14 +7130,14 @@ const buildArchitectureAIInput = (data) => {
   };
 };
 
-const getArchitectureAISystemPrompt = () => `${currentLang === "zh" ? "你是一位拥有10年经验的亚马逊美国站高级PPC架构师，当前品类是老花镜/阅读眼镜。你的输出必须像广告操作台，不像咨询报告。优先给可以复制核对的 Auto / Manual Exact / Manual Phrase / Manual Broad 执行矩阵。" : "You are a senior Amazon US PPC architect with 10 years of experience in reading glasses. Your output must feel like an operating console, not a consulting report. Prioritize a copy/review friendly Auto / Manual Exact / Manual Phrase / Manual Broad execution matrix."}
+const getArchitectureAISystemPrompt = () => `${currentLang === "zh" ? "你是一位拥有10年经验的亚马逊美国站高级PPC架构师，当前品类是老花镜/阅读眼镜。你的输出必须像广告操作台，不像咨询报告。优先给可以复制核对的 Auto / Manual Exact / Manual Phrase / Manual Broad / Product Targeting 五层执行矩阵。" : "You are a senior Amazon US PPC architect with 10 years of experience in reading glasses. Your output must feel like an operating console, not a consulting report. Prioritize a copy/review friendly Auto / Manual Exact / Manual Phrase / Manual Broad / Product Targeting five-layer execution matrix."}
 
 ${getAiLanguageInstruction()}
 
 ${currentLang === "zh" ? "硬性边界：" : "Hard boundaries:"}
 1. Rule engine output is the source of truth. Do not invent executable terms outside adTypeExecutionMatrix and rule-approved actionPools.
-2. First output must be a compact table with exactly four rows: Auto, Manual Exact, Manual Phrase, Manual Broad.
-3. The four-row table must include: Launch Terms / Objects, Negative Exact, Negative Phrase, Why, Upload Risk.
+2. First output must be a compact table with exactly five rows: Auto, Manual Exact, Manual Phrase, Manual Broad, Product Targeting.
+3. The five-row table must include: Launch Terms / Objects, Negative Exact / Negative Product, Negative Phrase, Why, Upload Risk.
 4. Use the exact terms supplied in JSON when listing launch terms or negatives. If evidence is insufficient, write “Hold / observe” instead of fabricating terms.
 5. Brand terms must not be auto-negated. Blue light is a supporting feature, not the Broad scaling axis.
 6. Broad must stay root-level and low-bid. Avoid full sentence Broad unless already approved by the rule pool.
@@ -7106,11 +7146,11 @@ ${currentLang === "zh" ? "硬性边界：" : "Hard boundaries:"}
 
 const buildArchitectureAIPrompt = (data) => {
   const input = buildArchitectureAIInput(data);
-  return `${currentLang === "zh" ? "基于下面的规则引擎压缩数据，生成一套更直观、可执行、方便核对的广告架构。不要写泛泛策略，必须围绕 Auto / Manual Exact / Manual Phrase / Manual Broad。" : "Using the rule-engine-compressed data below, generate a more intuitive, executable, review-friendly ad architecture. Do not write generic strategy; organize around Auto / Manual Exact / Manual Phrase / Manual Broad."}
+  return `${currentLang === "zh" ? "基于下面的规则引擎压缩数据，生成一套更直观、可执行、方便核对的广告架构。不要写泛泛策略，必须围绕 Auto / Manual Exact / Manual Phrase / Manual Broad / Product Targeting。" : "Using the rule-engine-compressed data below, generate a more intuitive, executable, review-friendly ad architecture. Do not write generic strategy; organize around Auto / Manual Exact / Manual Phrase / Manual Broad / Product Targeting."}
 
 ${currentLang === "zh" ? "输出结构必须严格包含以下模块：" : "Output must strictly contain these modules:"}
-<h3>1. 四类广告执行矩阵 / Four Ad Type Execution Matrix</h3>
-<table><thead><tr><th>Ad Type</th><th>Launch Terms / Objects</th><th>Negative Exact</th><th>Negative Phrase</th><th>Why</th><th>Upload Risk</th></tr></thead><tbody></tbody></table>
+<h3>1. 五类广告执行矩阵 / Five Ad Type Execution Matrix</h3>
+<table><thead><tr><th>Ad Type</th><th>Launch Terms / Objects</th><th>Negative Exact / Product</th><th>Negative Phrase</th><th>Why</th><th>Upload Risk</th></tr></thead><tbody></tbody></table>
 <h3>2. 先后顺序 / Execution Order</h3>
 <ol><li>${currentLang === "zh" ? "先做否定，再建承接层，再开扩词和词根探索。" : "Negatives first, then capture layer, then expansion and root mining."}</li></ol>
 <h3>3. 每类广告的核心风控 / Guardrails by Ad Type</h3>
@@ -7120,6 +7160,66 @@ ${currentLang === "zh" ? "输出结构必须严格包含以下模块：" : "Outp
 
 JSON_DATA:
 ${JSON.stringify(input, null, 2)}`;
+};
+
+
+const archEscapeCompactCell = (value) => escapeHtml(String(value || "-").trim() || "-");
+const archCompactTermCell = (items, emptyText, limit = 10) => {
+  const arr = archLimit((items || []).map(x => String(x || "").trim()).filter(Boolean), limit);
+  if (!arr.length) return `<span class="small">${escapeHtml(emptyText || "-")}</span>`;
+  return arr.map(x => `<code>${escapeHtml(x)}</code>`).join(" ");
+};
+
+const renderArchitectureLocalAIResult = (data, mode = "preview", note = "") => {
+  const zh = currentLang === "zh";
+  if (!data) return `<div class="alert-banner warn">⚠️ ${escapeHtml(t("arch_no_data") || "No data")}</div>`;
+  const matrix = getArchitectureAdMatrix(data);
+  const total = data.total || {};
+  const statusClass = mode === "api-failed" ? "warn" : "good";
+  const title = mode === "api-failed"
+    ? (zh ? "API 未返回内容，已生成本地规则引擎完整架构" : "API returned no usable content; local rule-engine architecture is shown")
+    : (zh ? "已生成本地规则引擎完整架构，API 结果返回后会自动替换" : "Local rule-engine architecture generated; API output will replace it when available");
+  const noteHtml = note ? `<div class="small">${escapeHtml(String(note).slice(0, 520))}</div>` : "";
+  const rowHtml = matrix.map(r => {
+    const launchLabel = r.launchLabel || (zh ? "投放词/对象" : "Launch Terms / Objects");
+    const negExactLabel = r.negativeExactLabel || (zh ? "否定精准/商品" : "Negative Exact / Product");
+    const negPhraseLabel = r.negativePhraseLabel || (zh ? "否定词组" : "Negative Phrase");
+    const risk = /Broad/i.test(r.shortType || "")
+      ? (zh ? "中高，必须先加词组否定并低价跑" : "Medium-high; phrase negatives and low bids first")
+      : /Auto/i.test(r.shortType || "")
+        ? (zh ? "中，采词层不能放任烧预算" : "Medium; harvesting layer must not bleed budget")
+        : /Product/i.test(r.shortType || "")
+          ? (zh ? "中，亏损 ASIN 必须及时否定" : "Medium; negate loss ASINs quickly")
+          : (zh ? "低到中，按成交证据放量" : "Low-medium; scale only with conversion proof");
+    return `<tr>
+      <td><b>${escapeHtml(r.type || r.shortType || "-")}</b><br><span class="small">${escapeHtml(r.layer || "")}</span></td>
+      <td>${archCompactTermCell(r.launchTerms, zh ? `暂无${launchLabel}` : `No ${launchLabel}`, 12)}</td>
+      <td>${archCompactTermCell(r.negativeExact, r.negativeExactEmpty || (zh ? `暂无${negExactLabel}` : `No ${negExactLabel}`), 10)}</td>
+      <td>${archCompactTermCell(r.negativePhrase, r.negativePhraseEmpty || (zh ? `暂无${negPhraseLabel}` : `No ${negPhraseLabel}`), 10)}</td>
+      <td>${archEscapeCompactCell(r.role)}<br><span class="small">${archEscapeCompactCell(r.uploadRule)}</span></td>
+      <td><span class="tag ${/高|High/i.test(risk) ? "bad" : /中|Medium/i.test(risk) ? "warn" : "good"}">${escapeHtml(risk)}</span></td>
+    </tr>`;
+  }).join("");
+  const order = zh
+    ? ["先上传否定词/否定商品，堵住预算漏血", "Exact 承接核心成交词，出价最高", "Phrase 扩中长尾，必须带词组否定", "Broad 只跑白名单词根，低价探索", "Auto 紧密自动采词，赢家迁移到手动", "Product Targeting 只攻有成交证据的 ASIN，亏损 ASIN 否定"]
+    : ["Upload negatives / negative products first to stop budget leakage", "Exact captures proven converters with the highest bid", "Phrase expands long-tail demand with phrase negatives", "Broad mines whitelisted roots at low bid", "Auto harvests tightly and migrates winners to manual", "Product Targeting attacks proven ASINs and negates loss ASINs"];
+  const guardrails = zh
+    ? ["Exact > Phrase > Broad / Auto 的出价阶梯必须保持", "Blue Light 只做辅助特征，不做 Broad 主轴", "品牌词不自动否定，只做降价或人工复核", "Bulk 草稿上传前必须人工确认 Campaign / Ad Group / Match Type / Bid"]
+    : ["Keep bid ladder: Exact > Phrase > Broad / Auto", "Blue light is supporting copy, not Broad scaling axis", "Do not auto-negate brand terms; bid down or review", "Confirm Campaign / Ad Group / Match Type / Bid before Bulk upload"];
+  return `<div class="alert-banner ${statusClass}">✅ <div><b>${escapeHtml(title)}</b>${noteHtml}</div></div>
+    <h3>${zh ? "1. 五类广告执行矩阵" : "1. Five Ad Type Execution Matrix"}</h3>
+    <div class="archTableWrap"><table class="archTable archMatrixTable"><thead><tr>
+      <th>Ad Type</th><th>${zh ? "投放词 / 对象" : "Launch Terms / Objects"}</th><th>${zh ? "否定精准 / 商品" : "Negative Exact / Product"}</th><th>${zh ? "否定词组" : "Negative Phrase"}</th><th>${zh ? "为什么这样做" : "Why"}</th><th>${zh ? "上传风险" : "Upload Risk"}</th>
+    </tr></thead><tbody>${rowHtml}</tbody></table></div>
+    <h3>${zh ? "2. 执行顺序" : "2. Execution Order"}</h3>
+    <ol>${order.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ol>
+    <h3>${zh ? "3. 核心风控" : "3. Core Guardrails"}</h3>
+    <ul>${guardrails.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+    <h3>${zh ? "4. 当前账户快照" : "4. Current Account Snapshot"}</h3>
+    <ul>
+      <li>Spend: <code>${escapeHtml(archMoney(total.spend || 0))}</code> · Sales: <code>${escapeHtml(archMoney(total.sales || 0))}</code> · ROAS: <code>${escapeHtml(String((total.roas || 0).toFixed(2)))}</code> · ACOS: <code>${escapeHtml(archPct(total.acos))}</code></li>
+      <li>Exact: <code>${fmtInt(data.exactLaunch?.length || 0)}</code> · Phrase: <code>${fmtInt(data.phraseLaunch?.length || 0)}</code> · Broad: <code>${fmtInt((data.broadLaunch?.length || 0) + (data.topBroadRoots?.length || 0))}</code> · Negative: <code>${fmtInt(data.negRows?.length || 0)}</code> · ASIN: <code>${fmtInt((data.profitableAsins?.length || 0) + (data.lossAsins?.length || 0))}</code></li>
+    </ul>`;
 };
 
 const ensureArchitectureAISection = (data) => {
@@ -7180,7 +7280,8 @@ const runArchitectureAI = async () => {
     btn.disabled = false;
     btn.setAttribute("aria-busy", "true");
     btn.innerHTML = currentLang === "zh" ? "停止生成" : "Stop";
-    result.innerHTML = `<div class="ai-loader-container"><div class="ai-spinner"></div><div><b>${currentLang === "zh" ? "AI 正在生成完整广告架构..." : "AI is generating the full ad architecture..."}</b><div class="small">${currentLang === "zh" ? "已展开到 AI 输出区。Gemini → OpenRouter → Groq 自动切换；如果 API 失败，会在这里显示原因。" : "AI output is now expanded. Gemini → OpenRouter → Groq auto-fallback; API errors will appear here."}</div></div></div>`;
+    const localPreviewHtml = renderArchitectureLocalAIResult(data, "preview");
+    result.innerHTML = `${localPreviewHtml}<div class="alert-banner warn">⏳ <div><b>${currentLang === "zh" ? "API AI 正在生成更细的完整架构..." : "API AI is generating a more detailed full architecture..."}</b><div class="small">${currentLang === "zh" ? "下方已先显示本地规则引擎结果，避免点击后空白。Gemini → OpenRouter → Groq 自动切换；API 成功后会自动替换为 AI 版本。" : "A local rule-engine result is shown first to avoid a blank output. Gemini → OpenRouter → Groq auto-fallback; successful API output will replace it."}</div></div></div>`;
     if (aiDetails) {
       aiDetails.open = true;
       try { aiDetails.scrollIntoView({ behavior: "smooth", block: "start" }); } catch(e) {}
@@ -7225,10 +7326,32 @@ const runArchitectureAI = async () => {
     } catch (e) {
       const aborted = e?.name === "AbortError";
       const msg = aborted ? (currentLang === "zh" ? "已停止生成。" : "Generation stopped.") : `${t("arch_ai_failed")}: ${String(e?.message || e).slice(0, 520)}`;
-      result.innerHTML = `<div class="alert-banner warn">⚠️ ${escapeHtml(msg)}</div>`;
+      if (aborted) {
+        result.innerHTML = `<div class="alert-banner warn">⚠️ ${escapeHtml(msg)}</div>`;
+      } else {
+        const fallbackHtml = renderArchitectureLocalAIResult(data, "api-failed", msg);
+        lastArchitectureAIText = archPlainTextFromHtml(fallbackHtml);
+        lastArchitectureAIHtml = fallbackHtml;
+        lastArchitectureAIProvider = currentLang === "zh" ? "本地规则引擎兜底" : "Local rule-engine fallback";
+        result.innerHTML = fallbackHtml;
+        lastArchitecturePlainText = `${buildArchitecturePlainText(data)}
+
+【Local Rule Engine Fallback】
+${lastArchitectureAIText}`;
+        log(msg, "warn");
+      }
     }
   } catch (outerError) {
-    result.innerHTML = `<div class="alert-banner warn">⚠️ ${escapeHtml(String(outerError?.message || outerError).slice(0, 520))}</div>`;
+    const msg = String(outerError?.message || outerError).slice(0, 520);
+    const fallbackHtml = renderArchitectureLocalAIResult(data, "api-failed", msg);
+    lastArchitectureAIText = archPlainTextFromHtml(fallbackHtml);
+    lastArchitectureAIHtml = fallbackHtml;
+    lastArchitectureAIProvider = currentLang === "zh" ? "本地规则引擎兜底" : "Local rule-engine fallback";
+    result.innerHTML = fallbackHtml;
+    lastArchitecturePlainText = `${buildArchitecturePlainText(data)}
+
+【Local Rule Engine Fallback】
+${lastArchitectureAIText}`;
   } finally {
     architectureAbortController = null;
     btn.disabled = false;
@@ -7324,8 +7447,8 @@ const buildArchitectureBulkSheets = (data) => {
   const matrixRows = getArchitectureMatrixSheetRows(data);
   const aiText = lastArchitectureAIText ? archPlainTextFromHtml(lastArchitectureAIText) : "";
   const sheets = [
-    { sheetName: "00 Read Me", headers: [zh ? "项目" : "Item", zh ? "说明" : "Explanation"], dataRows: [[zh ? "这个文件是什么" : "What this file is", zh ? "规则护栏后的 Sponsored Products Bulk 上传草稿，不是最终自动上传文件" : "Rule-guarded Sponsored Products Bulk upload draft, not a final auto-upload file"], [zh ? "最重要的 Sheet" : "Most important sheet", "01 Ad Type Matrix 和 04 SP Bulk Draft"], [zh ? "不要上传什么" : "Do not upload", zh ? "05 Keyword Review Gate 里 Gate=REVIEW 的行" : "Rows marked REVIEW in 05 Keyword Review Gate"], [zh ? "上传前确认" : "Before upload", zh ? "Campaign、Ad Group、SKU/ASIN、Match Type、Bid、预算、State，以及每个广告的否定关键词/词组" : "Campaign, Ad Group, SKU/ASIN, Match Type, Bid, Budget, State, and negatives per ad type"], [zh ? "生成时间" : "Generated At", data.generatedAt]] },
-    { sheetName: "01 Ad Type Matrix", headers: [zh ? "广告类型" : "Ad Type", "Layer", "Campaign", "Ad Group", "Match", "Budget", "Bid", zh ? "投放意图" : "Role", zh ? "投放词/对象" : "Launch Terms/Objects", zh ? "需要否定的关键词 Exact" : "Negative Exact", zh ? "需要否定的词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"], dataRows: matrixRows },
+    { sheetName: "00 Read Me", headers: [zh ? "项目" : "Item", zh ? "说明" : "Explanation"], dataRows: [[zh ? "这个文件是什么" : "What this file is", zh ? "规则护栏后的 Sponsored Products Bulk 上传草稿，不是最终自动上传文件" : "Rule-guarded Sponsored Products Bulk upload draft, not a final auto-upload file"], [zh ? "最重要的 Sheet" : "Most important sheet", "01 Ad Type Matrix 和 04 SP Bulk Draft"], [zh ? "不要上传什么" : "Do not upload", zh ? "05 Keyword Review Gate 里 Gate=REVIEW 的行" : "Rows marked REVIEW in 05 Keyword Review Gate"], [zh ? "上传前确认" : "Before upload", zh ? "Campaign、Ad Group、SKU/ASIN、Match Type、Bid、预算、State，以及每个广告的否定关键词/词组/否定商品" : "Campaign, Ad Group, SKU/ASIN, Match Type, Bid, Budget, State, and keyword/product negatives per ad type"], [zh ? "生成时间" : "Generated At", data.generatedAt]] },
+    { sheetName: "01 Ad Type Matrix", headers: [zh ? "广告类型" : "Ad Type", "Layer", "Campaign", "Ad Group", "Match", "Budget", "Bid", zh ? "投放意图" : "Role", zh ? "投放词/对象" : "Launch Terms/Objects", zh ? "需要否定的关键词/ASIN Exact/PAT" : "Negative Exact / Product", zh ? "需要否定的词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"], dataRows: matrixRows },
     { sheetName: "02 Intent Map", headers: ["Layer", zh ? "投放意图" : "Intent", zh ? "适用条件" : "When to Use", "Campaign", "Ad Group", "Match", zh ? "预算角色" : "Budget Role", "Bid", zh ? "种子来源" : "Seed Source", zh ? "控制逻辑" : "Control", zh ? "导出含义" : "Export Meaning"], dataRows: intentRows },
     { sheetName: "03 Campaign Setup", headers: ["Layer", "Campaign", "Ad Group", "Match", "Budget", "Bid", "Objective", "Seeds", "Negative Control"], dataRows: setupRows },
     { sheetName: "04 SP Bulk Draft", headers: bulkHeaders, dataRows: bulkRows },
@@ -7457,6 +7580,8 @@ const architecturePlaceholderPatterns = [
   /Do not force negatives/i,
   /Avoid phrase negatives/i,
   /Core ASIN\s*\/\s*hero SKU/i,
+  /当前筛选没有赚钱\s*ASIN\s*证据/i,
+  /No profitable ASIN evidence/i,
   /^-$/
 ];
 const cleanArchitectureKeyword = (value) => String(value || "")
@@ -7512,7 +7637,7 @@ const getArchitectureKindLabel = (kind) => {
 
 const buildArchitectureMatrixTsv = (data) => {
   const zh = currentLang === "zh";
-  const headers = [zh ? "广告类型" : "Ad Type", "Campaign", "Ad Group", zh ? "匹配类型" : "Match Type", zh ? "预算" : "Budget", zh ? "建议出价" : "Suggested Bid", zh ? "投放意图" : "Intent", zh ? "投放词 / 对象" : "Launch Terms / Objects", zh ? "否定关键词 Exact" : "Negative Exact", zh ? "否定词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"];
+  const headers = [zh ? "广告类型" : "Ad Type", "Campaign", "Ad Group", zh ? "匹配类型" : "Match Type", zh ? "预算" : "Budget", zh ? "建议出价" : "Suggested Bid", zh ? "投放意图" : "Intent", zh ? "投放词 / 对象" : "Launch Terms / Objects", zh ? "否定关键词 Exact" : "Negative Exact / Product", zh ? "否定词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"];
   const cleanCell = (v) => String(v || "-").replace(/\t/g, " ").replace(/\r?\n/g, " ").trim();
   const rows = getArchitectureAdMatrix(data).map(r => [
     r.type,
@@ -7777,7 +7902,7 @@ const addArchitectureNegativeFallbackRows = (rows, mode) => {
       acos: r.acos,
       campaign: r.campaign || "",
       adGroup: r.adGroup || "",
-      reason: r.reason || r.matchAdvice || (mode === "phrase" ? "Negative Phrase" : "Negative Exact"),
+      reason: r.reason || r.matchAdvice || (mode === "phrase" ? "Negative Phrase" : "Negative Exact / Product"),
       risk: r.protectionLabel || r.protection || "",
       sortScore: 90000 + safeNum(r.spend) * 10 + safeNum(r.clicks)
     });
@@ -7938,7 +8063,7 @@ const renderNegativeKeywordPopupContent = (mode, rows) => {
     </tr>`).join("");
   return `
     <div class="negKeywordSummary">
-      <div class="architectureMetric"><div class="label">${zh ? "候选数量" : "Candidates"}</div><div class="value">${fmtInt(rows.length)}</div><div class="meta">${mode === "phrase" ? "Negative Phrase" : "Negative Exact"}</div></div>
+      <div class="architectureMetric"><div class="label">${zh ? "候选数量" : "Candidates"}</div><div class="value">${fmtInt(rows.length)}</div><div class="meta">${mode === "phrase" ? "Negative Phrase" : "Negative Exact / Product"}</div></div>
       <div class="architectureMetric"><div class="label">${zh ? "覆盖花费" : "Covered Spend"}</div><div class="value">${fmtMoney(totalSpend)}</div><div class="meta">${zh ? "当前筛选范围" : "Current filters"}</div></div>
       <div class="architectureMetric"><div class="label">${zh ? "覆盖点击" : "Covered Clicks"}</div><div class="value">${fmtInt(totalClicks)}</div><div class="meta">${zh ? "用于判断浪费" : "Waste evidence"}</div></div>
       <div class="architectureMetric"><div class="label">${zh ? "覆盖订单" : "Covered Orders"}</div><div class="value">${fmtInt(totalOrders)}</div><div class="meta">${zh ? "越低越适合否定" : "Lower is safer"}</div></div>
