@@ -289,6 +289,10 @@
     #multiDimCard .cardTitle .seg { flex-wrap: nowrap; min-width:max-content; }
     #multiDimCard .cardTitle .segBtn { white-space: nowrap; }
     #multiDimCard table thead th { cursor:pointer; }
+    table thead th.sort-active { color: var(--accent); }
+    table thead th.sort-active[data-sort-dir="asc"]::after { content: " ▲"; font-size: 10px; color: var(--accent); }
+    table thead th.sort-active[data-sort-dir="desc"]::after { content: " ▼"; font-size: 10px; color: var(--accent); }
+    table thead th:hover { color: var(--accent); }
     #multiDimCard table thead th.sort-active { color: var(--accent); }
     #multiDimCard table thead th.sort-active[data-sort-dir="asc"]::after { content: " ▲"; font-size: 10px; color: var(--accent); }
     #multiDimCard table thead th.sort-active[data-sort-dir="desc"]::after { content: " ▼"; font-size: 10px; color: var(--accent); }
@@ -1388,6 +1392,10 @@
         <div class="fieldRow"><label data-i18n="lbl_fba">平均 FBA 费</label><input id="bizFba" type="number" step="0.1" value="4.50" data-i18n-title="title_fba" title="每单配送费" /></div>
         <div class="fieldRow"><label data-i18n="lbl_ref_fee">类目佣金比例</label><input id="bizRef" type="number" step="0.01" value="0.15" data-i18n-title="title_ref_fee" title="Amazon Referral Fee" /></div>
       </div>
+      <div class="row2">
+        <div class="fieldRow"><label data-i18n="lbl_units_per_order">平均每单件数</label><input id="bizUnitsPerOrder" type="number" step="0.05" min="0.1" value="1.10" data-i18n-title="title_units_per_order" title="用于广告报表没有 Units 字段时估算利润，建议按真实业务调整" /></div>
+        <div class="fieldRow"><label data-i18n="lbl_bid_hard_cap">建议出价硬上限</label><input id="bizBidHardCap" type="number" step="0.05" min="0.15" value="1.80" data-i18n-title="title_bid_hard_cap" title="限制 Exact/Phrase/Broad 建议出价，避免低客单价品类被异常 RPC 拉高" /></div>
+      </div>
       <div class="row3">
         <div class="fieldRow"><label data-i18n="lbl_neg_spend">否定花费 ≥</label><input id="ruleSpendNeg" type="number" step="0.01" value="30" /></div>
         <div class="fieldRow"><label data-i18n="lbl_neg_clicks">否定点击量 ≥</label><input id="ruleClicksNeg" type="number" step="1" value="20" /></div>
@@ -1983,6 +1991,10 @@ const I18N = {
       title_fba: "每单配送费",
       lbl_ref_fee: "类目佣金比例",
       title_ref_fee: "Amazon Referral Fee",
+      lbl_units_per_order: "平均每单件数",
+      title_units_per_order: "用于广告报表没有 Units 字段时估算利润，建议按真实业务调整",
+      lbl_bid_hard_cap: "建议出价硬上限",
+      title_bid_hard_cap: "限制 Exact/Phrase/Broad 建议出价，避免低客单价品类被异常 RPC 拉高",
       lbl_neg_spend: "否定花费 ≥",
       lbl_neg_clicks: "否定点击量 ≥",
       lbl_keep_roas: "保留 ROAS ≥",
@@ -2017,12 +2029,12 @@ const I18N = {
       btn_arch_ai: "AI 完整架构",
       btn_arch_copy: "复制架构",
       btn_arch_export: "导出架构 Excel",
-      btn_arch_bulk: "导出 Bulk 草稿",
+      btn_arch_bulk: "导出 Bulk 草稿（Draft Only）",
       title_close_arch: "关闭广告架构",
       arch_no_data: "当前筛选下没有广告数据。请先导入广告报表，或放宽左侧筛选条件。",
       arch_copied: "广告架构已复制到剪贴板",
       arch_exported: "广告架构 Excel 已导出",
-      arch_bulk_exported: "规则护栏 Bulk 草稿已导出",
+      arch_bulk_exported: "规则护栏 Bulk 草稿已导出（Draft Only，上传前必须人工确认）",
       arch_bulk_empty: "当前筛选下没有符合规则护栏的 Bulk 草稿。请先生成动作清单，或放宽筛选/规则。",
       arch_ai_done: "AI 完整广告架构已生成",
       arch_ai_failed: "AI 广告架构生成失败",
@@ -2040,7 +2052,7 @@ const I18N = {
       title_action_center: "广告动作清单中心 Simple (Action Command Center)",
       hint_action_center: "只输出 6 类动作：否定、加价、降价、投放精准、投放词组、投放广泛；新增今日 Top 20 与广泛词根提炼",
       btn_action_refresh: "刷新建议",
-      btn_action_bulk: "导出 Bulk 草稿",
+      btn_action_bulk: "导出 Bulk 草稿（Draft Only）",
       btn_action_excel: "导出建议 Excel",
       title_keyword_template_export: "关键词上传模板导出",
       hint_keyword_template_export: "按照你提供的模板导出：关键词 / 匹配类型 / 竞价，可分别上传精准、词组、广泛",
@@ -2110,7 +2122,7 @@ const I18N = {
       action_export_no_plan: "暂无可导出的建议",
       action_log_plan_exported: "简单动作建议已导出",
       action_export_no_bulk: "暂无可导出的 Bulk 草稿",
-      action_log_bulk_exported: "Bulk 草稿已导出",
+      action_log_bulk_exported: "Bulk 草稿已导出（Draft Only，上传前必须人工确认）",
       action_keyword_export_empty: "暂无可导出的{0}关键词建议。可先提高最大显示行数，或检查当前筛选条件是否过窄。",
       action_keyword_exported: "{0}关键词上传模板已导出",
       action_keyword_file_prefix: "Amazon_Keyword_Template",
@@ -2418,6 +2430,10 @@ const I18N = {
       title_fba: "FBA Fee per Unit",
       lbl_ref_fee: "Referral Fee %",
       title_ref_fee: "Amazon Referral Fee",
+      lbl_units_per_order: "Avg Units / Order",
+      title_units_per_order: "Used to estimate profit when the ads report does not include Units. Adjust based on actual account data.",
+      lbl_bid_hard_cap: "Suggested Bid Hard Cap",
+      title_bid_hard_cap: "Caps Exact/Phrase/Broad suggested bids to avoid inflated RPC on low-AOV products.",
       lbl_neg_spend: "Negate Spend ≥",
       lbl_neg_clicks: "Negate Clicks ≥",
       lbl_keep_roas: "Keep ROAS ≥",
@@ -2452,12 +2468,12 @@ const I18N = {
       btn_arch_ai: "AI Full Architecture",
       btn_arch_copy: "Copy Plan",
       btn_arch_export: "Export Architecture Excel",
-      btn_arch_bulk: "Export Bulk Draft",
+      btn_arch_bulk: "Export Bulk Draft Only",
       title_close_arch: "Close ad architecture",
       arch_no_data: "No ad data in the current filtered view. Import ad reports or loosen the filters.",
       arch_copied: "Ad architecture copied to clipboard",
       arch_exported: "Ad architecture Excel exported",
-      arch_bulk_exported: "Rule-guarded Bulk draft exported",
+      arch_bulk_exported: "Rule-guarded Bulk draft exported (Draft Only, manual review required before upload)",
       arch_bulk_empty: "No rule-guarded Bulk draft is available in the current filtered view. Generate actions first or loosen filters/rules.",
       arch_ai_done: "AI full ad architecture generated",
       arch_ai_failed: "AI ad architecture generation failed",
@@ -2475,7 +2491,7 @@ const I18N = {
       title_action_center: "Simple Action Command Center",
       hint_action_center: "Outputs 6 execution actions only: negate, increase bid, decrease bid, create exact, create phrase, create broad; includes Top 20 and broad root mining",
       btn_action_refresh: "Refresh Suggestions",
-      btn_action_bulk: "Export Bulk Draft",
+      btn_action_bulk: "Export Bulk Draft Only",
       btn_action_excel: "Export Action Excel",
       title_keyword_template_export: "Keyword Upload Template Export",
       hint_keyword_template_export: "Exports using your template: keyword / match type / bid, split into exact, phrase, and broad files.",
@@ -2545,7 +2561,7 @@ const I18N = {
       action_export_no_plan: "No action suggestions to export",
       action_log_plan_exported: "Simple action suggestions exported",
       action_export_no_bulk: "No Bulk draft to export",
-      action_log_bulk_exported: "Bulk draft exported",
+      action_log_bulk_exported: "Bulk draft exported (Draft Only, manual review required before upload)",
       action_keyword_export_empty: "No exportable {0} keyword suggestions. Increase max rows or check whether current filters are too narrow.",
       action_keyword_exported: "{0} keyword upload template exported",
       action_keyword_file_prefix: "Amazon_Keyword_Template",
@@ -2746,6 +2762,15 @@ const I18N = {
       dyn_lt_blue: "💎 Blue Ocean (Low Comp, High CVR)",
       dyn_lt_high: "🎯 High Intent (>2x Avg CVR)",
       dyn_lt_normal: "Normal Long-Tail",
+      dyn_lt_broad: "Broad Root",
+      dyn_lt_launch: "New Exact",
+      dyn_lt_listing: "Listing Gap",
+      dyn_lt_phrase: "Phrase Expansion",
+      dyn_lt_profit: "Profitable Long-Tail",
+      dyn_lt_risk: "Risk Review",
+      dyn_lt_scale: "Scale Exact",
+      dyn_lt_test: "Small-Sample Potential",
+      dyn_lt_watch: "Watch",
       
       dyn_day_sun: "Sun", dyn_day_mon: "Mon", dyn_day_tue: "Tue", dyn_day_wed: "Wed", dyn_day_thu: "Thu", dyn_day_fri: "Fri", dyn_day_sat: "Sat",
       
@@ -2802,7 +2827,7 @@ const formatStr = (str, ...args) => {
 };
 
 const t = (key, ...args) => {
-  let text = I18N[currentLang][key] || key;
+  let text = I18N[currentLang]?.[key] ?? I18N.zh?.[key] ?? key;
   if (args.length > 0) text = formatStr(text, ...args);
   return text;
 };
@@ -3427,14 +3452,30 @@ const buildWordStats = () => {
 // ==================== Web Worker & Parsing Optimization ====================
 const cleanHeader = (h) => String(h).replace(/^\uFEFF/, '').replace(/\s+/g, '').toLowerCase();
 
-const detectAdProduct = (headers) => {
+const normalizeAdProductValue = (value) => {
+    const v = String(value || "").trim().toLowerCase();
+    if (!v) return "";
+    if (v.includes("sponsored display") || v === "sd" || v.includes("display")) return "SD";
+    if (v.includes("sponsored brand") || v === "sb" || v.includes("brand")) return "SB";
+    if (v.includes("sponsored product") || v === "sp" || v.includes("product")) return "SP";
+    return "";
+};
+
+const detectAdProduct = (headers, sampleRows = [], adProductCol = null) => {
+    if (adProductCol && sampleRows.length) {
+      for (const row of sampleRows.slice(0, 80)) {
+        const detected = normalizeAdProductValue(row?.[adProductCol]);
+        if (detected) return detected;
+      }
+    }
     const joined = headers.map(cleanHeader).join("|");
-    if (joined.includes("viewableimpression") || joined.includes("vpm")) return "SD";
-    if (joined.includes("ntb") || joined.includes("new-to-brand")) return "SB";
+    if (joined.includes("viewableimpression") || joined.includes("vpm") || joined.includes("view-through") || joined.includes("viewthrough")) return "SD";
+    if (joined.includes("ntb") || joined.includes("new-to-brand") || joined.includes("newtobrand")) return "SB";
     return "SP"; 
 };
 
 const COL_MAP_ALIASES = { 
+  adProduct: ["广告类型","广告产品","AdProduct","Ad Product","CampaignType","Campaign Type","Product","产品"],
   date: ["日期","Date","Day","ReportDate"], 
   portfolio: ["广告组合名称","Portfolioname","Portfolio","PortfolioName"], 
   campaign: ["广告活动名称","Campaignname","Campaign","CampaignName"], 
@@ -3501,8 +3542,16 @@ const buildMap = (rows) => {
   const header = rows.length ? Object.keys(rows[0]) : []; 
   const map = {}; 
   for (const key in COL_MAP_ALIASES) map[key] = pickCol(header, COL_MAP_ALIASES[key]); 
-  if (!map.date) throw new Error("Ads Report: 未找到日期列 (Date)."); 
-  map.adProductType = detectAdProduct(header);
+  const required = [
+    ["date", "Date"], ["campaign", "Campaign"], ["impr", "Impressions"], ["clicks", "Clicks"],
+    ["spend", "Spend"], ["sales7d", "Sales"], ["orders7d", "Orders"]
+  ];
+  const missing = required.filter(([key]) => !map[key]).map(([, label]) => label);
+  if (!map.targeting && !map.searchTerm) missing.push("Targeting/Search Term");
+  if (missing.length) {
+    throw new Error(`Ads Report: 字段不完整，缺少 ${missing.join(", ")}。请导入标准广告搜索词/投放报表。`);
+  }
+  map.adProductType = detectAdProduct(header, rows, map.adProduct);
   return map; 
 };
 
@@ -3543,7 +3592,7 @@ const normalizeRow = (raw, map, sourceFile) => {
 
   return {
     sourceFile: intern(sourceFile), 
-    adProduct: intern(map.adProductType || "SP"), 
+    adProduct: intern(normalizeAdProductValue(map.adProduct ? raw[map.adProduct] : "") || map.adProductType || "SP"), 
     date: intern(toISODate(raw[map.date])), 
     portfolio: intern(String(raw[map.portfolio] ?? "").trim()), 
     campaign: intern(String(raw[map.campaign] ?? "").trim()), 
@@ -3647,8 +3696,12 @@ const parseXLSX = (file) => new Promise((r,j)=>{
 
 const dedupeRows = (rows) => { 
   const seen = new Set(), out = []; 
+  const n = (v) => Number.isFinite(Number(v)) ? Number(v).toFixed(4) : String(v ?? "");
   for (const r of rows) { 
-    const key = `${r.date}|${r.campaign}|${r.adGroup}|${r.targeting}|${r.matchType}|${r.searchTerm}`; 
+    const key = [
+      r.sourceFile, r.adProduct, r.date, r.portfolio, r.campaign, r.adGroup,
+      r.targeting, r.matchType, r.searchTerm, n(r.impr), n(r.clicks), n(r.spend), n(r.sales), n(r.orders)
+    ].join("|"); 
     if (!seen.has(key)) { seen.add(key); out.push(r); } 
   } 
   return out; 
@@ -4052,6 +4105,8 @@ const updateChildDropdowns = (changedId) => {
 };
 
 const withinDate = (r, start, end) => (!start || r.date >= start) && (!end || r.date <= end);
+const getBizUnitsPerOrder = () => clamp(safeNum($("bizUnitsPerOrder")?.value) || 1.10, 0.1, 20);
+const getBidHardCap = () => clamp(safeNum($("bizBidHardCap")?.value) || 1.80, 0.15, 5);
 
 const sumMetrics = (rows) => {
 let impr=0, clicks=0, spendCents=0, salesCents=0, orders=0, units=0;
@@ -4059,7 +4114,7 @@ for (const r of rows) {
     impr += r.impr; clicks += r.clicks; orders += r.orders; 
     spendCents += Math.round((r.spend || 0) * 100); 
     salesCents += Math.max(0, Math.round((r.sales || 0) * 100)); 
-    units += (r.orders || 0) * 1.1; 
+    units += (r.units ?? ((r.orders || 0) * getBizUnitsPerOrder())); 
 }
 const spend = spendCents / 100; const sales = salesCents / 100;
 
@@ -4858,7 +4913,9 @@ const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
   }
   if (risk.audienceShift && action === "NEGATE") { action = "REVIEW"; reason = currentLang === "zh" ? "Men 流量不自动否定，需人工复核" : "Men traffic is not auto-negated; manual review required"; }
 
-  const typeCap = typeCapMap[bucket] || 1.10;
+  const hardBidCap = getBidHardCap();
+  const matchHardCapMap = { exact: 1.00, keyword: 0.90, phrase: 0.75, broad: 0.55, auto: 0.65, asin: 0.65, targeting: 0.70 };
+  const typeCap = Math.min(typeCapMap[bucket] || 1.10, hardBidCap * (matchHardCapMap[bucket] || 0.80));
   let suggestedBid = currentCpc;
   if (action === "INCREASE") {
     const cap = Math.min(typeCap, currentCpc * 1.15, globalCpc * 1.35);
@@ -4880,7 +4937,7 @@ const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
   const dynamicMultiplier = bucket === "exact" || bucket === "keyword" ? 2.0 : 1.5;
   const placementMultiplier = hasTosPlacement ? 1.5 : 1.0;
   const effectiveMaxCpc = Math.round(suggestedBid * dynamicMultiplier * placementMultiplier * 100) / 100;
-  const effectiveCap = effectiveCapMap[bucket] || 1.25;
+  const effectiveCap = Math.min(effectiveCapMap[bucket] || 1.25, hardBidCap * 1.25);
   const bidDeltaPct = currentCpc > 0 && suggestedBid > 0 ? ((suggestedBid / currentCpc - 1) * 100) : (action === "NEGATE" ? -100 : 0);
   const suggestedBidDelta = action === "NEGATE" ? "-100%" : `${bidDeltaPct >= 0 ? "+" : ""}${Math.round(bidDeltaPct)}%`;
   const sampleLabel = confidenceScore >= 75 ? (currentLang === "zh" ? "高" : "High") : confidenceScore >= 50 ? (currentLang === "zh" ? "中" : "Medium") : (currentLang === "zh" ? "低" : "Low");
@@ -5601,6 +5658,19 @@ const initMultiDimTableSorting = () => {
     });
 };
 
+const initGlobalDisplayTableSorting = () => {
+    if (document.documentElement.dataset.globalSortReady === "1") return;
+    document.documentElement.dataset.globalSortReady = "1";
+    document.addEventListener("click", (e) => {
+        const th = e.target?.closest?.("table thead th");
+        if (!th) return;
+        const table = th.closest("table");
+        if (!table || table.id === "rankTable" || table.id === "wfTable" || th.closest("#multiDimCard")) return;
+        if (th.closest("button, a, input, select, textarea")) return;
+        sortMultiDimTableByHeader(th);
+    });
+};
+
 const regexCache = new Map();
 const matchAdvancedSearch = (term, query) => {
     if (query.startsWith("regex:")) { 
@@ -6086,13 +6156,18 @@ const getSimpleSourceMatch = (it) => {
 const getSuggestedBid = (it, mode, targetAcos) => {
   const currentCpc = it.cpc || (it.clicks > 0 ? it.spend / it.clicks : 0);
   const rpc = it.clicks > 0 ? it.sales / it.clicks : 0;
+  const hardCap = getBidHardCap();
   let bid = currentCpc || 0.5;
   if (mode === "increase") bid = currentCpc ? currentCpc * 1.12 : 0.5;
   if (mode === "decrease") bid = currentCpc ? currentCpc * 0.75 : 0.3;
   if (mode === "exact") bid = rpc > 0 ? rpc * targetAcos : (currentCpc ? currentCpc * 1.05 : 0.5);
   if (mode === "phrase") bid = currentCpc ? currentCpc * 0.90 : 0.4;
   if (mode === "broad") bid = currentCpc ? currentCpc * 0.70 : 0.3;
-  return Math.max(0.15, Math.min(bid, 3.5)).toFixed(2);
+  const modeCapMap = { increase: 0.95, decrease: 0.70, exact: 1.00, phrase: 0.75, broad: 0.55 };
+  const modeCap = hardCap * (modeCapMap[mode] || 0.80);
+  const cpcCap = currentCpc > 0 ? currentCpc * (mode === "increase" ? 1.15 : mode === "exact" ? 1.10 : mode === "phrase" ? 0.95 : mode === "broad" ? 0.80 : 0.90) : modeCap;
+  const finalCap = Math.max(0.15, Math.min(modeCap, Math.max(0.25, cpcCap)));
+  return Math.max(0.15, Math.min(bid, finalCap)).toFixed(2);
 };
 
 const getActionLabelText = (actionKey, fallback="") => I18N[currentLang]?.[`action_label_${actionKey}`] || fallback || actionKey;
@@ -6299,6 +6374,18 @@ const clearGrowthCommandModules = () => {
   if ($("actionExecutiveSummary")) $("actionExecutiveSummary").style.display = "none";
 };
 
+const buildBulkDraftReadmeSheet = (sourceLabel = "Action Center") => ({
+  sheetName: "00 Read Me - Draft Only",
+  headers: [currentLang === "zh" ? "项目" : "Item", currentLang === "zh" ? "说明" : "Explanation"],
+  dataRows: [
+    [currentLang === "zh" ? "文件性质" : "File Type", currentLang === "zh" ? "这是 Bulk 草稿，不是可无人审核直接上传的最终文件" : "This is a Bulk draft, not a final file for unattended upload"],
+    [currentLang === "zh" ? "来源模块" : "Source", sourceLabel],
+    [currentLang === "zh" ? "上传前必须确认" : "Before Upload", "Campaign Name / Ad Group Name / Match Type / Bid / State / SKU or ASIN / Budget"],
+    [currentLang === "zh" ? "占位符处理" : "Placeholder Handling", currentLang === "zh" ? "包含 [Campaign Name Required]、[Exact Campaign] 等占位符的行必须人工改完再上传" : "Rows containing placeholders such as [Campaign Name Required] or [Exact Campaign] must be manually completed before upload"],
+    [currentLang === "zh" ? "生成时间" : "Generated At", new Date().toLocaleString()]
+  ]
+});
+
 const buildSponsoredProductsBulkRows = (rows) => {
   const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Product Targeting Expression", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
   const bulkRows = [];
@@ -6343,8 +6430,9 @@ const buildActionExportSheets = (rows) => {
   const broadRootRows = rows.filter(r => r.actionKey === "broad").map(r => [r.sourceName || r.name, r.name, r.campaign, r.adGroup, r.suggestedBid || "", r.orders || 0, r.roas || 0, r.reason || ""]);
   const sheets = [
     { sheetName:"Simple Action Plan", headers, dataRows },
-    { sheetName:"SP Bulk Create Negatives", headers:bulkHeaders, dataRows:bulkRows },
-    { sheetName:"Bid Change Draft", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows:bidDraftRows }
+    buildBulkDraftReadmeSheet("Action Center Export"),
+    { sheetName:"SP Bulk Draft Only", headers:bulkHeaders, dataRows:bulkRows },
+    { sheetName:"Bid Change Draft Only", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows:bidDraftRows }
   ];
   if (broadRootRows.length) sheets.push({ sheetName:"Broad Root Mining", headers:["Source Search Term", "Broad Root", "Campaign", "Ad Group", "Suggested Bid", "Orders", "ROAS", "Reason"], dataRows:broadRootRows });
   sheets.push({ sheetName:"Rules", headers:["Rule", "Value"], dataRows: ruleRows });
@@ -6442,9 +6530,10 @@ const exportActionBulkExcel = () => {
   if (!rows.length) { alert(t("action_export_no_bulk")); return; }
   const { bulkHeaders, bulkRows, bidDraftRows } = buildSponsoredProductsBulkRows(rows);
   exportRichExcelMultiSheet([
-    { sheetName:"SP Bulk Create Negatives", headers:bulkHeaders, dataRows:bulkRows },
-    { sheetName:"Bid Change Draft", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows:bidDraftRows }
-  ], `Simple_Action_Bulk_Draft_${getTs()}.xlsx`).then(()=>log(t("action_log_bulk_exported"), "good"));
+    buildBulkDraftReadmeSheet("Action Center Bulk Draft"),
+    { sheetName:"SP Bulk Draft Only", headers:bulkHeaders, dataRows:bulkRows },
+    { sheetName:"Bid Change Draft Only", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows:bidDraftRows }
+  ], `Simple_Action_Bulk_Draft_ONLY_${getTs()}.xlsx`).then(()=>log(t("action_log_bulk_exported"), "good"));
 };
 
 
@@ -7447,11 +7536,11 @@ const buildArchitectureBulkSheets = (data) => {
   const matrixRows = getArchitectureMatrixSheetRows(data);
   const aiText = lastArchitectureAIText ? archPlainTextFromHtml(lastArchitectureAIText) : "";
   const sheets = [
-    { sheetName: "00 Read Me", headers: [zh ? "项目" : "Item", zh ? "说明" : "Explanation"], dataRows: [[zh ? "这个文件是什么" : "What this file is", zh ? "规则护栏后的 Sponsored Products Bulk 上传草稿，不是最终自动上传文件" : "Rule-guarded Sponsored Products Bulk upload draft, not a final auto-upload file"], [zh ? "最重要的 Sheet" : "Most important sheet", "01 Ad Type Matrix 和 04 SP Bulk Draft"], [zh ? "不要上传什么" : "Do not upload", zh ? "05 Keyword Review Gate 里 Gate=REVIEW 的行" : "Rows marked REVIEW in 05 Keyword Review Gate"], [zh ? "上传前确认" : "Before upload", zh ? "Campaign、Ad Group、SKU/ASIN、Match Type、Bid、预算、State，以及每个广告的否定关键词/词组/否定商品" : "Campaign, Ad Group, SKU/ASIN, Match Type, Bid, Budget, State, and keyword/product negatives per ad type"], [zh ? "生成时间" : "Generated At", data.generatedAt]] },
+    { sheetName: "00 Read Me - Draft Only", headers: [zh ? "项目" : "Item", zh ? "说明" : "Explanation"], dataRows: [[zh ? "这个文件是什么" : "What this file is", zh ? "规则护栏后的 Sponsored Products Bulk 上传草稿，不是最终自动上传文件" : "Rule-guarded Sponsored Products Bulk upload draft, not a final auto-upload file"], [zh ? "最重要的 Sheet" : "Most important sheet", "01 Ad Type Matrix 和 04 SP Bulk Draft"], [zh ? "不要上传什么" : "Do not upload", zh ? "05 Keyword Review Gate 里 Gate=REVIEW 的行" : "Rows marked REVIEW in 05 Keyword Review Gate"], [zh ? "上传前确认" : "Before upload", zh ? "Campaign、Ad Group、SKU/ASIN、Match Type、Bid、预算、State，以及每个广告的否定关键词/词组/否定商品" : "Campaign, Ad Group, SKU/ASIN, Match Type, Bid, Budget, State, and keyword/product negatives per ad type"], [zh ? "生成时间" : "Generated At", data.generatedAt]] },
     { sheetName: "01 Ad Type Matrix", headers: [zh ? "广告类型" : "Ad Type", "Layer", "Campaign", "Ad Group", "Match", "Budget", "Bid", zh ? "投放意图" : "Role", zh ? "投放词/对象" : "Launch Terms/Objects", zh ? "需要否定的关键词/ASIN Exact/PAT" : "Negative Exact / Product", zh ? "需要否定的词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"], dataRows: matrixRows },
     { sheetName: "02 Intent Map", headers: ["Layer", zh ? "投放意图" : "Intent", zh ? "适用条件" : "When to Use", "Campaign", "Ad Group", "Match", zh ? "预算角色" : "Budget Role", "Bid", zh ? "种子来源" : "Seed Source", zh ? "控制逻辑" : "Control", zh ? "导出含义" : "Export Meaning"], dataRows: intentRows },
     { sheetName: "03 Campaign Setup", headers: ["Layer", "Campaign", "Ad Group", "Match", "Budget", "Bid", "Objective", "Seeds", "Negative Control"], dataRows: setupRows },
-    { sheetName: "04 SP Bulk Draft", headers: bulkHeaders, dataRows: bulkRows },
+    { sheetName: "04 SP Bulk Draft Only", headers: bulkHeaders, dataRows: bulkRows },
     { sheetName: "05 Keyword Review Gate", headers: ["Gate", zh ? "执行意图" : "Execution Intent", "Match", "Keyword / ASIN", "Campaign", "Ad Group", "Bid", "Spend", "Sales", "Orders", "ROAS", "Reason", zh ? "上传处理" : "Upload Handling"], dataRows: reviewRows },
     { sheetName: "06 Bid Change Draft", headers:[zh ? "执行意图" : "Execution Intent", "Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows: bidDraftRows },
     { sheetName: "07 Upload SOP", headers: ["Step", zh ? "动作" : "Action", zh ? "说明" : "Explanation"], dataRows: getArchitectureUploadSopRows().map(([num,title,body]) => [num, title, body]) },
@@ -8331,7 +8420,7 @@ const bindEvents = () => {
       } 
     });
 
-    const simpleFilterIds = ["dateStart","dateEnd","filterAdProduct","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinIntent","ltMinScore","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef", "eventProtectionToggle"];
+    const simpleFilterIds = ["dateStart","dateEnd","filterAdProduct","filterAdGroup","filterTargeting","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinIntent","ltMinScore","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType", "bizMargin", "bizFba", "bizRef", "bizUnitsPerOrder", "bizBidHardCap", "eventProtectionToggle"];
     simpleFilterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
 
     $("filterSource").addEventListener("change", () => updateChildDropdowns("filterSource"));
@@ -8378,6 +8467,7 @@ const bindEvents = () => {
     }));
 
     initMultiDimTableSorting();
+    initGlobalDisplayTableSorting();
 
     document.addEventListener("click", (e) => { 
         const btn = e.target.closest(".segBtn"); if (!btn) return; 
@@ -8414,7 +8504,7 @@ const bindEvents = () => {
     $("listingCopyInput")?.addEventListener("input", debounce(() => { renderLongTailMining(); renderActionCommandCenter(); }, 300));
 
     $("btnRuleReset").addEventListener("click", () => {
-      const defaults = { ruleSpendNeg:30, ruleClicksNeg:20, ruleRoasNeg:1.5, ruleRoasKeep:3, ruleOrdersKeep:2, ruleRoasMigrateMin:2 };
+      const defaults = { ruleSpendNeg:30, ruleClicksNeg:20, ruleRoasNeg:1.5, ruleRoasKeep:3, ruleOrdersKeep:2, ruleRoasMigrateMin:2, bizUnitsPerOrder:1.10, bizBidHardCap:1.80 };
       Object.entries(defaults).forEach(([id,val]) => { if ($(id)) $(id).value = val; });
       applyFilters();
     });
@@ -8443,6 +8533,21 @@ const bindEvents = () => {
         e.preventDefault();
         e.stopPropagation();
         copyArchitectureMatrixToClipboard();
+        return;
+      }
+      const copyAllBtn = e.target?.closest?.("[data-arch-copy-all]");
+      if (copyAllBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        copyArchitectureAllTermsToClipboard(copyAllBtn.getAttribute("data-arch-copy-all"));
+        return;
+      }
+      const copySectionBtn = e.target?.closest?.("[data-arch-copy-section]");
+      if (copySectionBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const [sectionIndex, sectionKind] = String(copySectionBtn.getAttribute("data-arch-copy-section") || "").split(":");
+        copyArchitectureSectionToClipboard(sectionIndex, sectionKind);
         return;
       }
       const copyGroupBtn = e.target?.closest?.("[data-arch-copy-group]");
@@ -9238,10 +9343,10 @@ const bindAIEvents = () => {
             alert(t('dyn_msg_bulk_empty'));
             return;
         }
-        const sheets = [];
-        if (bulkRows.length) sheets.push({ sheetName: "SP Bulk Create Draft", headers: bulkHeaders, dataRows: bulkRows });
-        if (bidDraftRows.length) sheets.push({ sheetName: "Bid Change Draft", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows: bidDraftRows });
-        exportRichExcelMultiSheet(sheets, `AI_Bulk_Draft_Action_Center_${getTs()}.xlsx`).then(() => {
+        const sheets = [buildBulkDraftReadmeSheet("AI Action Center Bulk Draft")];
+        if (bulkRows.length) sheets.push({ sheetName: "SP Bulk Draft Only", headers: bulkHeaders, dataRows: bulkRows });
+        if (bidDraftRows.length) sheets.push({ sheetName: "Bid Change Draft Only", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows: bidDraftRows });
+        exportRichExcelMultiSheet(sheets, `AI_Bulk_Draft_ONLY_Action_Center_${getTs()}.xlsx`).then(() => {
             log(t('dyn_msg_bulk_done', bulkRows.length + bidDraftRows.length), "good");
         });
     });
