@@ -351,7 +351,7 @@
       -webkit-backdrop-filter: blur(18px);
       animation: fadeIn .2s ease forwards;
     }
-    .architectureModal {
+    .largeModal {
       width: min(1280px, 96vw);
       max-height: 92vh;
       overflow: hidden;
@@ -362,7 +362,7 @@
       border-radius: 24px;
       box-shadow: 0 28px 90px rgba(0,0,0,.28);
     }
-    .architectureModalHeader {
+    .largeModalHeader {
       display: grid;
       grid-template-columns: minmax(320px, 1fr) auto;
       align-items: start;
@@ -371,16 +371,16 @@
       border-bottom: 1px solid var(--line);
       background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--card)), var(--card));
     }
-    .architectureModalHeader h2 {
+    .largeModalHeader h2 {
       margin: 0;
       font-size: 18px;
       font-weight: 850;
       letter-spacing: -.25px;
     }
-    .architectureModalHeader .small { max-width: 760px; margin-top: 5px; line-height:1.45; }
-    .architectureModalActions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:center; max-width: 620px; }
-    .architectureModalActions .btn { padding: 8px 12px; }
-    .architectureBody {
+    .largeModalHeader .small { max-width: 760px; margin-top: 5px; line-height:1.45; }
+    .largeModalActions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:center; max-width: 620px; }
+    .largeModalActions .btn { padding: 8px 12px; }
+    .largeModalBody {
       padding: 14px 16px 18px;
       overflow: auto;
       display: flex;
@@ -388,16 +388,16 @@
       gap: 12px;
     }
     .architectureHero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .architectureMetric {
+    .summaryMetric {
       background: var(--hover-bg);
       border: 1px solid var(--line);
       border-radius: 16px;
       padding: 11px 12px;
       min-height: 78px;
     }
-    .architectureMetric .label { color: var(--muted); font-size: 11.5px; font-weight: 650; }
-    .architectureMetric .value { margin-top: 5px; font-size: 19px; font-weight: 850; letter-spacing: -.2px; }
-    .architectureMetric .meta { margin-top: 4px; color: var(--muted); font-size: 11.2px; line-height:1.35; }
+    .summaryMetric .label { color: var(--muted); font-size: 11.5px; font-weight: 650; }
+    .summaryMetric .value { margin-top: 5px; font-size: 19px; font-weight: 850; letter-spacing: -.2px; }
+    .summaryMetric .meta { margin-top: 4px; color: var(--muted); font-size: 11.2px; line-height:1.35; }
     .archLayout { display:flex; flex-direction:column; gap:12px; align-items:stretch; }
     .archTopPanel { display:grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap:12px; align-items:stretch; }
     .archTopPanel .architectureSection { min-width:0; }
@@ -465,7 +465,7 @@
     .architectureAIResult .small { line-height:1.45; }
     .architectureGuardrail { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-top:10px; }
     .architectureGuardrail .pill { justify-content:center; background:var(--hover-bg); color:var(--text); }
-    @media (max-width: 1100px){ .architectureModalHeader{grid-template-columns:1fr;} .architectureModalActions{justify-content:flex-start; max-width:none;} .archTopPanel,.archSide{grid-template-columns:1fr;} .architectureHero{grid-template-columns:1fr 1fr;} .architectureGrid2,.architectureCardGrid,.architectureGuardrail,.archActionGrid,.archSop{grid-template-columns:1fr;} .modalOverlay{padding:12px;} }
+    @media (max-width: 1100px){ .largeModalHeader{grid-template-columns:1fr;} .largeModalActions{justify-content:flex-start; max-width:none;} .archTopPanel,.archSide{grid-template-columns:1fr;} .architectureHero{grid-template-columns:1fr 1fr;} .architectureGrid2,.architectureCardGrid,.architectureGuardrail,.archActionGrid,.archSop{grid-template-columns:1fr;} .modalOverlay{padding:12px;} }
     @media (max-width: 650px){ .archMiniList,.archGuardrailGrid{grid-template-columns:1fr;} .architectureHero{grid-template-columns:1fr;} }
 
 
@@ -1422,7 +1422,7 @@
     <div class="fieldGroup">
       <div class="fieldRow"><label data-i18n="lbl_source">来源文件（Source File）</label><div class="selectWrap"><select id="filterSource"></select></div></div>
       <div class="fieldRow">
-        <label data-i18n="lbl_ad_product">广告矩阵架构 (Ad Product)</label>
+        <label data-i18n="lbl_ad_product">广告类型 (Ad Product)</label>
         <div class="selectWrap">
             <select id="filterAdProduct">
                 <option value="" selected data-i18n="opt_all">全部 (All)</option>
@@ -1566,7 +1566,6 @@
         <button class="btn" id="btnLangToggle" type="button">🌐 EN</button>
         <button class="btn" id="btnTheme" type="button">🎨 浅色</button>
         <button class="btn" id="btnCheck" type="button" data-i18n="btn_check">自检</button>
-        <button class="btn primary" id="btnArchitecture" type="button" data-i18n="btn_architecture">架构</button>
         <button class="btn primary" id="btnCampaignStudio" type="button" data-i18n="btn_campaign_studio">Studio</button>
         <button class="btn primary" id="btnAI" type="button" style="background: linear-gradient(135deg, var(--accent), #aa00ff); color: #fff; border: none; box-shadow: 0 2px 6px rgba(170,0,255,0.2);">
           ✨ <span data-i18n="btn_ai">AI 参谋</span>
@@ -1599,58 +1598,37 @@
       </div>
     </div>
 
-    <div id="architectureModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="architectureTitle">
-      <div class="architectureModal">
-        <div class="architectureModalHeader">
-          <div>
-            <h2 id="architectureTitle" data-i18n="arch_title">广告架构生成器</h2>
-            <div class="small" data-i18n="arch_subtitle">基于当前筛选数据，按 Auto / Exact / Phrase / Broad 输出投放词、否定关键词、否定词组和上传边界</div>
-          </div>
-          <div class="architectureModalActions">
-            <button class="btn primary" id="btnGenerateAIArchitecture" type="button" data-i18n="btn_arch_ai">AI 完整架构</button>
-            <button class="btn" id="btnCopyArchitecture" type="button" data-i18n="btn_arch_copy">复制架构</button>
-            <button class="btn primary" id="btnExportArchitecture" type="button" data-i18n="btn_arch_export">导出架构 Excel</button>
-            <button class="btn" id="btnExportArchitectureBulk" type="button" data-i18n="btn_arch_bulk">导出 Bulk 草稿</button>
-            <button class="search-clear-btn" id="btnCloseArchitecture" type="button" data-i18n-title="title_close_arch" title="关闭">✕</button>
-          </div>
-        </div>
-        <div id="architectureContent" class="architectureBody"></div>
-      </div>
-    </div>
-
-
-
     <div id="campaignStudioModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="campaignStudioTitle">
-      <div class="architectureModal campaignStudioModal">
-        <div class="architectureModalHeader campaignStudioHeader">
+      <div class="largeModal campaignStudioModal">
+        <div class="largeModalHeader campaignStudioHeader">
           <div>
             <h2 id="campaignStudioTitle" data-i18n="studio_title">Campaign Studio 广告结构生成器</h2>
             <div class="small" data-i18n="studio_subtitle">基于当前筛选数据，生成 Campaign / Ad Group / Match Type / Budget / Bid / Negatives 的可执行结构草稿</div>
           </div>
-          <div class="architectureModalActions">
+          <div class="largeModalActions">
             <button class="btn" id="btnCopyCampaignStudio" type="button" data-i18n="btn_studio_copy">复制 Studio 方案</button>
             <button class="btn primary" id="btnExportCampaignStudio" type="button" data-i18n="btn_studio_export">导出 Studio Excel</button>
             <button class="btn" id="btnExportCampaignStudioBulk" type="button" data-i18n="btn_studio_bulk">导出 Bulk 草稿</button>
             <button class="search-clear-btn" id="btnCloseCampaignStudio" type="button" data-i18n-title="title_close_studio" title="关闭">✕</button>
           </div>
         </div>
-        <div id="campaignStudioContent" class="architectureBody campaignStudioBody"></div>
+        <div id="campaignStudioContent" class="largeModalBody campaignStudioBody"></div>
       </div>
     </div>
 
     <div id="negativeKeywordModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="negativeKeywordTitle">
-      <div class="architectureModal" style="max-width:1180px;">
-        <div class="architectureModalHeader">
+      <div class="largeModal" style="max-width:1180px;">
+        <div class="largeModalHeader">
           <div>
             <h2 id="negativeKeywordTitle">否定关键词清单</h2>
             <div class="small" id="negativeKeywordSubtitle">基于当前筛选数据生成</div>
           </div>
-          <div class="architectureModalActions">
+          <div class="largeModalActions">
             <button class="btn primary" id="btnCopyNegativeKeywordTerms" type="button">复制全部关键词</button>
             <button class="search-clear-btn" id="btnCloseNegativeKeywordModal" type="button" title="关闭">✕</button>
           </div>
         </div>
-        <div id="negativeKeywordContent" class="architectureBody"></div>
+        <div id="negativeKeywordContent" class="largeModalBody"></div>
       </div>
     </div>
     
@@ -2077,7 +2055,7 @@ const I18N = {
       btn_mtd: "本月",
       btn_all: "全部",
       lbl_source: "来源文件 (Source File)",
-      lbl_ad_product: "广告矩阵架构 (Ad Product)",
+      lbl_ad_product: "广告类型 (Ad Product)",
       opt_all: "全部 (All)",
       lbl_portfolio: "广告组合 (Portfolio)",
       lbl_campaign: "广告活动 (Campaign)",
@@ -2141,9 +2119,7 @@ const I18N = {
       lbl_import_logs: "导入日志",
       btn_check: "自检",
       btn_ai: "AI 参谋",
-      btn_architecture: "架构",
       btn_campaign_studio: "Studio",
-      arch_title: "广告架构生成器",
       studio_title: "Campaign Studio 广告结构生成器",
       studio_subtitle: "基于当前筛选数据，生成 Campaign / Ad Group / Match Type / Budget / Bid / Negatives 的可执行结构草稿",
       btn_studio_copy: "复制 Studio 方案",
@@ -2154,19 +2130,7 @@ const I18N = {
       studio_copied: "Campaign Studio 方案已复制",
       studio_exported: "Campaign Studio Excel 已导出",
       studio_bulk_exported: "Campaign Studio Bulk 草稿已导出（Draft Only，上传前必须人工确认）",
-      arch_subtitle: "基于当前筛选数据，按 Auto / Exact / Phrase / Broad 输出投放词、否定关键词、否定词组和上传边界",
-      btn_arch_ai: "AI 完整架构",
-      btn_arch_copy: "复制架构",
-      btn_arch_export: "导出架构 Excel",
-      btn_arch_bulk: "导出 Bulk 草稿（Draft Only）",
-      title_close_arch: "关闭广告架构",
       arch_no_data: "当前筛选下没有广告数据。请先导入广告报表，或放宽左侧筛选条件。",
-      arch_copied: "广告架构已复制到剪贴板",
-      arch_exported: "广告架构 Excel 已导出",
-      arch_bulk_exported: "规则护栏 Bulk 草稿已导出（Draft Only，上传前必须人工确认）",
-      arch_bulk_empty: "当前筛选下没有符合规则护栏的 Bulk 草稿。请先生成动作清单，或放宽筛选/规则。",
-      arch_ai_done: "AI 完整广告架构已生成",
-      arch_ai_failed: "AI 广告架构生成失败",
       ai_title: "✨ Gemini + OpenRouter + Groq AI Agent 引擎",
       btn_ai_log: "📝 导出对话日志",
       title_ai_bulk: "AI 仅生成 Bulk 草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid",
@@ -2591,9 +2555,7 @@ const I18N = {
       lbl_import_logs: "Import Logs",
       btn_check: "Check",
       btn_ai: "AI Agent",
-      btn_architecture: "Arch",
       btn_campaign_studio: "Studio",
-      arch_title: "Ad Architecture Builder",
       studio_title: "Campaign Studio Builder",
       studio_subtitle: "Generate an executable Campaign / Ad Group / Match Type / Budget / Bid / Negative structure draft from the current filtered data",
       btn_studio_copy: "Copy Studio Plan",
@@ -2604,19 +2566,7 @@ const I18N = {
       studio_copied: "Campaign Studio plan copied",
       studio_exported: "Campaign Studio Excel exported",
       studio_bulk_exported: "Campaign Studio Bulk draft exported (Draft Only, manual review required before upload)",
-      arch_subtitle: "Build a Campaign / Ad Group / Match Type / Bid / Negative / Budget blueprint from the current filtered data",
-      btn_arch_ai: "AI Full Architecture",
-      btn_arch_copy: "Copy Plan",
-      btn_arch_export: "Export Architecture Excel",
-      btn_arch_bulk: "Export Bulk Draft Only",
-      title_close_arch: "Close ad architecture",
       arch_no_data: "No ad data in the current filtered view. Import ad reports or loosen the filters.",
-      arch_copied: "Ad architecture copied to clipboard",
-      arch_exported: "Ad architecture Excel exported",
-      arch_bulk_exported: "Rule-guarded Bulk draft exported (Draft Only, manual review required before upload)",
-      arch_bulk_empty: "No rule-guarded Bulk draft is available in the current filtered view. Generate actions first or loosen filters/rules.",
-      arch_ai_done: "AI full ad architecture generated",
-      arch_ai_failed: "AI ad architecture generation failed",
       ai_title: "✨ Gemini + OpenRouter + Groq AI Agent Engine",
       btn_ai_log: "📝 Export Chat Log",
       title_ai_bulk: "AI generates a Bulk draft only. Confirm Campaign, Ad Group, Match Type, and Bid before upload.",
@@ -6683,13 +6633,7 @@ const exportActionBulkExcel = () => {
 
 
 
-// ==================== Advertising Architecture Builder ====================
-let lastArchitecturePlainText = "";
-let lastArchitectureData = null;
-let lastArchitectureAIText = "";
-let lastArchitectureAIHtml = "";
-let lastArchitectureAIProvider = "";
-let architectureAbortController = null;
+// ==================== Shared Campaign Rule Engine ====================
 
 const getArchitectureText = (zhText, enText) => currentLang === "zh" ? zhText : enText;
 const archMoney = (v) => "$" + fmtMoney(v || 0);
@@ -7049,757 +6993,6 @@ const getArchitectureMatrixSheetRows = (data) => getArchitectureAdMatrix(data).m
   archJoinTerms(r.launchTerms), archJoinTerms(r.negativeExact, r.negativeExactEmpty), archJoinTerms(r.negativePhrase, r.negativePhraseEmpty), r.uploadRule
 ]);
 
-const renderAdArchitecture = (data) => {
-  if (!data) return `<div class="archEmpty">${escapeHtml(t("arch_no_data"))}</div>`;
-  const zh = currentLang === "zh";
-  const total = data.total || {};
-  const matrix = getArchitectureAdMatrix(data);
-  const neg = getArchitectureNegativeSets(data);
-  let bulkCount = 0;
-  try { bulkCount = (buildArchitectureBulkSheets(data).bulkRows || []).length; } catch(e) { bulkCount = 0; }
-
-  const stats = [
-    [zh ? "花费" : "Spend", archMoney(total.spend || 0)],
-    [zh ? "销售" : "Sales", archMoney(total.sales || 0)],
-    ["ROAS", (total.roas || 0).toFixed(2)],
-    ["ACOS", archPct(total.acos)]
-  ].map(([k,v]) => `<div class="stat"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v)}</div></div>`).join("");
-
-  const focusText = zh
-    ? `先复制否定词，再复制投放词。Auto 负责采词，Exact 负责承接，Phrase 负责中长尾扩词，Broad 只做低价白名单词根探索，Product Targeting 负责竞品 ASIN 攻防。完整表格默认收起，核对时再展开。`
-    : `Copy negatives first, then launch terms. Auto harvests, Exact captures, Phrase expands long-tail demand, Broad mines whitelisted roots at low bid, and Product Targeting handles ASIN attack/defense. Full table stays collapsed by default.`;
-  const qualityText = bulkCount
-    ? (zh ? `当前可生成 ${fmtInt(bulkCount)} 条 Bulk 草稿，上传前仍需人工确认 Campaign / Ad Group / Bid` : `${fmtInt(bulkCount)} Bulk draft rows available; confirm Campaign / Ad Group / Bid before upload`)
-    : (zh ? "当前 Bulk 草稿偏少，优先看否定与结构方向，不要强行上传" : "Few Bulk rows detected; prioritize negatives and structure, do not force upload");
-
-  const typeMeta = (shortType) => {
-    const map = {
-      Auto: zh ? [["采词层", "warn"], ["低价", ""], ["迁移赢家", "good"]] : [["Harvest", "warn"], ["Low bid", ""], ["Migrate winners", "good"]],
-      Exact: zh ? [["主力层", "good"], ["成交词", "good"], ["控 ACOS", ""]] : [["Core", "good"], ["Winners", "good"], ["ACOS control", ""]],
-      Phrase: zh ? [["扩词层", ""], ["中长尾", ""], ["配套否定", "warn"]] : [["Expansion", ""], ["Long-tail", ""], ["Negatives", "warn"]],
-      Broad: zh ? [["探索层", "warn"], ["只投词根", ""], ["先加否定", "bad"]] : [["Discovery", "warn"], ["Roots only", ""], ["Negatives first", "bad"]],
-      Product: zh ? [["ASIN 攻防", ""], ["单独控预算", "warn"], ["亏损即否定", "bad"]] : [["ASIN Attack", ""], ["Isolated budget", "warn"], ["Negate losers", "bad"]]
-    };
-    return (map[shortType] || []).map(([x,cls]) => `<span class="archStatusPill ${cls}">${escapeHtml(x)}</span>`).join("");
-  };
-
-  const termPanel = (idx, kind, title, badge, items, emptyText, danger = false) => `
-    <div class="archTermPanel">
-      <div class="archTermPanelHeader">
-        <h4>${escapeHtml(title)}<span class="count">${fmtInt((items || []).filter(Boolean).length)}</span></h4>
-        <button class="archTermCopyBtn ${danger ? "bad" : ""}" type="button" data-arch-copy-section="${idx}:${kind}">${zh ? "复制" : "Copy"}</button>
-      </div>
-      ${archTermListHtml(items, emptyText)}
-    </div>`;
-
-  const cardHtml = matrix.map((r, idx) => `
-    <div class="archAdCard" data-arch-type="${escapeHtml(r.shortType || "")}">
-      <div class="head">
-        <div>
-          <div class="type">${escapeHtml(r.type)}</div>
-          <div class="role">${escapeHtml(r.role)}</div>
-          <div class="archCardStatus">${typeMeta(r.shortType)}</div>
-        </div>
-        <div class="archCardTools">
-          <div class="badge">${escapeHtml(r.shortType)}</div>
-          <button class="archMiniCopyBtn" type="button" data-arch-copy-group="${idx}">${zh ? "复制本卡全部词" : "Copy All Terms"}</button>
-        </div>
-      </div>
-      <div class="archAdMeta">
-        <div class="box"><b>Campaign</b><span>${escapeHtml(r.campaign || "-")}</span></div>
-        <div class="box"><b>Ad Group</b><span>${escapeHtml(r.adGroup || "-")}</span></div>
-        <div class="box"><b>${zh ? "匹配/类型" : "Match"}</b><span>${escapeHtml(r.match || "-")}</span></div>
-        <div class="box"><b>${zh ? "预算 / 出价" : "Budget / Bid"}</b><span>${escapeHtml(r.budget || "-")} · ${escapeHtml(r.bid || "-")}</span></div>
-      </div>
-      ${termPanel(idx, "launch", r.launchLabel || (zh ? "需要投放的词 / 对象" : "Launch Terms / Objects"), "Launch", r.launchTerms, zh ? "当前筛选下暂无投放对象" : "No launch object")}
-      <div class="archNegSplit">
-        ${termPanel(idx, "negativeExact", r.negativeExactLabel || (zh ? "需要否定的关键词" : "Negative Exact Keywords"), "Exact", r.negativeExact, r.negativeExactEmpty, true)}
-        ${termPanel(idx, "negativePhrase", r.negativePhraseLabel || (zh ? "需要否定的词组" : "Negative Phrase Keywords"), "Phrase", r.negativePhrase, r.negativePhraseEmpty, true)}
-      </div>
-      <div class="archExecutionHint small"><b>${zh ? "执行原则" : "Rule"}:</b> ${escapeHtml(r.uploadRule)}</div>
-    </div>
-  `).join("");
-
-  const matrixRows = matrix.map(r => [
-    `<b>${escapeHtml(r.type)}</b>`,
-    escapeHtml(r.campaign || "-"),
-    escapeHtml(r.adGroup || "-"),
-    escapeHtml(r.match || "-"),
-    escapeHtml(r.budget || "-"),
-    escapeHtml(r.bid || "-"),
-    escapeHtml(r.role || "-"),
-    escapeHtml(archJoinTerms(r.launchTerms)),
-    escapeHtml(archJoinTerms(r.negativeExact, r.negativeExactEmpty)),
-    escapeHtml(archJoinTerms(r.negativePhrase, r.negativePhraseEmpty)),
-    escapeHtml(r.uploadRule || "-")
-  ]);
-
-  const guardrails = getArchitectureGuardrailRows(data).map(([k,v]) => `<span class="pill"><b>${escapeHtml(k)}</b><span>${escapeHtml(v)}</span></span>`).join("");
-  const scope = (data.scope || []).map(([k,v]) => `<span class="pill"><b>${escapeHtml(k)}:</b> ${escapeHtml(v)}</span>`).join("");
-
-  return `
-    <div class="archCommandCenter">
-      <div class="archAdMatrixIntro">
-        <div class="archAdMatrixHero">
-          <div class="eyebrow">${zh ? "当前筛选广告架构" : "Current Filter Ad Structure"}</div>
-          <div class="main">${zh ? "Auto / Exact / Phrase / Broad / Product Targeting 执行矩阵" : "Auto / Exact / Phrase / Broad / Product Targeting Execution Matrix"}</div>
-          <div class="sub">${zh ? "直接围绕五类广告回答：投什么、否定什么、预算怎么控、哪个层级负责什么。" : "Directly answers: what to launch, what to negate, how to control budget, and what each layer owns across keyword and ASIN targeting."}</div>
-        </div>
-        <div class="archAdMatrixStats">${stats}</div>
-      </div>
-
-      <div class="archFocusStrip">
-        <div><b>${zh ? "操作焦点" : "Operator Focus"}</b><div class="small">${escapeHtml(focusText)}</div></div>
-        <div class="pill">${escapeHtml(qualityText)}</div>
-      </div>
-
-      <div class="architectureSection">
-        <div class="cardTitle" style="margin-bottom:10px;">
-          <div>
-            <h3>${zh ? "广告类型执行矩阵" : "Ad Type Execution Matrix"}</h3>
-            <div class="sectionLead">${zh ? "五张卡就是执行入口。每块词表都能单独复制，复制结果为纯关键词或 ASIN，每行一个。" : "The five cards are the execution entry. Each term list can be copied separately as one keyword or ASIN per line."}</div>
-          </div>
-          <div class="rightTools">
-            <span class="pill"><b>${zh ? "Bulk 草稿" : "Bulk Draft"}</b> ${fmtInt(bulkCount)}</span>
-            <span class="pill"><b>${zh ? "否定关键词" : "Neg Exact"}</b> ${fmtInt(neg.negativeExact.length)}</span>
-            <span class="pill"><b>${zh ? "否定词组" : "Neg Phrase"}</b> ${fmtInt(neg.negativePhrase.length)}</span>
-          </div>
-        </div>
-        <div class="archQuickCopyBar">
-          <button class="archMiniCopyBtn" type="button" data-arch-copy-all="launch">${zh ? "复制全部投放词/对象" : "Copy All Launch Terms"}</button>
-          <button class="archMiniCopyBtn" type="button" data-arch-copy-all="negativeExact">${zh ? "复制全部否定关键词" : "Copy All Negative Exact / Product"}</button>
-          <button class="archMiniCopyBtn" type="button" data-arch-copy-all="negativePhrase">${zh ? "复制全部否定词组" : "Copy All Negative Phrase"}</button>
-        </div>
-        <div class="archAdGrid">${cardHtml}</div>
-      </div>
-
-      <details class="archDetails">
-        <summary>
-          <span class="archDetailsSummaryTitle">${zh ? "完整表格版，方便复制核对" : "Full table version for copy/review"}</span>
-          <span class="archDetailsSummaryActions">
-            <button class="archMiniCopyBtn" type="button" data-arch-copy-matrix>${zh ? "复制整表" : "Copy Table"}</button>
-          </span>
-        </summary>
-        <div class="archDetailsBody">
-          ${archTable([zh ? "广告类型" : "Ad Type", "Campaign", "Ad Group", zh ? "匹配类型" : "Match Type", zh ? "预算" : "Budget", zh ? "建议出价" : "Suggested Bid", zh ? "投放意图" : "Intent", zh ? "投放词 / 对象" : "Launch Terms / Objects", zh ? "否定关键词 Exact" : "Negative Exact / Product", zh ? "否定词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"], matrixRows, "-", "archMatrixTable")}
-        </div>
-      </details>
-
-      <details class="archDetails">
-        <summary>${zh ? "规则护栏与当前筛选范围" : "Guardrails and Current Filter Scope"}</summary>
-        <div class="archDetailsBody">
-          <div class="archGuardrailGrid">${guardrails}</div>
-          <div style="height:10px"></div>
-          <div class="architectureList">${scope}</div>
-        </div>
-      </details>
-    </div>
-  `;
-};
-
-const buildArchitecturePlainText = (data) => {
-  if (!data) return t("arch_no_data");
-  const zh = currentLang === "zh";
-  const line = [];
-  line.push(zh ? "【当前筛选广告架构】" : "【Current Filter Ad Architecture】");
-  line.push(`${zh ? "核心数据" : "Core Metrics"}: Spend ${archMoney(data.total.spend)} | Sales ${archMoney(data.total.sales)} | Orders ${fmtInt(data.total.orders)} | ROAS ${(data.total.roas || 0).toFixed(2)} | ACOS ${archPct(data.total.acos)} | ${zh ? "目标 ACOS" : "Target ACOS"} ${archPct(data.targetAcos)}`);
-  line.push(`${zh ? "当前模式" : "Mode"}: ${data.budgetMode}`);
-  line.push("");
-  line.push(zh ? "一、五类广告执行矩阵" : "1. Five Ad Type Execution Matrix");
-  getArchitectureAdMatrix(data).forEach(r => {
-    line.push(`- ${r.type}: ${r.role}`);
-    line.push(`  Campaign: ${r.campaign} / ${r.adGroup}`);
-    line.push(`  ${zh ? "匹配/预算/出价" : "Match/Budget/Bid"}: ${r.match} / ${r.budget} / ${r.bid || "-"}`);
-    line.push(`  ${zh ? "投放词/对象" : "Launch Terms/Objects"}: ${archJoinTerms(r.launchTerms)}`);
-    line.push(`  ${zh ? "需要否定的关键词/ASIN Exact/PAT" : "Negative Exact / Product"}: ${archJoinTerms(r.negativeExact, r.negativeExactEmpty)}`);
-    line.push(`  ${zh ? "需要否定的词组 Phrase" : "Negative Phrase"}: ${archJoinTerms(r.negativePhrase, r.negativePhraseEmpty)}`);
-    line.push(`  ${zh ? "执行原则" : "Rule"}: ${r.uploadRule}`);
-  });
-  line.push("");
-  line.push(zh ? "二、投放意图地图" : "2. Intent Map");
-  getArchitectureIntentMap(data).forEach(r => {
-    line.push(`- ${r.layerLabel}: ${r.intent}`);
-    line.push(`  ${zh ? "适用条件" : "When"}: ${r.useWhen}`);
-    line.push(`  Campaign: ${r.campaign} / ${r.adGroup}`);
-    line.push(`  ${zh ? "预算/出价" : "Budget/Bid"}: ${r.budgetRole} / ${r.bid || "-"}`);
-    line.push(`  ${zh ? "控制逻辑" : "Control"}: ${r.control}`);
-    line.push(`  ${zh ? "导出含义" : "Export Meaning"}: ${r.exportMeaning}`);
-  });
-  line.push("");
-  line.push(zh ? "三、执行顺序" : "3. Execution Order");
-  getArchitectureUploadSopRows().forEach(([num,title,body]) => line.push(`${num}. ${title}: ${body}`));
-  line.push("");
-  line.push(zh ? "四、规则护栏" : "4. Rule Guardrails");
-  getArchitectureGuardrailRows(data).forEach(([k,v]) => line.push(`- ${k}: ${v}`));
-  line.push("");
-  line.push(zh ? "五、动作池摘要" : "5. Action Pool Summary");
-  line.push(`Exact: ${data.exactLaunch.length} | Phrase: ${data.phraseLaunch.length} | Broad: ${(data.broadLaunch.length + data.topBroadRoots.length)} | Negative: ${data.negRows.length} | Bid Down: ${data.decreaseRows.length} | ASIN: ${(data.profitableAsins.length + data.lossAsins.length)}`);
-  line.push("");
-  line.push(zh ? "六、上传提醒" : "6. Upload Reminder");
-  line.push(zh ? "广告架构 Excel 是策略说明；Bulk 草稿才是上传草稿。REVIEW 行不要上传，必须先人工确认意图、Campaign、Ad Group、匹配类型、SKU/ASIN、Bid 和预算。" : "Architecture Excel explains strategy; Bulk draft is the upload draft. Do not upload REVIEW rows before confirming intent, Campaign, Ad Group, Match Type, SKU/ASIN, Bid and Budget.");
-  return line.join("\n");
-};
-
-const renderArchitectureAISection = () => {
-  const zh = currentLang === "zh";
-  const guardrails = [
-    zh ? "只读当前筛选数据" : "Current filter only",
-    zh ? "规则引擎先定边界" : "Rule guardrails first",
-    zh ? "AI 输出执行矩阵" : "AI returns execution matrix",
-    zh ? "Bulk 上传前人工确认" : "Manual review before Bulk upload"
-  ].map(x => `<span class="pill">${escapeHtml(x)}</span>`).join("");
-  const empty = zh
-    ? "AI 区域默认收起，避免干扰执行。点击右上角“AI 完整架构”后会自动展开，并按 Auto / Exact / Phrase / Broad / Product Targeting 给出更完整的结构判断。"
-    : "AI stays collapsed by default to keep execution clean. Click AI Full Architecture and it will expand with an Auto / Exact / Phrase / Broad / Product Targeting structure read.";
-  const provider = lastArchitectureAIProvider ? `<span class="pill"><b>AI:</b> ${escapeHtml(lastArchitectureAIProvider)}</span>` : `<span class="pill">${zh ? "未生成" : "Not generated"}</span>`;
-  return `
-    <details class="archDetails archAICompact" id="architectureAIDetails">
-      <summary>
-        <span class="archDetailsSummaryTitle">${zh ? "API AI 完整架构，默认收起" : "API AI Full Architecture, collapsed by default"}</span>
-        <span class="archDetailsSummaryActions">${provider}</span>
-      </summary>
-      <div class="archDetailsBody">
-        <div class="architectureAIBox">
-          <div class="architectureAIHeader">
-            <div>
-              <h3>${zh ? "API AI 广告结构师" : "API AI PPC Architect"}</h3>
-              <div class="small">${zh ? "AI 只基于规则引擎压缩后的数据输出，不直接绕过护栏生成上传动作" : "AI only uses rule-engine-compressed data and cannot bypass upload guardrails"}</div>
-            </div>
-            <div class="architectureList">${provider}</div>
-          </div>
-          <div id="architectureAIResult" class="architectureAIResult">${lastArchitectureAIHtml ? sanitizeAIHtml(lastArchitectureAIHtml) : `<div class="small">${escapeHtml(empty)}</div>`}</div>
-          <div class="archAIHintGrid">${guardrails}</div>
-        </div>
-      </div>
-    </details>`;
-};
-
-const archRowForAI = (r = {}) => ({
-  object: r.name || "",
-  sourceSearchTerm: r.sourceName || r.name || "",
-  action: r.actionKey || r.actionLabel || r.matchAdvice || "",
-  operation: r.matchAdvice || "",
-  suggestedBid: r.suggestedBid || "",
-  campaign: r.campaign || "",
-  adGroup: r.adGroup || "",
-  sourceMatch: r.sourceMatch || "",
-  intent: r.intentLabel || "",
-  confidence: r.confidenceScore || null,
-  risk: r.executionRisk || "",
-  bulkReady: !!r.bulkReady,
-  negativeGuard: r.negativeGuard?.label || "",
-  spend: +(r.spend || 0).toFixed(2),
-  sales: +(r.sales || 0).toFixed(2),
-  orders: r.orders || 0,
-  clicks: r.clicks || 0,
-  cvr: +(r.cvr || 0).toFixed(4),
-  roas: +(r.roas || 0).toFixed(2),
-  acos: r.acos === Infinity ? null : +(r.acos || 0).toFixed(4),
-  reason: String(r.reason || "").slice(0, 220)
-});
-
-const buildArchitectureAIInput = (data) => {
-  if (!data) return null;
-  const total = data.total || {};
-  const architectureMatchBucket = (r) => {
-    const mt = String(r.matchType || "").toLowerCase();
-    if (!checkIsManual(r)) return "auto";
-    if (isExactLike(mt)) return "exact";
-    if (isPhraseLike(mt)) return "phrase";
-    if (isBroadLike(mt)) return "broad";
-    return mt || "manual";
-  };
-  const matchTypeGroups = groupBy(AdsStore.view || [], architectureMatchBucket);
-  const matchTypePerformance = [...matchTypeGroups.entries()].map(([name, rows]) => ({ name, ...sumMetrics(rows) }))
-    .sort((a,b) => (b.spend || 0) - (a.spend || 0))
-    .map(r => ({ name: r.name, spend:+(r.spend||0).toFixed(2), sales:+(r.sales||0).toFixed(2), orders:r.orders||0, clicks:r.clicks||0, roas:+(r.roas||0).toFixed(2), acos:r.acos===Infinity?null:+(r.acos||0).toFixed(4), cvr:+(r.cvr||0).toFixed(4) }));
-  const campaignGroups = groupBy(AdsStore.view || [], r => r.campaign || "(blank)");
-  const campaignPerformance = [...campaignGroups.entries()].map(([name, rows]) => ({ name, ...sumMetrics(rows) }))
-    .sort((a,b) => (b.spend || 0) - (a.spend || 0)).slice(0, 20)
-    .map(r => ({ name:r.name, spend:+(r.spend||0).toFixed(2), sales:+(r.sales||0).toFixed(2), orders:r.orders||0, roas:+(r.roas||0).toFixed(2), acos:r.acos===Infinity?null:+(r.acos||0).toFixed(4) }));
-  return {
-    version: "AD_ARCHITECTURE_RULE_GUARDED_AI_V2",
-    language: currentLang,
-    generatedAt: data.generatedAt,
-    scope: Object.fromEntries(data.scope || []),
-    summary: {
-      spend:+(total.spend||0).toFixed(2), sales:+(total.sales||0).toFixed(2), orders:total.orders||0, clicks:total.clicks||0,
-      cpc:+(total.cpc||0).toFixed(2), cvr:+(total.cvr||0).toFixed(4), roas:+(total.roas||0).toFixed(2), acos:total.acos===Infinity?null:+(total.acos||0).toFixed(4),
-      targetAcos:+(data.targetAcos||0).toFixed(4), architectureMode:data.budgetMode
-    },
-    hardRules: {
-      negativeSpendThreshold:data.rules?.spendNeg, negativeClicksThreshold:data.rules?.clicksNeg, negativeRoasThreshold:data.rules?.roasNeg,
-      keepRoasThreshold:data.rules?.roasKeep, keepOrdersThreshold:data.rules?.ordersKeep, migrateRoasThreshold:data.rules?.roasMigrateMin,
-      broadWhitelist:"reading glasses women / readers women / women readers / cat eye readers / fashion readers / computer readers and proven style roots only",
-      blueLightPolicy:"supporting feature only; do not make Broad scaling axis",
-      brandPolicy:"do not auto-negate brand terms; bid down or manual review only",
-      bulkPolicy:"Bulk draft must use rule-engine approved rows only; user must confirm Campaign, Ad Group, Match Type and Bid before upload"
-    },
-    adTypeExecutionMatrix: getArchitectureAdMatrix(data).map(r => ({
-      adType: r.type,
-      layer: r.layer,
-      campaign: r.campaign,
-      adGroup: r.adGroup,
-      match: r.match,
-      budget: r.budget,
-      bid: r.bid,
-      intent: r.role,
-      launchTerms: getArchitectureCleanKeywordList([r.launchTerms]).slice(0, 30),
-      negativeExact: getArchitectureCleanKeywordList([r.negativeExact]).slice(0, 30),
-      negativePhrase: getArchitectureCleanKeywordList([r.negativePhrase]).slice(0, 30),
-      rule: r.uploadRule
-    })),
-    currentRuleBlueprint: data.blueprint,
-    actionPools: {
-      exactScale: archLimit(data.exactLaunch, 18).map(archRowForAI),
-      phraseExpansion: archLimit(data.phraseLaunch, 18).map(archRowForAI),
-      broadRootMining: archLimit([...data.broadLaunch, ...data.topBroadRoots], 18).map(archRowForAI),
-      negatives: archLimit(data.negRows, 22).map(archRowForAI),
-      bidUp: archLimit(data.increaseRows, 16).map(archRowForAI),
-      bidDown: archLimit(data.decreaseRows, 16).map(archRowForAI),
-      productTargeting: archLimit(data.profitableAsins, 12).map(archRowForAI),
-      negativeAsins: archLimit(data.lossAsins, 12).map(archRowForAI)
-    },
-    structureEvidence: { matchTypePerformance, campaignPerformance }
-  };
-};
-
-const getArchitectureAISystemPrompt = () => `${currentLang === "zh" ? "你是一位拥有10年经验的亚马逊美国站高级PPC架构师，当前品类是老花镜/阅读眼镜。你的输出必须像广告操作台，不像咨询报告。优先给可以复制核对的 Auto / Manual Exact / Manual Phrase / Manual Broad / Product Targeting 五层执行矩阵。" : "You are a senior Amazon US PPC architect with 10 years of experience in reading glasses. Your output must feel like an operating console, not a consulting report. Prioritize a copy/review friendly Auto / Manual Exact / Manual Phrase / Manual Broad / Product Targeting five-layer execution matrix."}
-
-${getAiLanguageInstruction()}
-
-${currentLang === "zh" ? "硬性边界：" : "Hard boundaries:"}
-1. Rule engine output is the source of truth. Do not invent executable terms outside adTypeExecutionMatrix and rule-approved actionPools.
-2. First output must be a compact table with exactly five rows: Auto, Manual Exact, Manual Phrase, Manual Broad, Product Targeting.
-3. The five-row table must include: Launch Terms / Objects, Negative Exact / Negative Product, Negative Phrase, Why, Upload Risk.
-4. Use the exact terms supplied in JSON when listing launch terms or negatives. If evidence is insufficient, write “Hold / observe” instead of fabricating terms.
-5. Brand terms must not be auto-negated. Blue light is a supporting feature, not the Broad scaling axis.
-6. Broad must stay root-level and low-bid. Avoid full sentence Broad unless already approved by the rule pool.
-7. Keep it operational: no generic PPC theory, no duplicated paragraphs, no long essays. Prefer tables and short bullets.
-8. Output compact HTML only. Use <h3>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <ol>, <ul>, <li>, <span class="tag good">, <span class="tag warn">, <span class="tag bad"> and <code>. Do not use Markdown.`;
-
-const buildArchitectureAIPrompt = (data) => {
-  const input = buildArchitectureAIInput(data);
-  return `${currentLang === "zh" ? "基于下面的规则引擎压缩数据，生成一套更直观、可执行、方便核对的广告架构。不要写泛泛策略，必须围绕 Auto / Manual Exact / Manual Phrase / Manual Broad / Product Targeting。" : "Using the rule-engine-compressed data below, generate a more intuitive, executable, review-friendly ad architecture. Do not write generic strategy; organize around Auto / Manual Exact / Manual Phrase / Manual Broad / Product Targeting."}
-
-${currentLang === "zh" ? "输出结构必须严格包含以下模块：" : "Output must strictly contain these modules:"}
-<h3>1. 五类广告执行矩阵 / Five Ad Type Execution Matrix</h3>
-<table><thead><tr><th>Ad Type</th><th>Launch Terms / Objects</th><th>Negative Exact / Product</th><th>Negative Phrase</th><th>Why</th><th>Upload Risk</th></tr></thead><tbody></tbody></table>
-<h3>2. 先后顺序 / Execution Order</h3>
-<ol><li>${currentLang === "zh" ? "先做否定，再建承接层，再开扩词和词根探索。" : "Negatives first, then capture layer, then expansion and root mining."}</li></ol>
-<h3>3. 每类广告的核心风控 / Guardrails by Ad Type</h3>
-<table><thead><tr><th>Ad Type</th><th>Budget Role</th><th>Bid Boundary</th><th>Do Not Do</th></tr></thead><tbody></tbody></table>
-<h3>4. 需要人工复核的地方 / Manual Review Points</h3>
-<ul><li>${currentLang === "zh" ? "列出样本不足、品牌词、Blue Light、Broad、Bulk 上传前必须人工确认的点。" : "List insufficient sample, brand terms, blue light, Broad, and Bulk pre-upload checks."}</li></ul>
-
-JSON_DATA:
-${JSON.stringify(input, null, 2)}`;
-};
-
-
-const archEscapeCompactCell = (value) => escapeHtml(String(value || "-").trim() || "-");
-const archCompactTermCell = (items, emptyText, limit = 10) => {
-  const arr = archLimit((items || []).map(x => String(x || "").trim()).filter(Boolean), limit);
-  if (!arr.length) return `<span class="small">${escapeHtml(emptyText || "-")}</span>`;
-  return arr.map(x => `<code>${escapeHtml(x)}</code>`).join(" ");
-};
-
-const renderArchitectureLocalAIResult = (data, mode = "preview", note = "") => {
-  const zh = currentLang === "zh";
-  if (!data) return `<div class="alert-banner warn">⚠️ ${escapeHtml(t("arch_no_data") || "No data")}</div>`;
-  const matrix = getArchitectureAdMatrix(data);
-  const total = data.total || {};
-  const statusClass = mode === "api-failed" ? "warn" : "good";
-  const title = mode === "api-failed"
-    ? (zh ? "API 未返回内容，已生成本地规则引擎完整架构" : "API returned no usable content; local rule-engine architecture is shown")
-    : (zh ? "已生成本地规则引擎完整架构，API 结果返回后会自动替换" : "Local rule-engine architecture generated; API output will replace it when available");
-  const noteHtml = note ? `<div class="small">${escapeHtml(String(note).slice(0, 520))}</div>` : "";
-  const rowHtml = matrix.map(r => {
-    const launchLabel = r.launchLabel || (zh ? "投放词/对象" : "Launch Terms / Objects");
-    const negExactLabel = r.negativeExactLabel || (zh ? "否定精准/商品" : "Negative Exact / Product");
-    const negPhraseLabel = r.negativePhraseLabel || (zh ? "否定词组" : "Negative Phrase");
-    const risk = /Broad/i.test(r.shortType || "")
-      ? (zh ? "中高，必须先加词组否定并低价跑" : "Medium-high; phrase negatives and low bids first")
-      : /Auto/i.test(r.shortType || "")
-        ? (zh ? "中，采词层不能放任烧预算" : "Medium; harvesting layer must not bleed budget")
-        : /Product/i.test(r.shortType || "")
-          ? (zh ? "中，亏损 ASIN 必须及时否定" : "Medium; negate loss ASINs quickly")
-          : (zh ? "低到中，按成交证据放量" : "Low-medium; scale only with conversion proof");
-    return `<tr>
-      <td><b>${escapeHtml(r.type || r.shortType || "-")}</b><br><span class="small">${escapeHtml(r.layer || "")}</span></td>
-      <td>${archCompactTermCell(r.launchTerms, zh ? `暂无${launchLabel}` : `No ${launchLabel}`, 12)}</td>
-      <td>${archCompactTermCell(r.negativeExact, r.negativeExactEmpty || (zh ? `暂无${negExactLabel}` : `No ${negExactLabel}`), 10)}</td>
-      <td>${archCompactTermCell(r.negativePhrase, r.negativePhraseEmpty || (zh ? `暂无${negPhraseLabel}` : `No ${negPhraseLabel}`), 10)}</td>
-      <td>${archEscapeCompactCell(r.role)}<br><span class="small">${archEscapeCompactCell(r.uploadRule)}</span></td>
-      <td><span class="tag ${/高|High/i.test(risk) ? "bad" : /中|Medium/i.test(risk) ? "warn" : "good"}">${escapeHtml(risk)}</span></td>
-    </tr>`;
-  }).join("");
-  const order = zh
-    ? ["先上传否定词/否定商品，堵住预算漏血", "Exact 承接核心成交词，出价最高", "Phrase 扩中长尾，必须带词组否定", "Broad 只跑白名单词根，低价探索", "Auto 紧密自动采词，赢家迁移到手动", "Product Targeting 只攻有成交证据的 ASIN，亏损 ASIN 否定"]
-    : ["Upload negatives / negative products first to stop budget leakage", "Exact captures proven converters with the highest bid", "Phrase expands long-tail demand with phrase negatives", "Broad mines whitelisted roots at low bid", "Auto harvests tightly and migrates winners to manual", "Product Targeting attacks proven ASINs and negates loss ASINs"];
-  const guardrails = zh
-    ? ["Exact > Phrase > Broad / Auto 的出价阶梯必须保持", "Blue Light 只做辅助特征，不做 Broad 主轴", "品牌词不自动否定，只做降价或人工复核", "Bulk 草稿上传前必须人工确认 Campaign / Ad Group / Match Type / Bid"]
-    : ["Keep bid ladder: Exact > Phrase > Broad / Auto", "Blue light is supporting copy, not Broad scaling axis", "Do not auto-negate brand terms; bid down or review", "Confirm Campaign / Ad Group / Match Type / Bid before Bulk upload"];
-  return `<div class="alert-banner ${statusClass}">✅ <div><b>${escapeHtml(title)}</b>${noteHtml}</div></div>
-    <h3>${zh ? "1. 五类广告执行矩阵" : "1. Five Ad Type Execution Matrix"}</h3>
-    <div class="archTableWrap"><table class="archTable archMatrixTable"><thead><tr>
-      <th>Ad Type</th><th>${zh ? "投放词 / 对象" : "Launch Terms / Objects"}</th><th>${zh ? "否定精准 / 商品" : "Negative Exact / Product"}</th><th>${zh ? "否定词组" : "Negative Phrase"}</th><th>${zh ? "为什么这样做" : "Why"}</th><th>${zh ? "上传风险" : "Upload Risk"}</th>
-    </tr></thead><tbody>${rowHtml}</tbody></table></div>
-    <h3>${zh ? "2. 执行顺序" : "2. Execution Order"}</h3>
-    <ol>${order.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ol>
-    <h3>${zh ? "3. 核心风控" : "3. Core Guardrails"}</h3>
-    <ul>${guardrails.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
-    <h3>${zh ? "4. 当前账户快照" : "4. Current Account Snapshot"}</h3>
-    <ul>
-      <li>Spend: <code>${escapeHtml(archMoney(total.spend || 0))}</code> · Sales: <code>${escapeHtml(archMoney(total.sales || 0))}</code> · ROAS: <code>${escapeHtml(String((total.roas || 0).toFixed(2)))}</code> · ACOS: <code>${escapeHtml(archPct(total.acos))}</code></li>
-      <li>Exact: <code>${fmtInt(data.exactLaunch?.length || 0)}</code> · Phrase: <code>${fmtInt(data.phraseLaunch?.length || 0)}</code> · Broad: <code>${fmtInt((data.broadLaunch?.length || 0) + (data.topBroadRoots?.length || 0))}</code> · Negative: <code>${fmtInt(data.negRows?.length || 0)}</code> · ASIN: <code>${fmtInt((data.profitableAsins?.length || 0) + (data.lossAsins?.length || 0))}</code></li>
-    </ul>`;
-};
-
-const ensureArchitectureAISection = (data) => {
-  const modal = $("architectureModal");
-  const content = $("architectureContent");
-  if (!content) return { details: null, result: null };
-  const sourceData = data || lastArchitectureData || buildAdArchitectureData();
-  if (!content.innerHTML.trim()) {
-    lastArchitectureData = sourceData;
-    lastArchitecturePlainText = buildArchitecturePlainText(sourceData);
-    content.innerHTML = renderAdArchitecture(sourceData) + renderArchitectureAISection();
-  }
-  if (modal && modal.style.display !== "flex") modal.style.display = "flex";
-  let details = $("architectureAIDetails");
-  if (!details) {
-    content.insertAdjacentHTML("beforeend", renderArchitectureAISection());
-    details = $("architectureAIDetails");
-  }
-  let result = $("architectureAIResult");
-  if (!result && details) {
-    details.insertAdjacentHTML("beforeend", `<div class="archDetailsBody"><div class="architectureAIBox"><div id="architectureAIResult" class="architectureAIResult"></div></div></div>`);
-    result = $("architectureAIResult");
-  }
-  if (details) {
-    details.open = true;
-    details.classList.add("archAIActive");
-    setTimeout(() => {
-      try { details.scrollIntoView({ behavior: "smooth", block: "start" }); } catch(e) { details.scrollIntoView(); }
-    }, 40);
-  }
-  return { details, result };
-};
-
-const runArchitectureAI = async () => {
-  const data = lastArchitectureData || buildAdArchitectureData();
-  if (!data) { alert(t("arch_no_data")); return; }
-  lastArchitectureData = data;
-  const { details: aiDetails, result } = ensureArchitectureAISection(data);
-  const btn = $("btnGenerateAIArchitecture");
-  if (!result) {
-    alert(currentLang === "zh" ? "AI 输出区域没有成功初始化，请重新打开广告架构弹窗。" : "AI output area did not initialize. Reopen the architecture modal.");
-    return;
-  }
-  if (!btn) return;
-
-  if (architectureAbortController) {
-    try { architectureAbortController.abort(); } catch(e) {}
-    architectureAbortController = null;
-    btn.disabled = false;
-    btn.removeAttribute("aria-busy");
-    btn.innerHTML = t("btn_arch_ai");
-    result.innerHTML = `<div class="alert-banner warn">⚠️ ${currentLang === "zh" ? "已停止生成。" : "Generation stopped."}</div>`;
-    return;
-  }
-
-  try {
-    architectureAbortController = new AbortController();
-    btn.disabled = false;
-    btn.setAttribute("aria-busy", "true");
-    btn.innerHTML = currentLang === "zh" ? "停止生成" : "Stop";
-    const localPreviewHtml = renderArchitectureLocalAIResult(data, "preview");
-    result.innerHTML = `${localPreviewHtml}<div class="alert-banner warn">⏳ <div><b>${currentLang === "zh" ? "API AI 正在生成更细的完整架构..." : "API AI is generating a more detailed full architecture..."}</b><div class="small">${currentLang === "zh" ? "下方已先显示本地规则引擎结果，避免点击后空白。Gemini → OpenRouter → Groq 自动切换；API 成功后会自动替换为 AI 版本。" : "A local rule-engine result is shown first to avoid a blank output. Gemini → OpenRouter → Groq auto-fallback; successful API output will replace it."}</div></div></div>`;
-    if (aiDetails) {
-      aiDetails.open = true;
-      try { aiDetails.scrollIntoView({ behavior: "smooth", block: "start" }); } catch(e) {}
-    }
-
-    if (typeof requestGeminiStream !== "function" || typeof requestOpenRouterStream !== "function" || typeof requestGroqStream !== "function") {
-      throw new Error(currentLang === "zh" ? "AI API 函数未加载完成，请刷新页面后重试" : "AI API functions are not loaded. Refresh the page and retry.");
-    }
-
-    const systemPrompt = getArchitectureAISystemPrompt();
-    const finalPrompt = buildArchitectureAIPrompt(data);
-    const geminiPayload = { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: "user", parts: [{ text: finalPrompt }] }], generationConfig: { temperature: 0.18 } };
-
-    let aiText = "";
-    let providerUsed = "Gemini";
-    try {
-      try {
-        aiText = await requestGeminiStream(geminiPayload, architectureAbortController.signal, result);
-        providerUsed = AI_PROVIDER_CONFIG.gemini.label || "Gemini";
-      } catch (geminiError) {
-        if (geminiError?.name === "AbortError") throw geminiError;
-        providerUsed = AI_PROVIDER_CONFIG.openrouter.label || "OpenRouter";
-        result.innerHTML = `<div class="alert-banner warn">⚠️ Gemini ${currentLang === "zh" ? "失败，切换 OpenRouter" : "failed, switching to OpenRouter"}<br><span class="small">${escapeHtml(String(geminiError?.message || geminiError).slice(0, 420))}</span></div>`;
-        await new Promise(resolve => setTimeout(resolve, 350));
-        try {
-          aiText = await requestOpenRouterStream({ systemPrompt, finalPrompt, history: [], signal: architectureAbortController.signal, bubble: result });
-        } catch (openRouterError) {
-          if (openRouterError?.name === "AbortError") throw openRouterError;
-          providerUsed = AI_PROVIDER_CONFIG.groq.label || "Groq";
-          result.innerHTML = `<div class="alert-banner warn">⚠️ OpenRouter ${currentLang === "zh" ? "失败，切换 Groq" : "failed, switching to Groq"}<br><span class="small">${escapeHtml(String(openRouterError?.message || openRouterError).slice(0, 420))}</span></div>`;
-          await new Promise(resolve => setTimeout(resolve, 350));
-          aiText = await requestGroqStream({ systemPrompt, finalPrompt, history: [], signal: architectureAbortController.signal, bubble: result });
-        }
-      }
-      if (!aiText || !aiText.trim()) throw new Error(currentLang === "zh" ? "AI 返回为空" : "AI returned empty content");
-      lastArchitectureAIText = aiText;
-      lastArchitectureAIHtml = sanitizeAIHtml(aiText);
-      lastArchitectureAIProvider = providerUsed;
-      result.innerHTML = lastArchitectureAIHtml;
-      lastArchitecturePlainText = `${buildArchitecturePlainText(data)}\n\n【API AI Full Architecture - ${providerUsed}】\n${archPlainTextFromHtml(aiText)}`;
-      log(t("arch_ai_done"), "good");
-    } catch (e) {
-      const aborted = e?.name === "AbortError";
-      const msg = aborted ? (currentLang === "zh" ? "已停止生成。" : "Generation stopped.") : `${t("arch_ai_failed")}: ${String(e?.message || e).slice(0, 520)}`;
-      if (aborted) {
-        result.innerHTML = `<div class="alert-banner warn">⚠️ ${escapeHtml(msg)}</div>`;
-      } else {
-        const fallbackHtml = renderArchitectureLocalAIResult(data, "api-failed", msg);
-        lastArchitectureAIText = archPlainTextFromHtml(fallbackHtml);
-        lastArchitectureAIHtml = fallbackHtml;
-        lastArchitectureAIProvider = currentLang === "zh" ? "本地规则引擎兜底" : "Local rule-engine fallback";
-        result.innerHTML = fallbackHtml;
-        lastArchitecturePlainText = `${buildArchitecturePlainText(data)}
-
-【Local Rule Engine Fallback】
-${lastArchitectureAIText}`;
-        log(msg, "warn");
-      }
-    }
-  } catch (outerError) {
-    const msg = String(outerError?.message || outerError).slice(0, 520);
-    const fallbackHtml = renderArchitectureLocalAIResult(data, "api-failed", msg);
-    lastArchitectureAIText = archPlainTextFromHtml(fallbackHtml);
-    lastArchitectureAIHtml = fallbackHtml;
-    lastArchitectureAIProvider = currentLang === "zh" ? "本地规则引擎兜底" : "Local rule-engine fallback";
-    result.innerHTML = fallbackHtml;
-    lastArchitecturePlainText = `${buildArchitecturePlainText(data)}
-
-【Local Rule Engine Fallback】
-${lastArchitectureAIText}`;
-  } finally {
-    architectureAbortController = null;
-    btn.disabled = false;
-    btn.removeAttribute("aria-busy");
-    btn.innerHTML = t("btn_arch_ai");
-  }
-};
-
-try {
-  window.runArchitectureAI = runArchitectureAI;
-  document.addEventListener("click", (e) => {
-    const aiBtn = e.target?.closest?.("#btnGenerateAIArchitecture, [data-arch-action='ai']");
-    if (!aiBtn) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    runArchitectureAI();
-  }, true);
-} catch(e) {}
-
-
-const archFindBlueprint = (data, token) => (data.blueprint || []).find(x => String(x.layer || "").includes(token)) || {};
-
-const buildArchitectureBulkSheets = (data) => {
-  const zh = currentLang === "zh";
-  const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Product Targeting Expression", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
-  const bulkRows = [];
-  const reviewRows = [];
-  const seen = new Set();
-  const exactLayer = archFindBlueprint(data, "EXACT");
-  const phraseLayer = archFindBlueprint(data, "PHRASE");
-  const broadLayer = archFindBlueprint(data, "BROAD");
-  const patLayer = archFindBlueprint(data, "PRODUCT");
-  const intentByMatch = (match) => {
-    if (match === "exact") return zh ? "Exact 承接成交词，主攻转化与排名" : "Exact captures winners for conversion and rank";
-    if (match === "phrase") return zh ? "Phrase 扩展中长尾变体，保留语义约束" : "Phrase expands variants with semantic control";
-    if (match === "broad") return zh ? "Broad 低价词根探索，不投完整长句" : "Broad mines safe roots at low bids";
-    if (match === "negative phrase" || match === "negative exact") return zh ? "否定止损，排除错配或无转化流量" : "Negative control to block waste or mismatch";
-    if (match === "product targeting") return zh ? "商品投放，单独控 ASIN 预算" : "Product targeting with isolated ASIN budget";
-    return zh ? "人工复核后执行" : "Manual review before execution";
-  };
-  const addKeyword = (r, match, layer) => {
-    const kw = String(r.name || "").trim().replace(/\s+/g, " ");
-    if (!kw || isASINLike(kw) || extractAsinFromText(kw)) return;
-    const key = `${match}|${kw.toLowerCase()}|${layer.campaign || ""}|${layer.adGroup || ""}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    const rulePassed = !!r.bulkReady || ((r.orders || 0) >= 1 && (r.roas || 0) >= Math.max(2, data.rules?.roasMigrateMin || 2));
-    const gate = rulePassed ? "PASS" : "REVIEW";
-    reviewRows.push([gate, intentByMatch(match), match, kw, layer.campaign || "[Campaign Required]", layer.adGroup || "[Ad Group Required]", r.suggestedBid || "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.reason || "", rulePassed ? (zh ? "可进入 SP Bulk Draft" : "Included in SP Bulk Draft") : (zh ? "不要上传，先人工确认" : "Do not upload before manual review")]);
-    if (!rulePassed) return;
-    bulkRows.push(["Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", layer.campaign || "[Campaign Required]", layer.adGroup || "[Ad Group Required]", kw, "", match, "", "", "", r.suggestedBid || "0.50", "enabled"]);
-  };
-  archLimit(data.exactLaunch || [], 80).forEach(r => addKeyword(r, "exact", exactLayer));
-  archLimit(data.phraseLaunch || [], 80).forEach(r => addKeyword(r, "phrase", phraseLayer));
-  archLimit([...(data.broadLaunch || []), ...(data.topBroadRoots || [])], 60).forEach(r => addKeyword(r, "broad", broadLayer));
-
-  for (const r of archLimit(data.negRows || [], 120)) {
-    if (!r.bulkReady) {
-      reviewRows.push(["REVIEW", intentByMatch("negative phrase"), "negative", r.name || "", r.campaign || "", r.adGroup || "", "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.reason || "", zh ? "护栏未通过，不进入上传草稿" : "Guardrail not passed; excluded from upload draft"]);
-      continue;
-    }
-    if (r.objectType === "ASIN") {
-      const asin = extractAsinFromText(r.name);
-      if (!asin) continue;
-      bulkRows.push(["Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", r.campaign || "[Source Campaign Required]", r.adGroup || "[Source Ad Group Required]", "", `asin=\"${asin}\"`, "negative exact", "", "", "", "", bulkState]);
-      reviewRows.push(["PASS", zh ? "亏损 ASIN 否定商品投放" : "Negative product targeting for loss ASIN", "negative exact", asin, r.campaign || "", r.adGroup || "", "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.reason || "", zh ? "已进入 SP Bulk Draft" : "Included in SP Bulk Draft"]);
-    } else {
-      const mt = /exact/i.test(r.matchAdvice || "") ? "negative exact" : "negative phrase";
-      bulkRows.push(["Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "", r.campaign || "[Source Campaign Required]", r.adGroup || "[Source Ad Group Required]", r.name, "", mt, "", "", "", "", "enabled"]);
-      reviewRows.push(["PASS", intentByMatch(mt), mt, r.name || "", r.campaign || "", r.adGroup || "", "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.reason || "", zh ? "已进入 SP Bulk Draft" : "Included in SP Bulk Draft"]);
-    }
-  }
-
-  for (const x of archLimit(data.profitableAsins || [], 40)) {
-    const asin = extractAsinFromText(x.name);
-    if (!asin) continue;
-    bulkRows.push(["Sponsored Products", "Product Targeting", "Create", "", "", "", "", "", "", patLayer.campaign || "[PAT Campaign Required]", patLayer.adGroup || "[PAT Ad Group Required]", "", `asin=\"${asin}\"`, "exact", "", "", "", getSuggestedBid(x, "phrase", data.targetAcos), "enabled"]);
-    reviewRows.push(["PASS", intentByMatch("product targeting"), "product targeting", asin, patLayer.campaign || "", patLayer.adGroup || "", getSuggestedBid(x, "phrase", data.targetAcos), x.spend || 0, x.sales || 0, x.orders || 0, x.roas || 0, zh ? "ASIN 有成交证据，适合单独控预算" : "ASIN has conversion evidence; isolate for budget control", zh ? "已进入 SP Bulk Draft" : "Included in SP Bulk Draft"]);
-  }
-  for (const x of archLimit(data.lossAsins || [], 40)) {
-    const asin = extractAsinFromText(x.name);
-    if (!asin) continue;
-    bulkRows.push(["Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", x.bulkCampaign || x.campaign || "[Source Campaign Required]", x.bulkAdGroup || x.adGroup || "[Source Ad Group Required]", "", `asin=\"${asin}\"`, "negative exact", "", "", "", "", bulkState]);
-    reviewRows.push(["PASS", zh ? "亏损 ASIN 否定商品投放" : "Negative product targeting for loss ASIN", "negative exact", asin, x.campaign || "", x.adGroup || "", "", x.spend || 0, x.sales || 0, x.orders || 0, x.roas || 0, zh ? "高花费或高点击 0 单" : "High spend or clicks with zero orders", zh ? "已进入 SP Bulk Draft" : "Included in SP Bulk Draft"]);
-  }
-
-  const bidDraftRows = [...(data.increaseRows || []), ...(data.decreaseRows || [])].filter(r => r.bulkReady || r.suggestedBid).map(r => [
-    /decrease|降价/i.test(String(r.actionKey || r.actionLabel || "")) ? (zh ? "降低无效 CPC，控制 ACOS" : "Reduce inefficient CPC and control ACOS") : (zh ? "给成交词加价，提高流量承接" : "Bid up converting terms for traffic capture"),
-    r.actionLabel || r.actionKey, r.name, r.campaign, r.adGroup, r.sourceMatch, r.suggestedBid || "", r.reason || "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.acos === Infinity ? null : r.acos
-  ]);
-  const setupRows = (data.blueprint || []).map(r => [r.layer, r.campaign, r.adGroup, r.match, r.budget, r.bid, r.objective, r.seed, r.negative]);
-  const intentRows = getArchitectureIntentMap(data).map(r => [r.layerLabel, r.intent, r.useWhen, r.campaign, r.adGroup, r.match, r.budgetRole, r.bid, r.seedSource, r.control, r.exportMeaning]);
-  const matrixRows = getArchitectureMatrixSheetRows(data);
-  const aiText = lastArchitectureAIText ? archPlainTextFromHtml(lastArchitectureAIText) : "";
-  const sheets = [
-    { sheetName: "00 Read Me - Draft Only", headers: [zh ? "项目" : "Item", zh ? "说明" : "Explanation"], dataRows: [[zh ? "这个文件是什么" : "What this file is", zh ? "规则护栏后的 Sponsored Products Bulk 上传草稿，不是最终自动上传文件" : "Rule-guarded Sponsored Products Bulk upload draft, not a final auto-upload file"], [zh ? "最重要的 Sheet" : "Most important sheet", "01 Ad Type Matrix 和 04 SP Bulk Draft"], [zh ? "不要上传什么" : "Do not upload", zh ? "05 Keyword Review Gate 里 Gate=REVIEW 的行" : "Rows marked REVIEW in 05 Keyword Review Gate"], [zh ? "上传前确认" : "Before upload", zh ? "Campaign、Ad Group、SKU/ASIN、Match Type、Bid、预算、State，以及每个广告的否定关键词/词组/否定商品" : "Campaign, Ad Group, SKU/ASIN, Match Type, Bid, Budget, State, and keyword/product negatives per ad type"], [zh ? "生成时间" : "Generated At", data.generatedAt]] },
-    { sheetName: "01 Ad Type Matrix", headers: [zh ? "广告类型" : "Ad Type", "Layer", "Campaign", "Ad Group", "Match", "Budget", "Bid", zh ? "投放意图" : "Role", zh ? "投放词/对象" : "Launch Terms/Objects", zh ? "需要否定的关键词/ASIN Exact/PAT" : "Negative Exact / Product", zh ? "需要否定的词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"], dataRows: matrixRows },
-    { sheetName: "02 Intent Map", headers: ["Layer", zh ? "投放意图" : "Intent", zh ? "适用条件" : "When to Use", "Campaign", "Ad Group", "Match", zh ? "预算角色" : "Budget Role", "Bid", zh ? "种子来源" : "Seed Source", zh ? "控制逻辑" : "Control", zh ? "导出含义" : "Export Meaning"], dataRows: intentRows },
-    { sheetName: "03 Campaign Setup", headers: ["Layer", "Campaign", "Ad Group", "Match", "Budget", "Bid", "Objective", "Seeds", "Negative Control"], dataRows: setupRows },
-    { sheetName: "04 SP Bulk Draft Only", headers: bulkHeaders, dataRows: bulkRows },
-    { sheetName: "05 Keyword Review Gate", headers: ["Gate", zh ? "执行意图" : "Execution Intent", "Match", "Keyword / ASIN", "Campaign", "Ad Group", "Bid", "Spend", "Sales", "Orders", "ROAS", "Reason", zh ? "上传处理" : "Upload Handling"], dataRows: reviewRows },
-    { sheetName: "06 Bid Change Draft", headers:[zh ? "执行意图" : "Execution Intent", "Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows: bidDraftRows },
-    { sheetName: "07 Upload SOP", headers: ["Step", zh ? "动作" : "Action", zh ? "说明" : "Explanation"], dataRows: getArchitectureUploadSopRows().map(([num,title,body]) => [num, title, body]) },
-    { sheetName: "08 Guardrails", headers: [zh ? "护栏" : "Guardrail", zh ? "规则" : "Rule"], dataRows: getArchitectureGuardrailRows(data).map(([k,v]) => [k, v]) }
-  ];
-  if (aiText) sheets.push({ sheetName: "10 AI Strategy", headers: ["Provider", "Report"], dataRows: [[lastArchitectureAIProvider || "AI", aiText]] });
-  return { sheets, bulkRows, reviewRows, bidDraftRows };
-};
-
-const exportArchitectureXlsxFallback = (sheets, filename) => {
-  if (!window.XLSX) throw new Error("XLSX library is not loaded");
-  const workbook = XLSX.utils.book_new();
-  const usedNames = new Set();
-  (sheets || []).forEach((sheetDef, idx) => {
-    const headers = Array.isArray(sheetDef.headers) ? sheetDef.headers : [];
-    const dataRows = Array.isArray(sheetDef.dataRows) ? sheetDef.dataRows : [];
-    const aoa = [headers, ...dataRows];
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    const colCount = Math.max(headers.length, ...dataRows.map(r => Array.isArray(r) ? r.length : 0), 1);
-    ws["!cols"] = Array.from({ length: colCount }, (_, colIndex) => {
-      let maxLen = 12;
-      aoa.forEach(row => {
-        const v = Array.isArray(row) ? row[colIndex] : "";
-        const len = String(v ?? "").slice(0, 120).length;
-        if (len > maxLen) maxLen = len;
-      });
-      return { wch: Math.min(Math.max(maxLen + 2, 12), 55) };
-    });
-    let baseName = String(sheetDef.sheetName || `Sheet${idx + 1}`).replace(/[\\/?*\[\]:]/g, "").slice(0, 31) || `Sheet${idx + 1}`;
-    let name = baseName;
-    let n = 2;
-    while (usedNames.has(name)) {
-      const suffix = `_${n++}`;
-      name = `${baseName.slice(0, 31 - suffix.length)}${suffix}`;
-    }
-    usedNames.add(name);
-    XLSX.utils.book_append_sheet(workbook, ws, name);
-  });
-  XLSX.writeFile(workbook, filename);
-};
-
-const exportArchitectureWorkbookSafe = async (sheets, filename, successMessage, buttonId) => {
-  const btn = buttonId ? $(buttonId) : null;
-  const oldText = btn ? btn.innerHTML : "";
-  const wrap = $("globalProgressWrap");
-  const bar = $("globalProgressBar");
-  try {
-    if (!Array.isArray(sheets) || !sheets.length) throw new Error("No export sheets generated");
-    if (btn) { btn.disabled = true; btn.innerHTML = currentLang === "zh" ? "正在导出..." : "Exporting..."; }
-    log(currentLang === "zh" ? "正在生成广告架构导出文件..." : "Generating ad architecture export file...", "warn");
-    try {
-      if (!window.ExcelJS || !window.saveAs) throw new Error("ExcelJS/FileSaver missing, using XLSX fallback");
-      await exportRichExcelMultiSheet(sheets, filename);
-    } catch (excelErr) {
-      console.warn("Architecture ExcelJS export failed, fallback to XLSX", excelErr);
-      if (wrap) wrap.style.display = "block";
-      if (bar) bar.style.width = "30%";
-      exportArchitectureXlsxFallback(sheets, filename);
-      if (bar) bar.style.width = "100%";
-      setTimeout(() => { if (wrap) wrap.style.display = "none"; if (bar) bar.style.width = "0%"; }, 400);
-    }
-    log(successMessage, "good");
-  } catch (err) {
-    console.error("Architecture export failed", err);
-    alert((currentLang === "zh" ? "导出失败：" : "Export failed: ") + (err?.message || err));
-    log((currentLang === "zh" ? "导出失败：" : "Export failed: ") + (err?.message || err), "bad");
-  } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = oldText; }
-  }
-};
-
-const exportArchitectureBulkExcel = async () => {
-  const data = lastArchitectureData || buildAdArchitectureData();
-  if (!data) { alert(t("arch_no_data")); return; }
-  const { sheets, bulkRows, bidDraftRows } = buildArchitectureBulkSheets(data);
-  if (!bulkRows.length && !bidDraftRows.length) { alert(t("arch_bulk_empty")); return; }
-  await exportArchitectureWorkbookSafe(sheets, `Rule_Guarded_AI_Ad_Architecture_Bulk_Draft_${getTs()}.xlsx`, t("arch_bulk_exported"), "btnExportArchitectureBulk");
-};
-
-const showArchitectureModal = () => {
-  const modal = $("architectureModal");
-  const content = $("architectureContent");
-  if (!modal || !content) return;
-  const data = buildAdArchitectureData();
-  lastArchitectureData = data;
-  lastArchitectureAIText = "";
-  lastArchitectureAIHtml = "";
-  lastArchitectureAIProvider = "";
-  lastArchitecturePlainText = buildArchitecturePlainText(data);
-  content.innerHTML = renderAdArchitecture(data) + renderArchitectureAISection();
-  modal.style.display = "flex";
-};
-
-const closeArchitectureModal = () => {
-  const modal = $("architectureModal");
-  if (modal) modal.style.display = "none";
-};
-
-const copyArchitectureToClipboard = async () => {
-  if (!lastArchitecturePlainText) lastArchitecturePlainText = buildArchitecturePlainText(buildAdArchitectureData());
-  try {
-    await navigator.clipboard.writeText(lastArchitecturePlainText || "");
-    log(t("arch_copied"), "good");
-  } catch (e) {
-    const ta = document.createElement("textarea");
-    ta.value = lastArchitecturePlainText || "";
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-    log(t("arch_copied"), "good");
-  }
-};
-
 const architecturePlaceholderPatterns = [
   /当前筛选下暂无/,
   /没有明确错配词/,
@@ -7851,96 +7044,6 @@ const writeArchitectureClipboard = async (text, successMsg) => {
   }
   log(successMsg, "good");
 };
-const buildArchitectureGroupPlainText = (r) => getArchitectureCleanKeywordList([r?.launchTerms, r?.negativeExact, r?.negativePhrase]).join("\n");
-const getArchitectureSectionTerms = (r, kind) => {
-  if (!r) return [];
-  if (kind === "launch") return getArchitectureCleanKeywordList([r.launchTerms]);
-  if (kind === "negativeExact") return getArchitectureCleanKeywordList([r.negativeExact]);
-  if (kind === "negativePhrase") return getArchitectureCleanKeywordList([r.negativePhrase]);
-  return getArchitectureCleanKeywordList([r.launchTerms, r.negativeExact, r.negativePhrase]);
-};
-const getArchitectureKindLabel = (kind) => {
-  const zh = currentLang === "zh";
-  const map = {
-    launch: zh ? "投放词/对象" : "launch terms/objects",
-    negativeExact: zh ? "否定关键词" : "negative exact keywords",
-    negativePhrase: zh ? "否定词组" : "negative phrase keywords"
-  };
-  return map[kind] || (zh ? "关键词" : "keywords");
-};
-
-const buildArchitectureMatrixTsv = (data) => {
-  const zh = currentLang === "zh";
-  const headers = [zh ? "广告类型" : "Ad Type", "Campaign", "Ad Group", zh ? "匹配类型" : "Match Type", zh ? "预算" : "Budget", zh ? "建议出价" : "Suggested Bid", zh ? "投放意图" : "Intent", zh ? "投放词 / 对象" : "Launch Terms / Objects", zh ? "否定关键词 Exact" : "Negative Exact / Product", zh ? "否定词组 Phrase" : "Negative Phrase", zh ? "执行原则" : "Execution Rule"];
-  const cleanCell = (v) => String(v || "-").replace(/\t/g, " ").replace(/\r?\n/g, " ").trim();
-  const rows = getArchitectureAdMatrix(data).map(r => [
-    r.type,
-    r.campaign || "-",
-    r.adGroup || "-",
-    r.match || "-",
-    r.budget || "-",
-    r.bid || "-",
-    r.role || "-",
-    archJoinTerms(r.launchTerms),
-    archJoinTerms(r.negativeExact, r.negativeExactEmpty),
-    archJoinTerms(r.negativePhrase, r.negativePhraseEmpty),
-    r.uploadRule || "-"
-  ].map(cleanCell));
-  return [headers, ...rows].map(row => row.map(cleanCell).join("\t")).join("\n");
-};
-
-const copyArchitectureMatrixToClipboard = async () => {
-  const data = lastArchitectureData || buildAdArchitectureData();
-  if (!data) { alert(t("arch_no_data")); return; }
-  const text = buildArchitectureMatrixTsv(data);
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch (e) {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-  }
-  log(currentLang === "zh" ? "已复制完整表格，可直接粘贴到 Excel / 表格核对" : "Full table copied. Paste into Excel/Sheets for review", "good");
-};
-
-const copyArchitectureGroupToClipboard = async (index) => {
-  const data = lastArchitectureData || buildAdArchitectureData();
-  const matrix = getArchitectureAdMatrix(data);
-  const r = matrix[Number(index)];
-  if (!r) return;
-  const terms = getArchitectureCleanKeywordList([r.launchTerms, r.negativeExact, r.negativePhrase]);
-  if (!terms.length) { alert(currentLang === "zh" ? "当前卡片没有可复制关键词" : "No keywords to copy in this card"); return; }
-  await writeArchitectureClipboard(terms.join("\n"), currentLang === "zh" ? `已复制 ${terms.length} 个关键词：${r.type}` : `Copied ${terms.length} keywords: ${r.type}`);
-};
-
-
-const copyArchitectureSectionToClipboard = async (index, kind) => {
-  const data = lastArchitectureData || buildAdArchitectureData();
-  const matrix = getArchitectureAdMatrix(data);
-  const r = matrix[Number(index)];
-  if (!r) return;
-  const terms = getArchitectureSectionTerms(r, kind);
-  if (!terms.length) { alert(currentLang === "zh" ? "当前区域没有可复制关键词" : "No keywords to copy in this section"); return; }
-  await writeArchitectureClipboard(terms.join("\n"), currentLang === "zh" ? `已复制 ${terms.length} 个${getArchitectureKindLabel(kind)}：${r.type}` : `Copied ${terms.length} ${getArchitectureKindLabel(kind)}: ${r.type}`);
-};
-
-const copyArchitectureAllTermsToClipboard = async (kind) => {
-  const data = lastArchitectureData || buildAdArchitectureData();
-  const matrix = getArchitectureAdMatrix(data);
-  const terms = getArchitectureCleanKeywordList(matrix.map(r => {
-    if (kind === "launch") return r.launchTerms;
-    if (kind === "negativeExact") return r.negativeExact;
-    if (kind === "negativePhrase") return r.negativePhrase;
-    return [r.launchTerms, r.negativeExact, r.negativePhrase].flat();
-  }));
-  if (!terms.length) { alert(currentLang === "zh" ? "当前没有可复制关键词" : "No keywords to copy"); return; }
-  await writeArchitectureClipboard(terms.join("\n"), currentLang === "zh" ? `已复制全部 ${terms.length} 个${getArchitectureKindLabel(kind)}` : `Copied all ${terms.length} ${getArchitectureKindLabel(kind)}`);
-};
-
-
 // ==================== Negative Keyword Drilldown Popups ====================
 let lastNegativeKeywordTerms = [];
 
@@ -8127,7 +7230,7 @@ const addArchitectureNegativeFallbackRows = (rows, mode) => {
     extra.push({
       term,
       matchType: mode === "phrase" ? "PHRASE" : "EXACT",
-      source: currentLang === "zh" ? "广告架构动作池" : "Architecture Action Pool",
+      source: currentLang === "zh" ? "规则动作池" : "Rule Action Pool",
       freq: 1,
       spend: r.spend || 0,
       clicks: r.clicks || 0,
@@ -8297,10 +7400,10 @@ const renderNegativeKeywordPopupContent = (mode, rows) => {
     </tr>`).join("");
   return `
     <div class="negKeywordSummary">
-      <div class="architectureMetric"><div class="label">${zh ? "候选数量" : "Candidates"}</div><div class="value">${fmtInt(rows.length)}</div><div class="meta">${mode === "phrase" ? "Negative Phrase" : "Negative Exact / Product"}</div></div>
-      <div class="architectureMetric"><div class="label">${zh ? "覆盖花费" : "Covered Spend"}</div><div class="value">${fmtMoney(totalSpend)}</div><div class="meta">${zh ? "当前筛选范围" : "Current filters"}</div></div>
-      <div class="architectureMetric"><div class="label">${zh ? "覆盖点击" : "Covered Clicks"}</div><div class="value">${fmtInt(totalClicks)}</div><div class="meta">${zh ? "用于判断浪费" : "Waste evidence"}</div></div>
-      <div class="architectureMetric"><div class="label">${zh ? "覆盖订单" : "Covered Orders"}</div><div class="value">${fmtInt(totalOrders)}</div><div class="meta">${zh ? "越低越适合否定" : "Lower is safer"}</div></div>
+      <div class="summaryMetric"><div class="label">${zh ? "候选数量" : "Candidates"}</div><div class="value">${fmtInt(rows.length)}</div><div class="meta">${mode === "phrase" ? "Negative Phrase" : "Negative Exact / Product"}</div></div>
+      <div class="summaryMetric"><div class="label">${zh ? "覆盖花费" : "Covered Spend"}</div><div class="value">${fmtMoney(totalSpend)}</div><div class="meta">${zh ? "当前筛选范围" : "Current filters"}</div></div>
+      <div class="summaryMetric"><div class="label">${zh ? "覆盖点击" : "Covered Clicks"}</div><div class="value">${fmtInt(totalClicks)}</div><div class="meta">${zh ? "用于判断浪费" : "Waste evidence"}</div></div>
+      <div class="summaryMetric"><div class="label">${zh ? "覆盖订单" : "Covered Orders"}</div><div class="value">${fmtInt(totalOrders)}</div><div class="meta">${zh ? "越低越适合否定" : "Lower is safer"}</div></div>
     </div>
     <div class="negKeywordToolbar">
       <button class="btn primary" type="button" data-neg-copy-all="1">${zh ? "复制全部关键词" : "Copy All Keywords"}</button>
@@ -8347,55 +7450,6 @@ const copyNegativeKeywordTerms = async (idx = null) => {
   if (!terms.length) { alert(currentLang === "zh" ? "当前没有可复制关键词" : "No keywords to copy"); return; }
   await writeArchitectureClipboard(terms.join("\n"), currentLang === "zh" ? `已复制 ${terms.length} 个关键词` : `Copied ${terms.length} keywords`);
 };
-
-const buildArchitectureExportSheets = (data) => {
-  const zh = currentLang === "zh";
-  const inferIntent = (r) => {
-    const key = String(r.actionKey || r.matchAdvice || r.actionLabel || "").toLowerCase();
-    if (key.includes("exact") || key.includes("精准") || key.includes("加价") || key.includes("increase")) return zh ? "承接成交词 / 提升排名" : "Capture winner / improve rank";
-    if (key.includes("phrase") || key.includes("词组")) return zh ? "拓展中长尾变体" : "Expand mid-long-tail variants";
-    if (key.includes("broad") || key.includes("广泛")) return zh ? "低价词根探索" : "Low-bid root mining";
-    if (key.includes("neg") || key.includes("否定")) return zh ? "止损 / 排除错配流量" : "Stop loss / block mismatch traffic";
-    if (key.includes("decrease") || key.includes("降价")) return zh ? "控 ACOS / 降低无效 CPC" : "Control ACOS / reduce inefficient CPC";
-    return zh ? "人工复核后执行" : "Manual review before execution";
-  };
-  const matrixRows = getArchitectureMatrixSheetRows(data);
-  const intentRows = getArchitectureIntentMap(data).map(r => [r.layerLabel, r.intent, r.useWhen, r.campaign, r.adGroup, r.match, r.budgetRole, r.bid, r.seedSource, r.control, r.exportMeaning]);
-  const setupRows = data.blueprint.map(r => [r.layer, r.campaign, r.adGroup, r.match, r.budget, r.bid, r.objective, r.seed, r.negative]);
-  const actionRow = (r) => [inferIntent(r), r.actionLabel || r.matchAdvice || "", r.name || "", r.sourceName || "", r.sourceMatch || "", r.matchAdvice || "", r.suggestedBid || "", r.campaign || "", r.adGroup || "", r.reason || "", r.spend || 0, r.sales || 0, r.orders || 0, r.clicks || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos];
-  const readmeRows = [
-    [zh ? "这个文件是什么" : "What this file is", zh ? "当前筛选数据下的广告架构说明文件，不是直接上传文件" : "Ad architecture explanation for the current filtered view, not a direct upload file"],
-    [zh ? "先看哪个 Sheet" : "Read first", zh ? "先看 01 Intent Map，再看 02 Campaign Setup，最后看动作池" : "Read 01 Intent Map first, then 02 Campaign Setup, then action pools"],
-    [zh ? "导出意图" : "Export intent", zh ? "让你明确每个 Campaign / Ad Group 为什么存在、承接什么流量、怎么控损" : "Clarifies why each Campaign / Ad Group exists, what traffic it captures, and how it controls waste"],
-    [zh ? "Bulk 上传" : "Bulk upload", zh ? "请使用“导出 Bulk 草稿”按钮生成上传草稿；本文件主要用于策略审核" : "Use Export Bulk Draft for upload drafts; this file is mainly for strategy review"],
-    [zh ? "生成时间" : "Generated At", data.generatedAt]
-  ];
-  const sopRows = getArchitectureUploadSopRows().map(([num,title,body]) => [num, title, body]);
-  const guardrailRows = getArchitectureGuardrailRows(data).map(([k,v]) => [k, v]);
-  const onePageRows = [
-    [zh ? "当前判断" : "Verdict", data.budgetMode, zh ? "先根据账户类型决定预算迁移速度" : "Use this to decide budget migration speed"],
-    [zh ? "第一步" : "Step 1", zh ? "先止损" : "Stop loss first", zh ? "处理否定词与降价，避免继续烧钱" : "Handle negatives and bid-down to stop leaking spend"],
-    [zh ? "第二步" : "Step 2", zh ? "再承接" : "Capture winners", zh ? "把有成交证据的词迁移到 Exact / Phrase" : "Move proven terms into Exact / Phrase"],
-    [zh ? "第三步" : "Step 3", zh ? "后探索" : "Explore later", zh ? "Auto / Broad / ASIN 只做采词和小预算测试" : "Auto / Broad / ASIN only harvest and test with small budget"],
-    [zh ? "Bulk 原则" : "Bulk Rule", "PASS only", zh ? "REVIEW 行不要上传，先人工确认" : "Do not upload REVIEW rows before manual confirmation"],
-    ["ROAS / ACOS", `${(data.total.roas || 0).toFixed(2)} / ${data.total.acos === Infinity ? "∞" : (data.total.acos * 100).toFixed(2) + "%"}`, zh ? "用于判断整体效率" : "Used to judge overall efficiency"]
-  ];
-  const sheets = [
-    { sheetName: "00 One Page Plan", headers: [zh ? "模块" : "Module", zh ? "结论" : "Decision", zh ? "怎么执行" : "How to execute"], dataRows: onePageRows },
-    { sheetName: "01 Intent Map", headers: ["Layer", zh ? "投放意图" : "Intent", zh ? "适用条件" : "When to Use", "Campaign", "Ad Group", "Match", zh ? "预算角色" : "Budget Role", "Bid", zh ? "种子来源" : "Seed Source", zh ? "控制逻辑" : "Control", zh ? "导出含义" : "Export Meaning"], dataRows: intentRows },
-    { sheetName: "02 Campaign Setup", headers: ["Layer", "Campaign", "Ad Group", "Match", "Budget", "Bid", "Objective", "Seeds", "Negative Control"], dataRows: setupRows },
-    { sheetName: "03 Action Pools", headers: [zh ? "执行意图" : "Execution Intent", "Action", "Object", "Source", "Source Match", "Operation", "Suggested Bid", "Campaign", "Ad Group", "Reason", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS"], dataRows: [...data.exactLaunch, ...data.increaseRows, ...data.phraseLaunch, ...data.broadLaunch, ...data.topBroadRoots].map(actionRow) },
-    { sheetName: "04 Control Negatives", headers: [zh ? "执行意图" : "Execution Intent", "Action", "Object", "Source", "Source Match", "Operation", "Suggested Bid", "Campaign", "Ad Group", "Reason", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS"], dataRows: [...data.negRows, ...data.decreaseRows].map(actionRow) },
-    { sheetName: "06 ASIN Targeting", headers: [zh ? "执行意图" : "Execution Intent", "Object", "Recommended Action", "Spend", "Sales", "Orders", "Clicks", "ROAS", "ACOS"], dataRows: [...data.profitableAsins.map(x => [zh ? "赚钱 ASIN 单独控预算" : "Separate profitable ASIN budget", x.name, "Keep / Separate PAT Ad Group", x.spend, x.sales, x.orders, x.clicks, x.roas, x.acos === Infinity ? null : x.acos]), ...data.lossAsins.map(x => [zh ? "亏损 ASIN 否定" : "Negate loss-making ASIN", x.name, "Negative Product Targeting", x.spend, x.sales, x.orders, x.clicks, x.roas, x.acos === Infinity ? null : x.acos])] },
-    { sheetName: "07 Upload SOP", headers: ["Step", zh ? "动作" : "Action", zh ? "说明" : "Explanation"], dataRows: sopRows },
-    { sheetName: "08 Guardrails", headers: [zh ? "护栏" : "Guardrail", zh ? "规则" : "Rule"], dataRows: guardrailRows },
-    { sheetName: "09 Summary", headers: ["Metric", "Value"], dataRows: [["Spend", data.total.spend], ["Sales", data.total.sales], ["Orders", data.total.orders], ["ROAS", data.total.roas], ["ACOS", data.total.acos === Infinity ? null : data.total.acos], ["Target ACOS", data.targetAcos], ["Mode", data.budgetMode], ["Generated At", data.generatedAt]] }
-  ];
-  if (lastArchitectureAIText) sheets.push({ sheetName: "10 AI Strategy", headers: ["Provider", "Report"], dataRows: [[lastArchitectureAIProvider || "AI", archPlainTextFromHtml(lastArchitectureAIText)]] });
-  return sheets;
-};
-
-
 
 // ==================== Campaign Studio Builder ====================
 let lastCampaignStudioData = null;
@@ -9213,7 +8267,7 @@ const exportCampaignStudioBulkExcel = async () => {
   const data = lastCampaignStudioData || buildCampaignStudioData();
   if (!data) { alert(t("studio_no_data")); return; }
   const bulk = buildCampaignStudioBulkRows(data);
-  if (!bulk.bulkRows.length) { alert(t("arch_bulk_empty")); return; }
+  if (!bulk.bulkRows.length) { alert(currentLang === "zh" ? "Bulk 草稿为空，当前筛选范围没有可上传对象" : "Bulk draft is empty; no uploadable objects in the current filter scope"); return; }
   const readme = [
     [currentLang === "zh" ? "重要" : "Important", currentLang === "zh" ? "这是 Draft Only。上传前必须确认 Campaign、Ad Group、Bid、State、SKU/ASIN。" : "This is Draft Only. Confirm Campaign, Ad Group, Bid, State, SKU/ASIN before upload."],
     [currentLang === "zh" ? "上线保护" : "Launch Safety", currentLang === "zh" ? `Bulk 默认 State=${data.bulkDefaultState || "paused"}，人工确认后再改 enabled` : `Bulk default State=${data.bulkDefaultState || "paused"}; switch to enabled only after review`],
@@ -9225,12 +8279,6 @@ const exportCampaignStudioBulkExcel = async () => {
     { sheetName:"SP Bulk Draft Only", headers:bulk.headers, dataRows:bulk.bulkRows }
   ], `Campaign_Studio_Traffic_Router_Bulk_Draft_ONLY_${getTs()}.xlsx`);
   alert(t("studio_bulk_exported"));
-};
-
-const exportArchitectureExcel = async () => {
-  const data = lastArchitectureData || buildAdArchitectureData();
-  if (!data) { alert(t("arch_no_data")); return; }
-  await exportArchitectureWorkbookSafe(buildArchitectureExportSheets(data), `Ad_Architecture_Blueprint_${getTs()}.xlsx`, t("arch_exported"), "btnExportArchitecture");
 };
 
 const applyFilters = (initial=false) => {
@@ -9533,50 +8581,7 @@ const bindEvents = () => {
     });
     $("campaignStudioModal")?.addEventListener("click", (e) => { if (e.target && e.target.id === "campaignStudioModal") closeCampaignStudioModal(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("campaignStudioModal")?.style.display === "flex") closeCampaignStudioModal(); });
-    $("btnArchitecture")?.addEventListener("click", showArchitectureModal);
-    $("btnCloseArchitecture")?.addEventListener("click", closeArchitectureModal);
-    $("btnGenerateAIArchitecture")?.addEventListener("click", runArchitectureAI);
-    $("btnCopyArchitecture")?.addEventListener("click", copyArchitectureToClipboard);
-    $("btnExportArchitecture")?.addEventListener("click", exportArchitectureExcel);
-    $("btnExportArchitectureBulk")?.addEventListener("click", exportArchitectureBulkExcel);
-    $("architectureContent")?.addEventListener("click", (e) => {
-      const copyMatrixBtn = e.target?.closest?.("[data-arch-copy-matrix]");
-      if (copyMatrixBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        copyArchitectureMatrixToClipboard();
-        return;
-      }
-      const copyAllBtn = e.target?.closest?.("[data-arch-copy-all]");
-      if (copyAllBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        copyArchitectureAllTermsToClipboard(copyAllBtn.getAttribute("data-arch-copy-all"));
-        return;
-      }
-      const copySectionBtn = e.target?.closest?.("[data-arch-copy-section]");
-      if (copySectionBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        const [sectionIndex, sectionKind] = String(copySectionBtn.getAttribute("data-arch-copy-section") || "").split(":");
-        copyArchitectureSectionToClipboard(sectionIndex, sectionKind);
-        return;
-      }
-      const copyGroupBtn = e.target?.closest?.("[data-arch-copy-group]");
-      if (copyGroupBtn) {
-        copyArchitectureGroupToClipboard(copyGroupBtn.getAttribute("data-arch-copy-group"));
-        return;
-      }
-      const btn = e.target?.closest?.("[data-arch-action]");
-      if (!btn) return;
-      const action = btn.getAttribute("data-arch-action");
-      if (action === "ai") runArchitectureAI();
-      if (action === "copy") copyArchitectureToClipboard();
-      if (action === "excel") exportArchitectureExcel();
-      if (action === "bulk") exportArchitectureBulkExcel();
-    });
-    $("architectureModal")?.addEventListener("click", (e) => { if (e.target && e.target.id === "architectureModal") closeArchitectureModal(); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("architectureModal")?.style.display === "flex") closeArchitectureModal(); });
+
 
     document.addEventListener("click", (e) => {
         const trigger = e.target.closest(".ai-trigger");
