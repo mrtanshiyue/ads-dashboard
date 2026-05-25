@@ -1603,12 +1603,12 @@
         <div class="largeModalHeader campaignStudioHeader">
           <div>
             <h2 id="campaignStudioTitle" data-i18n="studio_title">Campaign Studio 广告结构生成器</h2>
-            <div class="small" data-i18n="studio_subtitle">基于当前筛选数据，生成 Campaign / Ad Group / Match Type / Budget / Bid / Negatives 的可执行结构草稿</div>
+            <div class="small" data-i18n="studio_subtitle">基于当前筛选数据，生成 Campaign 分层、投放对象、否定池、预算与 Bid 的上线复核草稿</div>
           </div>
           <div class="largeModalActions">
             <button class="btn" id="btnCopyCampaignStudio" type="button" data-i18n="btn_studio_copy">复制 Studio 方案</button>
             <button class="btn primary" id="btnExportCampaignStudio" type="button" data-i18n="btn_studio_export">导出 Studio Excel</button>
-            <button class="btn" id="btnExportCampaignStudioBulk" type="button" data-i18n="btn_studio_bulk">导出 Bulk 草稿</button>
+            <button class="btn" id="btnExportCampaignStudioBulk" type="button" data-i18n="btn_studio_bulk">导出 Target 草稿</button>
             <button class="search-clear-btn" id="btnCloseCampaignStudio" type="button" data-i18n-title="title_close_studio" title="关闭">✕</button>
           </div>
         </div>
@@ -2121,15 +2121,15 @@ const I18N = {
       btn_ai: "AI 参谋",
       btn_campaign_studio: "Studio",
       studio_title: "Campaign Studio 广告结构生成器",
-      studio_subtitle: "基于当前筛选数据，生成 Campaign / Ad Group / Match Type / Budget / Bid / Negatives 的可执行结构草稿",
+      studio_subtitle: "基于当前筛选数据，生成 Campaign 分层、投放对象、否定池、预算与 Bid 的上线复核草稿",
       btn_studio_copy: "复制 Studio 方案",
       btn_studio_export: "导出 Studio Excel",
-      btn_studio_bulk: "导出 Bulk 草稿",
+      btn_studio_bulk: "导出 Target 草稿",
       title_close_studio: "关闭 Campaign Studio",
       studio_no_data: "当前筛选下没有广告数据。请先导入广告报表，或放宽左侧筛选条件。",
       studio_copied: "Campaign Studio 方案已复制",
       studio_exported: "Campaign Studio Excel 已导出",
-      studio_bulk_exported: "Campaign Studio Bulk 草稿已导出（Draft Only，上传前必须人工确认）",
+      studio_bulk_exported: "Campaign Studio Target 草稿已导出（不是完整建广告 Bulk，上传前必须人工确认）",
       arch_no_data: "当前筛选下没有广告数据。请先导入广告报表，或放宽左侧筛选条件。",
       ai_title: "✨ Gemini + OpenRouter + Groq AI Agent 引擎",
       btn_ai_log: "📝 导出对话日志",
@@ -2557,15 +2557,15 @@ const I18N = {
       btn_ai: "AI Agent",
       btn_campaign_studio: "Studio",
       studio_title: "Campaign Studio Builder",
-      studio_subtitle: "Generate an executable Campaign / Ad Group / Match Type / Budget / Bid / Negative structure draft from the current filtered data",
+      studio_subtitle: "Generate a review draft for Campaign layering, targets, negatives, budget, and bids from the current filtered data",
       btn_studio_copy: "Copy Studio Plan",
       btn_studio_export: "Export Studio Excel",
-      btn_studio_bulk: "Export Bulk Draft",
+      btn_studio_bulk: "Export Target Draft",
       title_close_studio: "Close Campaign Studio",
       studio_no_data: "No ad data in the current filtered view. Import ad reports or loosen the filters.",
       studio_copied: "Campaign Studio plan copied",
       studio_exported: "Campaign Studio Excel exported",
-      studio_bulk_exported: "Campaign Studio Bulk draft exported (Draft Only, manual review required before upload)",
+      studio_bulk_exported: "Campaign Studio Target Draft exported (not a full campaign-creation bulk; manual review required)",
       arch_no_data: "No ad data in the current filtered view. Import ad reports or loosen the filters.",
       ai_title: "✨ Gemini + OpenRouter + Groq AI Agent Engine",
       btn_ai_log: "📝 Export Chat Log",
@@ -7482,6 +7482,11 @@ const uniqueStudioTerms = (rows = [], limit = 30, mapper = null) => {
 
 const normalizeStudioTerm = (value = "") => String(value || "").toLowerCase().replace(/[\[\]"']/g, "").replace(/\s+/g, " ").trim();
 
+// Competitor-brand watchlist: these terms may be tested in controlled Exact/Phrase campaigns,
+// but must not enter Broad or Rank Push because broad matching can expand competitor intent too widely.
+const STUDIO_COMPETITOR_BRAND_RE = /\b(peepers|foster\s*grant|gaoye|readers(?:\.com|\s+com)|thinoptics|eyebobs|sojos|gamma\s*ray|eyekeepers|magnivision|clic|livho)\b/i;
+const isStudioCompetitorBrandTerm = (value = "") => STUDIO_COMPETITOR_BRAND_RE.test(normalizeStudioTerm(value));
+
 const isStudioBlockedGenericForAutoHandover = (value = "") => {
   const s = normalizeStudioTerm(value);
   const blocked = new Set([
@@ -7516,6 +7521,90 @@ const isStudioOverBroadTerm = (value = "") => {
   return false;
 };
 
+const validateAmazonKeywordForStudio = (value = "") => {
+  const raw = String(value || "").trim();
+  const normalized = raw.replace(/\s+/g, " ");
+  if (!normalized) return { valid:false, reason: currentLang === "zh" ? "空关键词" : "Empty keyword" };
+  if (extractAsinFromText(normalized) || isASINLike(normalized)) return { valid:false, reason: currentLang === "zh" ? "ASIN 不能作为关键词上传" : "ASIN is not a keyword" };
+  if (normalized.length > 80) return { valid:false, reason: currentLang === "zh" ? "超过 80 个字符" : "Over 80 characters" };
+  if (studioTermWordCount(normalized) > 10) return { valid:false, reason: currentLang === "zh" ? "超过 10 个词" : "Over 10 words" };
+  if (/[<>\[\]{}|\"`~^=]/.test(normalized)) return { valid:false, reason: currentLang === "zh" ? "包含不适合 Bulk 的特殊字符" : "Contains unsupported bulk characters" };
+  if (/https?:\/\/|www\./i.test(normalized)) return { valid:false, reason: currentLang === "zh" ? "疑似 URL" : "Looks like a URL" };
+  return { valid:true, reason:"" };
+};
+
+const buildStudioTermEvidenceMap = (rows = [], mode = "auto") => {
+  const map = new Map();
+  (rows || []).forEach(r => {
+    const manual = checkIsManual(r);
+    if (mode === "auto" && manual) return;
+    if (mode === "manual" && !manual) return;
+    const key = normalizeStudioTerm(r.searchTerm || r.targeting || "");
+    if (!key || key === "(blank)" || extractAsinFromText(key) || isASINLike(key)) return;
+    const current = map.get(key) || { spend:0, sales:0, orders:0, clicks:0, campaigns:new Set(), adGroups:new Set() };
+    current.spend += safeNum(r.spend);
+    current.sales += safeNum(r.sales);
+    current.orders += safeNum(r.orders);
+    current.clicks += safeNum(r.clicks);
+    if (r.campaign) current.campaigns.add(r.campaign);
+    if (r.adGroup) current.adGroups.add(r.adGroup);
+    map.set(key, current);
+  });
+  return map;
+};
+
+const buildStudioAutoTermEvidenceMap = (rows = []) => buildStudioTermEvidenceMap(rows, "auto");
+const buildStudioManualTermEvidenceMap = (rows = []) => buildStudioTermEvidenceMap(rows, "manual");
+
+const attachStudioAutoEvidence = (row, autoEvidenceMap) => {
+  const name = String(row?.name || row?.searchTerm || row?.targeting || "").trim();
+  const ev = autoEvidenceMap.get(normalizeStudioTerm(name));
+  if (!ev) return null;
+  const autoSpend = ev.spend || 0;
+  return {
+    ...row,
+    autoSpend,
+    autoClicks: ev.clicks || 0,
+    autoOrders: ev.orders || 0,
+    autoSales: ev.sales || 0,
+    autoRoas: autoSpend > 0 ? (ev.sales || 0) / autoSpend : 0,
+    autoCampaigns: [...ev.campaigns],
+    autoAdGroups: [...ev.adGroups]
+  };
+};
+
+const attachStudioManualEvidence = (row, manualEvidenceMap) => {
+  if (!row) return null;
+  const name = String(row?.name || row?.searchTerm || row?.targeting || "").trim();
+  const ev = manualEvidenceMap.get(normalizeStudioTerm(name));
+  const manualSpend = ev?.spend ?? safeNum(row.spend);
+  const manualSales = ev?.sales ?? safeNum(row.sales);
+  return {
+    ...row,
+    manualSpend,
+    manualClicks: ev?.clicks ?? safeNum(row.clicks),
+    manualOrders: ev?.orders ?? safeNum(row.orders),
+    manualSales,
+    manualRoas: manualSpend > 0 ? manualSales / manualSpend : safeNum(row.roas),
+    manualCampaigns: ev ? [...ev.campaigns] : [],
+    manualAdGroups: ev ? [...ev.adGroups] : []
+  };
+};
+
+const isStudioNegativePhraseEligible = (row = {}, rules = {}) => {
+  const name = String(row?.name || row?.searchTerm || row?.targeting || "").trim();
+  if (!name || extractAsinFromText(name) || isASINLike(name)) return false;
+  const intent = classifySearchTermIntent(name);
+  if (["brand", "male", "core", "cat_eye", "style", "diopter", "blue_light", "computer"].includes(intent.key)) return false;
+  if (safeNum(row.orders) > 0) return false;
+  const lower = name.toLowerCase();
+  const clearMismatch = intent.key === "mismatch" || ACTION_MISMATCH_RE.test(lower);
+  const explicitPhraseAdvice = /\bnegative\s+phrase\b/i.test(String(row.matchAdvice || ""));
+  const guardSafe = row.negativeGuard?.level === "safe" || !row.negativeGuard;
+  const enoughSignal = safeNum(row.spend) >= Math.max(5, (safeNum(rules.spendNeg) || 30) * 0.55) || safeNum(row.clicks) >= Math.max(8, (safeNum(rules.clicksNeg) || 20) * 0.55);
+  return guardSafe && enoughSignal && (clearMismatch || explicitPhraseAdvice);
+};
+
 const studioRowEvidenceScore = (row = {}) => {
   const orders = safeNum(row.orders);
   const roas = safeNum(row.roas);
@@ -7525,7 +7614,7 @@ const studioRowEvidenceScore = (row = {}) => {
   return orders * 1000 + Math.min(roas, 8) * 100 + sales * 2 + clicks * 0.5 - spend * 0.15;
 };
 
-const filterStudioExactCandidates = (rows = [], rules = {}) => uniqueStudioTerms((rows || [])
+const filterStudioExactCandidates = (rows = [], rules = {}, limit = 15) => uniqueStudioTerms((rows || [])
   .filter(r => {
     const name = r?.name || r?.searchTerm || r?.targeting || "";
     if (isStudioBadSeedTerm(name)) return false;
@@ -7537,7 +7626,7 @@ const filterStudioExactCandidates = (rows = [], rules = {}) => uniqueStudioTerms
     if (isStudioOverBroadTerm(name) && orders < 2) return false;
     return orders >= 1 || (roas >= Math.max(2, safeNum(rules.roasMigrateMin) || 2) && clicks >= 3);
   })
-  .sort((a,b) => studioRowEvidenceScore(b) - studioRowEvidenceScore(a)), 15);
+  .sort((a,b) => studioRowEvidenceScore(b) - studioRowEvidenceScore(a)), limit);
 
 const filterStudioPhraseCandidates = (rows = [], rules = {}) => uniqueStudioTerms((rows || [])
   .filter(r => {
@@ -7557,7 +7646,7 @@ const filterStudioBroadCandidates = (rows = [], rules = {}) => {
   return uniqueStudioTerms((rows || [])
     .filter(r => {
       const name = r?.name || r?.searchTerm || r?.targeting || "";
-      if (isStudioBadSeedTerm(name) || isStudioOverBroadTerm(name)) return false;
+      if (isStudioBadSeedTerm(name) || isStudioOverBroadTerm(name) || isStudioCompetitorBrandTerm(name)) return false;
       const wc = studioTermWordCount(name);
       if (wc < 2 || wc > 5) return false;
       if (!safeRootSignals.test(name)) return false;
@@ -7589,7 +7678,8 @@ const getStudioSelfAsinRows = (limit = 30) => {
     .map(r => ({
       ...r,
       name: String(r.asin || "").toUpperCase(),
-      reason: currentLang === "zh" ? "自家 ASIN，用于商品页防守" : "Own ASIN for PDP defense",
+      sourceType: "Business Report",
+      reason: currentLang === "zh" ? "Business Report 识别到的自家 ASIN，用于商品页防守" : "Own ASIN from Business Report for PDP defense",
       orders: safeNum(r.units || r.orders || r.adOrders || 0),
       sales: safeNum(r.sales || 0),
       clicks: 0,
@@ -7597,24 +7687,28 @@ const getStudioSelfAsinRows = (limit = 30) => {
       roas: 0,
       acos: 0
     }));
-  const fromAds = (AdsStore.view || [])
-    .map(r => extractAsinFromText(`${r.campaign || ""} ${r.adGroup || ""} ${r.targeting || ""}`))
-    .filter(Boolean)
-    .map(asin => makeStudioStaticRow(asin.toUpperCase(), currentLang === "zh" ? "广告结构中识别到的自家/相关 ASIN，需人工确认后防守" : "ASIN found in ad structure; confirm ownership before defense"));
-  return uniqueStudioTerms([...fromBiz, ...fromAds], limit, r => extractAsinFromText(r.name) || r.name)
+  return uniqueStudioTerms(fromBiz, limit, r => extractAsinFromText(r.name) || r.name)
     .filter(r => isASINLike(extractAsinFromText(r.name) || r.name));
 };
 
-const getStudioRankPushRows = (exactRows = [], rules = {}) => {
+const getStudioRankPushRows = (exactRows = [], rules = {}, total = {}) => {
+  const accountCvr = safeNum(total?.cvr);
+  const minRoas = Math.max(2.5, safeNum(rules.roasKeep) || 3);
   const strategic = (exactRows || []).filter(r => {
     const name = r?.name || r?.searchTerm || r?.targeting || "";
+    if (isStudioCompetitorBrandTerm(name)) return false;
     const intent = classifySearchTermIntent(name);
     const orders = safeNum(r.orders);
     const roas = safeNum(r.roas);
-    return ["core", "cat_eye", "style", "diopter", "blue_light", "computer"].includes(intent.key) && (orders >= 2 || roas >= Math.max(2, safeNum(rules.roasKeep) || 3));
+    const cvr = safeNum(r.cvr);
+    const coreIntent = ["core", "cat_eye", "style", "diopter"].includes(intent.key);
+    const secondaryIntent = ["blue_light", "computer"].includes(intent.key) && orders >= 3;
+    if (!(coreIntent || secondaryIntent)) return false;
+    if (orders < 2 || roas < minRoas) return false;
+    if (accountCvr > 0 && cvr > 0 && cvr < accountCvr * 0.9) return false;
+    return validateAmazonKeywordForStudio(name).valid;
   });
-  const source = strategic.length ? strategic : (exactRows || []).filter(r => safeNum(r.orders) >= 1 || safeNum(r.roas) >= Math.max(2, safeNum(rules.roasMigrateMin) || 2));
-  return uniqueStudioTerms(source.sort((a,b) => studioRowEvidenceScore(b) - studioRowEvidenceScore(a)), 5);
+  return uniqueStudioTerms(strategic.sort((a,b) => studioRowEvidenceScore(b) - studioRowEvidenceScore(a)), 5);
 };
 
 const limitStudioRows = (rows = [], limit = 12) => uniqueStudioTerms((rows || [])
@@ -7624,15 +7718,37 @@ const limitStudioRows = (rows = [], limit = 12) => uniqueStudioTerms((rows || []
 const isStudioAutoHandoverEligible = (row, rules = {}) => {
   const name = String(row?.name || row?.searchTerm || row?.targeting || "").trim();
   if (!name || name === "(blank)" || extractAsinFromText(name) || isASINLike(name)) return false;
+  if (!validateAmazonKeywordForStudio(name).valid) return false;
   const intent = classifySearchTermIntent(name);
-  if (["brand", "male", "mismatch"].includes(intent.key)) return false;
-  const orders = safeNum(row?.orders);
-  const roas = safeNum(row?.roas);
-  const clicks = safeNum(row?.clicks);
+  if (["brand", "male", "mismatch"].includes(intent.key) || isStudioCompetitorBrandTerm(name)) return false;
+
+  const autoSpend = safeNum(row?.autoSpend);
+  const autoClicks = safeNum(row?.autoClicks);
+  const autoOrders = safeNum(row?.autoOrders);
+  const autoRoas = autoSpend > 0 ? safeNum(row?.autoSales) / autoSpend : safeNum(row?.autoRoas);
+  if (autoSpend <= 0 || autoClicks <= 0) return false;
+
+  const manualSpend = safeNum(row?.manualSpend);
+  const manualClicks = safeNum(row?.manualClicks);
+  const manualOrders = safeNum(row?.manualOrders);
+  const manualRoas = manualSpend > 0 ? safeNum(row?.manualSales) / manualSpend : safeNum(row?.manualRoas || row?.roas);
   const minRoas = Math.max(1, safeNum(rules?.roasMigrateMin) || 2);
-  // Generic single-root queries should not be removed from Auto unless they have strong conversion proof.
-  if (isStudioBlockedGenericForAutoHandover(name) && orders < 2) return false;
-  return orders >= 1 || (roas >= minRoas && clicks >= 2);
+
+  // Must be truly承接ed by a manual campaign. If no manual spend/click trail exists, do not route Auto away.
+  if (manualSpend <= 0 && manualClicks <= 0) return false;
+  const manualHasProof = manualOrders >= 1 || (manualRoas >= minRoas && manualClicks >= 2);
+  if (!manualHasProof) return false;
+
+  // P0 guardrail from real-account validation: do not negative Auto when Auto is more efficient.
+  // Only route traffic away from Auto when Manual is at least 5% more efficient,
+  // or Auto has spending/clicks with zero orders while Manual has proven orders.
+  const manualBeatsAuto = autoRoas <= 0 ? manualRoas >= minRoas : manualRoas >= autoRoas * 1.05;
+  const autoWastingWhileManualWorks = autoOrders === 0 && autoSpend >= Math.max(5, (safeNum(rules?.spendNeg) || 30) * 0.3) && manualOrders >= 1;
+  if (!manualBeatsAuto && !autoWastingWhileManualWorks) return false;
+
+  // Generic roots should stay available for Auto discovery unless manual proof is materially strong.
+  if (isStudioBlockedGenericForAutoHandover(name) && (manualOrders < 2 || (autoRoas > 0 && manualRoas < autoRoas * 1.15))) return false;
+  return true;
 };
 
 const buildCampaignStudioReadiness = (data) => {
@@ -7664,7 +7780,7 @@ const buildCampaignStudioReadiness = (data) => {
     zh ? "AUTO 迁移" : "Auto Handover",
     data.autoManualNegRows.length >= 1 ? "pass" : "review",
     zh ? `${data.autoManualNegRows.length} 个成熟迁移词可在 Auto 否定精准` : `${data.autoManualNegRows.length} mature handover terms for Auto negative exact`,
-    zh ? "只把已迁移且有成交/ROAS 证据的词做 negative exact，不做 negative phrase" : "Use negative exact only for migrated terms with conversion/ROAS proof; do not use phrase negatives"
+    zh ? "只把真实来自 Auto、且 Manual 表现明显优于 Auto 的成熟词做 negative exact，不做 negative phrase" : "Use negative exact only for terms that truly came from Auto and perform materially better in Manual; do not use phrase negatives"
   ));
   items.push(item(
     zh ? "Broad 安全" : "Broad Safety",
@@ -7691,10 +7807,10 @@ const buildCampaignStudioReadiness = (data) => {
     zh ? "否定词组只处理明确错配，ASIN 亏损单独走 Negative Product Targeting" : "Use phrase negatives only for clear mismatches; loss ASINs go to Negative Product Targeting"
   ));
   items.push(item(
-    zh ? "Bulk 上线保护" : "Bulk Launch Safety",
+    zh ? "Target 上线保护" : "Target Launch Safety",
     "pass",
-    zh ? `Bulk 默认 State=${data.bulkDefaultState || "paused"}` : `Bulk default State=${data.bulkDefaultState || "paused"}`,
-    zh ? "导出后默认暂停，人工确认后再启用" : "Exports default to paused; enable manually after review"
+    zh ? `Target 默认 State=${data.bulkDefaultState || "paused"}` : `Target default State=${data.bulkDefaultState || "paused"}`,
+    zh ? "Target 草稿默认暂停；它不包含完整 Campaign / Ad Group / Product Ad 创建链路" : "Target draft defaults to paused; it does not include full Campaign / Ad Group / Product Ad creation rows"
   ));
   const weights = { pass: 1, review: 0.55, block: 0 };
   const score = Math.round((items.reduce((sum, x) => sum + weights[x.status], 0) / Math.max(1, items.length)) * 100);
@@ -7732,29 +7848,40 @@ const buildCampaignStudioData = () => {
 
   // Campaign Studio 2.0 = traffic routing system, not keyword dumping.
   // Exact = profit harvesting, Phrase = controlled expansion, Broad = whitelisted root test only.
-  const exactRows = filterStudioExactCandidates(exactSeedRows, rules).slice(0, 15);
+  const fullExactCandidateRows = filterStudioExactCandidates(exactSeedRows, rules, 120);
+  const exactRows = fullExactCandidateRows.slice(0, 15);
   const phraseRows = filterStudioPhraseCandidates(phraseSeedRows, rules).slice(0, 18);
   const broadRows = filterStudioBroadCandidates(broadSeedRows, rules).slice(0, 8);
-  const rankPushRows = getStudioRankPushRows(exactRows, rules);
+  // Rank Push must be selected from the full Exact candidate pool, not from the truncated Top 15.
+  const rankPushRows = getStudioRankPushRows(fullExactCandidateRows, rules, total);
 
-  // Auto should only negative exact mature migrated terms. Do not kill new discovery with phrase negatives.
+  // Auto negative exact only routes traffic when the term was actually discovered/spending in Auto,
+  // has a real manual trail, and Manual materially beats Auto.
+  const autoEvidenceMap = buildStudioAutoTermEvidenceMap(rows);
+  const manualEvidenceMap = buildStudioManualTermEvidenceMap(rows);
   const autoManualNegRows = uniqueStudioTerms([
     ...exactRows,
     ...phraseRows,
     ...rankPushRows
-  ], 80).filter(r => isStudioAutoHandoverEligible(r, rules));
+  ], 80)
+    .map(r => attachStudioAutoEvidence(r, autoEvidenceMap))
+    .filter(Boolean)
+    .map(r => attachStudioManualEvidence(r, manualEvidenceMap))
+    .filter(Boolean)
+    .filter(r => isStudioAutoHandoverEligible(r, rules));
 
   const negativeRows = uniqueStudioTerms([
     ...actionRows.filter(r => r.actionKey === "negate"),
     ...(arch?.negRows || [])
   ].sort((a,b) => (b.spend - a.spend) || (b.clicks - a.clicks)), 60);
-  const negativePhraseRows = negativeRows.filter(r => /phrase/i.test(r.matchAdvice || "") || r.intentKey === "mismatch" || r.negativeGuard?.level === "safe").slice(0, 30);
-  const negativeExactRows = negativeRows.filter(r => !negativePhraseRows.some(x => String(x.name).toLowerCase() === String(r.name).toLowerCase())).slice(0, 40);
+  const negativePhraseRows = negativeRows.filter(r => isStudioNegativePhraseEligible(r, rules)).slice(0, 20);
+  const negativeExactRows = negativeRows.filter(r => !negativePhraseRows.some(x => normalizeStudioTerm(x.name) === normalizeStudioTerm(r.name))).slice(0, 40);
   const patRows = uniqueStudioTerms([...(arch?.profitableAsins || [])].sort((a,b) => (b.orders - a.orders) || (b.roas - a.roas)), 30, r => extractAsinFromText(r.name) || r.name);
   const patAttackRows = patRows.slice(0, 30);
   const lossAsins = uniqueStudioTerms([...(arch?.lossAsins || [])].sort((a,b) => (b.spend - a.spend) || (b.clicks - a.clicks)), 30, r => extractAsinFromText(r.name) || r.name);
   const patDefenseRows = getStudioSelfAsinRows(30);
   const brandRows = uniqueStudioTerms(actionRows.filter(r => r.intentKey === "brand" || /ytdbns|朗容/i.test(r.name || "")), 20);
+  const competitorBrandRows = uniqueStudioTerms(actionRows.filter(r => isStudioCompetitorBrandTerm(r.name || r.searchTerm || r.targeting || "")), 30);
   const negativeControlRows = uniqueStudioTerms([...negativeExactRows, ...negativePhraseRows, ...lossAsins], 50, r => extractAsinFromText(r.name) || r.name);
 
   let mode = getStudioText("效率修复型", "Efficiency Repair");
@@ -7796,7 +7923,7 @@ const buildCampaignStudioData = () => {
   ];
 
   const layers = [
-    { key:"AUTO_SEARCH", layer:"AUTO", layerZh:"自动搜索", suffix:"Search Harvest", suffixZh:"搜索采词", zhLabel:"自动搜索采词", campaign:campaignName("AUTO", "Search Harvest"), adGroup:"AG | Close Loose Harvest", match:"auto close/loose", placement:getStudioText("Rest of Search 为主", "Rest of Search first"), role:getStudioText("发现搜索词，Close/Loose 分层低价采词", "Discover search queries with Close/Loose low-bid harvesting"), budgetShare:shares.AUTO_SEARCH, bid:"$0.20-$0.45", terms:autoSearchTargets, negatives:autoManualNegRows.slice(0, 30), rule:getStudioText("成熟迁移词在 Auto Search 做 negative exact，禁止 phrase 否定堵长尾", "Mature migrated terms become negative exact in Auto Search; no phrase negatives blocking long-tail discovery") },
+    { key:"AUTO_SEARCH", layer:"AUTO", layerZh:"自动搜索", suffix:"Search Harvest", suffixZh:"搜索采词", zhLabel:"自动搜索采词", campaign:campaignName("AUTO", "Search Harvest"), adGroup:"AG | Close Loose Harvest", match:"auto close/loose", placement:getStudioText("Rest of Search 为主", "Rest of Search first"), role:getStudioText("发现搜索词，Close/Loose 分层低价采词", "Discover search queries with Close/Loose low-bid harvesting"), budgetShare:shares.AUTO_SEARCH, bid:"$0.20-$0.45", terms:autoSearchTargets, negatives:autoManualNegRows.slice(0, 30), rule:getStudioText("只有 Manual ROAS 高于 Auto 至少 5% 的成熟迁移词，才在 Auto Search 做 negative exact", "Only mature migrated terms with Manual ROAS at least 5% above Auto become negative exact in Auto Search") },
     { key:"AUTO_PRODUCT", layer:"AUTO", layerZh:"自动商品", suffix:"Product Harvest", suffixZh:"商品页采集", zhLabel:"自动商品页采集", campaign:campaignName("AUTO", "Product Harvest"), adGroup:"AG | Substitutes Complements", match:"auto substitutes/complements", placement:getStudioText("Product Pages 为主", "Product Pages first"), role:getStudioText("发现 ASIN 与商品页机会，Complements 低预算观察", "Discover ASIN and product-page opportunities; keep Complements low-budget"), budgetShare:shares.AUTO_PRODUCT, bid:"$0.15-$0.35", terms:autoProductTargets, negatives:lossAsins.slice(0, 10), rule:getStudioText("Substitutes 可正常测试，Complements 只低价观察，亏损 ASIN 转 Negative Product Targeting", "Test Substitutes normally; keep Complements low-bid; loss ASINs go to Negative Product Targeting") },
     { key:"EXACT", layer:"EXACT", layerZh:"精准", suffix:"Performance", suffixZh:"利润收割", zhLabel:"精准利润收割", campaign:campaignName("EXACT", "Performance"), adGroup:"AG | Proven Keywords", match:"exact", placement:getStudioText("高 CVR 词才加 Top of Search", "Top of Search only for high-CVR terms"), role:getStudioText("承接已出单高意图词，稳定利润和排名", "Capture proven high-intent converters for profit and ranking stability"), budgetShare:shares.EXACT, bid:"$0.55-$1.20", terms:exactRows, negatives:negativeExactRows.slice(0, 8), rule:getStudioText("只上有成交/高 ROAS/强相关证据的词", "Launch only terms with orders, high ROAS, or strong relevance evidence") },
     { key:"PHRASE", layer:"PHRASE", layerZh:"词组", suffix:"Expansion", suffixZh:"长尾扩量", zhLabel:"词组长尾扩量", campaign:campaignName("PHRASE", "Expansion"), adGroup:"AG | Intent Expansion", match:"phrase", placement:getStudioText("默认不加 Top of Search", "No Top of Search boost by default"), role:getStudioText("用 2-6 词中长尾扩量，保持语义约束", "Expand with 2-6 word mid/long-tail queries while keeping semantic control"), budgetShare:shares.PHRASE, bid:"$0.40-$0.90", terms:phraseRows, negatives:negativePhraseRows.slice(0, 12), rule:getStudioText("有订单或高意图的搜索词进入 Phrase，Phrase 是主力扩量层", "Converting or high-intent queries enter Phrase; Phrase is the main expansion layer") },
@@ -7813,16 +7940,17 @@ const buildCampaignStudioData = () => {
   }));
 
   const guardrails = [
-    [getStudioText("Draft Only", "Draft Only"), getStudioText("所有导出只作为草稿，上传前必须确认 Campaign、Ad Group、Bid、State、SKU/ASIN", "All exports are drafts. Confirm Campaign, Ad Group, Bid, State, SKU/ASIN before upload")],
+    [getStudioText("Draft Only", "Draft Only"), getStudioText("Target 草稿只作为投放对象/否定对象草稿，上传前必须确认 Campaign、Ad Group、Bid、State、SKU/ASIN", "Target drafts contain targets/negatives only. Confirm Campaign, Ad Group, Bid, State, SKU/ASIN before upload")],
     [getStudioText("Auto 拆分", "Auto Split"), getStudioText("Auto Search 负责搜索词采集，Auto Product 负责商品页/ASIN 采集，不混同一个预算池", "Auto Search harvests queries; Auto Product harvests PDP/ASIN opportunities; do not mix budgets")],
-    [getStudioText("Auto 迁移", "Auto Migration"), getStudioText("只把成熟迁移词在 Auto 里 negative exact；不做 Auto negative phrase", "Only mature migrated terms become Auto negative exact; never use Auto negative phrase")],
-    [getStudioText("Broad 护栏", "Broad Guardrail"), getStudioText("Broad 只投 5-8 个白名单强属性词根，不直接投 reading glasses / readers / glasses / blue light", "Broad only launches 5-8 whitelisted attribute roots; no generic reading glasses / readers / glasses / blue light")],
+    [getStudioText("Auto 迁移", "Auto Migration"), getStudioText("只把来自 Auto、且 Manual ROAS 至少高于 Auto 5% 的成熟迁移词做 negative exact；不做 Auto negative phrase", "Only Auto-origin terms whose Manual ROAS beats Auto by at least 5% become negative exact; never use Auto negative phrase")],
+    [getStudioText("Broad 护栏", "Broad Guardrail"), getStudioText("Broad 只投 5-8 个白名单强属性词根，不直接投 reading glasses / readers / glasses / blue light，也不投竞品品牌词", "Broad only launches 5-8 whitelisted attribute roots; no generic reading glasses / readers / glasses / blue light, and no competitor-brand terms")],
+    [getStudioText("竞品品牌 Watch", "Competitor Brand Watch"), getStudioText("Peepers / Foster Grant / Gaoye 等竞品品牌词只允许人工复核进入 Exact 或 Phrase，不进 Broad / Rank Push / 否定词组", "Competitor-brand terms such as Peepers / Foster Grant / Gaoye require manual Exact/Phrase review and cannot enter Broad / Rank Push / phrase negatives")],
     [getStudioText("PAT 护栏", "PAT Guardrail"), getStudioText("PAT Attack 和 Self Defense 拆分；自家 ASIN 上传前必须人工确认", "Split PAT Attack and Self Defense; confirm own ASINs manually before upload")],
     [getStudioText("Rank Push 护栏", "Rank Push Guardrail"), getStudioText("Rank Push 只放 3-5 个强证据词，Top of Search 不做激进系数", "Rank Push only allows 3-5 high-evidence terms; no aggressive Top of Search multiplier")],
     [getStudioText("否定护栏", "Negative Guardrail"), getStudioText("品牌词、男士观察词、核心泛词不自动词组否定", "Do not auto phrase-negate brand terms, men-review terms, or generic core terms")]
   ];
 
-  const data = { arch, rows, total, rules, span, dailySpend, baseDailyBudget, wasteRows, wasteSpend, wasteShare, winners, mode, modeClass, nextMove, baseCampaign, layers, exactRows, phraseRows, broadRows, rankPushRows, autoManualNegRows, negativeRows, negativePhraseRows, negativeExactRows, patRows, patAttackRows, patDefenseRows, brandRows, lossAsins, negativeControlRows, guardrails, actionRows, bulkDefaultState:"paused" };
+  const data = { arch, rows, total, rules, span, dailySpend, baseDailyBudget, wasteRows, wasteSpend, wasteShare, winners, mode, modeClass, nextMove, baseCampaign, layers, exactRows, phraseRows, broadRows, rankPushRows, autoManualNegRows, negativeRows, negativePhraseRows, negativeExactRows, patRows, patAttackRows, patDefenseRows, brandRows, competitorBrandRows, lossAsins, negativeControlRows, guardrails, actionRows, bulkDefaultState:"paused" };
   data.readiness = buildCampaignStudioReadiness(data);
   return data;
 };
@@ -7848,7 +7976,11 @@ const studioLayerDisplayName = (layer, options = {}) => {
 const renderCampaignStudio = (data) => {
   const zh = currentLang === "zh";
   const total = data.total || {};
-  const layerCards = data.layers.map(layer => `
+  const layerCards = data.layers.map(layer => {
+    const isAutoLayer = String(layer.key || "").startsWith("AUTO");
+    const primaryCopyLabel = isAutoLayer ? (zh ? "复制策略" : "Copy Strategy") : (zh ? "复制关键词" : "Copy Keywords");
+    const negativeCopyLabel = isAutoLayer ? (zh ? "复制AUTO否定" : "Copy Auto Neg") : (zh ? "复制否定词" : "Copy Negatives");
+    return `
     <div class="studioCampaignCard" data-layer="${escapeHtml(layer.key)}">
       <div class="top">
         <div>
@@ -7856,8 +7988,8 @@ const renderCampaignStudio = (data) => {
           <div class="campaign">${escapeHtml(layer.campaign)}<br>${escapeHtml(layer.adGroup)}</div>
         </div>
         <div class="studioCardTools">
-          <button class="studioLayerCopyBtn" type="button" data-studio-copy-layer-keywords="${escapeHtml(layer.key)}">${zh ? "复制关键词" : "Copy Keywords"}</button>
-          ${(layer.negatives || []).length ? `<button class="studioLayerCopyBtn" type="button" data-studio-copy-layer-negatives="${escapeHtml(layer.key)}">${zh ? (layer.key === "AUTO" ? "复制AUTO否定" : "复制否定词") : (layer.key === "AUTO" ? "Copy Auto Neg" : "Copy Negatives")}</button>` : ""}
+          <button class="studioLayerCopyBtn" type="button" data-studio-copy-layer-keywords="${escapeHtml(layer.key)}">${primaryCopyLabel}</button>
+          ${(layer.negatives || []).length ? `<button class="studioLayerCopyBtn" type="button" data-studio-copy-layer-negatives="${escapeHtml(layer.key)}">${negativeCopyLabel}</button>` : ""}
           <span class="studioBudgetPill">${studioMoney(layer.dailyBudget)}/day</span>
         </div>
       </div>
@@ -7869,7 +8001,8 @@ const renderCampaignStudio = (data) => {
       </div>
       <div class="small">${escapeHtml(layer.role)}</div>
       <div class="studioTermChips">${studioTermHtml(layer.terms, 8)}</div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 
   const readinessCards = (data.readiness?.items || []).map(item => `
     <div class="studioReadinessItem">
@@ -7938,7 +8071,7 @@ const renderCampaignStudio = (data) => {
 
     <div class="studioSection">
       <div class="studioSectionHead">
-        <div><h3>${zh ? "2. 广告组与预算矩阵" : "2. Ad Group and Budget Matrix"}</h3><div class="small">${zh ? "这是上传前的结构底稿。Bulk 导出仍为 Draft Only，不建议直接上传。" : "This is the upload planning draft. Bulk export remains Draft Only; do not upload without manual review."}</div></div>
+        <div><h3>${zh ? "2. 广告组与预算矩阵" : "2. Ad Group and Budget Matrix"}</h3><div class="small">${zh ? "这是上传前的结构底稿。Target 草稿只导出投放对象/否定对象，不是完整建广告 Bulk；不建议直接上传。" : "This is the upload planning draft. Target Draft exports targets/negatives only, not full campaign-creation bulk; do not upload without manual review."}</div></div>
       </div>
       <div class="archTableWrap"><table class="studioTable"><thead><tr><th>Layer</th><th>Campaign</th><th>Ad Group</th><th>Match</th><th>Budget</th><th>Bid</th><th>Placement</th><th>${zh ? "角色" : "Role"}</th><th>${zh ? "执行规则" : "Rule"}</th></tr></thead><tbody>${matrixRows}</tbody></table></div>
     </div>
@@ -7979,7 +8112,7 @@ const buildCampaignStudioPlainText = (data) => {
     lines.push(`${zh ? "否定池" : "Negative Pool"}: ${negs || "-"}`);
     lines.push("");
   });
-  lines.push(zh ? "上传提醒：所有 Bulk 都是 Draft Only。上传前必须人工确认 Campaign、Ad Group、Bid、State、SKU/ASIN。" : "Upload reminder: all Bulk exports are Draft Only. Confirm Campaign, Ad Group, Bid, State, SKU/ASIN before upload.");
+  lines.push(zh ? "上传提醒：Target 草稿不是完整建广告 Bulk。上传前必须人工确认 Campaign、Ad Group、Bid、State、SKU/ASIN。" : "Upload reminder: Target Draft is not a full campaign-creation bulk. Confirm Campaign, Ad Group, Bid, State, SKU/ASIN before upload.");
   return lines.join("\n");
 };
 
@@ -8120,13 +8253,14 @@ const copyCampaignStudioLayerKeywords = async (layerKey, triggerEl = null) => {
   if (!data) { setStudioCopyButtonFeedback(triggerEl, currentLang === "zh" ? "无数据" : "No data", 1200); return; }
   lastCampaignStudioData = data;
   const layer = (data.layers || []).find(l => String(l.key) === String(layerKey));
+  const isAutoLayer = String(layer?.key || "").startsWith("AUTO");
   const lines = getCampaignStudioLayerKeywordLines(layer);
   const text = lines.join("\n");
   await writeStudioClipboardNoPopup(
     text,
     triggerEl,
-    currentLang === "zh" ? `已复制 ${lines.length} 个` : `Copied ${lines.length}`,
-    currentLang === "zh" ? "无关键词" : "No keywords"
+    currentLang === "zh" ? `已复制 ${lines.length} ${isAutoLayer ? "个策略" : "个"}` : `Copied ${lines.length}${isAutoLayer ? " strategies" : ""}`,
+    currentLang === "zh" ? (isAutoLayer ? "无策略" : "无关键词") : (isAutoLayer ? "No strategy" : "No keywords")
   );
 };
 
@@ -8169,6 +8303,7 @@ const getCampaignStudioExportSheets = (data) => {
   pushPool("Phrase Expansion", data.phraseRows, "phrase");
   pushPool("Broad Root Test", data.broadRows, "broad");
   pushPool("Rank Push", data.rankPushRows, "exact");
+  pushPool("Competitor Brand Watch", data.competitorBrandRows || [], "manual review");
   pushPool("Auto Mature-Handover Negative Exact", data.autoManualNegRows, "negative exact");
   pushPool("Negative Exact", data.negativeExactRows, "negative exact");
   pushPool("Negative Phrase", data.negativePhraseRows, "negative phrase");
@@ -8178,11 +8313,11 @@ const getCampaignStudioExportSheets = (data) => {
   const guardHeaders = ["Guardrail", "Rule"];
   const guardRows = data.guardrails.map(x => [x[0], x[1]]);
   const readmeRows = [
-    [zh ? "文件性质" : "File Type", zh ? "Draft Only，不能不经人工确认直接上传" : "Draft Only; do not upload without manual review"],
+    [zh ? "文件性质" : "File Type", zh ? "Target Draft Only，只包含投放对象/否定对象，不能不经人工确认直接上传" : "Target Draft Only; contains targets/negatives only and requires manual review"],
     [zh ? "当前模式" : "Mode", data.mode],
     [zh ? "下一步" : "Next Move", data.nextMove],
     [zh ? "数据范围" : "Date Range", `${data.span.start || "-"} → ${data.span.end || "-"}`],
-    [zh ? "Bulk 默认状态" : "Bulk Default State", data.bulkDefaultState || "paused"],
+    [zh ? "Target 默认状态" : "Target Default State", data.bulkDefaultState || "paused"],
     ["Spend", data.total.spend || 0],
     ["ROAS", data.total.roas || 0],
     ["ACOS", data.total.acos === Infinity ? null : data.total.acos]
@@ -8194,11 +8329,30 @@ const getCampaignStudioExportSheets = (data) => {
     { sheetName:"01 Campaign Setup", headers:setupHeaders, dataRows:setupRows },
     { sheetName:"02 Keyword Vault", headers:poolHeaders, dataRows:poolRows },
     { sheetName:"03 Guardrails", headers:guardHeaders, dataRows:guardRows },
-    { sheetName:"04 Studio Bulk Draft", headers:getCampaignStudioBulkHeaders(), dataRows:buildCampaignStudioBulkRows(data).bulkRows }
+    { sheetName:"04 Target Draft Only", headers:getCampaignStudioBulkHeaders(), dataRows:buildCampaignStudioBulkRows(data).bulkRows },
+    { sheetName:"05 Invalid Keyword Review", headers:["Pool", "Keyword", "Issue", "Campaign", "Ad Group", "Spend", "Clicks", "Orders"], dataRows:getCampaignStudioInvalidKeywordRows(data) }
   ];
 };
 
 const getCampaignStudioBulkHeaders = () => ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Product Targeting Expression", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
+
+const getCampaignStudioInvalidKeywordRows = (data) => {
+  const rows = [];
+  const collect = (pool, list) => (list || []).forEach(r => {
+    const name = String(r?.name || r?.searchTerm || r?.targeting || "").trim();
+    if (!name || extractAsinFromText(name) || isASINLike(name)) return;
+    const v = validateAmazonKeywordForStudio(name);
+    if (!v.valid) rows.push([pool, name, v.reason, r.campaign || "", r.adGroup || "", r.spend || 0, r.clicks || 0, r.orders || 0]);
+  });
+  collect("Exact Performance", data?.exactRows);
+  collect("Phrase Expansion", data?.phraseRows);
+  collect("Broad Root Test", data?.broadRows);
+  collect("Rank Push", data?.rankPushRows);
+  collect("Auto Negative Exact", data?.autoManualNegRows);
+  collect("Negative Exact", data?.negativeExactRows);
+  collect("Negative Phrase", data?.negativePhraseRows);
+  return rows;
+};
 
 const buildCampaignStudioBulkRows = (data) => {
   const bulkRows = [];
@@ -8208,7 +8362,8 @@ const buildCampaignStudioBulkRows = (data) => {
     if (!layer) return;
     uniqueStudioTerms(rows, 80).forEach(r => {
       const kw = String(r.name || "").trim();
-      if (!kw || extractAsinFromText(kw) || isASINLike(kw)) return;
+      const validation = validateAmazonKeywordForStudio(kw);
+      if (!validation.valid) return;
       bulkRows.push(["Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", layer.campaign, layer.adGroup, kw, "", match, "", "", "", r.suggestedBid || getSuggestedBid(r, match, 1 / Math.max(1, data.rules.roasKeep || 3)) || "0.50", bulkState]);
     });
   };
@@ -8234,18 +8389,21 @@ const buildCampaignStudioBulkRows = (data) => {
   const autoSearchLayer = data.layers.find(l => l.key === "AUTO_SEARCH");
   uniqueStudioTerms(data.autoManualNegRows, 120).forEach(r => {
     const kw = String(r.name || "").trim();
-    if (!kw || extractAsinFromText(kw) || isASINLike(kw)) return;
+    const validation = validateAmazonKeywordForStudio(kw);
+    if (!validation.valid) return;
     bulkRows.push(["Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "", autoSearchLayer?.campaign || "[AUTO Search Campaign Required]", autoSearchLayer?.adGroup || "[AUTO Search Ad Group Required]", kw, "", "negative exact", "", "", "", "", bulkState]);
   });
 
   uniqueStudioTerms(data.negativeExactRows, 80).forEach(r => {
     const kw = String(r.name || "").trim();
-    if (!kw || extractAsinFromText(kw) || isASINLike(kw)) return;
+    const validation = validateAmazonKeywordForStudio(kw);
+    if (!validation.valid) return;
     bulkRows.push(["Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "", r.campaign || "[Source Campaign Required]", r.adGroup || "[Source Ad Group Required]", kw, "", "negative exact", "", "", "", "", bulkState]);
   });
   uniqueStudioTerms(data.negativePhraseRows, 80).forEach(r => {
     const kw = String(r.name || "").trim();
-    if (!kw || extractAsinFromText(kw) || isASINLike(kw)) return;
+    const validation = validateAmazonKeywordForStudio(kw);
+    if (!validation.valid) return;
     bulkRows.push(["Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "", r.campaign || "[Source Campaign Required]", r.adGroup || "[Source Ad Group Required]", kw, "", "negative phrase", "", "", "", "", bulkState]);
   });
   uniqueStudioTerms(data.lossAsins, 60).forEach(r => {
@@ -8267,17 +8425,17 @@ const exportCampaignStudioBulkExcel = async () => {
   const data = lastCampaignStudioData || buildCampaignStudioData();
   if (!data) { alert(t("studio_no_data")); return; }
   const bulk = buildCampaignStudioBulkRows(data);
-  if (!bulk.bulkRows.length) { alert(currentLang === "zh" ? "Bulk 草稿为空，当前筛选范围没有可上传对象" : "Bulk draft is empty; no uploadable objects in the current filter scope"); return; }
+  if (!bulk.bulkRows.length) { alert(currentLang === "zh" ? "Target 草稿为空，当前筛选范围没有可上传对象" : "Target draft is empty; no uploadable objects in the current filter scope"); return; }
   const readme = [
     [currentLang === "zh" ? "重要" : "Important", currentLang === "zh" ? "这是 Draft Only。上传前必须确认 Campaign、Ad Group、Bid、State、SKU/ASIN。" : "This is Draft Only. Confirm Campaign, Ad Group, Bid, State, SKU/ASIN before upload."],
-    [currentLang === "zh" ? "上线保护" : "Launch Safety", currentLang === "zh" ? `Bulk 默认 State=${data.bulkDefaultState || "paused"}，人工确认后再改 enabled` : `Bulk default State=${data.bulkDefaultState || "paused"}; switch to enabled only after review`],
+    [currentLang === "zh" ? "上线保护" : "Launch Safety", currentLang === "zh" ? `Target 默认 State=${data.bulkDefaultState || "paused"}，人工确认后再改 enabled` : `Target default State=${data.bulkDefaultState || "paused"}; switch to enabled only after review`],
     [currentLang === "zh" ? "模式" : "Mode", data.mode],
     [currentLang === "zh" ? "下一步" : "Next Move", data.nextMove]
   ];
   await exportRichExcelMultiSheet([
     { sheetName:"00 Read Me Draft", headers:["Item", "Value"], dataRows:readme },
-    { sheetName:"SP Bulk Draft Only", headers:bulk.headers, dataRows:bulk.bulkRows }
-  ], `Campaign_Studio_Traffic_Router_Bulk_Draft_ONLY_${getTs()}.xlsx`);
+    { sheetName:"SP Target Draft Only", headers:bulk.headers, dataRows:bulk.bulkRows }
+  ], `Campaign_Studio_Traffic_Router_Target_Draft_ONLY_${getTs()}.xlsx`);
   alert(t("studio_bulk_exported"));
 };
 
