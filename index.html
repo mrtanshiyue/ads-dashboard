@@ -4979,9 +4979,27 @@ const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
 
   let action = "HOLD";
   let reason = currentLang === "zh" ? "保持现有出价" : "Hold current bid";
-  if (risk.hardMismatch && item.orders <= 0 && item.spend >= Math.max(10, r.spendNeg * 0.6)) {
-    action = item.spend >= dynamicSpendNeg && !eventProfile.blocksNegative ? "NEGATE" : "REVIEW";
-    reason = currentLang === "zh" ? "疑似错配词，禁止加价，进入风控复核" : "Mismatch risk; block bid increase and review";
+  if (risk.hardMismatch) {
+    const mismatchSpendFloor = Math.max(8, r.spendNeg * 0.35);
+    const mismatchClickFloor = Math.max(8, Math.ceil(r.clicksNeg * 0.5));
+    if (item.orders <= 0 && (item.spend >= mismatchSpendFloor || item.clicks >= mismatchClickFloor)) {
+      if (eventProfile.blocksNegative) {
+        action = "REVIEW NEGATIVE";
+        reason = getEventProtectionReason(eventProfile) || (currentLang === "zh" ? "明显错配词但处于归因保护期，暂缓自动否定，进入否定复核" : "Clear mismatch in attribution guard; pause auto-negation and review negative");
+      } else {
+        action = "NEGATE";
+        reason = currentLang === "zh" ? "明显错配词且 0 订单，优先加入否定候选" : "Clear mismatch with zero orders; prioritize negative candidate";
+      }
+    } else if (item.orders > 0 && item.roas > 0 && item.roas < 2) {
+      action = "REVIEW NEGATIVE";
+      reason = currentLang === "zh" ? "明显错配词虽有订单但 ROAS < 2，不放量，复核精准/词组否定" : "Mismatch term converted but ROAS < 2; do not scale; review exact/phrase negative";
+    } else if (item.orders > 0 && ((item.acos && item.acos > targetAcos * 1.45) || (item.roas > 0 && item.roas < r.roasKeep))) {
+      action = "DECREASE";
+      reason = currentLang === "zh" ? "错配词有订单但效率偏弱，先降价并进入 Exact Negative 复核" : "Mismatch term has orders but weak efficiency; reduce bid and review exact negative";
+    } else if (item.spend > 0 || item.clicks > 0) {
+      action = "WATCH";
+      reason = currentLang === "zh" ? "错配词样本较低，禁止加价，等待更多数据后复核" : "Mismatch term has low sample; block bid increase and review later";
+    }
   } else if (enoughBadSample) {
     if (eventProfile.blocksNegative) {
       action = "DECREASE";
@@ -5006,7 +5024,7 @@ const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
     action = "WATCH";
     reason = currentLang === "zh" ? "样本不足，不做激进调价" : "Insufficient sample; avoid aggressive bid change";
   }
-  if (risk.audienceShift && action === "NEGATE") { action = "REVIEW"; reason = currentLang === "zh" ? "Men 流量不自动否定，需人工复核" : "Men traffic is not auto-negated; manual review required"; }
+  if (risk.audienceShift && !risk.hardMismatch && action === "NEGATE") { action = "REVIEW"; reason = currentLang === "zh" ? "Men 流量不自动否定，需人工复核" : "Men traffic is not auto-negated; manual review required"; }
 
   const hardBidCap = getBidHardCap();
   const matchHardCapMap = { exact: 1.00, keyword: 0.90, phrase: 0.75, broad: 0.55, auto: 0.65, asin: 0.65, targeting: 0.70 };
@@ -5021,6 +5039,8 @@ const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
     suggestedBid = clamp(Math.min(currentCpc * 0.90, rawBid || currentCpc * 0.75, 1.15), 0.15, Math.min(1.15, globalCpc * 1.15));
   } else if (action === "NEGATE") {
     suggestedBid = 0;
+  } else if (action === "REVIEW NEGATIVE") {
+    suggestedBid = clamp(Math.min(currentCpc * 0.65, rawBid || currentCpc * 0.65), 0.15, Math.min(typeCap, currentCpc * 0.80));
   } else if (action === "REVIEW") {
     suggestedBid = clamp(Math.min(currentCpc, rawBid || currentCpc * 0.75), 0.15, Math.min(typeCap, currentCpc));
   } else {
@@ -5036,8 +5056,8 @@ const getBidGovernance = (item, rankBy, cachedGlobalMetrics = null) => {
   const bidDeltaPct = currentCpc > 0 && suggestedBid > 0 ? ((suggestedBid / currentCpc - 1) * 100) : (action === "NEGATE" ? -100 : 0);
   const suggestedBidDelta = action === "NEGATE" ? "-100%" : `${bidDeltaPct >= 0 ? "+" : ""}${Math.round(bidDeltaPct)}%`;
   const sampleLabel = confidenceScore >= 75 ? (currentLang === "zh" ? "高" : "High") : confidenceScore >= 50 ? (currentLang === "zh" ? "中" : "Medium") : (currentLang === "zh" ? "低" : "Low");
-  const priority = (action === "NEGATE" || action === "INCREASE") && confidenceScore >= 60 ? "P1" : (action === "DECREASE" || action === "MIGRATE EXACT") ? "P2" : "P3";
-  const bulkBlocked = eventProfile.blocksBulk || protection === "Low Sample";
+  const priority = (action === "REVIEW NEGATIVE" || ((action === "NEGATE" || action === "INCREASE") && confidenceScore >= 60)) ? "P1" : (action === "DECREASE" || action === "MIGRATE EXACT") ? "P2" : "P3";
+  const bulkBlocked = eventProfile.blocksBulk || protection === "Low Sample" || action === "REVIEW NEGATIVE";
   const bulkReady = ["INCREASE", "DECREASE", "NEGATE", "MIGRATE EXACT"].includes(action) && !bulkBlocked && confidenceScore >= 55 && effectiveMaxCpc <= effectiveCap && !!item.campaign && !!item.adGroup && action !== "REVIEW";
   const evidence = [
     `Bucket=${bucket}`,
@@ -5064,6 +5084,66 @@ const decideAction = (item, rankBy, cachedGlobalMetrics = null) => {
   return getBidGovernance(item, rankBy, cachedGlobalMetrics);
 };
 
+const sanitizeExcelExportValue = (value) => {
+  if (typeof value !== 'string') return value;
+  const raw = value;
+  const trimmed = raw.trimStart();
+  if (!trimmed) return value;
+  // 保留 +15% / -100% 这类出价变化百分比，避免被转成普通文本。
+  if (trimmed.endsWith('%') && !isNaN(parseFloat(trimmed))) return value;
+  // 防止搜索词/ASIN/备注以 = + - @ 开头时被 Excel 或 Google Sheets 当公式执行。
+  if (/^[=+\-@]/.test(trimmed)) return `'${raw}`;
+  return value;
+};
+
+const addDaysISO = (days = 0) => {
+  const d = new Date();
+  d.setDate(d.getDate() + Number(days || 0));
+  return d.toISOString().slice(0, 10);
+};
+
+const getBidChangeRiskLevel = (r = {}) => {
+  const action = String(r.action || '');
+  const hardMismatch = /MismatchRisk=YES/i.test(String(r.evidence || '')) || getBidRiskProfile(r.name || '').hardMismatch;
+  if (action === 'REVIEW NEGATIVE' || (action === 'NEGATE' && (r.spend >= 20 || r.clicks >= 15 || hardMismatch))) return 'P1 High Risk';
+  if (action === 'DECREASE' && (r.spend >= 30 || r.roas < 1.5 || hardMismatch)) return 'P1 High Risk';
+  if (action === 'INCREASE' && r.sampleConfidence >= 70 && r.roas >= 3) return 'P2 Scale';
+  if (action === 'MIGRATE EXACT') return r.bulkReady ? 'P2 Migration Ready' : 'P3 Migration Review';
+  return 'P3 Monitor';
+};
+
+const getBidReasonGroup = (r = {}) => {
+  const action = String(r.action || '');
+  const reason = String(r.reason || '');
+  const evidence = String(r.evidence || '');
+  if (/MismatchRisk=YES/i.test(evidence) || /错配|mismatch|progressive|bifocal|prescription|transition|photochromic/i.test(reason + ' ' + (r.name || ''))) return 'Hard Mismatch Control';
+  if (/Low Sample|样本不足/i.test(evidence + ' ' + reason + ' ' + (r.protection || ''))) return 'Low Sample Guard';
+  if (/Event|归因|大促|Fresh Click/i.test(evidence + ' ' + reason + ' ' + (r.protection || ''))) return 'Attribution Guard';
+  if (action === 'INCREASE') return 'Profitable Scale';
+  if (action === 'DECREASE') return 'ROAS / ACOS Control';
+  if (action === 'MIGRATE EXACT') return 'Exact Isolation';
+  if (action === 'NEGATE') return 'Waste Elimination';
+  return 'Manual Review';
+};
+
+const getNextReviewDate = (r = {}) => {
+  const level = getBidChangeRiskLevel(r);
+  if (level.startsWith('P1')) return addDaysISO(3);
+  if (String(r.action || '') === 'INCREASE') return addDaysISO(7);
+  if (String(r.action || '') === 'MIGRATE EXACT') return addDaysISO(7);
+  return addDaysISO(14);
+};
+
+const isProtectionCandidate = (r = {}) => (!r.bulkReady || r.protection !== 'Executable' || ['REVIEW', 'REVIEW NEGATIVE', 'WATCH'].includes(r.action));
+const isHighSignalProtection = (r = {}) => (
+  r.action === 'REVIEW NEGATIVE' ||
+  r.action === 'REVIEW' ||
+  r.spend >= 10 ||
+  r.clicks >= 10 ||
+  r.orders > 0 ||
+  (r.protection && r.protection !== 'Low Sample')
+);
+
 const exportRichExcelMultiSheet = async (sheets, filename) => {
   const wrap = $("globalProgressWrap");
   const bar = $("globalProgressBar");
@@ -5087,7 +5167,7 @@ const exportRichExcelMultiSheet = async (sheets, filename) => {
       sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
 
       for (let i = 0; i < dataRows.length; i++) {
-          const rowData = dataRows[i];
+          const rowData = (dataRows[i] || []).map(sanitizeExcelExportValue);
           const row = sheet.addRow(rowData);
           row.eachCell((cell, colNumber) => {
               const headerName = String(headers[colNumber - 1]).toLowerCase();
@@ -5262,16 +5342,40 @@ const exportRankExcel = () => {
     r.spend || 0, r.sales || 0, r.orders || 0, r.netProfit || 0, r.clicks || 0, r.cpc || 0, r.cvr || 0, r.acos === Infinity ? null : r.acos, r.roas || 0, r.campaign || "", r.adGroup || "", r.matchBucket || "", r.reason || "", r.evidence || ""
   ];
   const dataRows = AdsStore.rankRows.map(makeRow);
-  const bidDraftRows = AdsStore.rankRows.filter(r => r.bulkReady && ["INCREASE", "DECREASE"].includes(r.action)).map(r => [r.action, r.name, r.campaign || "", r.adGroup || "", r.currentCpc || r.cpc || 0, r.suggestedBid || 0, r.effectiveMaxCpc || 0, r.suggestedBidDelta || "", r.reason || "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.acos === Infinity ? null : r.acos]);
-  const negRows = AdsStore.rankRows.filter(r => r.action === "NEGATE").map(r => [r.name, r.bulkReady ? "YES" : "NO", r.campaign || "", r.adGroup || "", r.reason || "", r.spend || 0, r.clicks || 0, r.orders || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, r.evidence || ""]);
-  const migrateRows = AdsStore.rankRows.filter(r => r.action === "MIGRATE EXACT").map(r => [r.name, r.bulkReady ? "YES" : "NO", r.campaign || "", r.adGroup || "", r.suggestedBid || 0, r.effectiveMaxCpc || 0, r.reason || "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.evidence || ""]);
-  const protectRows = AdsStore.rankRows.filter(r => !r.bulkReady || r.protection !== "Executable" || r.action === "REVIEW" || r.action === "WATCH").map(makeRow);
+  const executionRows = AdsStore.rankRows.filter(r => r.bulkReady).map(makeRow);
+  const bidDraftRows = AdsStore.rankRows
+    .filter(r => r.bulkReady && ["INCREASE", "DECREASE"].includes(r.action))
+    .map(r => [
+      r.action, getBidChangeRiskLevel(r), getBidReasonGroup(r), getNextReviewDate(r),
+      r.name, r.campaign || "", r.adGroup || "", r.currentCpc || r.cpc || 0, r.suggestedBid || 0,
+      r.effectiveMaxCpc || 0, r.suggestedBidDelta || "", r.reason || "", r.spend || 0, r.sales || 0,
+      r.orders || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, r.evidence || ""
+    ]);
+  const negRows = AdsStore.rankRows
+    .filter(r => r.action === "NEGATE")
+    .map(r => [r.name, r.bulkReady ? "YES" : "NO", getBidChangeRiskLevel(r), getBidReasonGroup(r), r.campaign || "", r.adGroup || "", r.reason || "", r.spend || 0, r.clicks || 0, r.orders || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, r.evidence || ""]);
+  const hardMismatchReviewRows = AdsStore.rankRows
+    .filter(r => r.action === "REVIEW NEGATIVE")
+    .map(r => [r.name, getBidChangeRiskLevel(r), getBidReasonGroup(r), getNextReviewDate(r), r.campaign || "", r.adGroup || "", r.currentCpc || r.cpc || 0, r.suggestedBid || 0, r.reason || "", r.spend || 0, r.sales || 0, r.orders || 0, r.clicks || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, r.evidence || ""]);
+  const migrateReadyRows = AdsStore.rankRows
+    .filter(r => r.action === "MIGRATE EXACT" && r.bulkReady)
+    .map(r => [r.name, "YES", getBidChangeRiskLevel(r), getNextReviewDate(r), r.campaign || "", r.adGroup || "", r.suggestedBid || 0, r.effectiveMaxCpc || 0, r.reason || "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.evidence || ""]);
+  const migrateReviewRows = AdsStore.rankRows
+    .filter(r => r.action === "MIGRATE EXACT" && !r.bulkReady)
+    .map(r => [r.name, "NO", getBidChangeRiskLevel(r), getBidReasonGroup(r), r.bulkBlocked ? "Blocked by guard/cap/sample" : "Missing campaign/ad group or confidence/cap check", r.campaign || "", r.adGroup || "", r.suggestedBid || 0, r.effectiveMaxCpc || 0, r.reason || "", r.spend || 0, r.sales || 0, r.orders || 0, r.roas || 0, r.evidence || ""]);
+  const protectionSourceRows = AdsStore.rankRows.filter(isProtectionCandidate);
+  const protectHighRows = protectionSourceRows.filter(isHighSignalProtection).map(makeRow);
+  const lowSampleArchiveRows = protectionSourceRows.filter(r => !isHighSignalProtection(r)).map(makeRow);
   const sheets = [
     { sheetName: "Bid Governance Rank", headers, dataRows },
-    { sheetName: "Bid Change Draft", headers: ["Action", "Name", "Campaign", "Ad Group", "Current CPC", "Suggested Bid", "Effective Max CPC", "Bid Delta", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows: bidDraftRows },
-    { sheetName: "Negation Candidates", headers: ["Name", "Bulk Ready", "Campaign", "Ad Group", "Reason", "Spend", "Clicks", "Orders", "ROAS", "ACOS", "Evidence"], dataRows: negRows },
-    { sheetName: "Exact Migration", headers: ["Search Term", "Bulk Ready", "Campaign", "Ad Group", "Suggested Exact Bid", "Effective Max CPC", "Reason", "Spend", "Sales", "Orders", "ROAS", "Evidence"], dataRows: migrateRows },
-    { sheetName: "Protection Watchlist", headers, dataRows: protectRows }
+    { sheetName: "Execution Draft", headers, dataRows: executionRows },
+    { sheetName: "Bid Change Draft", headers: ["Action", "Risk Level", "Reason Group", "Next Review Date", "Name", "Campaign", "Ad Group", "Current CPC", "Suggested Bid", "Effective Max CPC", "Bid Delta", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS", "Evidence"], dataRows: bidDraftRows },
+    { sheetName: "Negation Candidates", headers: ["Name", "Bulk Ready", "Risk Level", "Reason Group", "Campaign", "Ad Group", "Reason", "Spend", "Clicks", "Orders", "ROAS", "ACOS", "Evidence"], dataRows: negRows },
+    { sheetName: "Mismatch Review", headers: ["Search Term", "Risk Level", "Reason Group", "Next Review Date", "Campaign", "Ad Group", "Current CPC", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "Clicks", "ROAS", "ACOS", "Evidence"], dataRows: hardMismatchReviewRows },
+    { sheetName: "Exact Migration Ready", headers: ["Search Term", "Bulk Ready", "Risk Level", "Next Review Date", "Campaign", "Ad Group", "Suggested Exact Bid", "Effective Max CPC", "Reason", "Spend", "Sales", "Orders", "ROAS", "Evidence"], dataRows: migrateReadyRows },
+    { sheetName: "Exact Migration Review", headers: ["Search Term", "Bulk Ready", "Risk Level", "Reason Group", "Review Blocker", "Campaign", "Ad Group", "Suggested Exact Bid", "Effective Max CPC", "Reason", "Spend", "Sales", "Orders", "ROAS", "Evidence"], dataRows: migrateReviewRows },
+    { sheetName: "Protection Watchlist", headers, dataRows: protectHighRows },
+    { sheetName: "Low Sample Archive", headers, dataRows: lowSampleArchiveRows }
   ];
   log(t('dyn_msg_export_rank_gen'));
   exportRichExcelMultiSheet(sheets, `Ultimate_Bid_Governance_${getTs()}.xlsx`);
@@ -5647,7 +5751,7 @@ const renderRankTable = () => {
     buildRankTable(); 
     const tbody = $("rankTable").querySelector("tbody");
     const searchBtnHtml = `<span class="action-icon search-btn" title="Exact Search">🔍</span>`; 
-    const actionClass = (a) => a === "INCREASE" || a === "MIGRATE EXACT" ? "good" : a === "NEGATE" || a === "DECREASE" ? "bad" : a === "REVIEW" ? "warn" : "neutral";
+    const actionClass = (a) => a === "INCREASE" || a === "MIGRATE EXACT" ? "good" : a === "NEGATE" || a === "DECREASE" || a === "REVIEW NEGATIVE" ? "bad" : a === "REVIEW" ? "warn" : "neutral";
     const protClass = (p) => p === "Executable" ? "good" : (p === "Low Sample" ? "warn" : "neutral");
     renderProgressive(tbody, AdsStore.rankRows, (it) => {
         let auditHtml = '<span style="color:var(--muted)">-</span>';
