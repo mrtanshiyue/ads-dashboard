@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>朗容眼镜 - 广告数据中台</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" />
+  <title>朗容眼镜 - 广告数据中台 v2026.06 Guardrail</title>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1383,7 +1386,7 @@
       <div class="fieldRow">
         <label data-i18n="lbl_import">导入同类报表（多文件 CSV / XLSX）</label>
         <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" multiple />
-        <div class="small" data-i18n="desc_import">支持：广告报表 (SP/SB/SD)、业务报告、广告位报告、<b>SQP 搜索词表现</b></div>
+        <div class="small" data-i18n="desc_import">支持：广告报表 (SP/SB/Display Ads)、业务报告、广告位报告、<b>SQP 搜索词表现</b></div>
       </div>
       <div class="row2">
         <div class="fieldRow">
@@ -1428,7 +1431,7 @@
                 <option value="" selected data-i18n="opt_all">全部 (All)</option>
                 <option value="SP">Sponsored Products (SP)</option>
                 <option value="SB">Sponsored Brands (SB)</option>
-                <option value="SD">Sponsored Display (SD)</option>
+                <option value="SD">Display Ads (former Sponsored Display)</option>
             </select>
         </div>
       </div>
@@ -2038,7 +2041,7 @@ const I18N = {
       app_title: "朗容眼镜 Ads Dashboard (Ultimate Pro)",
       app_subtitle_init: "未导入数据。请导入同类报表（支持多文件）。",
       lbl_import: "导入同类报表（多文件 CSV / XLSX）",
-      desc_import: "支持：广告报表 (SP/SB/SD)、业务报告、广告位报告、<b>SQP 搜索词表现</b>",
+      desc_import: "支持：广告报表 (SP/SB/Display Ads)、业务报告、广告位报告、<b>SQP 搜索词表现</b>",
       lbl_merge_mode: "合并模式",
       opt_append: "追加合并（Append）",
       opt_replace: "替换（Replace）",
@@ -2474,7 +2477,7 @@ const I18N = {
       app_title: "Langrong Glasses Ads Dashboard (Ultimate Pro)",
       app_subtitle_init: "No data imported. Please import similar reports (multi-file supported).",
       lbl_import: "Import Reports (Multi CSV/XLSX)",
-      desc_import: "Supports: Ads Reports (SP/SB/SD), Business Reports, Placement Reports, <b>SQP Search Terms</b>",
+      desc_import: "Supports: Ads Reports (SP/SB/Display), Business Reports, Placement Reports, <b>SQP Search Terms</b>",
       lbl_merge_mode: "Merge Mode",
       opt_append: "Append",
       opt_replace: "Replace",
@@ -2973,6 +2976,8 @@ const AdsStore = {
   placement: [],
   sqp: [], // 新增 SQP 数据存储
   files: [],
+  schemaAudits: [],
+  importWarnings: [],
   rankGroups: null,
   rankRows: [],
   longTailRows: [],
@@ -2987,6 +2992,21 @@ const AdsStore = {
 };
 
 const CONFIG = { CACHE_MAX: 20000, STR_POOL_MAX: 80000 };
+const APP_SCHEMA_VERSION = "ADS_DASHBOARD_2026_06_GUARDRAIL_V2";
+const AMAZON_AD_PRODUCT_META = {
+  SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
+  SB: { code: "SB", label: "Sponsored Brands", bulkAllowed: false, defaultAttributionDays: 14, role: "brand_awareness_and_store_video" },
+  SD: { code: "SD", canonical: "DISPLAY", label: "Display Ads (former Sponsored Display)", bulkAllowed: false, defaultAttributionDays: 14, role: "audience_and_retargeting" }
+};
+const AMAZON_BULK_LIMITS = {
+  KEYWORDS_PER_MANUAL_AD_GROUP: 1000,
+  NEGATIVE_KEYWORDS_PER_CAMPAIGN: 10000,
+  NEGATIVE_KEYWORDS_PER_AD_GROUP: 10000,
+  NEGATIVE_PRODUCTS_PER_AD_GROUP: 10000,
+  KEYWORD_MAX_CHARS: 80,
+  KEYWORD_MAX_WORDS: 10
+};
+const BULK_DRAFT_DEFAULT_STATE = "paused";
 let trendChart = null; 
 let rankSort = { key: "spend", dir: "desc" }; 
 let rankTypeFilter = "all"; 
@@ -2994,28 +3014,28 @@ let rankTypeFilter = "all";
 const $ = (id) => document.getElementById(id);
 
 // ⚡ 高阶：时间切片渲染引擎
+const scheduleUiWork = (fn) => {
+  if (typeof window.requestIdleCallback === "function") return window.requestIdleCallback(fn, { timeout: 120 });
+  return window.requestAnimationFrame(fn);
+};
+
 const renderProgressive = (tbody, data, renderRowFn, chunkSize = 40) => {
   tbody.innerHTML = "";
   if (!data || !data.length) return;
-  
+  const safeChunkSize = data.length > 5000 ? Math.min(chunkSize, 28) : chunkSize;
   let index = 0;
   const renderNextChunk = () => {
-      const chunk = data.slice(index, index + chunkSize);
+      const chunk = data.slice(index, index + safeChunkSize);
       if (!chunk.length) return;
-      
       const fragment = document.createDocumentFragment();
       const temp = document.createElement("tbody");
       temp.innerHTML = chunk.map(renderRowFn).join("");
-      
       while(temp.firstChild) fragment.appendChild(temp.firstChild);
       tbody.appendChild(fragment);
-      
-      index += chunkSize;
-      if (index < data.length) {
-          requestAnimationFrame(renderNextChunk);
-      }
+      index += safeChunkSize;
+      if (index < data.length) scheduleUiWork(renderNextChunk);
   };
-  requestAnimationFrame(renderNextChunk);
+  scheduleUiWork(renderNextChunk);
 };
 
 const fmtMoney = (v) => isFinite(v) ? new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(v) : "0.00"; 
@@ -3079,6 +3099,9 @@ const initIDB = async () => {
           AdsStore.placement = meta.PLACEMENT_ROWS || [];
           AdsStore.sqp = meta.SQP_ROWS || [];
           AdsStore.files = meta.importedFiles || [];
+          AdsStore.schemaAudits = meta.schemaAudits || [];
+          AdsStore.importWarnings = meta.importWarnings || [];
+          if (meta.schemaVersion && meta.schemaVersion !== APP_SCHEMA_VERSION) log(`DB schema migrated: ${meta.schemaVersion} → ${APP_SCHEMA_VERSION}`, "warn");
           
           if ($("logBox")) $("logBox").innerHTML = `<div class="small" style="color:var(--good);padding:6px;border-bottom:1px solid rgba(229,229,234,.7);">✅ IndexedDB Loaded</div>`;
           renderFileList(); 
@@ -3099,7 +3122,18 @@ const saveToIDB = async () => {
           await idbKeyval.set(key, rows);
           keys.push(key);
       }
-      await idbKeyval.set('db_meta', { keys, BUSINESS_ROWS: AdsStore.biz, PLACEMENT_ROWS: AdsStore.placement, SQP_ROWS: AdsStore.sqp, importedFiles: AdsStore.files });
+      await idbKeyval.set('db_meta', {
+        schemaVersion: APP_SCHEMA_VERSION,
+        savedAt: new Date().toISOString(),
+        rowCounts: { ads: AdsStore.all.length, business: AdsStore.biz.length, placement: AdsStore.placement.length, sqp: AdsStore.sqp.length },
+        keys,
+        BUSINESS_ROWS: AdsStore.biz,
+        PLACEMENT_ROWS: AdsStore.placement,
+        SQP_ROWS: AdsStore.sqp,
+        importedFiles: AdsStore.files,
+        schemaAudits: AdsStore.schemaAudits,
+        importWarnings: AdsStore.importWarnings
+      });
       log("✅ DB Saved", "good");
   } catch(e) { log("IndexedDB Error", "warn"); }
 };
@@ -3547,10 +3581,47 @@ const buildWordStats = () => {
 // ==================== Web Worker & Parsing Optimization ====================
 const cleanHeader = (h) => String(h).replace(/^\uFEFF/, '').replace(/\s+/g, '').toLowerCase();
 
+const getAdProductMeta = (code) => AMAZON_AD_PRODUCT_META[String(code || "SP").toUpperCase()] || AMAZON_AD_PRODUCT_META.SP;
+const getAdProductDisplayLabel = (code) => getAdProductMeta(code).label;
+const isSponsoredProductsCode = (code) => String(code || "SP").toUpperCase() === "SP";
+const isBulkAllowedAdProduct = (code) => Boolean(getAdProductMeta(code).bulkAllowed);
+const detectAttributionWindowFromHeader = (header = [], fallbackCode = "SP") => {
+  const joined = header.map(cleanHeaderCompact).join("|");
+  if (/14(day|天)|14d/.test(joined)) return 14;
+  if (/7(day|天)|7d/.test(joined)) return 7;
+  return getAdProductMeta(fallbackCode).defaultAttributionDays || 7;
+};
+const buildReportSchemaAudit = (reportType, header = [], map = {}, rows = [], fileName = "") => {
+  const warnings = [];
+  const requiredByType = {
+    ADS_REPORT: ["date", "campaign", "impr", "clicks", "spend", "sales7d", "orders7d"],
+    BUSINESS_REPORT: ["asin", "sessions", "units", "sales"],
+    PLACEMENT_REPORT: ["campaign", "placement", "impr", "clicks", "spend"],
+    SQP_REPORT: ["query", "searchVolume", "imprShare", "clickShare", "purchShare"]
+  };
+  const required = requiredByType[reportType] || [];
+  const missing = required.filter(k => !map[k]);
+  if (missing.length) warnings.push(`Missing columns: ${missing.join(", ")}`);
+  const adProduct = map.adProductType || (reportType === "ADS_REPORT" ? detectAdProduct(header, rows, map.adProduct) : "");
+  const attributionWindowDays = reportType === "ADS_REPORT" || reportType === "PLACEMENT_REPORT" ? detectAttributionWindowFromHeader(header, adProduct || "SP") : null;
+  if (reportType === "ADS_REPORT" && adProduct !== "SP") warnings.push(`${getAdProductDisplayLabel(adProduct)} imported as analysis-only; SP Bulk export is blocked for this report type.`);
+  if (reportType === "SQP_REPORT") warnings.push("SQP is search funnel/share data; do not merge it as advertising search-term performance.");
+  return { schemaVersion: APP_SCHEMA_VERSION, fileName, reportType, adProduct: adProduct || "", attributionWindowDays, rowCount: rows.length || 0, headerCount: header.length || 0, missing, warnings, createdAt: new Date().toISOString() };
+};
+const recordSchemaAudit = (audit) => {
+  if (!audit) return;
+  AdsStore.schemaAudits.push(audit);
+  (audit.warnings || []).forEach(w => AdsStore.importWarnings.push({ fileName: audit.fileName, reportType: audit.reportType, warning: w }));
+  const label = audit.reportType === "ADS_REPORT" && audit.adProduct ? `${audit.reportType}/${getAdProductDisplayLabel(audit.adProduct)}` : audit.reportType;
+  if (audit.missing?.length) log(`Schema Audit ${label}: missing ${audit.missing.join(", ")}`, "warn");
+  else log(`Schema Audit ${label}: OK · rows=${audit.rowCount.toLocaleString()}${audit.attributionWindowDays ? ` · attribution=${audit.attributionWindowDays}d` : ""}`, "good");
+  (audit.warnings || []).forEach(w => log(`Guardrail: ${w}`, "warn"));
+};
+
 const normalizeAdProductValue = (value) => {
     const v = String(value || "").trim().toLowerCase();
     if (!v) return "";
-    if (v.includes("sponsored display") || v === "sd" || v.includes("display")) return "SD";
+    if (v.includes("sponsored display") || v === "sd" || v.includes("display ads") || v.includes("display")) return "SD";
     if (v.includes("sponsored brand") || v === "sb" || v.includes("brand")) return "SB";
     if (v.includes("sponsored product") || v === "sp" || v.includes("product")) return "SP";
     return "";
@@ -3564,8 +3635,8 @@ const detectAdProduct = (headers, sampleRows = [], adProductCol = null) => {
       }
     }
     const joined = headers.map(cleanHeader).join("|");
-    if (joined.includes("viewableimpression") || joined.includes("vpm") || joined.includes("view-through") || joined.includes("viewthrough")) return "SD";
-    if (joined.includes("ntb") || joined.includes("new-to-brand") || joined.includes("newtobrand")) return "SB";
+    if (joined.includes("viewableimpression") || joined.includes("vpm") || joined.includes("view-through") || joined.includes("viewthrough") || joined.includes("display")) return "SD";
+    if (joined.includes("ntb") || joined.includes("new-to-brand") || joined.includes("newtobrand") || joined.includes("brandimpression")) return "SB";
     return "SP"; 
 };
 
@@ -3647,6 +3718,7 @@ const buildMap = (rows) => {
     throw new Error(`Ads Report: 字段不完整，缺少 ${missing.join(", ")}。请导入标准广告搜索词/投放报表。`);
   }
   map.adProductType = detectAdProduct(header, rows, map.adProduct);
+  map.attributionWindowDays = detectAttributionWindowFromHeader(header, map.adProductType);
   return map; 
 };
 
@@ -3685,9 +3757,13 @@ const normalizeRow = (raw, map, sourceFile) => {
   const rawRoas = map.roas ? safeNum(raw[map.roas]) : (spend > 0 ? Math.max(0, sales) / spend : 0);
   const normalizedRoas = spend > 0 ? Math.max(0, rawRoas || (sales / spend)) : 0;
 
+  const adProduct = normalizeAdProductValue(map.adProduct ? raw[map.adProduct] : "") || map.adProductType || "SP";
   return {
     sourceFile: intern(sourceFile), 
-    adProduct: intern(normalizeAdProductValue(map.adProduct ? raw[map.adProduct] : "") || map.adProductType || "SP"), 
+    adProduct: intern(adProduct),
+    adProductLabel: intern(getAdProductDisplayLabel(adProduct)),
+    attributionWindowDays: map.attributionWindowDays || getAdProductMeta(adProduct).defaultAttributionDays || 7,
+    reportSchemaVersion: APP_SCHEMA_VERSION,
     date: intern(toISODate(raw[map.date])), 
     portfolio: intern(String(raw[map.portfolio] ?? "").trim()), 
     campaign: intern(String(raw[map.campaign] ?? "").trim()), 
@@ -3829,7 +3905,7 @@ const importMultipleFiles = async (files) => {
   setSubtitle(t('dyn_processing'));
   
   if (mergeMode === "replace") { 
-      AdsStore.all = []; AdsStore.biz = []; AdsStore.placement = []; AdsStore.sqp = []; AdsStore.files = []; 
+      AdsStore.all = []; AdsStore.biz = []; AdsStore.placement = []; AdsStore.sqp = []; AdsStore.files = []; AdsStore.schemaAudits = []; AdsStore.importWarnings = [];
       rootCache.clear(); tokenCache.clear(); clearStringPool(); 
       AdsStore.rankGroups = null; AdsStore.isolationRows = [];
       try { await idbKeyval.clear(); } catch(e) {} 
@@ -3868,29 +3944,33 @@ const importMultipleFiles = async (files) => {
 
       if (hasAsin && hasSessions) {
          log(t('dyn_detect_br'), "good"); 
-         const brMap = buildBrMap(rows); 
+         const brMap = buildBrMap(rows);
+         recordSchemaAudit(buildReportSchemaAudit("BUSINESS_REPORT", header, brMap, rows, name));
          const mappedRows = await processInChunks(rows, r => normalizeBrRow(r, brMap, name)); 
          const norm = mappedRows.filter(r => r.asin); 
          AdsStore.biz = AdsStore.biz.concat(norm); 
          log(t('dyn_import_br', name, norm.length.toLocaleString()), "good");
       } else if (hasPlacement && !hasSearchTerm) { 
          log(t('dyn_detect_pl'), "good"); 
-         const plMap = buildPlacementMap(rows); 
+         const plMap = buildPlacementMap(rows);
+         recordSchemaAudit(buildReportSchemaAudit("PLACEMENT_REPORT", header, plMap, rows, name));
          const mappedRows = await processInChunks(rows, r => normalizePlacementRow(r, plMap, name)); 
          const norm = mappedRows.filter(r => r.placement); 
          AdsStore.placement = AdsStore.placement.concat(norm); 
          log(t('dyn_import_pl', name, norm.length.toLocaleString()), "good");
       } else if (hasSqpShare) {
          log(t('dyn_detect_sqp'), "good"); 
-         const sqpMap = buildSqpMap(rows); 
+         const sqpMap = buildSqpMap(rows);
+         recordSchemaAudit(buildReportSchemaAudit("SQP_REPORT", header, sqpMap, rows, name));
          const mappedRows = await processInChunks(rows, r => normalizeSqpRow(r, sqpMap, name)); 
          const norm = mappedRows.filter(r => r.query); 
          AdsStore.sqp = AdsStore.sqp.concat(norm); 
          log(t('dyn_import_sqp', name, norm.length.toLocaleString()), "good");
       } else {
          try { 
-           const map = buildMap(rows); 
-           log(t('dyn_standardize', map.adProductType, name)); 
+           const map = buildMap(rows);
+           recordSchemaAudit(buildReportSchemaAudit("ADS_REPORT", header, map, rows, name));
+           log(t('dyn_standardize', getAdProductDisplayLabel(map.adProductType), name)); 
            const mappedRows = await processInChunks(rows, r => normalizeRow(r, map, name)); 
            const normalized = mappedRows.filter(r => r && r.date); 
            log(t('dyn_import_ads', name, normalized.length.toLocaleString()), "good"); 
@@ -4828,7 +4908,7 @@ const ATTRIBUTION_DAY_MS = 86400000;
 const normalizeAdProductCode = (x) => {
   const s = String(x || "").toUpperCase();
   if (s.includes("SPONSORED BRANDS") || s === "SB") return "SB";
-  if (s.includes("SPONSORED DISPLAY") || s === "SD") return "SD";
+  if (s.includes("SPONSORED DISPLAY") || s.includes("DISPLAY ADS") || s === "SD" || s === "DISPLAY") return "SD";
   return "SP";
 };
 
@@ -6112,16 +6192,16 @@ const evaluateNegativeConflictGuard = (it, allItems = []) => {
   const genericCoreBlock = /^(reading glasses|readers|reader|glasses|eyeglasses|eyewear|women readers|reading glasses women|women reading glasses)$/i.test(normalized);
 
   if (intent.key === "asin" || intent.key === "mismatch") {
-    return { level: "safe", label: currentLang === "zh" ? "安全" : "Safe", reason: intent.key === "mismatch" ? (currentLang === "zh" ? "明显错配流量" : "Clear mismatch intent") : "", conflicts: [] };
+    return { level: "safe", label: currentLang === "zh" ? "安全" : "Safe", reason: intent.key === "mismatch" ? (currentLang === "zh" ? "明显错配流量" : "Clear mismatch intent") : "", conflicts: [], preferredNegativeMatch: intent.key === "asin" ? "negative product" : "negative exact_or_phrase", recommendedAction: "allow_with_context" };
   }
   if (intent.key === "brand") {
-    return { level: "block", label: currentLang === "zh" ? "禁止自动否定" : "Blocked", reason: currentLang === "zh" ? "品牌词只能降价或人工复核" : "Brand terms require manual review or bid reduction", conflicts: [] };
+    return { level: "block", label: currentLang === "zh" ? "禁止自动否定" : "Blocked", reason: currentLang === "zh" ? "品牌词只能降价或人工复核" : "Brand terms require manual review or bid reduction", conflicts: [], preferredNegativeMatch: "blocked", recommendedAction: "bid_down_or_review" };
   }
   if (intent.key === "male") {
-    return { level: "block", label: currentLang === "zh" ? "禁止自动否定" : "Blocked", reason: currentLang === "zh" ? "男士流量按你的策略保留观察，不自动否定" : "Men traffic is protected for review, not auto-negation", conflicts: [] };
+    return { level: "block", label: currentLang === "zh" ? "禁止自动否定" : "Blocked", reason: currentLang === "zh" ? "男士流量按你的策略保留观察，不自动否定" : "Men traffic is protected for review, not auto-negation", conflicts: [], preferredNegativeMatch: "blocked", recommendedAction: "separate_test_or_bid_down" };
   }
   if (genericCoreBlock) {
-    return { level: "block", label: currentLang === "zh" ? "禁止自动否定" : "Blocked", reason: currentLang === "zh" ? "核心泛词/类目词不能自动否定，建议降价控量" : "Generic/core category term cannot be auto-negated; reduce bid instead", conflicts: [] };
+    return { level: "block", label: currentLang === "zh" ? "禁止自动否定" : "Blocked", reason: currentLang === "zh" ? "核心泛词/类目词不能自动否定，建议降价控量" : "Generic/core category term cannot be auto-negated; reduce bid instead", conflicts: [], preferredNegativeMatch: "blocked", recommendedAction: "bid_down" };
   }
 
   const profitableChildren = allItems
@@ -6131,12 +6211,12 @@ const evaluateNegativeConflictGuard = (it, allItems = []) => {
     .map(x => x.name);
 
   if (profitableChildren.length) {
-    return { level: "review", label: currentLang === "zh" ? "需复核" : "Review", reason: currentLang === "zh" ? `该词根存在赚钱长尾，禁止直接 Phrase 误杀：${profitableChildren.join(" / ")}` : `Profitable child terms exist; avoid phrase over-blocking: ${profitableChildren.join(" / ")}`, conflicts: profitableChildren };
+    return { level: "review", label: currentLang === "zh" ? "需复核" : "Review", reason: currentLang === "zh" ? `该词根存在赚钱长尾，禁止直接 Phrase 误杀：${profitableChildren.join(" / ")}` : `Profitable child terms exist; avoid phrase over-blocking: ${profitableChildren.join(" / ")}`, conflicts: profitableChildren, preferredNegativeMatch: "negative exact_only", recommendedAction: "human_review" };
   }
   if (["core","style","cat_eye","diopter","blue_light","computer"].includes(intent.key)) {
-    return { level: "review", label: currentLang === "zh" ? "需复核" : "Review", reason: currentLang === "zh" ? "相关流量词默认进入复核，优先精准否定或降价" : "Relevant intent term requires review; prefer exact negative or bid reduction", conflicts: [] };
+    return { level: "review", label: currentLang === "zh" ? "需复核" : "Review", reason: currentLang === "zh" ? "相关流量词默认进入复核，优先精准否定或降价" : "Relevant intent term requires review; prefer exact negative or bid reduction", conflicts: [], preferredNegativeMatch: "negative exact_only", recommendedAction: "exact_negative_or_bid_down" };
   }
-  return { level: "safe", label: currentLang === "zh" ? "安全" : "Safe", reason: "", conflicts: [] };
+  return { level: "safe", label: currentLang === "zh" ? "安全" : "Safe", reason: "", conflicts: [], preferredNegativeMatch: "negative phrase_allowed", recommendedAction: "allow" };
 };
 
 const scoreActionConfidence = (it, actionKey, guard, intent) => {
@@ -6175,8 +6255,10 @@ const getAIDecisionActionCode = (actionKey, matchAdvice = "") => {
 };
 
 const buildAIDecisionSchema = (row) => ({
-  version: "AI_DECISION_SCHEMA_2026_05_V1",
+  version: "AI_DECISION_SCHEMA_2026_06_V2",
+  appSchemaVersion: APP_SCHEMA_VERSION,
   action: getAIDecisionActionCode(row.actionKey, row.matchAdvice),
+  adProductScope: "SP_BULK_ONLY__SB_DISPLAY_ANALYSIS_ONLY",
   object: row.name,
   sourceSearchTerm: row.sourceName || row.name,
   intent: row.intentKey,
@@ -6194,6 +6276,13 @@ const buildAIDecisionSchema = (row) => ({
   confidence: Number((row.confidenceScore || 0).toFixed(2)),
   risk: row.executionRisk || "",
   negativeGuard: row.negativeGuard?.level || "safe",
+  preferredNegativeMatch: row.negativeGuard?.preferredNegativeMatch || "",
+  amazonBulkGuard: {
+    bulkReady: Boolean(row.bulkReady),
+    product: "Sponsored Products",
+    state: BULK_DRAFT_DEFAULT_STATE,
+    limits: AMAZON_BULK_LIMITS
+  },
   humanReviewRequired: !row.bulkReady || row.negativeGuard?.level === "review" || row.negativeGuard?.level === "block"
 });
 
@@ -6331,7 +6420,7 @@ const getGroupedActionItems = () => {
   return [...groups.entries()].map(([name, list]) => {
     const m = sumMetrics(list);
     const main = getMainRow(list);
-    const spRows = list.filter(r => String(r.adProduct || "SP").toUpperCase() === "SP");
+    const spRows = list.filter(r => isSponsoredProductsCode(r.adProduct));
     const mainSp = spRows.length ? getMainRow(spRows) : null;
     const matchTypes = [...new Set(list.map(r => r.matchType).filter(Boolean))];
     const adProducts = [...new Set(list.map(r => String(r.adProduct || "SP").toUpperCase()).filter(Boolean))];
@@ -6339,7 +6428,8 @@ const getGroupedActionItems = () => {
     const hasPhrase = list.some(r => isPhraseLike(r.matchType));
     const hasBroad = list.some(r => isBroadLike(r.matchType));
     const hasAuto = list.some(r => !checkIsManual(r));
-    return { name, ...m, campaign: main.campaign || "", adGroup: main.adGroup || "", bulkCampaign: mainSp?.campaign || "", bulkAdGroup: mainSp?.adGroup || "", isSpEligible: !!(mainSp?.campaign && mainSp?.adGroup), adProducts, matchTypes, hasExact, hasPhrase, hasBroad, hasAuto, rows:list };
+    const isSpEligible = !!(mainSp?.campaign && mainSp?.adGroup) && adProducts.some(isSponsoredProductsCode);
+    return { name, ...m, campaign: main.campaign || "", adGroup: main.adGroup || "", bulkCampaign: mainSp?.campaign || "", bulkAdGroup: mainSp?.adGroup || "", isSpEligible, adProducts, adProductLabels: adProducts.map(getAdProductDisplayLabel), matchTypes, hasExact, hasPhrase, hasBroad, hasAuto, rows:list };
   }).filter(x => x.name && x.name !== "(blank)");
 };
 
@@ -6573,6 +6663,71 @@ const clearGrowthCommandModules = () => {
   if ($("actionExecutiveSummary")) $("actionExecutiveSummary").style.display = "none";
 };
 
+const validateKeywordTextForBulk = (keyword) => {
+  const text = String(keyword || "").trim().replace(/\s+/g, " ");
+  if (!text) return { ok: false, issue: "Empty keyword" };
+  if (text.length > AMAZON_BULK_LIMITS.KEYWORD_MAX_CHARS) return { ok: false, issue: `Keyword exceeds ${AMAZON_BULK_LIMITS.KEYWORD_MAX_CHARS} chars` };
+  if (text.split(/\s+/).length > AMAZON_BULK_LIMITS.KEYWORD_MAX_WORDS) return { ok: false, issue: `Keyword exceeds ${AMAZON_BULK_LIMITS.KEYWORD_MAX_WORDS} words` };
+  if (/[<>={}\\]/.test(text)) return { ok: false, issue: "Keyword contains invalid bulk characters" };
+  return { ok: true, issue: "" };
+};
+
+const validateSponsoredProductsBulkDraft = (headers = [], rows = [], sourceLabel = "Bulk Draft") => {
+  const idx = Object.fromEntries(headers.map((h, i) => [h, i]));
+  const issues = [];
+  const adGroupKeywordCount = new Map();
+  const campaignNegKeywordCount = new Map();
+  const adGroupNegKeywordCount = new Map();
+  const adGroupNegProductCount = new Map();
+  const addIssue = (severity, rowNo, field, issue, fix = "") => issues.push([severity, rowNo, field, issue, fix, sourceLabel]);
+  rows.forEach((row, i) => {
+    const rowNo = i + 2;
+    const product = String(row[idx.Product] || "").trim();
+    const entity = String(row[idx.Entity] || "").trim();
+    const campaign = String(row[idx["Campaign Name"]] || "").trim();
+    const adGroup = String(row[idx["Ad Group Name"]] || "").trim();
+    const keyword = String(row[idx["Keyword Text"]] || "").trim();
+    const expression = String(row[idx["Product Targeting Expression"]] || "").trim();
+    const matchType = String(row[idx["Match Type"]] || "").trim().toLowerCase();
+    const state = String(row[idx.State] || "").trim().toLowerCase();
+    const bid = safeNum(row[idx.Bid]);
+    if (product !== "Sponsored Products") addIssue("ERROR", rowNo, "Product", "Only Sponsored Products bulk rows are allowed in this draft", "Move SB/Display rows to analysis-only sheet");
+    if (!campaign || /\[.*required.*\]|\[.*campaign.*\]/i.test(campaign)) addIssue("WARN", rowNo, "Campaign Name", "Campaign placeholder or empty campaign", "Confirm exact campaign name before upload");
+    if (!adGroup || /\[.*required.*\]|\[.*ad group.*\]/i.test(adGroup)) addIssue("WARN", rowNo, "Ad Group Name", "Ad group placeholder or empty ad group", "Confirm exact ad group name before upload");
+    if (state && !["enabled", "paused", "archived"].includes(state)) addIssue("ERROR", rowNo, "State", "Invalid state", "Use paused before launch review");
+    if (/keyword/i.test(entity)) {
+      const v = validateKeywordTextForBulk(keyword);
+      if (!v.ok) addIssue("ERROR", rowNo, "Keyword Text", v.issue, "Edit keyword before upload");
+      if (!["exact", "phrase", "broad", "negative exact", "negative phrase"].includes(matchType)) addIssue("ERROR", rowNo, "Match Type", "Invalid keyword match type", "Use exact/phrase/broad/negative exact/negative phrase");
+      if (!/negative/i.test(entity) && bid <= 0) addIssue("WARN", rowNo, "Bid", "Missing or zero bid", "Confirm bid before enabling");
+      const agKey = `${campaign}|${adGroup}`;
+      if (!/negative/i.test(entity)) adGroupKeywordCount.set(agKey, (adGroupKeywordCount.get(agKey) || 0) + 1);
+      else {
+        campaignNegKeywordCount.set(campaign, (campaignNegKeywordCount.get(campaign) || 0) + 1);
+        adGroupNegKeywordCount.set(agKey, (adGroupNegKeywordCount.get(agKey) || 0) + 1);
+      }
+    }
+    if (/product targeting/i.test(entity)) {
+      const asin = extractAsinFromText(expression);
+      if (!asin) addIssue("ERROR", rowNo, "Product Targeting Expression", "Invalid or missing ASIN targeting expression", 'Use asin="B0XXXXXXXX"');
+      if (/negative/i.test(entity)) adGroupNegProductCount.set(`${campaign}|${adGroup}`, (adGroupNegProductCount.get(`${campaign}|${adGroup}`) || 0) + 1);
+      else if (bid <= 0) addIssue("WARN", rowNo, "Bid", "Missing or zero product targeting bid", "Confirm bid before enabling");
+    }
+  });
+  for (const [key, count] of adGroupKeywordCount) if (count > AMAZON_BULK_LIMITS.KEYWORDS_PER_MANUAL_AD_GROUP) addIssue("ERROR", "GROUP", key, `Manual ad group keyword count ${count} exceeds ${AMAZON_BULK_LIMITS.KEYWORDS_PER_MANUAL_AD_GROUP}`, "Split into another ad group");
+  for (const [key, count] of campaignNegKeywordCount) if (count > AMAZON_BULK_LIMITS.NEGATIVE_KEYWORDS_PER_CAMPAIGN) addIssue("ERROR", "CAMPAIGN", key, `Campaign negative keyword count ${count} exceeds ${AMAZON_BULK_LIMITS.NEGATIVE_KEYWORDS_PER_CAMPAIGN}`, "Prune or split negatives");
+  for (const [key, count] of adGroupNegKeywordCount) if (count > AMAZON_BULK_LIMITS.NEGATIVE_KEYWORDS_PER_AD_GROUP) addIssue("ERROR", "ADGROUP", key, `Ad group negative keyword count ${count} exceeds ${AMAZON_BULK_LIMITS.NEGATIVE_KEYWORDS_PER_AD_GROUP}`, "Prune or split negatives");
+  for (const [key, count] of adGroupNegProductCount) if (count > AMAZON_BULK_LIMITS.NEGATIVE_PRODUCTS_PER_AD_GROUP) addIssue("ERROR", "ADGROUP", key, `Ad group negative product count ${count} exceeds ${AMAZON_BULK_LIMITS.NEGATIVE_PRODUCTS_PER_AD_GROUP}`, "Prune negative ASINs");
+  if (!issues.length) issues.push(["OK", "-", "-", "Bulk draft passed local guardrail checks", "Still review Campaign/Ad Group/Bid in Amazon Bulk Operations", sourceLabel]);
+  return issues;
+};
+
+const getBulkValidationSheet = (headers, rows, sourceLabel = "Bulk Draft") => ({
+  sheetName: "Bulk Validator",
+  headers: ["Severity", "Row", "Field/Scope", "Issue", "Fix", "Source"],
+  dataRows: validateSponsoredProductsBulkDraft(headers, rows, sourceLabel)
+});
+
 const buildBulkDraftReadmeSheet = (sourceLabel = "Action Center") => ({
   sheetName: "00 Read Me - Draft Only",
   headers: [currentLang === "zh" ? "项目" : "Item", currentLang === "zh" ? "说明" : "Explanation"],
@@ -6580,6 +6735,9 @@ const buildBulkDraftReadmeSheet = (sourceLabel = "Action Center") => ({
     [currentLang === "zh" ? "文件性质" : "File Type", currentLang === "zh" ? "这是 Bulk 草稿，不是可无人审核直接上传的最终文件" : "This is a Bulk draft, not a final file for unattended upload"],
     [currentLang === "zh" ? "来源模块" : "Source", sourceLabel],
     [currentLang === "zh" ? "上传前必须确认" : "Before Upload", "Campaign Name / Ad Group Name / Match Type / Bid / State / SKU or ASIN / Budget"],
+    [currentLang === "zh" ? "广告产品边界" : "Ad Product Boundary", currentLang === "zh" ? "本 Bulk 草稿只允许 Sponsored Products。Sponsored Brands / Display Ads 仅做分析，不生成 SP 上传行" : "This draft only creates Sponsored Products rows. Sponsored Brands / Display Ads are analysis-only and are not exported as SP bulk operations"],
+    [currentLang === "zh" ? "本地限额校验" : "Local Limit Guard", `Keywords/ad group ≤ ${AMAZON_BULK_LIMITS.KEYWORDS_PER_MANUAL_AD_GROUP}; negative keywords/campaign or ad group ≤ ${AMAZON_BULK_LIMITS.NEGATIVE_KEYWORDS_PER_CAMPAIGN}; negative products/ad group ≤ ${AMAZON_BULK_LIMITS.NEGATIVE_PRODUCTS_PER_AD_GROUP}`],
+    [currentLang === "zh" ? "默认状态" : "Default State", `State=${BULK_DRAFT_DEFAULT_STATE}; review in Amazon Bulk Operations before enabling`],
     [currentLang === "zh" ? "占位符处理" : "Placeholder Handling", currentLang === "zh" ? "包含 [Campaign Name Required]、[Exact Campaign] 等占位符的行必须人工改完再上传" : "Rows containing placeholders such as [Campaign Name Required] or [Exact Campaign] must be manually completed before upload"],
     [currentLang === "zh" ? "生成时间" : "Generated At", new Date().toLocaleString()]
   ]
@@ -6589,33 +6747,35 @@ const buildSponsoredProductsBulkRows = (rows) => {
   const bulkHeaders = ["Product", "Entity", "Operation", "Campaign Id", "Ad Group Id", "Portfolio Id", "Ad Id", "Keyword Id", "Product Targeting Id", "Campaign Name", "Ad Group Name", "Keyword Text", "Product Targeting Expression", "Match Type", "Bidding Strategy", "Placement", "Percentage", "Bid", "State"];
   const bulkRows = [];
   const bidDraftRows = [];
+  const bulkState = BULK_DRAFT_DEFAULT_STATE;
   for (const r of rows) {
     if (r.actionKey === "negate" && r.bulkReady) {
       if (r.objectType === "ASIN") {
         const asin = extractAsinFromText(r.name);
-        bulkRows.push(["Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", r.campaign || "[Campaign Name Required]", r.adGroup || "[Ad Group Name Required]", "", `asin=\"${asin}\"`, "negative exact", "", "", "", "", bulkState]);
+        if (asin) bulkRows.push(["Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", r.campaign || "[Campaign Name Required]", r.adGroup || "[Ad Group Name Required]", "", `asin="${asin}"`, "negative exact", "", "", "", "", bulkState]);
       } else {
-        const mt = /exact/i.test(r.matchAdvice || "") ? "negative exact" : "negative phrase";
-        bulkRows.push(["Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "", r.campaign || "[Campaign Name Required]", r.adGroup || "[Ad Group Name Required]", r.name, "", mt, "", "", "", "", "enabled"]);
+        const mt = /exact/i.test(r.matchAdvice || "") || r.negativeGuard?.preferredNegativeMatch === "negative exact_only" ? "negative exact" : "negative phrase";
+        bulkRows.push(["Sponsored Products", "Negative Keyword", "Create", "", "", "", "", "", "", r.campaign || "[Campaign Name Required]", r.adGroup || "[Ad Group Name Required]", r.name, "", mt, "", "", "", "", bulkState]);
       }
     }
     if (["exact","phrase","broad"].includes(r.actionKey) && r.bulkReady) {
       const match = r.actionKey;
       const camp = r.actionKey === "exact" ? "[Exact Campaign]" : r.actionKey === "phrase" ? "[Phrase Campaign]" : "[Broad Campaign]";
       const adg = r.actionKey === "exact" ? "[Exact Ad Group]" : r.actionKey === "phrase" ? "[Phrase Ad Group]" : "[Broad Ad Group]";
-      bulkRows.push(["Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", camp, adg, r.name, "", match, "", "", "", r.suggestedBid || "0.50", "enabled"]);
+      bulkRows.push(["Sponsored Products", "Keyword", "Create", "", "", "", "", "", "", camp, adg, r.name, "", match, "", "", "", r.suggestedBid || "0.50", bulkState]);
     }
     if (["increase","decrease"].includes(r.actionKey)) {
       bidDraftRows.push([r.actionLabel, r.name, r.campaign, r.adGroup, r.sourceMatch, r.suggestedBid, r.reason, r.spend, r.sales, r.orders, r.roas, r.acos === Infinity ? null : r.acos]);
     }
   }
-  return { bulkHeaders, bulkRows, bidDraftRows };
+  const validationRows = validateSponsoredProductsBulkDraft(bulkHeaders, bulkRows, "Action Center SP Bulk Draft");
+  return { bulkHeaders, bulkRows, bidDraftRows, validationRows };
 };
 
 const buildActionExportSheets = (rows) => {
   const headers = ["Action", "Object", "Source Search Term", "Intent", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS", "Type", "Source Match", "Suggested Match/Operation", "Suggested Bid", "Campaign", "Ad Group", "Confidence", "Execution Risk", "Negative Guard", "Reason", "AI Decision JSON"];
   const dataRows = rows.map(r => [r.actionLabel, r.name, r.sourceName || r.name, r.intentLabel || "", r.spend || 0, r.sales || 0, r.orders || 0, r.clicks || 0, r.cvr || 0, r.roas || 0, r.acos === Infinity ? null : r.acos, r.objectType, r.sourceMatch, r.matchAdvice, r.suggestedBid || "", r.campaign, r.adGroup, r.confidenceScore || 0, r.executionRisk || "", r.negativeGuard?.label || "", r.reason, JSON.stringify(r.decisionSchema || {})]);
-  const { bulkHeaders, bulkRows, bidDraftRows } = buildSponsoredProductsBulkRows(rows);
+  const { bulkHeaders, bulkRows, bidDraftRows, validationRows } = buildSponsoredProductsBulkRows(rows);
   const rules = getRules();
   const ruleRows = [
     ["Negative Spend Threshold", rules.spendNeg],
@@ -6631,6 +6791,7 @@ const buildActionExportSheets = (rows) => {
     { sheetName:"Simple Action Plan", headers, dataRows },
     buildBulkDraftReadmeSheet("Action Center Export"),
     { sheetName:"SP Bulk Draft Only", headers:bulkHeaders, dataRows:bulkRows },
+    { sheetName:"Bulk Validator", headers:["Severity", "Row", "Field/Scope", "Issue", "Fix", "Source"], dataRows:validationRows },
     { sheetName:"Bid Change Draft Only", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows:bidDraftRows }
   ];
   if (broadRootRows.length) sheets.push({ sheetName:"Broad Root Mining", headers:["Source Search Term", "Broad Root", "Campaign", "Ad Group", "Suggested Bid", "Orders", "ROAS", "Reason"], dataRows:broadRootRows });
@@ -6727,10 +6888,11 @@ const exportActionPlanExcel = () => {
 const exportActionBulkExcel = () => {
   const rows = buildActionPlan().filter(r => r.bulkReady);
   if (!rows.length) { alert(t("action_export_no_bulk")); return; }
-  const { bulkHeaders, bulkRows, bidDraftRows } = buildSponsoredProductsBulkRows(rows);
+  const { bulkHeaders, bulkRows, bidDraftRows, validationRows } = buildSponsoredProductsBulkRows(rows);
   exportRichExcelMultiSheet([
     buildBulkDraftReadmeSheet("Action Center Bulk Draft"),
     { sheetName:"SP Bulk Draft Only", headers:bulkHeaders, dataRows:bulkRows },
+    { sheetName:"Bulk Validator", headers:["Severity", "Row", "Field/Scope", "Issue", "Fix", "Source"], dataRows:validationRows },
     { sheetName:"Bid Change Draft Only", headers:["Action", "Object", "Campaign", "Ad Group", "Source Match", "Suggested Bid", "Reason", "Spend", "Sales", "Orders", "ROAS", "ACOS"], dataRows:bidDraftRows }
   ], `Simple_Action_Bulk_Draft_ONLY_${getTs()}.xlsx`).then(()=>log(t("action_log_bulk_exported"), "good"));
 };
@@ -8434,7 +8596,8 @@ const getCampaignStudioExportSheets = (data) => {
     { sheetName:"02 Keyword Vault", headers:poolHeaders, dataRows:poolRows },
     { sheetName:"03 Guardrails", headers:guardHeaders, dataRows:guardRows },
     { sheetName:"04 Target Draft Only", headers:getCampaignStudioBulkHeaders(), dataRows:buildCampaignStudioBulkRows(data).bulkRows },
-    { sheetName:"05 Invalid Keyword Review", headers:["Pool", "Keyword", "Issue", "Campaign", "Ad Group", "Spend", "Clicks", "Orders"], dataRows:getCampaignStudioInvalidKeywordRows(data) }
+    { sheetName:"05 Bulk Validator", headers:["Severity", "Row", "Field/Scope", "Issue", "Fix", "Source"], dataRows:buildCampaignStudioBulkRows(data).validationRows },
+    { sheetName:"06 Invalid Keyword Review", headers:["Pool", "Keyword", "Issue", "Campaign", "Ad Group", "Spend", "Clicks", "Orders"], dataRows:getCampaignStudioInvalidKeywordRows(data) }
   ];
 };
 
@@ -8460,7 +8623,7 @@ const getCampaignStudioInvalidKeywordRows = (data) => {
 
 const buildCampaignStudioBulkRows = (data) => {
   const bulkRows = [];
-  const bulkState = data?.bulkDefaultState || "paused";
+  const bulkState = data?.bulkDefaultState || BULK_DRAFT_DEFAULT_STATE;
   const addKeyword = (layerKey, rows, match) => {
     const layer = data.layers.find(l => l.key === layerKey);
     if (!layer) return;
@@ -8515,7 +8678,9 @@ const buildCampaignStudioBulkRows = (data) => {
     if (!isASINLike(asin)) return;
     bulkRows.push(["Sponsored Products", "Negative Product Targeting", "Create", "", "", "", "", "", "", r.campaign || "[Source Campaign Required]", r.adGroup || "[Source Ad Group Required]", "", `asin=\"${asin}\"`, "negative exact", "", "", "", "", bulkState]);
   });
-  return { headers:getCampaignStudioBulkHeaders(), bulkRows };
+  const headers = getCampaignStudioBulkHeaders();
+  const validationRows = validateSponsoredProductsBulkDraft(headers, bulkRows, "Campaign Studio SP Target Draft");
+  return { headers, bulkRows, validationRows };
 };
 
 const exportCampaignStudioExcel = async () => {
@@ -8532,13 +8697,15 @@ const exportCampaignStudioBulkExcel = async () => {
   if (!bulk.bulkRows.length) { alert(currentLang === "zh" ? "Target 草稿为空，当前筛选范围没有可上传对象" : "Target draft is empty; no uploadable objects in the current filter scope"); return; }
   const readme = [
     [currentLang === "zh" ? "重要" : "Important", currentLang === "zh" ? "这是 Draft Only。上传前必须确认 Campaign、Ad Group、Bid、State、SKU/ASIN。" : "This is Draft Only. Confirm Campaign, Ad Group, Bid, State, SKU/ASIN before upload."],
-    [currentLang === "zh" ? "上线保护" : "Launch Safety", currentLang === "zh" ? `Target 默认 State=${data.bulkDefaultState || "paused"}，人工确认后再改 enabled` : `Target default State=${data.bulkDefaultState || "paused"}; switch to enabled only after review`],
+    [currentLang === "zh" ? "广告产品边界" : "Ad Product Boundary", currentLang === "zh" ? "仅输出 Sponsored Products Target Draft；Sponsored Brands / Display Ads 保留在分析层，不混入 SP Bulk" : "Only Sponsored Products target drafts are exported; Sponsored Brands / Display Ads remain analysis-only"],
+    [currentLang === "zh" ? "上线保护" : "Launch Safety", currentLang === "zh" ? `Target 默认 State=${data.bulkDefaultState || BULK_DRAFT_DEFAULT_STATE}，人工确认后再改 enabled` : `Target default State=${data.bulkDefaultState || BULK_DRAFT_DEFAULT_STATE}; switch to enabled only after review`],
     [currentLang === "zh" ? "模式" : "Mode", data.mode],
     [currentLang === "zh" ? "下一步" : "Next Move", data.nextMove]
   ];
   await exportRichExcelMultiSheet([
     { sheetName:"00 Read Me Draft", headers:["Item", "Value"], dataRows:readme },
-    { sheetName:"SP Target Draft Only", headers:bulk.headers, dataRows:bulk.bulkRows }
+    { sheetName:"SP Target Draft Only", headers:bulk.headers, dataRows:bulk.bulkRows },
+    { sheetName:"Bulk Validator", headers:["Severity", "Row", "Field/Scope", "Issue", "Fix", "Source"], dataRows:bulk.validationRows }
   ], `Campaign_Studio_Traffic_Router_Target_Draft_ONLY_${getTs()}.xlsx`);
   alert(t("studio_bulk_exported"));
 };
@@ -8999,6 +9166,7 @@ const buildAdvancedAIContext = () => {
 
   const actionRowsForAI = buildActionPlan({ actionFilter: 'all', noLimit: true });
   const actionCenterSummary = summarizeActionRowsForAI(actionRowsForAI);
+  const schemaAuditSummary = (AdsStore.schemaAudits || []).slice(-8).map(a => `${a.fileName || '-'} | ${a.reportType} | ${a.adProduct ? getAdProductDisplayLabel(a.adProduct) : '-'} | ${a.attributionWindowDays || '-'}d | warnings:${(a.warnings || []).length}`).join('\n') || 'No schema audit records in current session.';
   const listingDoctorSummary = buildListingConversionDoctorContext();
   const decisionSchemaSnapshot = JSON.stringify(actionRowsForAI.slice(0, 25).map(r => r.decisionSchema), null, 2);
 
@@ -9012,6 +9180,9 @@ const buildAdvancedAIContext = () => {
 
 【广告位效能 (Placement)】
 ${placementStats}
+
+【导入 Schema / Amazon Guardrail】
+${schemaAuditSummary}
 
 【极端异动词组提取】
 🩸 核心流血词 (纯消耗): ${truncateForAI(bleeders, 10, "流血词").join(' | ')}
@@ -9617,7 +9788,7 @@ const bindAIEvents = () => {
             alert(t('dyn_msg_bulk_empty'));
             return;
         }
-        const { bulkHeaders, bulkRows, bidDraftRows } = buildSponsoredProductsBulkRows(rows);
+        const { bulkHeaders, bulkRows, bidDraftRows, validationRows } = buildSponsoredProductsBulkRows(rows);
         if (!bulkRows.length && !bidDraftRows.length) {
             alert(t('dyn_msg_bulk_empty'));
             return;
