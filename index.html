@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://oapi.dingtalk.com https://qyapi.weixin.qq.com https://open.feishu.cn https://hooks.slack.com; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://oapi.dingtalk.com https://qyapi.weixin.qq.com https://open.feishu.cn https://hooks.slack.com https://huggingface.co https://*.huggingface.co https://*.hf.co; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" />
   <title>朗容眼镜 - 广告决策中台 v2026.07 Decision Integrity</title>
@@ -6743,10 +6743,11 @@ const sortRank = (items) => {
 
 const buildRankTable = () => { 
     const rankBy = $("rankBy").value; 
+    const rankGroups = AdsStore.rankGroups instanceof Map ? AdsStore.rankGroups : new Map();
     const getMedian = (arr) => { if(!arr.length) return 0; arr.sort((a,b)=>a-b); return arr[Math.floor(arr.length/2)]; };
     const allCvrs = [], allCpcs = [], allCtrs = [], allRoas = [];
     
-    for (const list of AdsStore.rankGroups.values()) {
+    for (const list of rankGroups.values()) {
         const m = sumMetrics(list);
         if (m.clicks >= 5) { allCvrs.push(m.smoothCvr); allCpcs.push(m.cpc); allCtrs.push(m.ctr); allRoas.push(m.roas); }
     }
@@ -6756,7 +6757,7 @@ const buildRankTable = () => {
     const medRoas = getMedian(allRoas) || 2.0;
     
     const totalSales = AdsStore.view.reduce((sum, r) => sum + r.sales, 0);
-    const sortedForPareto = [...AdsStore.rankGroups.entries()].map(([name, list]) => ({name, sales: list.reduce((s, r)=>s+r.sales, 0)})).sort((a,b) => b.sales - a.sales);
+    const sortedForPareto = [...rankGroups.entries()].map(([name, list]) => ({name, sales: list.reduce((s, r)=>s+r.sales, 0)})).sort((a,b) => b.sales - a.sales);
     
     let cumSales = 0; const coreTerms = new Set();
     for (const item of sortedForPareto) { 
@@ -6765,7 +6766,7 @@ const buildRankTable = () => {
     }
 
     const globalMetrics = sumMetrics(AdsStore.view);
-    let items = [...AdsStore.rankGroups.entries()].map(([name, list]) => { 
+    let items = [...rankGroups.entries()].map(([name, list]) => { 
         const main = getMainRow(list);
         const base = { name, ...sumMetrics(list), rows: list, campaign: main.campaign || "", adGroup: main.adGroup || "", targeting: main.targeting || "", searchTerm: name, matchType: main.matchType || "", adProduct: main.adProduct || "", adProducts: [...new Set(list.map(r => r.adProduct).filter(Boolean))] }; 
         const governance = decideAction(base, rankBy, globalMetrics); 
@@ -6941,6 +6942,62 @@ const matchAdvancedSearch = (term, query) => {
 // ==================== Local Semantic Clustering (Transformers.js) ====================
 let embeddingPipeline = null;
 
+const buildLexicalFallbackClusters = (validTerms = []) => {
+    const clusters = [];
+    const sorted = [...validTerms].sort((a,b) => safeNum(b.metrics?.spend) - safeNum(a.metrics?.spend));
+    const tokenSet = (term) => new Set(tokenize(term).filter(Boolean));
+    const similarity = (a, b) => {
+        if (!a.size || !b.size) return 0;
+        let intersection = 0;
+        for (const x of a) if (b.has(x)) intersection++;
+        const union = a.size + b.size - intersection;
+        return union > 0 ? intersection / union : 0;
+    };
+    for (const item of sorted) {
+        const tokens = tokenSet(item.term);
+        let best = null, bestScore = 0;
+        for (const c of clusters) {
+            const score = similarity(tokens, c.tokens);
+            if (score > bestScore) { bestScore = score; best = c; }
+        }
+        const sharedCount = best ? [...tokens].filter(x => best.tokens.has(x)).length : 0;
+        if (best && (bestScore >= 0.45 || sharedCount >= 2)) {
+            best.items.push(item);
+            for (const x of tokens) best.tokens.add(x);
+        } else {
+            clusters.push({ tokens:new Set(tokens), items:[item] });
+        }
+    }
+    return clusters;
+};
+
+const renderLexicalFallbackClusters = (validTerms, progressDiv, reason = "") => {
+    const clusters = buildLexicalFallbackClusters(validTerms);
+    const clusterRows = clusters.map(c => {
+        const allRows = c.items.flatMap(it => it.rows);
+        const m = sumMetrics(allRows);
+        c.items.sort((a,b) => safeNum(b.metrics?.spend) - safeNum(a.metrics?.spend));
+        const represent = c.items[0]?.term || "(blank)";
+        return { word:`[Local Cluster] ${represent} (+${Math.max(0,c.items.length-1)} terms)`, freq:c.items.length, fullList:c.items.map(it=>it.term).join(", "), ...m };
+    }).sort((a,b) => safeNum(b.spend) - safeNum(a.spend));
+    const tbody = $("wfTable")?.querySelector("tbody");
+    const globalCvr = sumMetrics(AdsStore.view).cvr || 0.05;
+    renderProgressive(tbody, clusterRows, (r) => {
+        let rootTag = t('dyn_root_neutral');
+        if (r.orders > 0 && r.cvr > globalCvr * 1.5 && r.roas >= 2.5) rootTag = t('dyn_root_golden');
+        else if (r.clicks >= 15 && r.cvr < globalCvr * 0.5 && r.spend > 15) rootTag = t('dyn_root_toxic');
+        else if (r.spend > 20 && r.orders === 0) rootTag = t('dyn_root_bleeder');
+        const tooltip = `[ Local lexical fallback ]\n${rootTag}\nTerms in cluster:\n${r.fullList}`;
+        return `<tr title="${escapeHtml(tooltip)}"><td style="color:#10b981;font-weight:600;">${escapeHtml(r.word)}</td><td><span class="tag warn">Local Fallback</span></td><td>${fmtInt(r.freq)}</td><td>${fmtMoney(r.spend)}</td><td>${fmtInt(r.clicks||0)}</td><td>${fmtInt(r.orders)}</td><td>${fmtPct(r.cvr||0)}</td><td style="${r.roas>=2.5?'color:#1a7f37;font-weight:700':''}">${safeNum(r.roas).toFixed(2)}</td><td>${scoreBar((r.spend>20&&r.orders===0)?85:35,true)}</td><td>${scoreBar((r.orders>0&&r.roas>=2.5)?80:35,false)}</td><td>—</td><td><span class="rootDecision neutral">${escapeHtml(rootTag)}</span></td></tr>`;
+    });
+    progressDiv.style.color = "var(--warn)";
+    progressDiv.textContent = currentLang === "zh"
+      ? `⚠️ 语义模型不可用，已自动使用本地词根相似度聚类：${clusters.length} 个簇。${reason ? " 原因：" + reason : ""}`
+      : `⚠️ Semantic model unavailable. Local lexical clustering completed: ${clusters.length} clusters.${reason ? " Reason: " + reason : ""}`;
+    setTimeout(() => { progressDiv.style.display = "none"; }, 7000);
+    return clusters;
+};
+
 const runLocalSemanticClustering = async () => {
     const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3))); 
     const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10)); 
@@ -7073,9 +7130,14 @@ const runLocalSemanticClustering = async () => {
         setTimeout(() => { progressDiv.style.display = "none"; }, 5000);
 
     } catch (e) {
-        console.error("Local Clustering Error:", e);
-        progressDiv.style.color = "var(--bad)";
-        progressDiv.textContent = "❌ 聚类失败，可能受跨域策略或内存限制。详见 Console。";
+        console.warn("Semantic model unavailable; using local lexical fallback:", e);
+        try {
+            renderLexicalFallbackClusters(validTerms, progressDiv, String(e?.message || e).slice(0, 180));
+        } catch (fallbackError) {
+            console.error("Local clustering fallback failed:", fallbackError);
+            progressDiv.style.color = "var(--bad)";
+            progressDiv.textContent = currentLang === "zh" ? "❌ 语义聚类与本地备用聚类均失败，请缩小数据范围后重试。" : "❌ Semantic and local fallback clustering both failed. Narrow the data scope and retry.";
+        }
     }
 };
 
@@ -10646,7 +10708,17 @@ const bindEvents = () => {
         applyFilters(); 
     });
     
-    $("btnClearAll").addEventListener("click", () => { AdsStore.all = []; AdsStore.view = []; AdsStore.biz = []; AdsStore.placement = []; AdsStore.sqp = []; AdsStore.files = []; AdsStore.dataQuality = null; AdsStore.bidControlIndex.clear(); rootCache.clear(); tokenCache.clear(); clearStringPool(); AdsStore.rankGroups = null; AdsStore.isolationRows = []; AdsStore.indexes.exactTerm.clear(); AdsStore.bizLifecycleMap.clear(); AdsStore.bizAggregateMap.clear(); if($("dataIntegrityPanel")){$("dataIntegrityPanel").style.display="none";$("dataIntegrityPanel").innerHTML="";} try{idbKeyval.clear();}catch(e){} renderFileList(); populateDropdowns(); applyFilters(true); });
+    $("btnClearAll").addEventListener("click", () => {
+      AdsStore.all = []; AdsStore.view = []; AdsStore.biz = []; AdsStore.placement = []; AdsStore.sqp = []; AdsStore.files = [];
+      AdsStore.schemaAudits = []; AdsStore.importWarnings = []; AdsStore.dataQuality = null; AdsStore.effectiveGrain = "";
+      AdsStore.bidControlIndex.clear(); AdsStore.rankGroups = new Map(); AdsStore.isolationRows = [];
+      AdsStore.indexes.exactTerm.clear(); AdsStore.bizLifecycleMap.clear(); AdsStore.bizAggregateMap.clear();
+      rootCache.clear(); tokenCache.clear(); clearStringPool(); deepAnalysisRequested = false;
+      lastCampaignStudioData = null; lastCampaignStudioPlainText = ""; currentAlertsText = "";
+      if ($("dataIntegrityPanel")) { $("dataIntegrityPanel").style.display = "none"; $("dataIntegrityPanel").innerHTML = ""; }
+      try { idbKeyval.clear(); } catch(e) {}
+      renderFileList(); populateDropdowns(); applyFilters(true);
+    });
 
     document.querySelectorAll(".chipBtn").forEach(btn => { 
       btn.addEventListener("click", () => { 
@@ -11384,6 +11456,11 @@ ${getAiLanguageInstruction()}
     try {
         try {
             aiFullText = await requestGeminiStream(geminiPayload, aiAbortController.signal, bubble);
+            if (!aiFullText || !aiFullText.trim()) {
+                const emptyError = new Error(currentLang === 'zh' ? 'Gemini 返回空流。' : 'Gemini returned an empty stream.');
+                emptyError.provider = 'gemini';
+                throw emptyError;
+            }
         } catch (geminiError) {
             if (geminiError?.name === 'AbortError') throw geminiError;
             console.warn("Gemini failed. Falling back to OpenRouter:", geminiError);
@@ -11399,6 +11476,11 @@ ${getAiLanguageInstruction()}
                     signal: aiAbortController.signal,
                     bubble
                 });
+                if (!aiFullText || !aiFullText.trim()) {
+                    const emptyError = new Error(currentLang === 'zh' ? 'OpenRouter 返回空流。' : 'OpenRouter returned an empty stream.');
+                    emptyError.provider = 'openrouter';
+                    throw emptyError;
+                }
             } catch (openRouterError) {
                 if (openRouterError?.name === 'AbortError') throw openRouterError;
                 console.warn("OpenRouter failed. Falling back to Groq:", openRouterError);
@@ -11413,6 +11495,11 @@ ${getAiLanguageInstruction()}
                     signal: aiAbortController.signal,
                     bubble
                 });
+                if (!aiFullText || !aiFullText.trim()) {
+                    const emptyError = new Error(currentLang === 'zh' ? 'Groq 返回空流。' : 'Groq returned an empty stream.');
+                    emptyError.provider = 'groq';
+                    throw emptyError;
+                }
             }
         }
 
