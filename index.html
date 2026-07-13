@@ -8,13 +8,13 @@
 <meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://oapi.dingtalk.com https://qyapi.weixin.qq.com https://open.feishu.cn https://hooks.slack.com https://huggingface.co https://*.huggingface.co https://*.hf.co; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 Calm Workspace</title>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 Real Data Verified Final</title>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script crossorigin="anonymous" src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
 <script>
     (() => {
       try {
@@ -4066,7 +4066,13 @@ const notify = (message, type="info", timeout=3600) => {
 };
 
 const reportError = (module, error, context={}) => {
-  const row={time:new Date().toISOString(),module:String(module||"Unknown"),message:String(error?.message||error||"Unknown error"),context};
+  const message=String(error?.message||error||"Unknown error");
+  if (message === "Script error." && !error?.stack) { console.warn("Opaque cross-origin script error ignored; resource status is handled separately.", context); return; }
+  const row={time:new Date().toISOString(),module:String(module||"Unknown"),message,context,stack:String(error?.stack||"")};
+  const signature=`${row.module}|${row.message}|${context?.source||""}|${context?.line||""}`;
+  const now=Date.now(); APP_RUNTIME.errorDedupe=APP_RUNTIME.errorDedupe||new Map();
+  if(now-(APP_RUNTIME.errorDedupe.get(signature)||0)<4000){console.warn("Duplicate error suppressed",row);return;}
+  APP_RUNTIME.errorDedupe.set(signature,now);
   APP_RUNTIME.errors.unshift(row); APP_RUNTIME.errors=APP_RUNTIME.errors.slice(0,100);
   console.error(`[${row.module}]`,error,context);
   const badge=$("errorCenterBadge"); if(badge){badge.textContent=String(APP_RUNTIME.errors.length);badge.style.display="inline-flex";}
@@ -4084,7 +4090,7 @@ const getWorkspaceConfig = () => ({
 const getWorkspaceKey = (cfg=getWorkspaceConfig()) => [cfg.accountName||"default",cfg.marketplace||"US",cfg.brand||"default"].join("|").toLowerCase();
 const normalizeMarketplace = v => {
   const x=String(v||"").trim().toUpperCase();
-  const aliases={"UNITED STATES":"US","USA":"US","AMAZON.COM":"US","UNITED KINGDOM":"UK","AMAZON.CO.UK":"UK","CANADA":"CA","AMAZON.CA":"CA","MEXICO":"MX","GERMANY":"DE","FRANCE":"FR","ITALY":"IT","SPAIN":"ES","JAPAN":"JP","AUSTRALIA":"AU"};
+  const aliases={"UNITED STATES":"US","USA":"US","US":"US","美国":"US","美國":"US","AMAZON.COM":"US","UNITED KINGDOM":"UK","UK":"UK","英国":"UK","英國":"UK","AMAZON.CO.UK":"UK","CANADA":"CA","加拿大":"CA","AMAZON.CA":"CA","MEXICO":"MX","墨西哥":"MX","GERMANY":"DE","德国":"DE","德國":"DE","FRANCE":"FR","法国":"FR","法國":"FR","ITALY":"IT","意大利":"IT","SPAIN":"ES","西班牙":"ES","JAPAN":"JP","日本":"JP","AUSTRALIA":"AU","澳大利亚":"AU","澳大利亞":"AU"};
   return aliases[x]||x;
 };
 
@@ -5105,11 +5111,11 @@ const COL_MAP_ALIASES = {
   sales7d: ["7天总销售额","7DayTotalSales","7-daytotalsales","7daytotalsales","14天总销售额","14DayTotalSales","14-daytotalsales","14daytotalsales","TotalSales","Est.TotalSales", "Sales"], 
   orders7d: ["7天总订单数","7天总订单数(#)","7天总订单数（#）","7DayTotalOrders(#)","7-daytotalorders","7daytotalorders","14天总订单数","14天总订单数(#)","14DayTotalOrders(#)","14-daytotalorders","14daytotalorders","TotalOrders","Est.TotalOrders", "Orders"],
   units: ["7天总销售量(#)","7天总销售量（#）","7天总销售量","7 Day Total Units (#)","7DayTotalUnits(#)","7DayTotalUnits","7-day Total Units","7 Day Total Units","14天总销售量(#)","14天总销售量（#）","14天总销售量","14 Day Total Units (#)","14DayTotalUnits(#)","14DayTotalUnits","14-day Total Units","14 Day Total Units","Units Sold","Units","销售件数","广告销售件数"], 
-  ctr: ["点击率","CTR"], 
-  cpc: ["每次点击费用","CPC","Costperclick","Costperclick(CPC)"], 
+  ctr: ["点击率","点击率 (CTR)","点击率(CTR)","CTR"], 
+  cpc: ["每次点击费用","单次点击成本 (CPC)","单次点击成本(CPC)","每次点击成本 (CPC)","每次点击成本(CPC)","CPC","Costperclick","Costperclick(CPC)"], 
   cvr: ["7天的转化率","7DayConversionRate","7-dayconversionrate","7dayconversionrate","14天的转化率","14DayConversionRate","14-dayconversionrate","14dayconversionrate"], 
-  acos: ["ACOS","Acos"], 
-  roas: ["ROAS","Roas"],
+  acos: ["广告投入产出比 (ACOS) 总计","广告投入产出比(ACOS)总计","ACOS","Acos"], 
+  roas: ["总广告投资回报率 (ROAS)","总广告投资回报率(ROAS)","ROAS","Roas"],
   advertisedAsin: ["Advertised ASIN","AdvertisedASIN","广告商品ASIN","被推广的ASIN"],
   advertisedSku: ["Advertised SKU","AdvertisedSKU","广告商品SKU","被推广的SKU"],
   purchasedAsin: ["Purchased ASIN","PurchasedASIN","14 Day Purchased ASIN","7 Day Purchased ASIN","购买的ASIN","购买商品ASIN"],
@@ -5123,7 +5129,7 @@ const COL_MAP_ALIASES = {
   topOfSearchAdjustment: ["Top of Search Adjustment","Top of Search Bid Adjustment","Top of search (first page) adjustment","搜索结果顶部加价","搜索结果顶部竞价调整"],
   productPagesAdjustment: ["Product Pages Adjustment","Product pages","商品页面加价"],
   restOfSearchAdjustment: ["Rest of Search Adjustment","Rest of search","搜索结果其余位置加价"],
-  marketplace: ["Marketplace","Market Place","站点","市场"],
+  marketplace: ["Marketplace","Market Place","站点","市场","国家/地区","国家地区","Country/Region","Country"],
   accountName: ["Account","Account Name","Profile Name","账号","账户"]
 };
 const BR_MAP_ALIASES = { 
@@ -5373,13 +5379,44 @@ const cleanTargetForExact = (t) => (t || "").toLowerCase().replace(/[^\w\s]/gi, 
 
 const parseCSV = (file) => new Promise((resolve,reject)=>Papa.parse(file, {header:true, skipEmptyLines:'greedy', worker:true, dynamicTyping:false, complete:res=>resolve(res.data||[]), error:reject}));
 const XLSX_WORKER_LIB = "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+const repairWorksheetRange = (ws) => {
+  if (!ws) return ws;
+  let maxR = -1, maxC = -1;
+  const dense = Array.isArray(ws) ? ws : (Array.isArray(ws["!data"]) ? ws["!data"] : null);
+  if (dense) {
+    for (let r = 0; r < dense.length; r++) {
+      const row = dense[r]; if (!row) continue;
+      for (let c = row.length - 1; c >= 0; c--) {
+        if (row[c] !== undefined && row[c] !== null) { maxR = Math.max(maxR, r); maxC = Math.max(maxC, c); break; }
+      }
+    }
+  } else {
+    for (const key of Object.keys(ws)) {
+      if (key[0] === "!") continue;
+      const m = /^([A-Z]+)(\d+)$/.exec(key); if (!m) continue;
+      let c = 0; for (const ch of m[1]) c = c * 26 + ch.charCodeAt(0) - 64;
+      maxR = Math.max(maxR, Number(m[2]) - 1); maxC = Math.max(maxC, c - 1);
+    }
+  }
+  if (maxR >= 0 && maxC >= 0) {
+    const actual = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:maxR,c:maxC}});
+    const current = String(ws["!ref"] || "");
+    let currentRange = null; try { currentRange = current ? XLSX.utils.decode_range(current) : null; } catch (_) {}
+    if (!currentRange || currentRange.e.r < maxR || currentRange.e.c < maxC) ws["!ref"] = actual;
+  }
+  return ws;
+};
 const parseXLSXMainThread = async (buffer, maxRows) => {
   const wb=XLSX.read(new Uint8Array(buffer),{type:"array",cellDates:false,dense:true});
   if(wb.SheetNames.length>AMAZON_BULK_LIMITS.MAX_WORKSHEETS) throw new Error(`Workbook has ${wb.SheetNames.length} sheets; limit is ${AMAZON_BULK_LIMITS.MAX_WORKSHEETS}`);
   const sheets=[]; let remaining=maxRows;
   for(const sheetName of wb.SheetNames){
     if(remaining<=0) break;
-    let rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{defval:"",raw:true,blankrows:false});
+    const ws=repairWorksheetRange(wb.Sheets[sheetName]);
+    let rows=XLSX.utils.sheet_to_json(ws,{defval:"",raw:true,blankrows:false});
+    if (!rows.length && ws && ws["!ref"] && ws["!ref"] !== "A1") {
+      rows=XLSX.utils.sheet_to_json(ws,{defval:"",raw:true,blankrows:false,range:ws["!ref"]});
+    }
     const originalRows=rows.length; if(rows.length>remaining) rows=rows.slice(0,remaining);
     rows.forEach(row=>{row.__sheetName=sheetName;});
     if(rows.length){sheets.push({sheetName,rows,originalRows,truncated:originalRows>rows.length});remaining-=rows.length;}
@@ -5390,13 +5427,19 @@ const parseXLSXMainThread = async (buffer, maxRows) => {
 const parseXLSX = async (file, maxRows=200000) => {
   const buffer=await file.arrayBuffer();
   if(typeof Worker === "undefined") return parseXLSXMainThread(buffer,maxRows);
-  const workerCode=`self.onmessage=function(e){try{importScripts(e.data.lib);const wb=XLSX.read(new Uint8Array(e.data.buffer),{type:'array',cellDates:false,dense:true});if(wb.SheetNames.length>e.data.maxSheets)throw new Error('Workbook has '+wb.SheetNames.length+' sheets; limit is '+e.data.maxSheets);const sheets=[];let remaining=e.data.maxRows;for(const sheetName of wb.SheetNames){if(remaining<=0)break;let rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{defval:'',raw:true,blankrows:false});const originalRows=rows.length;if(rows.length>remaining)rows=rows.slice(0,remaining);for(let i=0;i<rows.length;i++)rows[i].__sheetName=sheetName;if(rows.length){sheets.push({sheetName:sheetName,rows:rows,originalRows:originalRows,truncated:originalRows>rows.length});remaining-=rows.length;}}self.postMessage({ok:true,sheets:sheets});}catch(err){self.postMessage({ok:false,error:String(err&&err.message||err)});}}`;
+  const workerCode=`self.onmessage=function(e){try{importScripts(e.data.lib);function range(ws){if(!ws)return ws;var mr=-1,mc=-1,d=Array.isArray(ws)?ws:(Array.isArray(ws['!data'])?ws['!data']:null);if(d){for(var r=0;r<d.length;r++){var row=d[r];if(!row)continue;for(var c=row.length-1;c>=0;c--){if(row[c]!==undefined&&row[c]!==null){if(r>mr)mr=r;if(c>mc)mc=c;break;}}}}else{Object.keys(ws).forEach(function(k){if(k.charAt(0)==='!')return;var m=/^([A-Z]+)(\\d+)$/.exec(k);if(!m)return;var c=0;for(var i=0;i<m[1].length;i++)c=c*26+m[1].charCodeAt(i)-64;mr=Math.max(mr,Number(m[2])-1);mc=Math.max(mc,c-1);});}if(mr>=0&&mc>=0){var actual=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:mr,c:mc}}),cur=null;try{cur=ws['!ref']?XLSX.utils.decode_range(ws['!ref']):null;}catch(x){}if(!cur||cur.e.r<mr||cur.e.c<mc)ws['!ref']=actual;}return ws;}const wb=XLSX.read(new Uint8Array(e.data.buffer),{type:'array',cellDates:false,dense:true});if(wb.SheetNames.length>e.data.maxSheets)throw new Error('Workbook has '+wb.SheetNames.length+' sheets; limit is '+e.data.maxSheets);const sheets=[];let remaining=e.data.maxRows;for(const sheetName of wb.SheetNames){if(remaining<=0)break;const ws=range(wb.Sheets[sheetName]);let rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true,blankrows:false});if(!rows.length&&ws&&ws['!ref']&&ws['!ref']!=='A1')rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true,blankrows:false,range:ws['!ref']});const originalRows=rows.length;if(rows.length>remaining)rows=rows.slice(0,remaining);for(let i=0;i<rows.length;i++)rows[i].__sheetName=sheetName;if(rows.length){sheets.push({sheetName:sheetName,rows:rows,originalRows:originalRows,truncated:originalRows>rows.length});remaining-=rows.length;}}self.postMessage({ok:true,sheets:sheets});}catch(err){self.postMessage({ok:false,error:String(err&&err.message||err)});}}`;
   const url=URL.createObjectURL(new Blob([workerCode],{type:"text/javascript"}));
   return new Promise((resolve,reject)=>{
     const worker=new Worker(url);
     const cleanup=()=>{worker.terminate();URL.revokeObjectURL(url);};
-    worker.onmessage=e=>{cleanup();e.data?.ok?resolve(e.data.sheets||[]):reject(new Error(e.data?.error||"XLSX worker failed"));};
-    worker.onerror=async err=>{cleanup();try{resolve(await parseXLSXMainThread(buffer,maxRows));}catch(e){reject(e);}};
+    worker.onmessage=async e=>{
+      cleanup();
+      if(!e.data?.ok){reject(new Error(e.data?.error||"XLSX worker failed"));return;}
+      const sheets=e.data.sheets||[];
+      if(sheets.length){resolve(sheets);return;}
+      try{resolve(await parseXLSXMainThread(buffer,maxRows));}catch(err){reject(err);}
+    };
+    worker.onerror=async ()=>{cleanup();try{resolve(await parseXLSXMainThread(buffer,maxRows));}catch(e){reject(e);}};
     worker.postMessage({buffer,lib:XLSX_WORKER_LIB,maxRows,maxSheets:AMAZON_BULK_LIMITS.MAX_WORKSHEETS});
   });
 };
@@ -12732,7 +12775,12 @@ return {
     $("btnTheme").addEventListener("click", toggleTheme); document.querySelectorAll("[data-theme-choice]").forEach(b=>b.addEventListener("click",()=>{const theme=b.dataset.themeChoice;document.documentElement.setAttribute("data-theme",theme);safeStorageSet("theme",theme);$("btnTheme").textContent=getThemeLabel(theme);$("themeMenu")?.classList.remove("open");if(trendChart)renderTrend(AdsStore.view||AdsStore.all);}));
     $("btnLangToggle").addEventListener("click", toggleLanguage);
     
-    window.addEventListener("error",e=>reportError("window",e.error||e.message,{source:e.filename,line:e.lineno})); window.addEventListener("unhandledrejection",e=>reportError("promise",e.reason||"Unhandled rejection"));
+    window.addEventListener("error",e=>{
+      if(e.target && e.target !== window){const url=e.target.src||e.target.href||e.target.tagName||"resource";reportError("资源加载",new Error(`加载失败：${url}`),{source:url});return;}
+      const msg=String(e.message||"");if(msg==="Script error."&&!e.error){console.warn("Ignored opaque cross-origin Script error",e.filename||"");return;}
+      reportError("页面运行",e.error||msg||"Unknown window error",{source:e.filename||"inline",line:e.lineno||0,column:e.colno||0});
+    },true);
+    window.addEventListener("unhandledrejection",e=>{reportError("异步任务",e.reason||"Unhandled rejection");});
     AdsDashboardApp.isInitialized = true;
   },
   pushCurrentAlerts: () => {
@@ -12773,7 +12821,7 @@ window.addEventListener('load', AdsDashboardApp.init);
 </script>
 <div aria-live="polite" class="opsToastCenter" id="toastCenter"></div><div class="modalOverlay" id="opsUtilityModal"><div class="largeModal opsUtilityModal"><div class="largeModalHeader"><h2 id="opsUtilityTitle">Operations Center</h2><button class="btn" id="btnCloseOpsUtility" type="button">关闭</button></div><div class="largeModalBody" id="opsUtilityBody"></div></div></div>
 
-<script id="finalWorkspaceV51Script">
+<script id="finalWorkspaceV53Script">
 (() => {
   const qs = (s, root=document) => root.querySelector(s);
   const qsa = (s, root=document) => [...root.querySelectorAll(s)];
@@ -12782,8 +12830,8 @@ window.addEventListener('load', AdsDashboardApp.init);
     set(k,v){ try { localStorage.setItem(k,v); } catch(e) {} }
   };
   const initShell = () => {
-    document.documentElement.dataset.visualVersion = '51';
-    document.body.classList.add('final-workspace-v51');
+    document.documentElement.dataset.visualVersion = '53';
+    document.body.classList.add('final-workspace-v51','final-workspace-v53');
     const actions = qs('.header .actions');
     if (actions && !qs('#workspaceSidebarToggle')) {
       const btn = document.createElement('button');
