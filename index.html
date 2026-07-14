@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
@@ -9,7 +8,7 @@
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
 <title>朗容眼镜 - 广告运营工作台 v2026.07 V61.4 Editorial Finance</title>
 <script>
-window.APP_BUILD_VERSION='V61.4.0';
+window.APP_BUILD_VERSION='V61.4.1';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" onerror="__loadDependencyFallback('PapaParse','https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')"></script>
@@ -4275,7 +4274,7 @@ const applyLanguageToDOM = () => {
       if (I18N[currentLang][key]) el.title = I18N[currentLang][key];
   });
   
-  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.4.0'}`;
+  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.4.1'}`;
   document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
   
   const btnLang = document.getElementById('btnLangToggle');
@@ -4360,7 +4359,7 @@ const PERF = {
   IDB_CHUNK_ROWS: 25000
 };
 const APP_DATA_SCHEMA_VERSION = "ADS_DECISION_OS_2026_07_TRANSACTION_ECONOMICS_V61";
-const APP_BUILD_VERSION = "V61.4.0";
+const APP_BUILD_VERSION = "V61.4.1";
 const APP_SCHEMA_VERSION = APP_DATA_SCHEMA_VERSION;
 const AMAZON_AD_PRODUCT_META = {
   SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
@@ -7218,6 +7217,8 @@ const exportRichExcelMultiSheet = async (sheets, filename) => {
   
   setTimeout(() => { if(wrap) wrap.style.display = "none"; if(bar) bar.style.width = "0%"; }, 500);
 };
+// Explicit global bridge: later independent modules must not rely on cross-script lexical bindings.
+window.exportRichExcelMultiSheet = exportRichExcelMultiSheet;
 
 
 const exportProductTargetingExcel = () => {
@@ -13748,16 +13749,67 @@ window.addEventListener('load', AdsDashboardApp.init);
     switchTab(activeTab);
   };
 
-  const exportReport=()=>{
+  const downloadBlob=(blob,filename)=>{
+    if(typeof window.saveAs==='function'){window.saveAs(blob,filename);return;}
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1200);
+  };
+  const cleanSheetName=name=>String(name||'Sheet').slice(0,31).replace(/[\\/?*\[\]:]/g,'_')||'Sheet';
+  const normalizeCell=v=>{
+    if(v===null||v===undefined||v===''||(typeof v==='number'&&!Number.isFinite(v)))return '';
+    if(v instanceof Date)return v.toISOString();
+    if(typeof v==='object'){try{return JSON.stringify(v);}catch(e){return String(v);}}
+    return v;
+  };
+  const exportViaSheetJS=(sheets,filename)=>{
+    if(!window.XLSX?.utils?.book_new)return false;
+    const wb=window.XLSX.utils.book_new();
+    for(const s of sheets){
+      const aoa=[(s.headers||[]).map(normalizeCell),...(s.dataRows||[]).map(row=>(row||[]).map(normalizeCell))];
+      const ws=window.XLSX.utils.aoa_to_sheet(aoa);
+      if(aoa.length&&aoa[0].length){ws['!autofilter']={ref:window.XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(0,aoa.length-1),c:aoa[0].length-1}})};ws['!freeze']={xSplit:0,ySplit:1};}
+      const widths=(s.headers||[]).map((h,i)=>{let max=String(h??'').length;for(const row of (s.dataRows||[]).slice(0,2000))max=Math.max(max,String(normalizeCell(row?.[i])).length);return{wch:Math.min(50,Math.max(10,max+2))};});
+      ws['!cols']=widths;
+      window.XLSX.utils.book_append_sheet(wb,ws,cleanSheetName(s.sheetName));
+    }
+    window.XLSX.writeFile(wb,filename,{compression:true});
+    return true;
+  };
+  const exportViaExcelJS=async(sheets,filename)=>{
+    if(!window.ExcelJS?.Workbook)return false;
+    const wb=new window.ExcelJS.Workbook();wb.creator='Ads Operations Integrity OS';wb.created=new Date();
+    for(const s of sheets){
+      const ws=wb.addWorksheet(cleanSheetName(s.sheetName),{views:[{state:'frozen',ySplit:1}]});
+      const headers=(s.headers||[]).map(normalizeCell);const hr=ws.addRow(headers);hr.font={bold:true,color:{argb:'FFFFFFFF'}};hr.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F2937'}};hr.alignment={vertical:'middle'};
+      if(headers.length)ws.autoFilter={from:{row:1,column:1},to:{row:1,column:headers.length}};
+      for(const row of (s.dataRows||[]))ws.addRow((row||[]).map(normalizeCell));
+      ws.columns.forEach((col,i)=>{let max=String(headers[i]??'').length;col.eachCell({includeEmpty:false},cell=>{max=Math.max(max,String(cell.value??'').length);});col.width=Math.min(50,Math.max(10,max+2));});
+    }
+    const buffer=await wb.xlsx.writeBuffer();downloadBlob(new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),filename);return true;
+  };
+  const csvEscape=v=>{const s=String(normalizeCell(v));return /[",\n\r]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;};
+  const exportCsvFallback=(sheets,filename)=>{
+    const parts=[];for(const s of sheets){parts.push(`# ${s.sheetName}`);parts.push((s.headers||[]).map(csvEscape).join(','));for(const row of (s.dataRows||[]))parts.push((row||[]).map(csvEscape).join(','));parts.push('');}
+    const csv='\uFEFF'+parts.join('\r\n');downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),filename.replace(/\.xlsx$/i,'_fallback.csv'));
+  };
+  const exportFinanceWorkbook=async(sheets,filename)=>{
+    const globalExporter=typeof window.exportRichExcelMultiSheet==='function'?window.exportRichExcelMultiSheet:null;
+    if(globalExporter){try{await globalExporter(sheets,filename);return'RICH_EXCEL';}catch(e){console.warn('Rich Excel export failed; falling back.',e);}}
+    try{if(exportViaSheetJS(sheets,filename))return'SHEETJS';}catch(e){console.warn('SheetJS export failed; falling back.',e);}
+    try{if(await exportViaExcelJS(sheets,filename))return'EXCELJS';}catch(e){console.warn('ExcelJS export failed; falling back.',e);}
+    exportCsvFallback(sheets,filename);return'CSV';
+  };
+
+  const exportReport=async()=>{
     const r=buildReport(),c=r.current;if(!c.rows.length){try{notify('当前日期范围没有联合交易数据。','warn');}catch(e){alert('当前日期范围没有联合交易数据。');}return;}
-    if(typeof exportRichExcelMultiSheet!=='function'){alert('Excel导出依赖未加载。');return;}
     const summary=[['日期开始',c.start],['日期结束',c.end],['交易口径',c.mode],['交易行数',c.rows.length],['订单数',c.orderCount],['SKU数',c.skuCount],['商品销售',c.orderSales],['退款商品额',c.refundSales],['净商品销售',c.netProductSales],['销售退款率',c.refundSalesRate],['件数退款率',c.returnRate],['交易费用',c.amazonTradeFees],['交易费用率',c.tradeFeeRate],['广告扣费',c.advertising],['广告占比',c.adRate],['非广告运营支出',c.nonAdOperatingExpenses],['非广告成本率',c.nonAdRate],['经营结算净额',c.operatingSettlement],['经营结算率',c.operatingMargin],['Transfer',c.transfer],['结算总额',c.settlementTotal]];
     const expenses=c.expense.map(x=>[x.name,x.value,x.rate,x.note]);
     const daily=c.daily.map(x=>[x.date,x.rows,x.sales,x.refund,x.fees,x.ads,x.refundRate,x.net,x.netRate]);
     const sku=c.sku.slice(0,500).map(x=>[x.sku,x.units,x.refundUnits,x.sales,x.refund,x.fees,x.refundRate,x.feeRate,x.net,x.netRate]);
     const cats=c.categories.map(x=>[x.label,x.category,x.rows,x.total,x.share]);
     const ts=(typeof getTs==='function'?getTs():new Date().toISOString().replace(/[:.]/g,'-'));
-    exportRichExcelMultiSheet([{sheetName:'财务摘要',headers:['指标','数值'],dataRows:summary},{sheetName:'成本结构',headers:['成本项目','金额','占净销售比例','口径'],dataRows:expenses},{sheetName:'每日明细',headers:['日期','交易行数','销售','退款','交易费用','广告扣费','退款率','经营净结算','净结算率'],dataRows:daily},{sheetName:'SKU明细',headers:['SKU','发货件数','退款件数','销售','退款','交易费用','退款率','费用率','净结算','净结算率'],dataRows:sku},{sheetName:'交易类别',headers:['类别','代码','行数','结算影响','占经营结算'],dataRows:cats}],`Transaction_Finance_Report_${c.start||'start'}_${c.end||'end'}_${ts}.xlsx`);
+    const sheets=[{sheetName:'财务摘要',headers:['指标','数值'],dataRows:summary},{sheetName:'成本结构',headers:['成本项目','金额','占净销售比例','口径'],dataRows:expenses},{sheetName:'每日明细',headers:['日期','交易行数','销售','退款','交易费用','广告扣费','退款率','经营净结算','净结算率'],dataRows:daily},{sheetName:'SKU明细',headers:['SKU','发货件数','退款件数','销售','退款','交易费用','退款率','费用率','净结算','净结算率'],dataRows:sku},{sheetName:'交易类别',headers:['类别','代码','行数','结算影响','占经营结算'],dataRows:cats}];
+    const filename=`Transaction_Finance_Report_${c.start||'start'}_${c.end||'end'}_${ts}.xlsx`;
+    const btn=byId('btnExportTransactionFinance'),oldText=btn?.textContent;try{if(btn){btn.disabled=true;btn.textContent='正在导出…';}const method=await exportFinanceWorkbook(sheets,filename);const msg=method==='CSV'?'Excel库不可用，已自动导出兼容CSV。':'交易财务报表已导出。';try{notify(msg,method==='CSV'?'warn':'good');}catch(e){console.info(msg);}}catch(err){console.error(err);alert(`导出失败：${err?.message||err}`);}finally{if(btn){btn.disabled=false;btn.textContent=oldText||'导出 Excel';}}
   };
   const openModal=()=>{const m=ensureModal();m.style.display='flex';renderReport();setTimeout(()=>byId('btnCloseTransactionFinance')?.focus(),0);};
   const init=()=>{
