@@ -8,7 +8,7 @@
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
 <title>朗容眼镜 - 广告运营工作台 v2026.07 V61.4 Editorial Finance</title>
 <script>
-window.APP_BUILD_VERSION='V61.4.1';
+window.APP_BUILD_VERSION='V61.4.2';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" onerror="__loadDependencyFallback('PapaParse','https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')"></script>
@@ -2802,7 +2802,7 @@ B0XXXXXXXX,19.99,0.28,4.35,0.15,0.02,0.03,0.08,0.35,0.30,0.10,0.10" style="min-h
 <div class="execInsightStack" id="execInsightStack"></div>
 </div>
 </div>
-<details class="execOverviewDetails" id="execTrendDetails">
+<details class="execOverviewDetails" id="execTrendDetails" open>
 <summary>经营联动趋势 <span>成熟归因、Pending与业务销售联动</span></summary>
 <div class="execTrendPanel">
 <div class="execPanelHead"><div><b id="execTrendTitle">经营联动趋势</b><span id="execTrendSubtitle">成熟归因数据用于决策；归因中花费单独展示</span></div><div class="execLegend" id="execTrendLegend"></div></div>
@@ -4274,7 +4274,7 @@ const applyLanguageToDOM = () => {
       if (I18N[currentLang][key]) el.title = I18N[currentLang][key];
   });
   
-  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.4.1'}`;
+  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.4.2'}`;
   document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
   
   const btnLang = document.getElementById('btnLangToggle');
@@ -4359,7 +4359,7 @@ const PERF = {
   IDB_CHUNK_ROWS: 25000
 };
 const APP_DATA_SCHEMA_VERSION = "ADS_DECISION_OS_2026_07_TRANSACTION_ECONOMICS_V61";
-const APP_BUILD_VERSION = "V61.4.1";
+const APP_BUILD_VERSION = "V61.4.2";
 const APP_SCHEMA_VERSION = APP_DATA_SCHEMA_VERSION;
 const AMAZON_AD_PRODUCT_META = {
   SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
@@ -7514,12 +7514,21 @@ const execBucketKey = (date,granularity) => {
   if(granularity!=="weekly")return date;
   const d=new Date(date+"T00:00:00Z"),day=(d.getUTCDay()+6)%7;d.setUTCDate(d.getUTCDate()-day);return execIsoDate(d);
 };
+const execTransactionSalesByBucket = (scope,mode) => {
+  const txMode=$("transactionStatusMode")?.value||"accrual",market=getWorkspaceConfig().marketplace,start=$("dateStart")?.value||scope?.start||"",end=$("dateEnd")?.value||scope?.end||"",map=new Map();
+  const rows=(AdsStore.transactions||[]).filter(r=>r?.date&&r.category==="ORDER"&&(txMode!=="cash"||String(r.status||"").toLowerCase()==="released")&&(!start||r.date>=start)&&(!end||r.date<=end)&&(!market||!r.marketplace||normalizeMarketplace(r.marketplace)===market));
+  rows.forEach(r=>{const key=execBucketKey(r.date,mode);map.set(key,(map.get(key)||0)+safeNum(r.productSales));});
+  return {map,available:rows.length>0,rows:rows.length,statusMode:txMode,start,end};
+};
 const execTrendSeries = (rows,granularity="auto") => {
-  if(!rows?.length)return [];
-  const scope=getExecutiveDateScope(rows),mode=granularity==="auto"?(scope.days>45?"weekly":"daily"):granularity,groups=groupBy(rows.filter(r=>r.date),r=>execBucketKey(r.date,mode));
-  return [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([bucket,list])=>{
-    const split=splitAttributionRows(list),mature=sumMetrics(split.mature),pending=split.pendingMetrics,biz=getExecutiveBizSales(split.mature,{start:bucket,end:mode==="weekly"?execShiftDate(bucket,6):bucket});
-    return {date:bucket,label:mode==="weekly"?`${bucket.slice(5)}周`:bucket.slice(5),...mature,pendingSpend:pending.spend,bizSales:biz.available?biz.sales:null,tacos:biz.available&&biz.sales>0?mature.spend/biz.sales:null};
+  const adRows=rows||[],scope=getExecutiveDateScope(adRows),selectedStart=$("dateStart")?.value||scope.start||"",selectedEnd=$("dateEnd")?.value||scope.end||"";
+  if(!adRows.length&&!(AdsStore.transactions||[]).length)return [];
+  let calendarDays=scope.days;
+  if(selectedStart&&selectedEnd){calendarDays=Math.max(1,Math.round((new Date(selectedEnd+"T00:00:00Z")-new Date(selectedStart+"T00:00:00Z"))/86400000)+1);}
+  const mode=granularity==="auto"?(calendarDays>45?"weekly":"daily"):granularity,groups=groupBy(adRows.filter(r=>r.date),r=>execBucketKey(r.date,mode)),tx=execTransactionSalesByBucket({start:selectedStart,end:selectedEnd},mode),keys=new Set([...groups.keys(),...tx.map.keys()]);
+  return [...keys].sort((a,b)=>a.localeCompare(b)).map(bucket=>{
+    const list=groups.get(bucket)||[],split=splitAttributionRows(list),mature=sumMetrics(split.mature),pending=split.pendingMetrics,biz=getExecutiveBizSales(split.mature,{start:bucket,end:mode==="weekly"?execShiftDate(bucket,6):bucket});
+    return {date:bucket,label:mode==="weekly"?`${bucket.slice(5)}周`:bucket.slice(5),...mature,pendingSpend:pending.spend,bizSales:biz.available?biz.sales:null,transactionSales:tx.map.has(bucket)?tx.map.get(bucket):null,tacos:biz.available&&biz.sales>0?mature.spend/biz.sales:null};
   });
 };
 const execStatusTag = kind => kind==="good"?"good":kind==="bad"?"bad":"warn";
@@ -7595,8 +7604,11 @@ const renderTrend = rows => {
     title=zh?"流量与转化趋势":"Traffic & Conversion Trend";subtitle=zh?"点击与订单看规模，CTR与CVR看质量":"Clicks/orders measure scale; CTR/CVR measure quality";
     datasets=[{type:"bar",label:zh?"点击":"Clicks",data:series.map(x=>x.clicks),backgroundColor:"rgba(10,132,255,.48)",yAxisID:"y"},{type:"bar",label:zh?"订单":"Orders",data:series.map(x=>x.orders),backgroundColor:"rgba(48,209,88,.55)",yAxisID:"y"},{type:"line",label:"CTR %",data:series.map(x=>x.ctr*100),borderColor:"rgba(175,82,222,1)",tension:.28,borderWidth:1.8,pointRadius:0,yAxisID:"y1"},{type:"line",label:"CVR %",data:series.map(x=>x.cvr*100),borderColor:"rgba(255,159,10,1)",tension:.28,borderWidth:2,pointRadius:1,yAxisID:"y1"}];
   }else{
-    title=zh?"经营趋势：花费 / 广告销售 / 贡献利润":"Business Trend: Spend / Ad Sales / Contribution Profit";subtitle=zh?"Business总销售若口径可比，以虚线独立显示；不与广告销售堆叠":"Comparable Business sales appear separately; never stacked with ad-attributed sales";
+    const partialScope=Boolean($("filterPortfolio")?.value||$("filterCampaign")?.value||$("filterAdGroup")?.value||$("filterTargeting")?.value||$("filterSearchTerm")?.value||$("filterMatchType")?.value),hasTx=series.some(x=>x.transactionSales!==null);
+    title=zh?"经营趋势：花费 / 广告销售 / 联合报告销售":"Business Trend: Spend / Ad Sales / Transaction Sales";
+    subtitle=zh?(partialScope&&hasTx?"联合报告销售按左侧日期和交易口径统计，为账户级Posted Date销售；广告数据仍按当前筛选作用域":"联合报告销售按左侧日期与交易口径统计；Business总销售若口径可比，以虚线独立显示"):(partialScope&&hasTx?"Transaction sales follow the selected dates and status mode at account level; ad data remains scoped by current filters":"Transaction sales follow selected dates/status mode; comparable Business sales appear separately");
     datasets=[{type:"bar",label:zh?"广告销售":"Ad Sales",data:series.map(x=>x.sales),backgroundColor:"rgba(10,132,255,.55)",yAxisID:"y"},{type:"bar",label:zh?"成熟花费":"Mature Spend",data:series.map(x=>x.spend),backgroundColor:"rgba(255,69,58,.40)",yAxisID:"y"},{type:"bar",label:zh?"归因中花费":"Pending Spend",data:series.map(x=>x.pendingSpend),backgroundColor:"rgba(142,142,147,.24)",yAxisID:"y"},{type:"line",label:zh?"贡献利润":"Contribution Profit",data:series.map(x=>x.contributionProfit),borderColor:"rgba(48,209,88,1)",tension:.25,borderWidth:2,pointRadius:1,yAxisID:"y"}];
+    if(hasTx)datasets.push({type:"line",label:zh?"联合报告销售额":"Transaction Report Sales",data:series.map(x=>x.transactionSales),borderColor:"rgba(0,199,190,1)",backgroundColor:"rgba(0,199,190,.08)",tension:.25,borderWidth:2.6,pointRadius:2,pointHoverRadius:5,spanGaps:true,yAxisID:"y"});
     if(series.some(x=>x.bizSales!==null))datasets.push({type:"line",label:zh?"Business总销售":"Business Sales",data:series.map(x=>x.bizSales),borderColor:"rgba(175,82,222,1)",borderDash:[6,4],tension:.25,borderWidth:1.8,pointRadius:0,yAxisID:"y"});
   }
   if($("execTrendTitle"))$("execTrendTitle").textContent=title;if($("execTrendSubtitle"))$("execTrendSubtitle").textContent=subtitle;if($("execTrendLegend"))$("execTrendLegend").innerHTML=datasets.map(x=>`<span class="pill">${escapeHtml(x.label)}</span>`).join("");
@@ -7606,11 +7618,11 @@ const renderTrend = rows => {
 const exportExecutiveOverviewExcel = async () => {
   const d=lastExecutiveOverviewData||getExecutiveData(AdsStore.view||[],sumMetrics(AdsStore.view||[]));if(!d?.rows?.length){notify(currentLang==="zh"?"当前没有可导出的总览数据":"No overview data to export");return;}
   const summary=[["Scope",`${d.scope.start} → ${d.scope.end}`],["Portfolio",execSelectedFilter("filterPortfolio")||"ALL"],["Campaign",execSelectedFilter("filterCampaign")||"ALL"],["Decision",d.verdict],["Next Move",d.nextMove],["Mature Spend",d.current.spend],["Pending Spend",d.pending.spend],["Ad Sales",d.current.sales],["Business Sales",d.bizSales],["Contribution Profit",d.current.contributionProfit],["ACOS",d.current.acos===Infinity?null:d.current.acos],["Target ACOS",d.targetAcos],["TACoS",d.tacos],["ROAS",d.current.roas],["Orders",d.current.orders],["Waste Spend",d.wasteSpend],["Waste Share",d.wasteShare],["Winners",d.winners.length],["Repair Objects",d.repair.length],["Decision Readiness",d.quality.decisionReadinessScore]];
-  const breakdown=d.breakdown.map(x=>[x.name,x.spend,x.sales,x.orders,x.clicks,x.acos===Infinity?null:x.acos,x.roas,x.contributionProfit,x.status.label]);const series=execTrendSeries(d.rows,EXEC_OVERVIEW_STATE.granularity).map(x=>[x.date,x.spend,x.pendingSpend,x.sales,x.bizSales,x.orders,x.clicks,x.ctr,x.cvr,x.acos===Infinity?null:x.acos,x.roas,x.contributionProfit]);
-  await exportRichExcelMultiSheet([{sheetName:"Executive Summary",headers:["Metric","Value"],dataRows:summary},{sheetName:"Operating Breakdown",headers:["Object","Spend","Sales","Orders","Clicks","ACOS","ROAS","Contribution Profit","Status"],dataRows:breakdown},{sheetName:"Trend",headers:["Period","Mature Spend","Pending Spend","Ad Sales","Business Sales","Orders","Clicks","CTR","CVR","ACOS","ROAS","Contribution Profit"],dataRows:series}],`Executive_Overview_${getTs()}.xlsx`);
+  const breakdown=d.breakdown.map(x=>[x.name,x.spend,x.sales,x.orders,x.clicks,x.acos===Infinity?null:x.acos,x.roas,x.contributionProfit,x.status.label]);const series=execTrendSeries(d.rows,EXEC_OVERVIEW_STATE.granularity).map(x=>[x.date,x.spend,x.pendingSpend,x.sales,x.bizSales,x.transactionSales,x.orders,x.clicks,x.ctr,x.cvr,x.acos===Infinity?null:x.acos,x.roas,x.contributionProfit]);
+  await exportRichExcelMultiSheet([{sheetName:"Executive Summary",headers:["Metric","Value"],dataRows:summary},{sheetName:"Operating Breakdown",headers:["Object","Spend","Sales","Orders","Clicks","ACOS","ROAS","Contribution Profit","Status"],dataRows:breakdown},{sheetName:"Trend",headers:["Period","Mature Spend","Pending Spend","Ad Sales","Business Sales","Transaction Report Sales","Orders","Clicks","CTR","CVR","ACOS","ROAS","Contribution Profit"],dataRows:series}],`Executive_Overview_${getTs()}.xlsx`);
 };
 document.addEventListener("click",e=>{const modeBtn=e.target.closest?.("[data-exec-trend-mode]");if(modeBtn){EXEC_OVERVIEW_STATE.trendMode=modeBtn.dataset.execTrendMode;safeStorageSet("exec_trend_mode",EXEC_OVERVIEW_STATE.trendMode);document.querySelectorAll("[data-exec-trend-mode]").forEach(b=>b.classList.toggle("active",b===modeBtn));renderTrend(AdsStore.view||[]);return;}const drill=e.target.closest?.("[data-exec-campaign]");if(drill){const name=decodeURIComponent(drill.dataset.execCampaign||"");if($("filterCampaign")){const opt=[...$("filterCampaign").options].find(o=>String(o.value).toLowerCase()===name.toLowerCase());if(opt){$("filterCampaign").value=opt.value;applyFilters();document.getElementById("overviewSection")?.scrollIntoView({behavior:"smooth",block:"start"});}else notify(currentLang==="zh"?"该Campaign不在当前下拉范围，请使用搜索筛选":"Campaign is outside the current dropdown scope");}}});
-document.addEventListener("change",e=>{if(e.target?.id==="execGranularity"){EXEC_OVERVIEW_STATE.granularity=e.target.value;safeStorageSet("exec_granularity",EXEC_OVERVIEW_STATE.granularity);renderTrend(AdsStore.view||[]);}if(e.target?.id==="execBreakdownDimension"){EXEC_OVERVIEW_STATE.breakdown=e.target.value;safeStorageSet("exec_breakdown",EXEC_OVERVIEW_STATE.breakdown);const d=getExecutiveData(AdsStore.view||[],sumMetrics(AdsStore.view||[]));lastExecutiveOverviewData=d;execRenderBreakdown(d);}});
+document.addEventListener("change",e=>{if(e.target?.id==="execGranularity"){EXEC_OVERVIEW_STATE.granularity=e.target.value;safeStorageSet("exec_granularity",EXEC_OVERVIEW_STATE.granularity);renderTrend(AdsStore.view||[]);}if(e.target?.id==="execBreakdownDimension"){EXEC_OVERVIEW_STATE.breakdown=e.target.value;safeStorageSet("exec_breakdown",EXEC_OVERVIEW_STATE.breakdown);const d=getExecutiveData(AdsStore.view||[],sumMetrics(AdsStore.view||[]));lastExecutiveOverviewData=d;execRenderBreakdown(d);}if(e.target?.id==="transactionStatusMode")requestAnimationFrame(()=>renderTrend(AdsStore.view||[]));});
 
 const getRankKey = () => { 
   const mapping = { 
