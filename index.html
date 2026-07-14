@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="zh-CN">
@@ -8,9 +7,9 @@
 <meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://oapi.dingtalk.com https://qyapi.weixin.qq.com https://open.feishu.cn https://hooks.slack.com https://huggingface.co https://*.huggingface.co https://*.hf.co; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.1 Transaction Finance Report</title>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.4 Editorial Finance</title>
 <script>
-window.APP_BUILD_VERSION='V61.1.0';
+window.APP_BUILD_VERSION='V61.4.0';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" onerror="__loadDependencyFallback('PapaParse','https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')"></script>
@@ -2345,34 +2344,89 @@ body.final-workspace-v60 .table-container{content-visibility:visible;contain:non
 </style>
 
 <style id="transaction-finance-report-style">
-.txFinanceOverlay{z-index:10040;padding:14px}
-.txFinanceModal{width:min(1500px,98vw);max-height:95vh;border-radius:18px!important}
-.txFinanceModal .largeModalHeader{grid-template-columns:minmax(300px,1fr) auto;align-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 8%,var(--card)),var(--card))}
-.txFinanceModal .largeModalBody{gap:12px;background:var(--bg)}
-.txFinanceScope{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));background:color-mix(in srgb,var(--accent) 7%,var(--card));border-radius:13px}
-.txFinanceScopeMain{font-weight:850;color:var(--text)}
-.txFinanceScopeMeta{font-size:11.5px;color:var(--muted)}
-.txFinanceSummary{display:grid;grid-template-columns:repeat(8,minmax(120px,1fr));gap:9px}
-.txFinanceMetric{border:1px solid var(--line);border-radius:13px;background:var(--card);padding:10px 11px;min-width:0;box-shadow:0 2px 8px rgba(0,0,0,.025)}
-.txFinanceMetric .k{font-size:10.8px;color:var(--muted);font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.txFinanceMetric .v{margin-top:4px;font-size:18px;font-weight:900;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.txFinanceMetric .m{margin-top:3px;font-size:10.5px;color:var(--muted);line-height:1.35}
-.txFinanceMetric.good .v{color:var(--good)}.txFinanceMetric.bad .v{color:var(--bad)}.txFinanceMetric.warn .v{color:var(--warn)}
-.txFinanceGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
-.txFinanceCard{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px;min-width:0}
-.txFinanceCard h3{margin:0;font-size:13.5px}.txFinanceCard .lead{margin-top:3px;color:var(--muted);font-size:10.8px;line-height:1.45}
-.txFinanceBreakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}
-.txFinanceLine{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);background:var(--hover-bg);border-radius:10px;padding:8px 9px;min-width:0}
-.txFinanceLine span{font-size:11.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.txFinanceLine b{font-size:11.8px;white-space:nowrap}
-.txFinanceLine.good b{color:var(--good)}.txFinanceLine.bad b{color:var(--bad)}.txFinanceLine.warn b{color:var(--warn)}
-.txFinanceTableWrap{margin-top:9px;max-height:310px;overflow:auto;border:1px solid var(--line);border-radius:11px;background:var(--card)}
-.txFinanceTable{min-width:760px;table-layout:fixed}.txFinanceTable th,.txFinanceTable td{padding:7px 8px!important;font-size:10.8px!important;height:32px!important;white-space:nowrap!important}.txFinanceTable td:first-child{font-weight:720}
-.txFinanceEmpty{padding:34px 18px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--muted);background:var(--card);line-height:1.65}
-.txFinanceFootnote{padding:9px 11px;border-radius:11px;background:var(--softWarn);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 24%,transparent);font-size:10.8px;line-height:1.5}
-.txFinanceTotalRow{border-top:1px solid var(--line);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;gap:12px;font-size:12px}.txFinanceTotalRow b{font-size:14px;color:var(--accent)}
-@media(max-width:1280px){.txFinanceSummary{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:900px){.txFinanceGrid{grid-template-columns:1fr}.txFinanceSummary{grid-template-columns:repeat(2,1fr)}.txFinanceModal .largeModalHeader{grid-template-columns:1fr}.txFinanceModal .largeModalActions{justify-content:flex-start}}
-@media(max-width:520px){.txFinanceSummary,.txFinanceBreakdown{grid-template-columns:1fr}.txFinanceOverlay{padding:5px}.txFinanceModal{max-height:98vh;width:99vw}}
+/* ================= V61.4 Transaction Finance — editorial SaaS redesign ================= */
+.txFinanceOverlay{z-index:10040;padding:18px;background:rgba(15,23,42,.54);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.txFinanceModal{--tx-ink:#111827;--tx-muted:#667085;--tx-line:#e7e9ee;--tx-soft:#f7f8fa;--tx-soft2:#f2f4f7;--tx-accent:#5b5bd6;--tx-good:#14804a;--tx-bad:#c0362c;--tx-warn:#a86209;width:min(1500px,97vw);max-height:95vh;border-radius:16px!important;overflow:hidden;background:#fff;box-shadow:0 36px 110px rgba(15,23,42,.34);border:1px solid rgba(255,255,255,.22);color:var(--tx-ink)}
+[data-theme="dark"] .txFinanceModal,[data-theme="ocean"] .txFinanceModal,[data-theme="forest"] .txFinanceModal{--tx-ink:#f8fafc;--tx-muted:#aab2bf;--tx-line:#343942;--tx-soft:#20242b;--tx-soft2:#282d35;--tx-accent:#8b8bf8;--tx-good:#44d28a;--tx-bad:#ff746a;--tx-warn:#f5b657;background:#181b20;color:var(--tx-ink)}
+.txFinanceModal .largeModalHeader{position:sticky;top:0;z-index:20;grid-template-columns:minmax(360px,1fr) auto;align-items:center;padding:18px 24px 14px;background:color-mix(in srgb,#fff 94%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--tx-line)}
+[data-theme="dark"] .txFinanceModal .largeModalHeader,[data-theme="ocean"] .txFinanceModal .largeModalHeader,[data-theme="forest"] .txFinanceModal .largeModalHeader{background:color-mix(in srgb,#181b20 94%,transparent)}
+.txFinanceModal .largeModalHeader h2{font-size:22px;font-weight:900;letter-spacing:-.45px;color:var(--tx-ink)}
+.txFinanceModal .largeModalActions .btn{border-radius:10px;padding:8px 12px;box-shadow:none}
+.txFinanceModal .largeModalActions .btn.primary{background:var(--tx-ink);border-color:var(--tx-ink);color:#fff}
+.txFinanceModal .largeModalBody{gap:0;background:#fff;padding:0;overflow:auto}
+[data-theme="dark"] .txFinanceModal .largeModalBody,[data-theme="ocean"] .txFinanceModal .largeModalBody,[data-theme="forest"] .txFinanceModal .largeModalBody{background:#181b20}
+.txFinanceHeaderMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:7px}
+.txFinanceHeaderPill{display:inline-flex;align-items:center;gap:5px;border:0;background:var(--tx-soft);border-radius:7px;padding:5px 8px;font-size:10.7px;font-weight:750;color:var(--tx-muted)}
+.txFinanceHeaderPill strong{color:var(--tx-ink)}
+.txFinanceTabsBar{position:sticky;top:77px;z-index:19;display:flex;align-items:end;justify-content:space-between;gap:16px;padding:0 24px;background:color-mix(in srgb,#fff 96%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--tx-line)}
+[data-theme="dark"] .txFinanceTabsBar,[data-theme="ocean"] .txFinanceTabsBar,[data-theme="forest"] .txFinanceTabsBar{background:color-mix(in srgb,#181b20 96%,transparent)}
+.txFinanceTabs{display:flex;align-items:center;gap:26px}
+.txFinanceTab{position:relative;border:0;background:transparent;color:var(--tx-muted);padding:14px 0 12px;font-size:11.8px;font-weight:800;cursor:pointer;transition:.18s ease}
+.txFinanceTab:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:transparent;border-radius:2px}
+.txFinanceTab:hover{color:var(--tx-ink)}
+.txFinanceTab.active{color:var(--tx-ink)}
+.txFinanceTab.active:after{background:var(--tx-ink)}
+.txFinanceTabMeta{padding-bottom:12px;font-size:10.7px;color:var(--tx-muted);font-weight:700}
+.txFinanceContent{padding:22px 24px 26px}
+.txFinancePanel{display:none}.txFinancePanel.active{display:block;animation:fadeIn .18s ease}
+.txFinanceEmpty{padding:48px 24px;border:1px dashed var(--tx-line);border-radius:12px;text-align:center;color:var(--tx-muted);background:var(--tx-soft);line-height:1.75}
+
+/* Overview */
+.txFinOverview{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.75fr);gap:22px;align-items:start}
+.txFinStatement{border:1px solid var(--tx-line);border-radius:14px;overflow:hidden;background:#fff}
+[data-theme="dark"] .txFinStatement,[data-theme="ocean"] .txFinStatement,[data-theme="forest"] .txFinStatement{background:#181b20}
+.txFinStatementHead{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:18px 20px 16px;border-bottom:1px solid var(--tx-line);background:linear-gradient(180deg,var(--tx-soft),#fff)}
+[data-theme="dark"] .txFinStatementHead,[data-theme="ocean"] .txFinStatementHead,[data-theme="forest"] .txFinStatementHead{background:linear-gradient(180deg,var(--tx-soft),#181b20)}
+.txFinKicker{font-size:10.5px;font-weight:850;letter-spacing:.085em;text-transform:uppercase;color:var(--tx-muted)}
+.txFinStatementValue{margin-top:7px;font-size:39px;line-height:1;font-weight:950;letter-spacing:-1px;color:var(--tx-ink)}
+.txFinStatementSub{margin-top:8px;font-size:11.4px;line-height:1.5;color:var(--tx-muted);max-width:640px}
+.txFinStatementDelta{min-width:108px;text-align:right}
+.txFinStatementDelta b{display:block;font-size:15px;font-weight:900}.txFinStatementDelta span{display:block;margin-top:4px;font-size:10px;color:var(--tx-muted)}
+.txFinLedger{padding:6px 20px 10px}
+.txFinLedgerRow{display:grid;grid-template-columns:minmax(170px,1.2fr) minmax(110px,.65fr) minmax(94px,.5fr);gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--tx-line)}
+.txFinLedgerRow:last-child{border-bottom:0}
+.txFinLedgerRow .label b{display:block;font-size:11.7px;color:var(--tx-ink)}.txFinLedgerRow .label span{display:block;margin-top:3px;font-size:10px;color:var(--tx-muted)}
+.txFinLedgerRow .amount{text-align:right;font-size:13px;font-weight:880;color:var(--tx-ink)}
+.txFinLedgerRow .ratio{text-align:right;font-size:10.7px;font-weight:760;color:var(--tx-muted)}
+.txFinLedgerRow.negative .amount{color:var(--tx-bad)}.txFinLedgerRow.positive .amount{color:var(--tx-good)}
+.txFinLedgerRow.total{margin-top:4px;padding-top:15px;border-top:2px solid var(--tx-ink);border-bottom:0}.txFinLedgerRow.total .label b,.txFinLedgerRow.total .amount{font-size:14px}.txFinLedgerRow.total .ratio{color:var(--tx-ink);font-weight:850}
+.txFinRightRail{display:flex;flex-direction:column;gap:18px}
+.txFinRatioPanel{border-top:3px solid var(--tx-ink);padding-top:4px}
+.txFinRatioRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:13px 0;border-bottom:1px solid var(--tx-line)}
+.txFinRatioRow b{display:block;font-size:11.5px}.txFinRatioRow span{display:block;margin-top:3px;font-size:9.9px;color:var(--tx-muted)}.txFinRatioRow strong{font-size:17px;letter-spacing:-.25px}
+.txFinInsightPanel{background:var(--tx-soft);border-radius:12px;padding:15px 16px}
+.txFinInsightTitle{font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-muted);margin-bottom:4px}
+.txFinInsight{display:grid;grid-template-columns:8px minmax(0,1fr);gap:10px;padding:11px 0;border-bottom:1px solid var(--tx-line)}
+.txFinInsight:last-child{border-bottom:0}.txFinInsight:before{content:"";width:7px;height:7px;border-radius:999px;margin-top:5px;background:var(--tx-muted)}.txFinInsight.good:before{background:var(--tx-good)}.txFinInsight.warn:before{background:var(--tx-warn)}.txFinInsight.bad:before{background:var(--tx-bad)}
+.txFinInsight b{display:block;font-size:11px}.txFinInsight span{display:block;margin-top:3px;font-size:10px;line-height:1.45;color:var(--tx-muted)}
+.txFinChartGrid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(330px,.75fr);gap:18px;margin-top:20px}
+.txFinChartBlock{border-top:1px solid var(--tx-line);padding-top:15px;min-width:0}
+.txFinSectionHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.txFinSectionHead h3{margin:0;font-size:13.5px;letter-spacing:-.12px}.txFinSectionHead p{margin:4px 0 0;font-size:10.5px;line-height:1.45;color:var(--tx-muted)}
+.txFinanceChart{position:relative;height:300px}.txFinanceChart.compact{height:245px}.txFinanceChart.tall{height:330px}
+
+/* Shared analytical tabs */
+.txFinTabHeader{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--tx-line)}
+.txFinTabHeader h3{margin:0;font-size:20px;letter-spacing:-.35px}.txFinTabHeader p{margin:5px 0 0;font-size:11px;color:var(--tx-muted)}
+.txFinTopStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--tx-line);border-bottom:1px solid var(--tx-line);margin-bottom:20px}
+.txFinTopStat{padding:14px 16px;border-right:1px solid var(--tx-line)}.txFinTopStat:last-child{border-right:0}
+.txFinTopStat .k{font-size:10.1px;color:var(--tx-muted);font-weight:800;text-transform:uppercase;letter-spacing:.055em}.txFinTopStat .v{margin-top:5px;font-size:20px;font-weight:930;letter-spacing:-.3px}.txFinTopStat .m{margin-top:4px;font-size:10px;color:var(--tx-muted)}
+.txFinAnalyticGrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:22px;align-items:start}
+.txFinPanel{min-width:0}
+.txFinPanel h4{margin:0;font-size:13px}.txFinPanel .lead{margin-top:4px;font-size:10.4px;color:var(--tx-muted);line-height:1.45}
+.txFinanceCostRows{margin-top:12px}
+.txFinanceCostRow{display:grid;grid-template-columns:minmax(140px,1fr) minmax(160px,1.6fr) minmax(110px,.7fr);gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--tx-line)}
+.txFinanceCostRow:last-child{border-bottom:0}.txFinanceCostName b{display:block;font-size:11.3px}.txFinanceCostName span{display:block;margin-top:3px;font-size:9.8px;color:var(--tx-muted)}
+.txFinanceCostTrack{height:5px;border-radius:999px;background:var(--tx-soft2);overflow:hidden}.txFinanceCostFill{height:100%;border-radius:999px;background:var(--tx-ink)}
+.txFinanceCostValue{text-align:right}.txFinanceCostValue b{display:block;font-size:11.5px}.txFinanceCostValue span{display:block;margin-top:3px;font-size:9.8px;color:var(--tx-muted)}
+.txFinanceTableWrap{max-height:430px;overflow:auto;border-top:1px solid var(--tx-line);border-bottom:1px solid var(--tx-line);background:transparent;margin-top:12px}
+.txFinanceTable{min-width:920px;table-layout:fixed}.txFinanceTable thead th{background:#fff!important;color:var(--tx-muted)!important;font-size:9.8px!important;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--tx-line)!important}.txFinanceTable th,.txFinanceTable td{padding:10px 8px!important;font-size:10.7px!important;height:36px!important;white-space:nowrap!important}.txFinanceTable td:first-child{font-weight:760}.txFinanceTable td.good{color:var(--tx-good)}.txFinanceTable td.bad{color:var(--tx-bad)}.txFinanceTable tbody tr:hover{background:var(--tx-soft)}
+[data-theme="dark"] .txFinanceTable thead th,[data-theme="ocean"] .txFinanceTable thead th,[data-theme="forest"] .txFinanceTable thead th{background:#181b20!important}
+.txFinanceFootnote{margin-top:20px;padding:12px 14px;border-left:3px solid var(--tx-warn);background:var(--tx-soft);font-size:10.6px;line-height:1.55;color:var(--tx-muted)}
+
+@media(max-width:1180px){.txFinOverview,.txFinChartGrid,.txFinAnalyticGrid{grid-template-columns:1fr}.txFinRightRail{display:grid;grid-template-columns:1fr 1fr}.txFinanceChart.tall{height:300px}}
+@media(max-width:900px){.txFinanceModal .largeModalHeader{grid-template-columns:1fr}.txFinanceModal .largeModalActions{justify-content:flex-start}.txFinanceTabsBar{top:132px;align-items:flex-start;flex-direction:column;padding-top:0}.txFinanceTabs{gap:18px;overflow:auto;width:100%}.txFinanceTabMeta{padding-bottom:10px}.txFinTopStats{grid-template-columns:repeat(2,1fr)}.txFinTopStat:nth-child(2){border-right:0}.txFinTopStat:nth-child(-n+2){border-bottom:1px solid var(--tx-line)}.txFinRightRail{grid-template-columns:1fr}}
+@media(max-width:560px){.txFinanceOverlay{padding:5px}.txFinanceModal{width:99vw;max-height:98vh;border-radius:10px!important}.txFinanceContent{padding:16px 14px 20px}.txFinanceTabsBar{padding-left:14px;padding-right:14px}.txFinStatementHead{flex-direction:column}.txFinStatementDelta{text-align:left}.txFinStatementValue{font-size:32px}.txFinLedgerRow{grid-template-columns:minmax(0,1fr) auto}.txFinLedgerRow .ratio{display:none}.txFinTopStats{grid-template-columns:1fr}.txFinTopStat{border-right:0;border-bottom:1px solid var(--tx-line)}.txFinTopStat:last-child{border-bottom:0}.txFinanceChart,.txFinanceChart.tall{height:260px}}
 </style>
 
 </head>
@@ -4221,7 +4275,7 @@ const applyLanguageToDOM = () => {
       if (I18N[currentLang][key]) el.title = I18N[currentLang][key];
   });
   
-  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.1.0'}`;
+  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.4.0'}`;
   document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
   
   const btnLang = document.getElementById('btnLangToggle');
@@ -4306,7 +4360,7 @@ const PERF = {
   IDB_CHUNK_ROWS: 25000
 };
 const APP_DATA_SCHEMA_VERSION = "ADS_DECISION_OS_2026_07_TRANSACTION_ECONOMICS_V61";
-const APP_BUILD_VERSION = "V61.1.0";
+const APP_BUILD_VERSION = "V61.4.0";
 const APP_SCHEMA_VERSION = APP_DATA_SCHEMA_VERSION;
 const AMAZON_AD_PRODUCT_META = {
   SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
@@ -13432,12 +13486,32 @@ window.addEventListener('load', AdsDashboardApp.init);
   const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0;};
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const sum=(rows,key)=>rows.reduce((a,r)=>a+num(typeof key==='function'?key(r):r[key]),0);
+  const safeDiv=(a,b)=>b?num(a)/num(b):0;
   const currency=()=>String(byId('workspaceCurrency')?.value||'USD').toUpperCase();
   const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:currency(),minimumFractionDigits:2,maximumFractionDigits:2}).format(num(v));
   const pct=v=>`${(num(v)*100).toFixed(2)}%`;
   const signedMoney=v=>`${num(v)>0?'+':''}${money(v)}`;
-  const toneForSigned=v=>num(v)>0?'good':num(v)<0?'bad':'';
+  const toneForSigned=v=>num(v)>0?'good':num(v)<0?'bad':'neutral';
   const categoryLabel={ORDER:'订单销售',REFUND:'退款',ADVERTISING:'广告扣费',INBOUND:'入库配置费',STORAGE:'仓储费',ACCOUNT_OVERHEAD:'账户级服务费',LIQUIDATION:'清算收入',ADJUSTMENT:'调整项',OTHER:'其他交易',TRANSFER:'转账'};
+  let chartBag={},lastReport=null,activeTab='overview';
+
+  const destroyCharts=(prefix='')=>{
+    Object.entries(chartBag).forEach(([k,c])=>{if(!prefix||k.startsWith(prefix)){try{c?.destroy?.();}catch(e){}delete chartBag[k];}});
+  };
+  const parseDate=s=>{if(!s)return null;const d=new Date(`${s}T00:00:00`);return Number.isNaN(d.getTime())?null:d;};
+  const fmtDate=d=>d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`:'';
+  const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+  const daySpan=(a,b)=>a&&b?Math.max(1,Math.round((b-a)/86400000)+1):0;
+  const delta=(cur,prev,{invert=false,points=false}={})=>{
+    if(!Number.isFinite(prev)||prev===0)return {text:'无上期',tone:'neutral',raw:null};
+    const raw=points?(cur-prev):(cur-prev)/Math.abs(prev);
+    const good=invert?raw<0:raw>0;
+    const bad=invert?raw>0:raw<0;
+    return {text:points?`${raw>0?'+':''}${(raw*100).toFixed(2)}pp`:`${raw>0?'+':''}${(raw*100).toFixed(1)}%`,tone:good?'good':bad?'bad':'neutral',raw};
+  };
+  const metric=(k,v,m,d)=>`<div class="txFinanceMetric"><div class="txFinanceMetricHead"><div class="k">${esc(k)}</div><span class="txFinanceDelta ${esc(d?.tone||'neutral')}">${esc(d?.text||'—')}</span></div><div class="v">${esc(v)}</div><div class="m">${esc(m)}</div></div>`;
+  const ratio=(k,v,m)=>`<div class="txFinanceRatio"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div><div class="m">${esc(m)}</div></div>`;
+  const mini=(k,v,m)=>`<div class="txFinanceMiniMetric"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div><div class="m">${esc(m)}</div></div>`;
 
   const ensureModal=()=>{
     let modal=byId('transactionFinanceModal');
@@ -13450,32 +13524,42 @@ window.addEventListener('load', AdsDashboardApp.init);
     modal.setAttribute('aria-labelledby','transactionFinanceTitle');
     modal.innerHTML=`<div class="largeModal txFinanceModal">
       <div class="largeModalHeader">
-        <div><h2 id="transactionFinanceTitle">交易财务报表</h2><div class="small" id="transactionFinanceSubtitle">按左侧日期范围读取联合报告，计算销售、退款、Amazon费用和净结算</div></div>
+        <div>
+          <h2 id="transactionFinanceTitle">交易财务报表</h2>
+          <div class="txFinanceHeaderMeta" id="transactionFinanceHeaderMeta"></div>
+        </div>
         <div class="largeModalActions">
           <button class="btn" id="btnRefreshTransactionFinance" type="button">刷新</button>
           <button class="btn primary" id="btnExportTransactionFinance" type="button">导出 Excel</button>
           <button class="btn" id="btnCloseTransactionFinance" type="button">关闭</button>
         </div>
       </div>
-      <div class="largeModalBody" id="transactionFinanceBody"></div>
+      <div class="txFinanceTabsBar">
+        <div class="txFinanceTabs" role="tablist" aria-label="交易财务报表维度">
+          <button class="txFinanceTab active" data-tx-tab="overview" type="button">经营总览</button>
+          <button class="txFinanceTab" data-tx-tab="costs" type="button">成本结构</button>
+          <button class="txFinanceTab" data-tx-tab="refunds" type="button">退款质量</button>
+          <button class="txFinanceTab" data-tx-tab="sku" type="button">SKU表现</button>
+        </div>
+        <div class="txFinanceTabMeta" id="transactionFinanceTabMeta">按左侧日期范围 · Posted Date</div>
+      </div>
+      <div class="largeModalBody"><div class="txFinanceContent" id="transactionFinanceBody"></div></div>
     </div>`;
     document.body.appendChild(modal);
     byId('btnCloseTransactionFinance')?.addEventListener('click',closeModal);
     byId('btnRefreshTransactionFinance')?.addEventListener('click',renderReport);
     byId('btnExportTransactionFinance')?.addEventListener('click',exportReport);
+    modal.querySelector('.txFinanceTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-tx-tab]');if(b)switchTab(b.dataset.txTab);});
     modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
     return modal;
   };
-  const closeModal=()=>{const m=byId('transactionFinanceModal');if(m)m.style.display='none';};
+  const closeModal=()=>{destroyCharts();const m=byId('transactionFinanceModal');if(m)m.style.display='none';};
   const getAllTransactionRows=()=>{try{const rows=AdsDashboardApp?.debug?.getTransactionRowsForFinance?.();return Array.isArray(rows)?rows:[];}catch(e){return[];}};
-  const filteredRows=()=>{
-    const start=byId('dateStart')?.value||'',end=byId('dateEnd')?.value||'',mode=byId('transactionStatusMode')?.value||'accrual';
-    const all=getAllTransactionRows();
-    const rows=all.filter(r=>(mode!=='cash'||String(r.status||'').toLowerCase()==='released')&&(!start||!r.date||r.date>=start)&&(!end||!r.date||r.date<=end));
-    return {start,end,mode,rows,allRows:all};
-  };
-  const buildReport=()=>{
-    const scope=filteredRows(),rows=scope.rows,order=rows.filter(r=>r.category==='ORDER'),refund=rows.filter(r=>r.category==='REFUND'),trade=rows.filter(r=>r.category==='ORDER'||r.category==='REFUND');
+  const currentScope=()=>({start:byId('dateStart')?.value||'',end:byId('dateEnd')?.value||'',mode:byId('transactionStatusMode')?.value||'accrual'});
+  const rowsFor=(all,start,end,mode)=>all.filter(r=>(mode!=='cash'||String(r.status||'').toLowerCase()==='released')&&(!start||!r.date||r.date>=start)&&(!end||!r.date||r.date<=end));
+
+  const aggregate=(rows,scope={})=>{
+    const order=rows.filter(r=>r.category==='ORDER'),refund=rows.filter(r=>r.category==='REFUND'),trade=rows.filter(r=>r.category==='ORDER'||r.category==='REFUND');
     const categoryTotals=new Map();
     for(const r of rows){const key=r.category||'OTHER',x=categoryTotals.get(key)||{rows:0,total:0};x.rows++;x.total+=num(r.total);categoryTotals.set(key,x);}
     const taxFields=['productSalesTax','shippingCreditsTax','giftWrapCreditsTax','regulatoryFeeTax','promotionalRebatesTax','marketplaceWithheldTax'];
@@ -13491,101 +13575,202 @@ window.addEventListener('load', AdsDashboardApp.init);
     const otherCategory=cat('OTHER'),liquidation=cat('LIQUIDATION'),adjustments=cat('ADJUSTMENT'),transfer=cat('TRANSFER');
     const settlementTotal=sum(rows,'total'),operatingSettlement=settlementTotal-transfer;
     const amazonTradeFees=sellingFees+fbaFees+promo+otherTx+otherTrade;
-    const operatingExpenses=advertising+inbound+storage+overhead+Math.max(0,-otherCategory)+Math.max(0,-adjustments),nonAdOperatingExpenses=Math.max(0,operatingExpenses-advertising);
-    const orderIds=new Set(order.map(r=>r.orderId).filter(Boolean));
-    const skuSet=new Set(rows.map(r=>r.sku).filter(Boolean));
-
+    const operatingExpenses=advertising+inbound+storage+overhead+Math.max(0,-otherCategory)+Math.max(0,-adjustments);
+    const nonAdOperatingExpenses=Math.max(0,operatingExpenses-advertising);
+    const orderIds=new Set(order.map(r=>r.orderId).filter(Boolean)),skuSet=new Set(rows.map(r=>r.sku).filter(Boolean));
     const dailyMap=new Map(),skuMap=new Map();
     for(const r of rows){
-      const d=r.date||'无日期',x=dailyMap.get(d)||{date:d,rows:0,sales:0,refund:0,fees:0,ads:0,net:0};x.rows++;x.net+=num(r.total);
-      if(r.category==='ORDER'){x.sales+=num(r.productSales);x.fees+=-(num(r.sellingFees)+num(r.fbaFees)+num(r.promotionalRebates)+num(r.otherTransactionFees)+num(r.other));}
+      const d=r.date||'无日期',x=dailyMap.get(d)||{date:d,rows:0,sales:0,refund:0,fees:0,ads:0,net:0,units:0};x.rows++;x.net+=num(r.total);
+      if(r.category==='ORDER'){x.sales+=num(r.productSales);x.units+=Math.max(0,num(r.quantity));x.fees+=-(num(r.sellingFees)+num(r.fbaFees)+num(r.promotionalRebates)+num(r.otherTransactionFees)+num(r.other));}
       else if(r.category==='REFUND'){x.refund+=Math.max(0,-num(r.productSales));x.fees+=-(num(r.sellingFees)+num(r.fbaFees)+num(r.promotionalRebates)+num(r.otherTransactionFees)+num(r.other));}
       else if(r.category==='ADVERTISING')x.ads+=Math.max(0,-num(r.total));
       dailyMap.set(d,x);
-      if(r.sku){const s=skuMap.get(r.sku)||{sku:r.sku,rows:0,units:0,refundUnits:0,sales:0,refund:0,fees:0,net:0};s.rows++;s.net+=num(r.total);if(r.category==='ORDER'){s.units+=Math.max(0,num(r.quantity));s.sales+=num(r.productSales);s.fees+=Math.max(0,-(num(r.sellingFees)+num(r.fbaFees)+num(r.promotionalRebates)+num(r.otherTransactionFees)+num(r.other)));}else if(r.category==='REFUND'){s.refundUnits+=Math.max(0,num(r.quantity));s.refund+=Math.max(0,-num(r.productSales));s.fees+=Math.max(0,-(num(r.sellingFees)+num(r.fbaFees)+num(r.promotionalRebates)+num(r.otherTransactionFees)+num(r.other)));}skuMap.set(r.sku,s);}
+      if(r.sku){
+        const s=skuMap.get(r.sku)||{sku:r.sku,rows:0,units:0,refundUnits:0,sales:0,refund:0,fees:0,net:0};s.rows++;s.net+=num(r.total);
+        if(r.category==='ORDER'){s.units+=Math.max(0,num(r.quantity));s.sales+=num(r.productSales);s.fees+=-(num(r.sellingFees)+num(r.fbaFees)+num(r.promotionalRebates)+num(r.otherTransactionFees)+num(r.other));}
+        else if(r.category==='REFUND'){s.refundUnits+=Math.max(0,num(r.quantity));s.refund+=Math.max(0,-num(r.productSales));s.fees+=-(num(r.sellingFees)+num(r.fbaFees)+num(r.promotionalRebates)+num(r.otherTransactionFees)+num(r.other));}
+        skuMap.set(r.sku,s);
+      }
     }
-    const daily=[...dailyMap.values()].sort((a,b)=>b.date.localeCompare(a.date));
-    const sku=[...skuMap.values()].sort((a,b)=>b.sales-a.sales).slice(0,200);
-    const categories=[...categoryTotals.entries()].map(([category,x])=>({category,label:categoryLabel[category]||category,rows:x.rows,total:x.total})).sort((a,b)=>Math.abs(b.total)-Math.abs(a.total));
+    const daily=[...dailyMap.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(x=>({...x,refundRate:safeDiv(x.refund,x.sales),netRate:safeDiv(x.net,x.sales)}));
+    const sku=[...skuMap.values()].map(s=>({...s,refundRate:safeDiv(s.refund,s.sales),feeRate:safeDiv(s.fees,s.sales),netRate:safeDiv(s.net,s.sales)})).sort((a,b)=>b.sales-a.sales);
+    const categories=[...categoryTotals.entries()].map(([category,x])=>({category,label:categoryLabel[category]||category,rows:x.rows,total:x.total,share:safeDiv(Math.abs(x.total),Math.max(Math.abs(operatingSettlement),1))})).sort((a,b)=>Math.abs(b.total)-Math.abs(a.total));
     const expense=[
-      ['销售佣金（净）',sellingFees,'订单与退款手续费净额'],['FBA配送费（净）',fbaFees,'订单与退款配送费净额'],['促销折扣（净）',promo,'Promotional Rebates净额'],['其他交易费（净）',otherTx,'Other Transaction Fees净额'],['订单/退款Other（净）',otherTrade,'订单和退款行Other净额'],['广告扣费',advertising,'Cost of Advertising'],['仓储费',storage,'库存仓储及长期仓储'],['入库配置费',inbound,'Inbound Placement'],['账户级服务费',overhead,'Service Fee / FBA Transaction Fees'],['其他分类支出',Math.max(0,-otherCategory),'未归入标准类别'],['调整项支出',Math.max(0,-adjustments),'Adjustment为负的部分']
+      ['销售佣金',sellingFees,'Amazon referral fee'],['FBA配送费',fbaFees,'Fulfillment fees'],['促销折扣',promo,'Promotional rebates'],['其他交易费',otherTx,'Other transaction fees'],['订单/退款Other',otherTrade,'Order / refund other'],['广告扣费',advertising,'Cost of Advertising'],['仓储费',storage,'Storage fees'],['入库配置费',inbound,'Inbound placement'],['账户服务费',overhead,'Service fees'],['其他/负调整',Math.max(0,-otherCategory)+Math.max(0,-adjustments),'Other + negative adjustments']
+    ].map(([name,value,note])=>({name,value,note,rate:safeDiv(value,netProductSales)}));
+    const bridgeSeed=[
+      {name:'商品销售',change:orderSales},
+      {name:'Credits',change:orderCredits},
+      {name:'退款',change:-(refundSales+refundCredits)},
+      {name:'销售佣金',change:-sellingFees},
+      {name:'FBA费用',change:-fbaFees},
+      {name:'促销/交易费',change:-(promo+otherTx+otherTrade)},
+      {name:'广告',change:-advertising},
+      {name:'仓储/入库/服务',change:-(storage+inbound+overhead)},
+      {name:'清算/调整/其他',change:liquidation+adjustments+otherCategory}
     ];
-    const bridge=[
-      ['订单结算',orderSettlement],['退款结算',refundSettlement],['广告扣费',cat('ADVERTISING')],['入库配置费',cat('INBOUND')],['仓储费',cat('STORAGE')],['账户级服务费',cat('ACCOUNT_OVERHEAD')],['清算收入',liquidation],['调整项',adjustments],['其他交易',otherCategory]
-    ];
-    return {...scope,orderSales,refundSales,netProductSales,orderUnits,refundUnits,returnRate:orderUnits?refundUnits/orderUnits:0,orderCount:orderIds.size,skuCount:skuSet.size,orderCredits,refundCredits,sellingFees,fbaFees,promo,otherTx,otherTrade,taxNet,orderSettlement,refundSettlement,refundPreTaxLoss,advertising,inbound,storage,overhead,otherCategory,liquidation,adjustments,transfer,settlementTotal,operatingSettlement,amazonTradeFees,operatingExpenses,nonAdOperatingExpenses,daily,sku,categories,expense,bridge};
+    const currentWithoutResidual=bridgeSeed.reduce((a,x)=>a+x.change,0);
+    const residual=operatingSettlement-currentWithoutResidual;
+    if(Math.abs(residual)>.005)bridgeSeed.push({name:'税费及口径差',change:residual});
+    let cursor=0;
+    const waterfall=bridgeSeed.map(x=>{const start=cursor;cursor+=x.change;return {...x,start,end:cursor};});
+    waterfall.push({name:'经营净结算',change:operatingSettlement,start:0,end:operatingSettlement,total:true});
+    const top3Share=safeDiv(sku.slice(0,3).reduce((a,x)=>a+x.sales,0),orderSales);
+    return {...scope,rows,orderSales,refundSales,netProductSales,orderUnits,refundUnits,returnRate:safeDiv(refundUnits,orderUnits),refundSalesRate:safeDiv(refundSales,orderSales),orderCount:orderIds.size,skuCount:skuSet.size,orderCredits,refundCredits,sellingFees,fbaFees,promo,otherTx,otherTrade,taxNet,orderSettlement,refundSettlement,refundPreTaxLoss,advertising,inbound,storage,overhead,otherCategory,liquidation,adjustments,transfer,settlementTotal,operatingSettlement,amazonTradeFees,operatingExpenses,nonAdOperatingExpenses,tradeFeeRate:safeDiv(amazonTradeFees,netProductSales),adRate:safeDiv(advertising,netProductSales),nonAdRate:safeDiv(nonAdOperatingExpenses,netProductSales),expenseLoad:safeDiv(amazonTradeFees+operatingExpenses,netProductSales),operatingMargin:safeDiv(operatingSettlement,netProductSales),aov:safeDiv(orderSales,orderIds.size),netPerOrder:safeDiv(operatingSettlement,orderIds.size),unitNet:safeDiv(operatingSettlement,orderUnits),unitFees:safeDiv(amazonTradeFees,orderUnits),unitAds:safeDiv(advertising,orderUnits),refundLossRate:safeDiv(refundPreTaxLoss,orderSales),daily,sku,categories,expense,waterfall,top3Share};
   };
-  const metric=(k,v,m,t='')=>`<div class="txFinanceMetric ${t}"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div><div class="m">${esc(m)}</div></div>`;
-  const line=(k,v,t='',note='')=>`<div class="txFinanceLine ${t}" title="${esc(note)}"><span>${esc(k)}</span><b>${esc(v)}</b></div>`;
+
+  const buildReport=()=>{
+    const all=getAllTransactionRows(),scope=currentScope(),rows=rowsFor(all,scope.start,scope.end,scope.mode),current=aggregate(rows,scope);
+    let previous=null,previousLabel='无上期数据';
+    const startD=parseDate(scope.start),endD=parseDate(scope.end),span=daySpan(startD,endD);
+    if(startD&&endD&&span){const prevEnd=addDays(startD,-1),prevStart=addDays(prevEnd,-span+1);const ps=fmtDate(prevStart),pe=fmtDate(prevEnd),pr=rowsFor(all,ps,pe,scope.mode);previous=aggregate(pr,{start:ps,end:pe,mode:scope.mode});previousLabel=`${ps} → ${pe}`;}
+    return {all,current,previous,previousLabel};
+  };
+
+  const insightRows=r=>{
+    const c=r.current,p=r.previous,out=[];
+    const add=(tone,title,detail)=>out.push(`<div class="txFinInsight ${tone}"><div><b>${esc(title)}</b><span>${esc(detail)}</span></div></div>`);
+    if(c.operatingMargin<.08)add('bad','经营结算率偏低',`当前仅 ${pct(c.operatingMargin)}，而且尚未扣除采购成本，真实利润空间更低。`);
+    else if(c.operatingMargin<.18)add('warn','经营结算率一般',`当前 ${pct(c.operatingMargin)}，优先压缩广告、退款和FBA费用。`);
+    else add('good','经营结算留存良好',`经营结算率 ${pct(c.operatingMargin)}，但仍需结合采购成本确认最终利润。`);
+    if(c.refundSalesRate>=.08)add('bad','退款压力高',`退款商品额占销售 ${pct(c.refundSalesRate)}，件数退款率 ${pct(c.returnRate)}。`);
+    else if(c.refundSalesRate>=.04)add('warn','退款值得跟踪',`销售退款率 ${pct(c.refundSalesRate)}，建议进入退款质量页排查。`);
+    else add('good','退款控制稳定',`销售退款率 ${pct(c.refundSalesRate)}。`);
+    if(c.adRate>=.22)add('bad','广告占比过高',`广告扣费占净商品销售 ${pct(c.adRate)}，正在明显压缩结算留存。`);
+    else if(c.adRate>=.14)add('warn','广告投入偏重',`广告占净销售 ${pct(c.adRate)}，需要结合Target ACOS治理。`);
+    else add('good','广告占比可控',`广告占净销售 ${pct(c.adRate)}。`);
+    if(c.top3Share>=.55)add('warn','SKU集中度较高',`Top 3 SKU贡献 ${pct(c.top3Share)} 的商品销售。`);
+    if(p?.rows?.length){const d=delta(c.operatingSettlement,p.operatingSettlement);add(d.tone,'较上期经营结算变化',`${d.text}，上期 ${money(p.operatingSettlement)}。`);}
+    return out.slice(0,4).join('');
+  };
+  const ledgerRow=(label,note,amount,ratioText,tone='')=>`<div class="txFinLedgerRow ${tone}"><div class="label"><b>${esc(label)}</b><span>${esc(note)}</span></div><div class="amount">${esc(amount)}</div><div class="ratio">${esc(ratioText)}</div></div>`;
+  const topStat=(k,v,m)=>`<div class="txFinTopStat"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div><div class="m">${esc(m)}</div></div>`;
+  const ratioRow=(k,v,m)=>`<div class="txFinRatioRow"><div><b>${esc(k)}</b><span>${esc(m)}</span></div><strong>${esc(v)}</strong></div>`;
+
+  const renderOverview=r=>{
+    const c=r.current,p=r.previous,dNet=delta(c.operatingSettlement,p?.operatingSettlement||0);
+    const statement=[
+      ledgerRow('商品销售','订单商品收入',money(c.orderSales),'100.00%','positive'),
+      ledgerRow('退款与退款Credits','退款商品额及相关Credits',`-${money(c.refundSales+c.refundCredits)}`,pct(safeDiv(c.refundSales+c.refundCredits,c.orderSales)),'negative'),
+      ledgerRow('Amazon交易费用','销售佣金、FBA、促销和其他交易费',`-${money(c.amazonTradeFees)}`,pct(c.tradeFeeRate),'negative'),
+      ledgerRow('广告扣费','联合报告 Cost of Advertising',`-${money(c.advertising)}`,pct(c.adRate),'negative'),
+      ledgerRow('其他运营支出','仓储、入库、服务费及负调整',`-${money(c.nonAdOperatingExpenses)}`,pct(c.nonAdRate),'negative'),
+      ledgerRow('经营结算净额','排除Transfer后的Amazon经营结算留存',money(c.operatingSettlement),pct(c.operatingMargin),'total positive')
+    ].join('');
+    return `<div class="txFinOverview">
+      <section class="txFinStatement">
+        <div class="txFinStatementHead"><div><div class="txFinKicker">Operating statement</div><div class="txFinStatementValue">${money(c.operatingSettlement)}</div><div class="txFinStatementSub">当前期间经营结算净额。它反映Amazon结算留存，不包含采购成本，因此不是最终净利润。</div></div><div class="txFinStatementDelta"><b>${esc(dNet.text)}</b><span>较上一等长周期</span></div></div>
+        <div class="txFinLedger">${statement}</div>
+      </section>
+      <aside class="txFinRightRail">
+        <section class="txFinRatioPanel">${ratioRow('经营结算率',pct(c.operatingMargin),'经营结算净额 ÷ 净商品销售')}${ratioRow('综合支出率',pct(c.expenseLoad),'交易费用 + 运营支出')}${ratioRow('销售退款率',pct(c.refundSalesRate),'退款商品额 ÷ 商品销售')}${ratioRow('Top 3销售占比',pct(c.top3Share),'SKU集中度')}</section>
+        <section class="txFinInsightPanel"><div class="txFinInsightTitle">经营结论</div>${insightRows(r)}</section>
+      </aside>
+    </div>
+    <div class="txFinChartGrid">
+      <section class="txFinChartBlock"><div class="txFinSectionHead"><div><h3>每日销售与经营结算</h3><p>同时看销售、退款、广告与最终结算沉淀，定位异常日期。</p></div></div><div class="txFinanceChart tall"><canvas id="txFinanceDailyChart"></canvas></div></section>
+      <section class="txFinChartBlock"><div class="txFinSectionHead"><div><h3>经营结算桥接</h3><p>从销售逐层扣除退款和费用，精确回到经营结算净额。</p></div></div><div class="txFinanceChart tall"><canvas id="txFinanceWaterfallChart"></canvas></div></section>
+    </div>`;
+  };
+
+  const renderCosts=r=>{
+    const c=r.current,max=Math.max(...c.expense.map(x=>x.value),1);
+    const rows=c.expense.map(x=>`<div class="txFinanceCostRow"><div class="txFinanceCostName"><b>${esc(x.name)}</b><span>${esc(x.note)}</span></div><div class="txFinanceCostTrack"><div class="txFinanceCostFill" style="width:${Math.min(100,x.value/max*100).toFixed(1)}%"></div></div><div class="txFinanceCostValue"><b>${money(x.value)}</b><span>${pct(x.rate)}</span></div></div>`).join('');
+    const catRows=c.categories.map(x=>`<tr><td>${esc(x.label)}</td><td>${x.rows.toLocaleString()}</td><td class="${toneForSigned(x.total)}">${signedMoney(x.total)}</td><td>${pct(x.share)}</td></tr>`).join('');
+    return `<div class="txFinTabHeader"><div><h3>成本结构</h3><p>看每一类费用的金额、强度和对经营结算的影响。</p></div></div>
+      <div class="txFinTopStats">${topStat('交易费用率',pct(c.tradeFeeRate),money(c.amazonTradeFees))}${topStat('广告占净销售',pct(c.adRate),money(c.advertising))}${topStat('非广告运营成本率',pct(c.nonAdRate),money(c.nonAdOperatingExpenses))}${topStat('综合支出率',pct(c.expenseLoad),money(c.amazonTradeFees+c.operatingExpenses))}</div>
+      <div class="txFinAnalyticGrid"><section class="txFinPanel"><h4>成本项目强度</h4><div class="lead">横条按金额缩放，右侧同时展示金额和占净销售比例。</div><div class="txFinanceCostRows">${rows}</div></section><section class="txFinPanel"><h4>支出构成</h4><div class="lead">看最大成本来源，不把Transfer混入经营支出。</div><div class="txFinanceChart compact"><canvas id="txFinanceCostMixChart"></canvas></div></section></div>
+      <section class="txFinPanel" style="margin-top:22px"><h4>交易类别结算影响</h4><div class="lead">按标准化交易类别汇总。</div><div class="txFinanceTableWrap"><table class="txFinanceTable"><thead><tr><th>类别</th><th>交易行数</th><th>结算影响</th><th>占经营结算</th></tr></thead><tbody>${catRows}</tbody></table></div></section>`;
+  };
+
+  const renderRefunds=r=>{
+    const c=r.current,refundSkuAll=[...c.sku].filter(x=>x.refund>0).sort((a,b)=>b.refund-a.refund),refundSku=refundSkuAll.slice(0,30);
+    const rows=refundSku.map(x=>`<tr><td>${esc(x.sku)}</td><td>${x.units.toLocaleString()}</td><td>${x.refundUnits.toLocaleString()}</td><td>${money(x.sales)}</td><td>${money(x.refund)}</td><td>${pct(x.refundRate)}</td><td class="${x.net<0?'bad':'good'}">${signedMoney(x.net)}</td><td>${pct(x.netRate)}</td></tr>`).join('');
+    return `<div class="txFinTabHeader"><div><h3>退款质量</h3><p>同时看退款金额、退款率和退款后经营沉淀。</p></div></div>
+      <div class="txFinTopStats">${topStat('退款商品额',money(c.refundSales),`占销售 ${pct(c.refundSalesRate)}`)}${topStat('退款件数',c.refundUnits.toLocaleString(),`件数退款率 ${pct(c.returnRate)}`)}${topStat('退款税前净损失',money(c.refundPreTaxLoss),`占销售 ${pct(c.refundLossRate)}`)}${topStat('有退款SKU',refundSkuAll.length.toLocaleString(),'本期出现退款的SKU')}</div>
+      <div class="txFinAnalyticGrid"><section class="txFinPanel"><h4>每日退款率与净结算率</h4><div class="lead">识别退款集中爆发日期以及对结算率的影响。</div><div class="txFinanceChart"><canvas id="txFinanceRefundTrendChart"></canvas></div></section><section class="txFinPanel"><h4>退款金额最高SKU</h4><div class="lead">优先处理高销售且高退款的SKU。</div><div class="txFinanceChart"><canvas id="txFinanceRefundSkuChart"></canvas></div></section></div>
+      <section class="txFinPanel" style="margin-top:22px"><h4>退款SKU明细</h4><div class="txFinanceTableWrap"><table class="txFinanceTable"><thead><tr><th>SKU</th><th>发货件数</th><th>退款件数</th><th>销售</th><th>退款</th><th>退款率</th><th>净结算</th><th>净结算率</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  };
+
+  const renderSku=r=>{
+    const c=r.current,rows=c.sku.slice(0,200).map(x=>`<tr><td>${esc(x.sku)}</td><td>${x.units.toLocaleString()}</td><td>${x.refundUnits.toLocaleString()}</td><td>${money(x.sales)}</td><td>${money(x.refund)}</td><td>${money(x.fees)}</td><td>${pct(x.refundRate)}</td><td>${pct(x.feeRate)}</td><td class="${x.net<0?'bad':'good'}">${signedMoney(x.net)}</td><td>${pct(x.netRate)}</td></tr>`).join('');
+    const top=c.sku[0],low=[...c.sku].filter(x=>x.sales>0).sort((a,b)=>a.netRate-b.netRate)[0];
+    return `<div class="txFinTabHeader"><div><h3>SKU表现</h3><p>把销售规模、退款、费用和经营结算放到同一张SKU视图。</p></div></div>
+      <div class="txFinTopStats">${topStat('SKU数量',c.skuCount.toLocaleString(),'本期有交易SKU')}${topStat('Top SKU销售',top?money(top.sales):money(0),top?.sku||'—')}${topStat('Top 3销售占比',pct(c.top3Share),'SKU集中度')}${topStat('最低净结算率SKU',low?pct(low.netRate):'—',low?.sku||'—')}</div>
+      <div class="txFinAnalyticGrid"><section class="txFinPanel"><h4>Top SKU销售与经营结算</h4><div class="lead">判断头部SKU是否真正沉淀经营结算。</div><div class="txFinanceChart"><canvas id="txFinanceSkuBarChart"></canvas></div></section><section class="txFinPanel"><h4>销售规模与净结算率</h4><div class="lead">气泡大小代表发货件数。</div><div class="txFinanceChart"><canvas id="txFinanceSkuBubbleChart"></canvas></div></section></div>
+      <section class="txFinPanel" style="margin-top:22px"><h4>SKU财务明细</h4><div class="txFinanceTableWrap"><table class="txFinanceTable"><thead><tr><th>SKU</th><th>发货件数</th><th>退款件数</th><th>销售</th><th>退款</th><th>交易费用</th><th>退款率</th><th>费用率</th><th>净结算</th><th>净结算率</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  };
+
+  const renderBody=r=>{
+    const body=byId('transactionFinanceBody');if(!body)return;
+    const c=r.current;
+    if(!r.all.length){body.innerHTML='<div class="txFinanceEmpty"><b>尚未导入联合交易报告</b><br>请先导入 Amazon 联合报告（交易），再生成财务报表。</div>';return;}
+    if(!c.rows.length){body.innerHTML='<div class="txFinanceEmpty"><b>当前日期范围没有联合交易记录</b><br>请调整左侧日期，确保与联合报告 Posted Date 重叠。</div>';return;}
+    body.innerHTML=`<section class="txFinancePanel ${activeTab==='overview'?'active':''}" data-tx-panel="overview">${renderOverview(r)}</section><section class="txFinancePanel ${activeTab==='costs'?'active':''}" data-tx-panel="costs">${renderCosts(r)}</section><section class="txFinancePanel ${activeTab==='refunds'?'active':''}" data-tx-panel="refunds">${renderRefunds(r)}</section><section class="txFinancePanel ${activeTab==='sku'?'active':''}" data-tx-panel="sku">${renderSku(r)}</section><div class="txFinanceFootnote"><b>口径说明：</b>经营结算净额使用联合报告非Transfer交易Total，反映Amazon结算留存，但尚未扣除采购成本，因此不等同最终净利润。Cost of Advertising单独列示，不与广告报表花费重复扣除。</div>`;
+  };
+
+  const chartTheme=()=>{const s=getComputedStyle(document.documentElement);return {text:s.getPropertyValue('--text').trim()||'#1d1d1f',muted:s.getPropertyValue('--muted').trim()||'#6e6e73',grid:s.getPropertyValue('--chart-grid').trim()||'rgba(0,0,0,.08)',accent:s.getPropertyValue('--accent').trim()||'#2563eb',good:s.getPropertyValue('--good').trim()||'#16a34a',bad:s.getPropertyValue('--bad').trim()||'#dc2626',warn:s.getPropertyValue('--warn').trim()||'#d97706',line:s.getPropertyValue('--line').trim()||'#e5e7eb'};};
+  const baseOptions=(indexAxis='x')=>{const t=chartTheme();return {responsive:true,maintainAspectRatio:false,indexAxis,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{boxWidth:10,usePointStyle:true,color:t.text,font:{size:10}}},tooltip:{backgroundColor:'rgba(15,23,42,.92)',titleFont:{size:11},bodyFont:{size:10},padding:10}},scales:{x:{grid:{color:indexAxis==='x'?t.grid:'transparent'},ticks:{color:t.muted,font:{size:9.5}}},y:{grid:{color:indexAxis==='x'?t.grid:'transparent'},ticks:{color:t.muted,font:{size:9.5}}}}};};
+  const renderChartsForTab=(tab,r)=>{
+    if(!window.Chart||!r?.current?.rows?.length)return;
+    const c=r.current,t=chartTheme();
+    destroyCharts(tab);
+    if(tab==='overview'){
+      const wf=byId('txFinanceWaterfallChart');
+      if(wf){chartBag.overviewWaterfall=new Chart(wf,{type:'bar',data:{labels:c.waterfall.map(x=>x.name),datasets:[{label:'经营结算桥接',data:c.waterfall.map(x=>[x.start,x.end]),backgroundColor:c.waterfall.map(x=>x.total?t.accent:x.change>=0?t.good:t.bad),borderRadius:5,borderSkipped:false}]},options:{...baseOptions(),plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const x=c.waterfall[ctx.dataIndex];return `${x.name}: ${signedMoney(x.total?x.end:x.change)} · 余额 ${money(x.end)}`;}}}},scales:{x:{grid:{display:false},ticks:{color:t.muted,font:{size:9},maxRotation:0,autoSkip:false}},y:{grid:{color:t.grid},ticks:{color:t.muted,callback:v=>money(v)}}}}});}
+      const daily=byId('txFinanceDailyChart');
+      if(daily){chartBag.overviewDaily=new Chart(daily,{data:{labels:c.daily.map(x=>x.date),datasets:[{type:'line',label:'商品销售',data:c.daily.map(x=>x.sales),borderColor:t.accent,backgroundColor:t.accent,tension:.28,pointRadius:1.5},{type:'line',label:'经营净结算',data:c.daily.map(x=>x.net),borderColor:t.good,backgroundColor:t.good,tension:.28,pointRadius:1.5},{type:'bar',label:'退款',data:c.daily.map(x=>x.refund),backgroundColor:`${t.bad}55`,borderRadius:3},{type:'bar',label:'广告',data:c.daily.map(x=>x.ads),backgroundColor:`${t.warn}55`,borderRadius:3}]},options:{...baseOptions(),scales:{x:{grid:{display:false},ticks:{color:t.muted,maxTicksLimit:15,maxRotation:0}},y:{grid:{color:t.grid},ticks:{color:t.muted,callback:v=>money(v)}}}}});}
+    } else if(tab==='costs'){
+      const ctx=byId('txFinanceCostMixChart');if(ctx){const vals=c.expense.map(x=>x.value);chartBag.costsMix=new Chart(ctx,{type:'doughnut',data:{labels:c.expense.map(x=>x.name),datasets:[{data:vals,borderWidth:0,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',plugins:{legend:{position:'bottom',labels:{boxWidth:9,usePointStyle:true,color:t.text,font:{size:9}}},tooltip:{callbacks:{label:x=>`${x.label}: ${money(x.parsed)} · ${pct(safeDiv(x.parsed,vals.reduce((a,b)=>a+b,0)))}`}}}}});}
+    } else if(tab==='refunds'){
+      const trend=byId('txFinanceRefundTrendChart');if(trend){chartBag.refundsTrend=new Chart(trend,{type:'line',data:{labels:c.daily.map(x=>x.date),datasets:[{label:'每日退款率',data:c.daily.map(x=>x.refundRate),borderColor:t.bad,backgroundColor:`${t.bad}22`,fill:true,tension:.3,pointRadius:2},{label:'每日净结算率',data:c.daily.map(x=>x.netRate),borderColor:t.good,backgroundColor:t.good,tension:.3,pointRadius:1.5}]},options:{...baseOptions(),scales:{x:{grid:{display:false},ticks:{color:t.muted,maxTicksLimit:14,maxRotation:0}},y:{grid:{color:t.grid},ticks:{color:t.muted,callback:v=>pct(v)}}}}});}
+      const refundSku=c.sku.filter(x=>x.refund>0).sort((a,b)=>b.refund-a.refund).slice(0,12),ctx=byId('txFinanceRefundSkuChart');if(ctx){chartBag.refundsSku=new Chart(ctx,{type:'bar',data:{labels:refundSku.map(x=>x.sku),datasets:[{label:'退款金额',data:refundSku.map(x=>x.refund),backgroundColor:`${t.bad}AA`,borderRadius:4},{label:'商品销售',data:refundSku.map(x=>x.sales),backgroundColor:`${t.accent}55`,borderRadius:4}]},options:{...baseOptions('y'),scales:{x:{grid:{color:t.grid},ticks:{color:t.muted,callback:v=>money(v)}},y:{grid:{display:false},ticks:{color:t.muted}}}}});}
+    } else if(tab==='sku'){
+      const top=c.sku.slice(0,12),bar=byId('txFinanceSkuBarChart');if(bar){chartBag.skuBar=new Chart(bar,{type:'bar',data:{labels:top.map(x=>x.sku),datasets:[{label:'商品销售',data:top.map(x=>x.sales),backgroundColor:`${t.accent}AA`,borderRadius:4},{label:'经营净结算',data:top.map(x=>x.net),backgroundColor:`${t.good}AA`,borderRadius:4}]},options:{...baseOptions('y'),scales:{x:{grid:{color:t.grid},ticks:{color:t.muted,callback:v=>money(v)}},y:{grid:{display:false},ticks:{color:t.muted}}}}});}
+      const bubble=byId('txFinanceSkuBubbleChart'),points=c.sku.filter(x=>x.sales>0).slice(0,80).map(x=>({x:x.sales,y:x.netRate,r:Math.max(3,Math.min(14,Math.sqrt(Math.max(x.units,1)))) ,sku:x.sku,refundRate:x.refundRate}));if(bubble){chartBag.skuBubble=new Chart(bubble,{type:'bubble',data:{datasets:[{label:'SKU',data:points,backgroundColor:points.map(x=>x.y>=.2?`${t.good}88`:x.y>=0?`${t.warn}88`:`${t.bad}88`),borderWidth:0}]},options:{...baseOptions(),plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const p=ctx.raw;return `${p.sku} · 销售 ${money(p.x)} · 净结算率 ${pct(p.y)} · 退款率 ${pct(p.refundRate)}`;}}}},scales:{x:{grid:{color:t.grid},title:{display:true,text:'商品销售',color:t.muted},ticks:{color:t.muted,callback:v=>money(v)}},y:{grid:{color:t.grid},title:{display:true,text:'经营净结算率',color:t.muted},ticks:{color:t.muted,callback:v=>pct(v)}}}}});}
+    }
+  };
+
+  const switchTab=tab=>{
+    activeTab=tab||'overview';
+    document.querySelectorAll('#transactionFinanceModal [data-tx-tab]').forEach(b=>b.classList.toggle('active',b.dataset.txTab===activeTab));
+    document.querySelectorAll('#transactionFinanceModal [data-tx-panel]').forEach(p=>p.classList.toggle('active',p.dataset.txPanel===activeTab));
+    requestAnimationFrame(()=>renderChartsForTab(activeTab,lastReport));
+  };
   const renderReport=()=>{
     const body=byId('transactionFinanceBody');if(!body)return;
-    const r=buildReport(),period=`${r.start||'最早'} → ${r.end||'最新'}`,mode=r.mode==='cash'?'现金口径：仅 Released':'权责口径：Released + Deferred';
-    byId('transactionFinanceSubtitle').textContent=`${period} · ${mode}`;
-    if(!r.allRows.length){body.innerHTML='<div class="txFinanceEmpty"><b>尚未导入联合交易报告</b><br>请先导入 Amazon 联合报告（交易），再生成财务报表。</div>';return;}
-    if(!r.rows.length){body.innerHTML=`<div class="txFinanceScope"><div><div class="txFinanceScopeMain">当前日期范围：${esc(period)}</div><div class="txFinanceScopeMeta">${esc(mode)}</div></div></div><div class="txFinanceEmpty"><b>当前日期范围没有联合交易记录</b><br>请调整左侧日期，确保与联合报告 Posted Date 重叠。</div>`;return;}
-    const summary=[
-      metric('商品销售',money(r.orderSales),`${r.orderUnits.toLocaleString()}件 · ${r.orderCount.toLocaleString()}订单`,'good'),
-      metric('退款商品额',money(r.refundSales),`${r.refundUnits.toLocaleString()}件 · 退款率${pct(r.returnRate)}`,'bad'),
-      metric('净商品销售',money(r.netProductSales),'销售减退款','good'),
-      metric('订单/退款Amazon费用',money(r.amazonTradeFees),'佣金、FBA、促销及交易费','bad'),
-      metric('广告扣费',money(r.advertising),'联合报告 Cost of Advertising','bad'),
-      metric('其他运营支出',money(r.nonAdOperatingExpenses),'不含广告：仓储、入库、服务费及负调整','bad'),
-      metric('经营结算净额',money(r.operatingSettlement),'排除 Transfer 后的Total',r.operatingSettlement>=0?'good':'bad'),
-      metric('结算总额',money(r.settlementTotal),`含Transfer ${signedMoney(r.transfer)}`,r.settlementTotal>=0?'good':'bad')
-    ].join('');
-    const salesLines=[
-      line('商品销售',money(r.orderSales),'good'),line('配送/礼品/监管Credits',signedMoney(r.orderCredits),toneForSigned(r.orderCredits)),line('退款商品额',`-${money(r.refundSales)}`,'bad'),line('退款Credits',`-${money(r.refundCredits)}`,'bad'),line('退款税前净损失',`-${money(r.refundPreTaxLoss)}`,'bad'),line('税费代收代缴净影响',signedMoney(r.taxNet),toneForSigned(r.taxNet))
-    ].join('');
-    const expenseLines=r.expense.map(([k,v,note])=>line(k,money(v),v>0?'bad':'',note)).join('');
-    const bridgeLines=r.bridge.map(([k,v])=>line(k,signedMoney(v),toneForSigned(v))).join('');
-    const dailyRows=r.daily.slice(0,120).map(x=>`<tr><td>${esc(x.date)}</td><td>${x.rows.toLocaleString()}</td><td>${money(x.sales)}</td><td>${money(x.refund)}</td><td>${money(x.fees)}</td><td>${money(x.ads)}</td><td class="${toneForSigned(x.net)}">${signedMoney(x.net)}</td></tr>`).join('');
-    const skuRows=r.sku.map(x=>`<tr><td>${esc(x.sku)}</td><td>${x.units.toLocaleString()}</td><td>${x.refundUnits.toLocaleString()}</td><td>${money(x.sales)}</td><td>${money(x.refund)}</td><td>${money(x.fees)}</td><td class="${toneForSigned(x.net)}">${signedMoney(x.net)}</td></tr>`).join('');
-    const catRows=r.categories.map(x=>`<tr><td>${esc(x.label)}</td><td>${x.rows.toLocaleString()}</td><td class="${toneForSigned(x.total)}">${signedMoney(x.total)}</td><td>${r.operatingSettlement?pct(Math.abs(x.total)/Math.abs(r.operatingSettlement)): '0.00%'}</td></tr>`).join('');
-    body.innerHTML=`
-      <div class="txFinanceScope"><div><div class="txFinanceScopeMain">${esc(period)} · ${esc(mode)}</div><div class="txFinanceScopeMeta">联合交易 ${r.rows.length.toLocaleString()} 行 · ${r.skuCount.toLocaleString()} SKU · Posted Date口径</div></div><div class="chips"><span class="pill">Released/Deferred按左侧交易口径</span><span class="pill">Transfer单独列示</span></div></div>
-      <div class="txFinanceSummary">${summary}</div>
-      <div class="txFinanceGrid">
-        <section class="txFinanceCard"><h3>销售与退款</h3><div class="lead">销售、Credits、退款及税费净影响。退款金额以正数展示，结算桥接使用真实符号。</div><div class="txFinanceBreakdown">${salesLines}</div><div class="txFinanceTotalRow"><span>净商品销售</span><b>${money(r.netProductSales)}</b></div></section>
-        <section class="txFinanceCard"><h3>各种支出</h3><div class="lead">订单与退款费用使用净额；仓储、广告、入库和账户服务费按交易类别计算，避免重复扣除。</div><div class="txFinanceBreakdown">${expenseLines}</div><div class="txFinanceTotalRow"><span>已识别运营支出</span><b>${money(r.amazonTradeFees+r.operatingExpenses)}</b></div></section>
-        <section class="txFinanceCard"><h3>经营结算桥接</h3><div class="lead">各交易类别Total相加，精确回到排除Transfer后的经营结算净额。</div><div class="txFinanceBreakdown">${bridgeLines}</div><div class="txFinanceTotalRow"><span>经营结算净额</span><b>${money(r.operatingSettlement)}</b></div></section>
-        <section class="txFinanceCard"><h3>交易类别</h3><div class="lead">按标准化交易类别汇总行数、结算影响和相对规模。</div><div class="txFinanceTableWrap"><table class="txFinanceTable"><thead><tr><th>类别</th><th>行数</th><th>结算影响</th><th>占经营结算</th></tr></thead><tbody>${catRows}</tbody></table></div></section>
-      </div>
-      <div class="txFinanceGrid">
-        <section class="txFinanceCard"><h3>每日财务走势</h3><div class="lead">按Posted Date汇总。退款和费用以正数表示支出，净结算保留真实符号。</div><div class="txFinanceTableWrap"><table class="txFinanceTable"><thead><tr><th>日期</th><th>行数</th><th>销售</th><th>退款</th><th>交易费用</th><th>广告</th><th>净结算</th></tr></thead><tbody>${dailyRows}</tbody></table></div></section>
-        <section class="txFinanceCard"><h3>SKU财务明细</h3><div class="lead">按销售额排序，最多显示200个SKU。净结算为该SKU全部联合交易行Total。</div><div class="txFinanceTableWrap"><table class="txFinanceTable"><thead><tr><th>SKU</th><th>发货件数</th><th>退款件数</th><th>销售</th><th>退款</th><th>交易费用</th><th>净结算</th></tr></thead><tbody>${skuRows}</tbody></table></div></section>
-      </div>
-      <div class="txFinanceFootnote"><b>口径说明：</b> 本报表严格使用左侧日期范围和联合报告Posted Date。经营结算净额为所有非Transfer交易的Total之和；Cost of Advertising单独列示，不与广告报表花费重复扣除。税费、Liquidation和Adjustment保留在结算桥接中，但不会自动用于放宽Target ACOS。</div>`;
+    destroyCharts();
+    const r=buildReport();lastReport=r;
+    const c=r.current,mode=c.mode==='cash'?'现金口径 · Released':'权责口径 · Released + Deferred';
+    byId('transactionFinanceHeaderMeta').innerHTML=`<span class="txFinanceHeaderPill"><strong>${esc(c.start||'最早')}</strong> → <strong>${esc(c.end||'最新')}</strong></span><span class="txFinanceHeaderPill">${esc(mode)}</span><span class="txFinanceHeaderPill">对比：${esc(r.previousLabel)}</span>`;
+    byId('transactionFinanceTabMeta').textContent=`${c.rows.length.toLocaleString()} 条交易 · ${c.skuCount.toLocaleString()} SKU · Posted Date`;
+    renderBody(r);
+    switchTab(activeTab);
   };
+
   const exportReport=()=>{
-    const r=buildReport();if(!r.rows.length){try{notify('当前日期范围没有联合交易数据。','warn');}catch(e){alert('当前日期范围没有联合交易数据。');}return;}
+    const r=buildReport(),c=r.current;if(!c.rows.length){try{notify('当前日期范围没有联合交易数据。','warn');}catch(e){alert('当前日期范围没有联合交易数据。');}return;}
     if(typeof exportRichExcelMultiSheet!=='function'){alert('Excel导出依赖未加载。');return;}
-    const summary=[['日期开始',r.start],['日期结束',r.end],['交易口径',r.mode],['交易行数',r.rows.length],['订单数',r.orderCount],['SKU数',r.skuCount],['商品销售',r.orderSales],['退款商品额',r.refundSales],['净商品销售',r.netProductSales],['发货件数',r.orderUnits],['退款件数',r.refundUnits],['退款率',r.returnRate],['订单/退款Amazon费用',r.amazonTradeFees],['广告扣费',r.advertising],['其他运营支出',r.operatingExpenses],['经营结算净额',r.operatingSettlement],['Transfer',r.transfer],['结算总额',r.settlementTotal]];
-    const expenses=r.expense.map(x=>[x[0],x[1],x[2]]);
-    const bridge=r.bridge.map(x=>[x[0],x[1]]).concat([['经营结算净额',r.operatingSettlement],['Transfer',r.transfer],['结算总额',r.settlementTotal]]);
-    const daily=r.daily.map(x=>[x.date,x.rows,x.sales,x.refund,x.fees,x.ads,x.net]);
-    const sku=r.sku.map(x=>[x.sku,x.units,x.refundUnits,x.sales,x.refund,x.fees,x.net]);
-    const cats=r.categories.map(x=>[x.label,x.category,x.rows,x.total]);
+    const summary=[['日期开始',c.start],['日期结束',c.end],['交易口径',c.mode],['交易行数',c.rows.length],['订单数',c.orderCount],['SKU数',c.skuCount],['商品销售',c.orderSales],['退款商品额',c.refundSales],['净商品销售',c.netProductSales],['销售退款率',c.refundSalesRate],['件数退款率',c.returnRate],['交易费用',c.amazonTradeFees],['交易费用率',c.tradeFeeRate],['广告扣费',c.advertising],['广告占比',c.adRate],['非广告运营支出',c.nonAdOperatingExpenses],['非广告成本率',c.nonAdRate],['经营结算净额',c.operatingSettlement],['经营结算率',c.operatingMargin],['Transfer',c.transfer],['结算总额',c.settlementTotal]];
+    const expenses=c.expense.map(x=>[x.name,x.value,x.rate,x.note]);
+    const daily=c.daily.map(x=>[x.date,x.rows,x.sales,x.refund,x.fees,x.ads,x.refundRate,x.net,x.netRate]);
+    const sku=c.sku.slice(0,500).map(x=>[x.sku,x.units,x.refundUnits,x.sales,x.refund,x.fees,x.refundRate,x.feeRate,x.net,x.netRate]);
+    const cats=c.categories.map(x=>[x.label,x.category,x.rows,x.total,x.share]);
     const ts=(typeof getTs==='function'?getTs():new Date().toISOString().replace(/[:.]/g,'-'));
-    exportRichExcelMultiSheet([
-      {sheetName:'财务摘要',headers:['指标','数值'],dataRows:summary},
-      {sheetName:'各种支出',headers:['支出项目','金额','口径'],dataRows:expenses},
-      {sheetName:'结算桥接',headers:['交易类别','结算影响'],dataRows:bridge},
-      {sheetName:'每日明细',headers:['日期','交易行数','销售','退款','交易费用','广告扣费','净结算'],dataRows:daily},
-      {sheetName:'SKU明细',headers:['SKU','发货件数','退款件数','销售','退款','交易费用','净结算'],dataRows:sku},
-      {sheetName:'交易类别',headers:['类别','代码','行数','结算影响'],dataRows:cats}
-    ],`Transaction_Finance_Report_${r.start||'start'}_${r.end||'end'}_${ts}.xlsx`);
+    exportRichExcelMultiSheet([{sheetName:'财务摘要',headers:['指标','数值'],dataRows:summary},{sheetName:'成本结构',headers:['成本项目','金额','占净销售比例','口径'],dataRows:expenses},{sheetName:'每日明细',headers:['日期','交易行数','销售','退款','交易费用','广告扣费','退款率','经营净结算','净结算率'],dataRows:daily},{sheetName:'SKU明细',headers:['SKU','发货件数','退款件数','销售','退款','交易费用','退款率','费用率','净结算','净结算率'],dataRows:sku},{sheetName:'交易类别',headers:['类别','代码','行数','结算影响','占经营结算'],dataRows:cats}],`Transaction_Finance_Report_${c.start||'start'}_${c.end||'end'}_${ts}.xlsx`);
   };
   const openModal=()=>{const m=ensureModal();m.style.display='flex';renderReport();setTimeout(()=>byId('btnCloseTransactionFinance')?.focus(),0);};
   const init=()=>{
     ensureModal();
     byId('btnTransactionFinanceReport')?.addEventListener('click',openModal);
-    ['dateStart','dateEnd','transactionStatusMode'].forEach(id=>byId(id)?.addEventListener('change',()=>{const m=byId('transactionFinanceModal');if(m&&m.style.display!=='none')setTimeout(renderReport,360);}));
+    ['dateStart','dateEnd','transactionStatusMode'].forEach(id=>byId(id)?.addEventListener('change',()=>{const m=byId('transactionFinanceModal');if(m&&m.style.display!=='none')setTimeout(renderReport,260);}));
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&byId('transactionFinanceModal')?.style.display==='flex')closeModal();});
-    window.TransactionFinanceReport={open:openModal,render:renderReport,build:buildReport,export:exportReport};
+    window.TransactionFinanceReport={open:openModal,render:renderReport,build:buildReport,export:exportReport,switchTab};
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
+
 
 </body>
 </html>
