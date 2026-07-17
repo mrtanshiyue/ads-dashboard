@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -6,9 +7,9 @@
 <meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://oapi.dingtalk.com https://qyapi.weixin.qq.com https://open.feishu.cn https://hooks.slack.com https://huggingface.co https://*.huggingface.co https://*.hf.co; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.4 Editorial Finance</title>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.4.4 Chart Lifecycle</title>
 <script>
-window.APP_BUILD_VERSION='V61.4.2';
+window.APP_BUILD_VERSION='V61.4.4';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" onerror="__loadDependencyFallback('PapaParse','https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')"></script>
@@ -4359,7 +4360,7 @@ const PERF = {
   IDB_CHUNK_ROWS: 25000
 };
 const APP_DATA_SCHEMA_VERSION = "ADS_DECISION_OS_2026_07_TRANSACTION_ECONOMICS_V61";
-const APP_BUILD_VERSION = "V61.4.2";
+const APP_BUILD_VERSION = "V61.4.4";
 const APP_SCHEMA_VERSION = APP_DATA_SCHEMA_VERSION;
 const AMAZON_AD_PRODUCT_META = {
   SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
@@ -5411,7 +5412,7 @@ const buildWordStats=(mode=WF_MODE)=>{const data=rootV6BuildAll();let rows=[...(
 const rootV6Band=(n,reverse=false)=>reverse?(n>=70?"bad":n>=45?"warn":"good"):(n>=65?"good":n>=40?"warn":"bad");
 const rootV6MiniScore=(n,reverse=false)=>{const cls=rootV6Band(n,reverse),v=Math.round(n);return `<div class="rootV6CompactScore ${cls}"><div class="bar"><i style="width:${v}%"></i></div><b>${v}</b></div>`;};
 const rootV6ScopeSummary=r=>ROOT_V6_STATE.scope==="account"?`${r.asins.size} ASIN · ${r.routeCount} 路由`:ROOT_V6_STATE.scope==="family"?`${escapeHtml(r.scopeLabel)} · ${r.asins.size} ASIN`:`${escapeHtml(r.scopeLabel)} · ${r.routeCount} 路由`;
-const rootV6RenderChart=rows=>{const canvas=$("rootV6MatrixChart");if(!canvas||typeof Chart==="undefined")return;if(ROOT_V6_STATE.chart){ROOT_V6_STATE.chart.destroy();ROOT_V6_STATE.chart=null;}const points=rows.slice(0,100).map(r=>({x:r.attraction,y:r.toxicity,r:Math.max(4,Math.min(18,3+Math.sqrt(Math.max(0,r.spend)))),label:r.word,action:r.decision.label}));const quadrant={id:"rootV6Quadrant",beforeDraw(chart){const {ctx,chartArea,scales}=chart;if(!chartArea)return;const x=scales.x.getPixelForValue(50),y=scales.y.getPixelForValue(50);ctx.save();ctx.fillStyle="rgba(26,127,55,.035)";ctx.fillRect(x,chartArea.top,chartArea.right-x,y-chartArea.top);ctx.fillStyle="rgba(180,35,24,.035)";ctx.fillRect(chartArea.left,chartArea.top,x-chartArea.left,y-chartArea.top);ctx.fillStyle="rgba(181,71,8,.035)";ctx.fillRect(chartArea.left,y,chartArea.right-chartArea.left,chartArea.bottom-y);ctx.strokeStyle="rgba(110,110,115,.35)";ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,chartArea.top);ctx.lineTo(x,chartArea.bottom);ctx.moveTo(chartArea.left,y);ctx.lineTo(chartArea.right,y);ctx.stroke();ctx.restore();}};ROOT_V6_STATE.chart=new Chart(canvas,{type:"bubble",data:{datasets:[{label:"Root assets",data:points,backgroundColor:ctx=>{const p=ctx.raw;return p.y>=70?"rgba(180,35,24,.65)":p.x>=65?"rgba(26,127,55,.65)":"rgba(181,71,8,.55)"},borderWidth:0}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.label}: 引力 ${Math.round(ctx.raw.x)} / 毒性 ${Math.round(ctx.raw.y)} · ${ctx.raw.action}`}}},scales:{x:{min:0,max:100,title:{display:true,text:"Attraction 引力"}},y:{min:0,max:100,title:{display:true,text:"Toxicity 毒性"}}}},plugins:[quadrant]});};
+const rootV6RenderChart=rows=>{const canvas=$("rootV6MatrixChart");if(!canvas||typeof Chart==="undefined")return;const points=rows.slice(0,100).map(r=>({x:r.attraction,y:r.toxicity,r:Math.max(4,Math.min(18,3+Math.sqrt(Math.max(0,r.spend)))),label:r.word,action:r.decision.label}));const registered=typeof Chart.getChart==="function"?Chart.getChart(canvas):null;let tracked=ROOT_V6_STATE.chart;if(tracked&&tracked!==registered&&tracked.canvas!==canvas){try{tracked.destroy();}catch(_){}tracked=null;ROOT_V6_STATE.chart=null;}const current=registered||((tracked&&tracked.canvas===canvas)?tracked:null);if(current&&current.canvas===canvas&&typeof current.update==="function"){try{current.data.datasets[0].data=points;current.update("none");ROOT_V6_STATE.chart=current;return;}catch(e){try{current.destroy();}catch(_){}ROOT_V6_STATE.chart=null;}}const staleCharts=[registered,tracked].filter((chart,index,list)=>chart&&list.indexOf(chart)===index);for(const chart of staleCharts){try{chart.destroy();}catch(_){}}ROOT_V6_STATE.chart=null;const orphan=typeof Chart.getChart==="function"?Chart.getChart(canvas):null;if(orphan){try{orphan.destroy();}catch(_){}}const quadrant={id:"rootV6Quadrant",beforeDraw(chart){const {ctx,chartArea,scales}=chart;if(!chartArea)return;const x=scales.x.getPixelForValue(50),y=scales.y.getPixelForValue(50);ctx.save();ctx.fillStyle="rgba(26,127,55,.035)";ctx.fillRect(x,chartArea.top,chartArea.right-x,y-chartArea.top);ctx.fillStyle="rgba(180,35,24,.035)";ctx.fillRect(chartArea.left,chartArea.top,x-chartArea.left,y-chartArea.top);ctx.fillStyle="rgba(181,71,8,.035)";ctx.fillRect(chartArea.left,y,chartArea.right-chartArea.left,chartArea.bottom-y);ctx.strokeStyle="rgba(110,110,115,.35)";ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,chartArea.top);ctx.lineTo(x,chartArea.bottom);ctx.moveTo(chartArea.left,y);ctx.lineTo(chartArea.right,y);ctx.stroke();ctx.restore();}};try{ROOT_V6_STATE.chart=new Chart(canvas,{type:"bubble",data:{datasets:[{label:"Root assets",data:points,backgroundColor:ctx=>{const p=ctx.raw;return p.y>=70?"rgba(180,35,24,.65)":p.x>=65?"rgba(26,127,55,.65)":"rgba(181,71,8,.55)"},borderWidth:0}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.label}: 引力 ${Math.round(ctx.raw.x)} / 毒性 ${Math.round(ctx.raw.y)} · ${ctx.raw.action}`}}},scales:{x:{min:0,max:100,title:{display:true,text:"Attraction 引力"}},y:{min:0,max:100,title:{display:true,text:"Toxicity 毒性"}}}},plugins:[quadrant]});}catch(e){const failed=typeof Chart.getChart==="function"?Chart.getChart(canvas):null;if(failed){try{failed.destroy();}catch(_){}}ROOT_V6_STATE.chart=null;console.error("rootV6RenderChart failed",e);}};
 const rootV6RenderSummary=(data,rows)=>{const all=data.all,strict=all.filter(x=>x.decision?.bulkReady),scale=all.filter(x=>x.decision?.bucket==="scale"),conditional=all.filter(x=>x.decision?.bucket==="protect"),reduce=all.filter(x=>x.decision?.bucket==="reduce"),pending=sumMetrics(data.source.pending);const mapped=data.source.query.length?data.source.query.filter(r=>rootV6ResolvedAsin(r,data.source.resolver)).length/data.source.query.length:0;$("rootV6ScopeText").textContent=`${$("filterPortfolio")?.value?`广告组合：${$("filterPortfolio").value}`:"当前左侧筛选"} · ${ROOT_V6_STATE.scope==="asin"?"ASIN粒度":ROOT_V6_STATE.scope==="family"?"产品家族粒度":"账户情报粒度"}`;$("rootV6ScopeMeta").textContent=`${data.source.grain} · Mature ${fmtMoney(sumMetrics(data.source.mature).spend)} · Pending ${fmtMoney(pending.spend)} · ASIN覆盖 ${fmtPct(mapped)}`;
   const verdict=strict.length?{c:"bad",t:`发现 ${strict.length} 个严格词组否定候选`,d:"仅导出成熟0单、自然短语、跨路由一致低效且无赚钱冲突的对象；其余高毒性词根只进入精准止损复核。"}:scale.length?{c:"good",t:`发现 ${scale.length} 个词根增长资产`,d:"优先收割盈利完整搜索词；有序短语可做Phrase测试，无序共现只用于发现Exact查询。"}:conditional.length?{c:"warn",t:`发现 ${conditional.length} 个条件词根`,d:"这些词根在不同组合或ASIN中的表现不同，禁止一刀切否定。"}:{c:"warn",t:"当前没有足够强的词根动作",d:"继续积累成熟点击、订单日与产品画像，避免用低样本做否定或扩量。"};$("rootV6Verdict").className=`rootV6Verdict ${verdict.c}`;$("rootV6Verdict").innerHTML=`<div class="title">${escapeHtml(verdict.t)}</div><div class="desc">${escapeHtml(verdict.d)}</div>`;
   $("rootMatrixSummary").innerHTML=`<div class="root-score-card focus"><div class="root-label">成熟词根资产</div><div class="root-value">${fmtInt(all.length)}</div><div class="root-note">当前粒度下通过最低样本门槛</div></div><div class="root-score-card"><div class="root-label">增长/收割</div><div class="root-value" style="color:var(--good)">${fmtInt(scale.length)}</div><div class="root-note">完整Exact查询或自然Phrase路径</div></div><div class="root-score-card"><div class="root-label">条件/解毒</div><div class="root-value" style="color:var(--warn)">${fmtInt(conditional.length)}</div><div class="root-note">存在赚钱共现或跨ASIN冲突</div></div><div class="root-score-card"><div class="root-label">止损复核</div><div class="root-value">${fmtInt(reduce.length)}</div><div class="root-note">优先处理具体查询和路由</div></div><div class="root-score-card"><div class="root-label">严格Phrase Negative</div><div class="root-value" style="color:var(--bad)">${fmtInt(strict.length)}</div><div class="root-note">可生成 paused 草稿</div></div><div class="root-score-card"><div class="root-label">归因中花费</div><div class="root-value">${fmtMoney(pending.spend)}</div><div class="root-note">不参与毒性与扩量决策</div></div>`;
@@ -6170,11 +6171,16 @@ const setSingleSelectOptions = (select, values, allLabel="All", syncSearchStore=
   select.replaceChildren(frag);
   if(normalized.includes(cur)&&shown.includes(cur))select.value=cur;else select.value="";
 };
+const getScopedDropdownGrain = () => {
+  const requested=$("analysisGrain")?.value||"auto",source=String($("filterSource")?.value||"").trim().toLowerCase(),adProduct=String($("filterAdProduct")?.value||"").trim().toUpperCase(),start=$("dateStart")?.value||"",end=$("dateEnd")?.value||"",eq=(v,q)=>!q||String(v||"").trim().toLowerCase()===q;
+  const base=(AdsStore.all||[]).filter(r=>{if(source&&!eq(r.sourceFile,source))return false;if(adProduct&&String(r.adProduct||"SP").toUpperCase()!==adProduct)return false;if((start||end)&&!withinDate(r,start,end))return false;return true;});
+  return requested!=="auto"?requested:resolveAnalysisGrain(base,"auto");
+};
 const scopedDropdownRows = (level="portfolio") => {
-  const source=String($("filterSource")?.value||"").trim().toLowerCase(),portfolio=String($("filterPortfolio")?.value||"").trim().toLowerCase(),campaign=String($("filterCampaign")?.value||"").trim().toLowerCase(),adGroup=String($("filterAdGroup")?.value||"").trim().toLowerCase(),targeting=String($("filterTargeting")?.value||"").trim().toLowerCase(),adProduct=String($("filterAdProduct")?.value||"").trim().toUpperCase(),start=$("dateStart")?.value||"",end=$("dateEnd")?.value||"";
+  const source=String($("filterSource")?.value||"").trim().toLowerCase(),portfolio=String($("filterPortfolio")?.value||"").trim().toLowerCase(),campaign=String($("filterCampaign")?.value||"").trim().toLowerCase(),adGroup=String($("filterAdGroup")?.value||"").trim().toLowerCase(),targeting=String($("filterTargeting")?.value||"").trim().toLowerCase(),adProduct=String($("filterAdProduct")?.value||"").trim().toUpperCase(),start=$("dateStart")?.value||"",end=$("dateEnd")?.value||"",grain=getScopedDropdownGrain();
   const rank={portfolio:0,campaign:1,adGroup:2,targeting:3,matchType:4},depth=rank[level]??0,eq=(v,q)=>!q||String(v||"").trim().toLowerCase()===q;
   return (AdsStore.all||[]).filter(r=>{
-    if(source&&!eq(r.sourceFile,source))return false;if(adProduct&&String(r.adProduct||"SP").toUpperCase()!==adProduct)return false;if((start||end)&&!withinDate(r,start,end))return false;
+    if(source&&!eq(r.sourceFile,source))return false;if(adProduct&&String(r.adProduct||"SP").toUpperCase()!==adProduct)return false;if((r.reportGranularity||"searchTerm")!==grain)return false;if((start||end)&&!withinDate(r,start,end))return false;
     if(depth>=1&&portfolio&&!eq(r.portfolio,portfolio))return false;if(depth>=2&&campaign&&!eq(r.campaign,campaign))return false;if(depth>=3&&adGroup&&!eq(r.adGroup,adGroup))return false;if(depth>=4&&targeting&&!eq(r.targeting,targeting))return false;return true;
   });
 };
@@ -6196,19 +6202,23 @@ const populateDropdowns = () => {
   syncScopedSelect("filterMatchType",dropdownValuesBySpend(scopedDropdownRows("matchType"),"matchType"));
 };
 
-const updateChildDropdowns = (changedId) => { 
-  const downstream={filterSource:["filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType"],filterPortfolio:["filterCampaign","filterAdGroup","filterTargeting","filterMatchType"],filterCampaign:["filterAdGroup","filterTargeting","filterMatchType"],filterAdGroup:["filterTargeting","filterMatchType"],filterTargeting:["filterMatchType"]};
-  for(const id of downstream[changedId]||[]){if($(id))$(id).value="";const search=document.querySelector(`[data-select-search="${id}"]`);if(search)search.value="";}
+const refreshScopedDropdownOptions = () => {
+  // Rebuild in hierarchy order. Each select preserves its value only when that value still exists in the active scope.
   syncScopedSelect("filterPortfolio",dropdownValuesBySpend(scopedDropdownRows("portfolio"),"portfolio"));
   syncScopedSelect("filterCampaign",dropdownValuesBySpend(scopedDropdownRows("campaign"),"campaign"));
   syncScopedSelect("filterAdGroup",dropdownValuesBySpend(scopedDropdownRows("adGroup"),"adGroup"));
   syncScopedSelect("filterTargeting",dropdownValuesBySpend(scopedDropdownRows("targeting"),"targeting"));
   syncScopedSelect("filterMatchType",dropdownValuesBySpend(scopedDropdownRows("matchType"),"matchType"));
+};
+const updateChildDropdowns = (changedId,{apply=true}={}) => { 
+  const downstream={filterSource:["filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType"],filterAdProduct:["filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType"],analysisGrain:["filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType"],filterPortfolio:["filterCampaign","filterAdGroup","filterTargeting","filterMatchType"],filterCampaign:["filterAdGroup","filterTargeting","filterMatchType"],filterAdGroup:["filterTargeting","filterMatchType"],filterTargeting:["filterMatchType"],dateScope:[]};
+  for(const id of downstream[changedId]||[]){if($(id))$(id).value="";const search=document.querySelector(`[data-select-search="${id}"]`);if(search)search.value="";}
+  refreshScopedDropdownOptions();
   if(changedId==="filterPortfolio"){
     studioV8InvalidateCache();
     if($("campaignStudioModal")?.style.display==="flex"){closeCampaignStudioModal();notify(currentLang==="zh"?"广告组合已切换。Campaign Studio 已关闭，请重新打开以读取新组合数据。":"Portfolio changed. Campaign Studio was closed; reopen it to load the new portfolio data.");}
   }
-  deepAnalysisRequested=false;autoApply(); 
+  if(apply){deepAnalysisRequested=false;autoApply();}
 };
 
 const withinDate = (r, start, end) => (!start || r.date >= start) && (!end || r.date <= end);
@@ -7853,6 +7863,10 @@ const finalizeVisibleFilterRender = (generation=0) => {
         renderActiveDimTab();
         forceWorkspacePaint();
     }));
+    setTimeout(()=>{
+        if (generation && generation !== filterApplyGeneration) return;
+        syncVisibleWorkspacePanels();renderActiveDimTab();forceWorkspacePaint();
+    },160);
     return true;
 };
 
@@ -11944,6 +11958,48 @@ const centralQueueModuleSelection = (owner,rawIds=[]) => {
   notify("系统已重新仲裁全部模块，并自动生成本轮直接执行方案；无需手动提交候选。","good",4200);
 };
 
+const runFilterRenderStep = (name,fn,generation=0) => {
+  if(generation&&generation!==filterApplyGeneration)return false;
+  try{fn();return true;}catch(error){reportError(`筛选渲染 · ${name}`,error,{generation,rows:AdsStore.view?.length||0,filters:AdsStore.currentContext?.filters||{}});return false;}
+};
+const repairBlankVisibleModules = (generation,total,attempt=1) => {
+  if(generation&&generation!==filterApplyGeneration)return;
+  const rows=AdsStore.view||[];
+  if(rows.length){
+    if(!$(("execHero"))?.children.length||!$(("kpiGrid"))?.children.length)runFilterRenderStep(`经营总览自愈 ${attempt}`,()=>renderKPIs(total),generation);
+    if(!$(("rankTable"))?.querySelector("tbody")?.children.length)runFilterRenderStep(`榜单自愈 ${attempt}`,renderRankTable,generation);
+    const visibleDim=document.querySelector('#multiDimCard .dim-view[style*="display: block"]')||document.querySelector('#multiDimCard .dim-view:not([style*="display: none"])');
+    if(visibleDim&&visibleDim.querySelector("tbody")&&!visibleDim.querySelector("tbody").children.length)runFilterRenderStep(`多维分析自愈 ${attempt}`,renderActiveDimTab,generation);
+    if($("execTrendDetails")?.open&&!trendChart)runFilterRenderStep(`趋势图自愈 ${attempt}`,()=>renderTrend(rows),generation);
+  }
+  runFilterRenderStep(`可见面板同步 ${attempt}`,syncVisibleWorkspacePanels,generation);
+  runFilterRenderStep(`浏览器重绘 ${attempt}`,forceWorkspacePaint,generation);
+};
+const renderFilteredWorkspace = ({generation=0,total=null,reason="filter"}={}) => {
+  if(generation&&generation!==filterApplyGeneration)return false;
+  const rows=AdsStore.view||[],metrics=total||sumMetrics(rows,AdsStore.currentContext||UnifiedDecisionEngine.context());
+  const steps=[
+    ["工作区状态",updateWorkspaceState],
+    ["经营总览",()=>renderKPIs(metrics)],
+    ["数据完整性",()=>renderDataIntegrityPanel(rows)],
+    ["决策完整性",renderOperationsIntegrityHub],
+    ["异常检测",()=>detectAnomalies(rows)],
+    ["经营趋势",()=>renderTrend(rows)],
+    ["榜单治理",renderRankTable],
+    ["Business Report",renderBusinessReport],
+    ["联合交易",renderTransactionReport],
+    ["CPC 分布",renderCPCDistribution],
+    ["词长分析",renderLengthAnalysis],
+    ["当前多维面板",renderActiveDimTab]
+  ];
+  const failed=[];for(const[name,fn]of steps)if(!runFilterRenderStep(name,fn,generation))failed.push(name);
+  runFilterRenderStep("最终可见性同步",()=>finalizeVisibleFilterRender(generation),generation);
+  APP_RUNTIME.filterRenderDiagnostics={time:new Date().toISOString(),reason,generation,rows:rows.length,failed};
+  setTimeout(()=>repairBlankVisibleModules(generation,metrics,1),90);
+  setTimeout(()=>repairBlankVisibleModules(generation,metrics,2),280);
+  return failed.length===0;
+};
+
 const applyFilters = (initial=false) => {
   const generation = ++filterApplyGeneration;
   ++deepAnalysisRunToken;
@@ -11988,9 +12044,9 @@ const applyFilters = (initial=false) => {
           const currentHash = draftContext.signature;
           if (!initial && currentHash === AdsStore.lastFilterHash) {
               setSubtitle(t('dyn_status_summary', AdsStore.files.length, AdsStore.all.length, filters.dateStart, filters.dateEnd));
-              renderOperationsIntegrityHub();
-              renderRankTable(); renderBusinessReport(); renderTransactionReport(); renderCPCDistribution(); renderLengthAnalysis();
-              finalizeVisibleFilterRender(generation);
+              const total=sumMetrics(AdsStore.view,AdsStore.currentContext||draftContext),bizMatch=getExecutiveBizSales(AdsStore.view,getExecutiveDateScope(AdsStore.view));
+              total.bizSales=bizMatch.available?bizMatch.sales:null;total.bizSalesAvailable=bizMatch.available;total.bizSalesReason=bizMatch.reason||"";
+              renderFilteredWorkspace({generation,total,reason:"same_context_refresh"});
               return;
           }
           AdsStore.lastFilterHash = currentHash;
@@ -12086,10 +12142,7 @@ const applyFilters = (initial=false) => {
           
           requestAnimationFrame(() => { 
               if (generation !== filterApplyGeneration) return;
-              updateWorkspaceState();
-              renderKPIs(total); renderDataIntegrityPanel(AdsStore.view); renderOperationsIntegrityHub(); detectAnomalies(AdsStore.view); renderTrend(AdsStore.view);
-              renderRankTable(); renderBusinessReport(); renderTransactionReport(); renderCPCDistribution(); renderLengthAnalysis(); renderActiveDimTab();
-              finalizeVisibleFilterRender(generation);
+              renderFilteredWorkspace({generation,total,reason:"filtered_view_ready"});
               const autoDeep=shouldAutoRunDeepAnalysis(filters,AdsStore.view.length);
               if(autoDeep){
                 hideDeepAnalysisButton();
@@ -12142,6 +12195,7 @@ const bindEvents = () => {
       if(id==="productProfileInput")APP_RUNTIME.profileCache.raw="__invalidate__";
       if(id==="asinEconomicsInput")asinEconomicsCache.raw="__invalidate__";
       ROOT_V6_STATE.cacheData=null;LONGTAIL_V5_STATE.cacheData=null;APP_RUNTIME.actionPlanCache=null;studioV8InvalidateCache?.();
+      if(id==="analysisGrain")updateChildDropdowns("analysisGrain",{apply:false});
       UnifiedDecisionEngine.invalidate(`decision_config:${id}`);AdsStore.lastFilterHash="";deepAnalysisRequested=false;
       if(AdsStore.all.length||AdsStore.biz.length||AdsStore.placement.length||AdsStore.sqp.length||AdsStore.transactions.length)applyFilters(true);else renderOperationsIntegrityHub();
     },320);
@@ -12168,8 +12222,10 @@ const bindEvents = () => {
       runDeepAnalysisPipeline(filterApplyGeneration,{manual:true});
     });
 
-    const simpleFilterIds = ["dateStart","dateEnd","filterAdProduct","filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinIntent","ltMinScore","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType","eventProtectionToggle"];
+    const simpleFilterIds = ["filterMatchType","rankBy","rankTopN","ruleSpendNeg","ruleClicksNeg","ruleRoasNeg","ruleRoasKeep","ruleOrdersKeep","ruleRoasMigrateMin","exportScope","exportNegMatch","wfMinFreq","wfMinSpend","ltMinIntent","ltMinScore","ltMinWords","ltMinOrders","ltMinRoas","filterSearchExact","filterAdType","eventProtectionToggle"];
     simpleFilterIds.forEach(id => $(id)?.addEventListener("change", autoApply));
+    ["dateStart","dateEnd"].forEach(id=>$(id)?.addEventListener("change",()=>updateChildDropdowns("dateScope")));
+    $("filterAdProduct")?.addEventListener("change",()=>updateChildDropdowns("filterAdProduct"));
 
     $("filterSource").addEventListener("change", () => updateChildDropdowns("filterSource"));
     $("filterPortfolio").addEventListener("change", () => updateChildDropdowns("filterPortfolio"));
@@ -12203,7 +12259,7 @@ const bindEvents = () => {
     document.querySelectorAll(".chipBtn").forEach(btn => { 
       btn.addEventListener("click", () => { 
         document.querySelectorAll(".sidebar .chipBtn").forEach(b => b.classList.remove("active")); 
-        btn.classList.add("active"); deepAnalysisRequested=false; applyQuickRange(btn.dataset.range); applyFilters(); 
+        btn.classList.add("active"); deepAnalysisRequested=false; applyQuickRange(btn.dataset.range); updateChildDropdowns("dateScope"); 
       }); 
     });
 
@@ -13331,12 +13387,32 @@ return {
       const checks={metricTotals:m1.impr===150&&m1.clicks===15&&m1.spend===8&&m1.sales===120&&m1.orders===3,derivedMetrics:Math.abs(m1.ctr-.1)<1e-9&&Math.abs(m1.roas-15)<1e-9&&Math.abs(m1.cvr-.2)<1e-9,cacheIdentity:m1===m1Cached,contextIsolation:ctx1.signature!==ctx2.signature&&m1.contextSignature!==m2.contextSignature&&m1.contributionProfit!==m2.contributionProfit&&m1.targetAcos!==null&&m2.targetAcos!==null&&m1.targetAcos!==m2.targetAcos,dimensionAggregation:campaigns.length===2&&campaigns.every(x=>x.dimension==="campaign"),negativePrecedence:byId.n?.status==="ready"&&byId.k?.status==="superseded",closeBidConflict:byId.i?.status==="conflict"&&byId.d?.status==="conflict",contextFrozen:Object.isFrozen(ctx1)&&Object.isFrozen(ctx1.config)&&Object.isFrozen(ctx1.config.economics)};
       return {pass:Object.values(checks).every(Boolean),checks,metrics:{primary:m1,alternativeTargetAcos:m2.targetAcos},arbitration:arb.map(x=>({id:x.id,status:x.status,action:x.canonicalAction,block:x.block||""}))};
     },
+    runFilterUiRegressionTest: () => new Promise(async resolve => {
+      const wait=ms=>new Promise(r=>setTimeout(r,ms)),mk=(x)=>({marketplace:"US",workspaceKey:"FILTER_TEST|US",adProduct:"SP",reportGranularity:"searchTerm",sourceFile:"Source A",portfolio:"Portfolio A",campaign:"Campaign A",adGroup:"Ad Group A",targeting:x.searchTerm,matchType:"EXACT",attributionWindowDays:7,units:x.orders||0,advertisedAsin:"B000000001",purchasedAsin:"B000000001",searchTermLower:String(x.searchTerm||"").toLowerCase(),currentBid:.55,biddingStrategy:"Dynamic bids - down only",...x});
+      const ads=[mk({date:"2026-06-01",searchTerm:"reading glasses women",impr:1000,clicks:60,spend:24,sales:120,orders:6}),mk({date:"2026-06-02",campaign:"Campaign B",adGroup:"Ad Group B",targeting:"blue light readers",searchTerm:"blue light readers",matchType:"PHRASE",impr:800,clicks:40,spend:18,sales:72,orders:4}),mk({date:"2026-06-03",sourceFile:"Source B",portfolio:"Portfolio B",campaign:"Campaign C",adGroup:"Ad Group C",targeting:"close-match",searchTerm:"fashion readers",matchType:"AUTO",impr:600,clicks:30,spend:15,sales:45,orders:3}),mk({date:"2026-06-04",sourceFile:"Source B",portfolio:"Portfolio B",campaign:"Campaign D",adGroup:"Ad Group D",targeting:"reading glasses men",searchTerm:"reading glasses men",matchType:"BROAD",impr:500,clicks:25,spend:10,sales:40,orders:2}),mk({date:"2026-06-01",reportGranularity:"targeting",searchTerm:"",searchTermLower:"",targeting:"reading glasses women",impr:1000,clicks:60,spend:24,sales:120,orders:6}),mk({date:"2026-06-03",reportGranularity:"targeting",sourceFile:"Source B",portfolio:"Portfolio B",campaign:"Campaign C",adGroup:"Ad Group C",searchTerm:"",searchTermLower:"",targeting:"close-match",matchType:"AUTO",impr:600,clicks:30,spend:15,sales:45,orders:3})];
+      const biz=[{date:"2026-06-01",marketplace:"US",asin:"B000000001",sku:"FILTER-SKU",sessions:300,units:18,orders:17,sales:320}];
+      ["filterSource","filterAdProduct","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterAdType","filterSearchTerm"].forEach(id=>{if($(id))$(id).value="";});$("filterSearchExact").checked=false;$("analysisGrain").value="auto";$("dateStart").value="2026-06-01";$("dateEnd").value="2026-06-30";
+      AdsDashboardApp.debug.setCoreRowsForTest({ads,biz,transactions:[]});document.querySelector('[data-dim="automanual"]')?.click();await wait(1000);
+      const snap=(name)=>{const dim=document.querySelector('.seg[aria-label="Dimension Filter"] .segBtn.active')?.dataset.dim||"automanual",view=$("view-"+dim);return{name,viewRows:AdsStore.view.length,hero:Boolean($("execHero")?.children.length),kpis:$("kpiGrid")?.children.length||0,rank:$("rankTable")?.querySelector("tbody")?.children.length||0,dim,dimRows:view?.querySelector("tbody")?.children.length??-1,subtitle:$("subtitle")?.textContent||"",renderErrors:[...(APP_RUNTIME.filterRenderDiagnostics?.failed||[])]};};
+      const results=[snap("initial")],set=async(id,value,delay=760)=>{const el=$(id);if(!el)return results.push({name:id,missing:true});el.value=value;el.dispatchEvent(new Event("change",{bubbles:true}));await wait(delay);results.push(snap(`${id}=${value}`));};
+      await set("dateStart","2026-06-02");await set("dateStart","2026-06-01");await set("dateEnd","2026-06-03");await set("dateEnd","2026-06-30");await set("filterAdProduct","SP");
+      await set("filterSource","Source A");await set("filterPortfolio","Portfolio A");await set("filterCampaign","Campaign A");await set("filterAdGroup","Ad Group A");await set("filterTargeting","reading glasses women");await set("filterMatchType","EXACT");await set("filterAdType","manual");
+      $("filterSearchTerm").value="reading glasses women";$("filterSearchExact").checked=true;$("filterSearchTerm").dispatchEvent(new Event("input",{bubbles:true}));await wait(760);results.push(snap("exact search"));
+      // Same-context recovery: blank visible modules and re-dispatch an unchanged scope.
+      $("execHero").innerHTML="";$("kpiGrid").innerHTML="";$("rankTable").querySelector("tbody").innerHTML="";$("view-automanual")?.querySelector("tbody")?.replaceChildren();$("dateEnd").dispatchEvent(new Event("change",{bubbles:true}));await wait(760);results.push(snap("same-context self-heal"));
+      // Reset and verify all ranking dimensions remain rendered.
+      ["filterSource","filterAdProduct","filterPortfolio","filterCampaign","filterAdGroup","filterTargeting","filterMatchType","filterAdType","filterSearchTerm"].forEach(id=>{if($(id))$(id).value="";});$("filterSearchExact").checked=false;$("analysisGrain").value="auto";updateChildDropdowns("analysisGrain",{apply:false});applyFilters(true);await wait(900);
+      for(const rank of ["searchTerm","searchTermRoot","targeting","campaign","adGroup"])await set("rankBy",rank,620);
+      // Explicit targeting grain must rebuild child options from targeting rows only.
+      await set("analysisGrain","targeting",980);await set("filterSource","Source B");await set("filterPortfolio","Portfolio B");await set("filterCampaign","Campaign C");await set("filterAdGroup","Ad Group C");await set("filterTargeting","close-match");await set("filterMatchType","AUTO");await set("filterAdType","auto");
+      const failures=results.filter(r=>!r.missing&&(r.viewRows<1||!r.hero||r.kpis<1||r.rank<1||r.dimRows<1||r.renderErrors.length));resolve({pass:failures.length===0,results,failures,diagnostics:APP_RUNTIME.filterRenderDiagnostics||null});
+    }),
     runUnifiedRenderSmokeTest: () => new Promise(resolve => {
       APP_RUNTIME.errors=[];const mk=(x)=>({marketplace:"US",workspaceKey:"TEST|US",portfolio:"Test Portfolio",adProduct:"SP",reportGranularity:"searchTerm",sourceFile:"Unified Smoke Test",attributionWindowDays:7,units:x.orders||0,advertisedAsin:"B000000001",purchasedAsin:"B000000001",matchType:x.matchType||"EXACT",targeting:x.targeting||x.searchTerm,searchTermLower:String(x.searchTerm||"").toLowerCase(),...x});
       AdsStore.all=[mk({date:"2026-05-01",campaign:"Exact Winners",adGroup:"Readers",searchTerm:"reading glasses women",impr:1200,clicks:80,spend:32,sales:180,orders:10,currentBid:.62,biddingStrategy:"Dynamic bids - down only"}),mk({date:"2026-05-02",campaign:"Auto Research",adGroup:"Research",searchTerm:"cheap sunglasses",targeting:"close-match",matchType:"AUTO",impr:800,clicks:35,spend:28,sales:0,orders:0,currentBid:.55,biddingStrategy:"Dynamic bids - down only"}),mk({date:"2026-05-03",campaign:"Phrase Expansion",adGroup:"Readers",searchTerm:"blue light readers women",impr:650,clicks:40,spend:18,sales:82,orders:5,currentBid:.48,biddingStrategy:"Dynamic bids - down only"})];
       AdsStore.biz=[{date:"2026-05-01",marketplace:"US",asin:"B000000001",sku:"TEST-SKU",sessions:500,units:30,orders:28,sales:510}];AdsStore.placement=[];AdsStore.sqp=[];AdsStore.bulkStructure=[];AdsStore.files=[{name:"Unified Smoke Test",rows:3}];AdsStore.transactions=[];AdsStore.dataVersions={ads:1,biz:1,placement:0,sqp:0,transaction:0,bulk:0,derived:1};AdsStore.lastFilterHash="";UnifiedDecisionEngine.invalidate("render_smoke_test");
       if($("dateStart"))$("dateStart").value="2026-05-01";if($("dateEnd"))$("dateEnd").value="2026-05-31";populateDropdowns();applyFilters(true);
-      setTimeout(()=>{const diag=AdsDashboardApp.debug.getUnifiedDiagnostics(),self=AdsDashboardApp.debug.runUnifiedSelfTest(),runtimeErrors=[...APP_RUNTIME.errors],result={pass:self.pass&&runtimeErrors.length===0&&Boolean(AdsStore.currentContext)&&AdsStore.view.length===3,viewRows:AdsStore.view.length,context:diag.context,kpiCards:document.querySelectorAll("#kpiGrid .kpi").length,rankRows:document.querySelectorAll("#rankTable tbody tr").length,centralRows:document.querySelectorAll("#centralDecisionTable tbody tr").length,runtimeErrors,selfTest:self.checks};resolve(result);},3600);
+      setTimeout(()=>{const diag=AdsDashboardApp.debug.getUnifiedDiagnostics(),self=AdsDashboardApp.debug.runUnifiedSelfTest(),runtimeErrors=[...APP_RUNTIME.errors],result={pass:self.pass&&runtimeErrors.length===0&&Boolean(AdsStore.currentContext)&&AdsStore.view.length===3,viewRows:AdsStore.view.length,context:diag.context,kpiCards:document.querySelectorAll("#kpiGrid .execKpiCard").length,rankRows:document.querySelectorAll("#rankTable tbody tr").length,centralRows:document.querySelectorAll("#centralDecisionTable tbody tr").length,runtimeErrors,selfTest:self.checks};resolve(result);},3600);
     })
   },
   isInitialized: false
