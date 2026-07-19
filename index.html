@@ -8,9 +8,9 @@
 <meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://oapi.dingtalk.com https://qyapi.weixin.qq.com https://open.feishu.cn https://hooks.slack.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.4.5 Private API CSP</title>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.4.6 Private Cloud Import</title>
 <script>
-window.APP_BUILD_VERSION='V61.4.5';
+window.APP_BUILD_VERSION='V61.4.6';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" onerror="__loadDependencyFallback('PapaParse','https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')"></script>
@@ -13912,6 +13912,213 @@ window.addEventListener('load', AdsDashboardApp.init);
 })();
 </script>
 
+
+
+<script id="privateCloudImportV6146">
+(() => {
+  'use strict';
+
+  const API_BASE = 'https://amazon-ad-private-api.tanshiyuesir.workers.dev';
+  const SESSION_KEY = 'lr_private_cloud_password';
+  const state = { loading: false, manifest: null };
+  const byId = id => document.getElementById(id);
+  const sleepFrame = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
+
+  const setStatus = (message, kind = '') => {
+    const el = byId('privateCloudImportStatus');
+    if (!el) return;
+    el.textContent = message;
+    el.dataset.kind = kind;
+  };
+
+  const setBusy = busy => {
+    state.loading = busy;
+    const loadBtn = byId('btnPrivateCloudImport');
+    const clearBtn = byId('btnPrivateCloudLogout');
+    if (loadBtn) {
+      loadBtn.disabled = busy;
+      loadBtn.textContent = busy ? '正在加载私有云数据…' : '☁ 加载私有云数据';
+    }
+    if (clearBtn) clearBtn.disabled = busy;
+  };
+
+  const notifyUser = (message, kind = 'good') => {
+    try {
+      if (typeof notify === 'function') notify(message, kind);
+      else console.info(message);
+    } catch (_) {
+      console.info(message);
+    }
+  };
+
+  const ensureUi = () => {
+    if (byId('privateCloudImportPanel')) return;
+    const input = byId('fileInput');
+    if (!input) return;
+
+    const style = document.createElement('style');
+    style.id = 'privateCloudImportStyles';
+    style.textContent = `
+      #privateCloudImportPanel{display:grid;grid-template-columns:1fr;gap:7px;margin-top:8px;padding:9px;border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--accent) 5%,var(--input-bg))}
+      #privateCloudImportPanel .privateCloudActions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+      #privateCloudImportPanel .btn{justify-content:center;padding:8px 10px;border-radius:10px;font-size:11.2px;min-width:0}
+      #privateCloudImportStatus{min-height:16px;line-height:1.4;word-break:break-word}
+      #privateCloudImportStatus[data-kind="good"]{color:var(--good)}
+      #privateCloudImportStatus[data-kind="warn"]{color:var(--warn)}
+      #privateCloudImportStatus[data-kind="bad"]{color:var(--bad)}
+      @media(max-width:420px){#privateCloudImportPanel .privateCloudActions{grid-template-columns:1fr}}
+    `;
+    document.head.appendChild(style);
+
+    const panel = document.createElement('div');
+    panel.id = 'privateCloudImportPanel';
+    panel.innerHTML = `
+      <div class="privateCloudActions">
+        <button class="btn primary" id="btnPrivateCloudImport" type="button">☁ 加载私有云数据</button>
+        <button class="btn" id="btnPrivateCloudLogout" type="button" title="清除当前标签页保存的访问密码">清除密码</button>
+      </div>
+      <div class="small" id="privateCloudImportStatus">Cloudflare 私有接口 · 未连接</div>
+    `;
+    input.insertAdjacentElement('afterend', panel);
+
+    byId('btnPrivateCloudImport')?.addEventListener('click', () => loadPrivateCloudData());
+    byId('btnPrivateCloudLogout')?.addEventListener('click', () => {
+      sessionStorage.removeItem(SESSION_KEY);
+      setStatus('会话密码已清除；下次加载时需要重新输入', 'warn');
+      notifyUser('私有云会话密码已清除。', 'good');
+    });
+  };
+
+  const requestPassword = () => {
+    const password = window.prompt('请输入广告工作台密码');
+    return typeof password === 'string' ? password.trim() : '';
+  };
+
+  const apiFetchJson = async (path, password) => {
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    const response = await fetch(`${API_BASE}${normalized}`, {
+      method: 'GET',
+      headers: { 'X-Dashboard-Password': password },
+      cache: 'no-store'
+    });
+
+    const text = await response.text();
+    let payload = null;
+    try { payload = text ? JSON.parse(text) : null; } catch (_) {}
+
+    if (!response.ok) {
+      const error = new Error(payload?.error || `私有接口请求失败（HTTP ${response.status}）`);
+      error.status = response.status;
+      throw error;
+    }
+    return payload;
+  };
+
+  const extractRows = payload => {
+    if (Array.isArray(payload?.rows)) return payload.rows;
+    if (Array.isArray(payload?.reports)) {
+      return payload.reports.flatMap(report => Array.isArray(report?.rows) ? report.rows : []);
+    }
+    return [];
+  };
+
+  const payloadToCsvFile = (payload, entry) => {
+    const rows = extractRows(payload);
+    if (!rows.length) throw new Error(`${entry.month || entry.url} 没有可导入的数据行`);
+    if (!window.Papa?.unparse) throw new Error('PapaParse 未加载，无法转换私有云数据');
+    const csv = window.Papa.unparse(rows, { quotes: false, newline: '\r\n' });
+    const filename = String(entry.url || `ads-${entry.month}.json`).split('/').pop().replace(/\.json$/i, '.csv');
+    return new File([csv], filename, { type: 'text/csv;charset=utf-8', lastModified: Date.now() });
+  };
+
+  const loadPrivateCloudData = async () => {
+    if (state.loading) return;
+    ensureUi();
+    setBusy(true);
+
+    let password = sessionStorage.getItem(SESSION_KEY) || '';
+    if (!password) password = requestPassword();
+    if (!password) {
+      setBusy(false);
+      setStatus('已取消私有云数据加载', 'warn');
+      return;
+    }
+
+    try {
+      setStatus('正在验证私有接口与读取数据清单…');
+      const manifest = await apiFetchJson('/manifest', password);
+      const entries = Array.isArray(manifest?.files) ? manifest.files : [];
+      if (!entries.length) throw new Error('数据清单为空，没有可加载的月份文件');
+      state.manifest = manifest;
+      sessionStorage.setItem(SESSION_KEY, password);
+
+      const csvFiles = [];
+      let fetchedRows = 0;
+      for (let index = 0; index < entries.length; index += 1) {
+        const entry = entries[index];
+        setStatus(`正在下载 ${entry.month || index + 1}（${index + 1}/${entries.length}）…`);
+        const payload = await apiFetchJson(entry.url, password);
+        const file = payloadToCsvFile(payload, entry);
+        csvFiles.push(file);
+        fetchedRows += Number(entry.rowCount || extractRows(payload).length || 0);
+        await sleepFrame();
+      }
+
+      if (typeof importMultipleFiles !== 'function') {
+        throw new Error('网页导入模块尚未就绪，请刷新页面后重试');
+      }
+
+      const mergeSelect = byId('mergeMode');
+      const previousMerge = mergeSelect?.value || 'append';
+      if (mergeSelect) mergeSelect.value = 'replace';
+      setStatus(`已下载 ${entries.length} 个月，正在导入并建立索引…`);
+      try {
+        await importMultipleFiles(csvFiles);
+      } finally {
+        if (mergeSelect) mergeSelect.value = previousMerge;
+      }
+
+      const totalRows = Number(manifest.totalRows || fetchedRows || 0);
+      setStatus(`私有云数据已加载：${totalRows.toLocaleString()} 行 · ${entries.length} 个月`, 'good');
+      const brand = byId('brandStatus');
+      if (brand) brand.textContent = `系统就绪 · 私有云 ${totalRows.toLocaleString()} 行`;
+      notifyUser(`私有云广告数据加载完成：${totalRows.toLocaleString()} 行`, 'good');
+    } catch (error) {
+      console.error('Private cloud import failed:', error);
+      if (error?.status === 401) sessionStorage.removeItem(SESSION_KEY);
+      const message = error?.status === 401
+        ? '网页登录密码错误，请清除密码后重新加载'
+        : error?.status === 403
+          ? '当前网页来源未被 Worker 授权'
+          : error?.status === 502
+            ? 'Worker 无法读取 GitHub 私有仓库，请检查令牌权限'
+            : (error?.message || String(error));
+      setStatus(message, 'bad');
+      notifyUser(message, 'bad');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const init = () => {
+    ensureUi();
+    if (sessionStorage.getItem(SESSION_KEY)) {
+      setStatus('已保存当前标签页会话密码，点击即可重新加载私有云数据');
+    }
+    window.PrivateCloudAds = {
+      load: loadPrivateCloudData,
+      clearPassword: () => sessionStorage.removeItem(SESSION_KEY),
+      apiBase: API_BASE
+    };
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();
+</script>
 
 </body>
 </html>
