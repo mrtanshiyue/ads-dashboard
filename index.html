@@ -6,9 +6,9 @@
 <meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.1 Private Cloud Bridge</title>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.3 Private Cloud Bridge</title>
 <script>
-window.APP_BUILD_VERSION='V61.5.1';
+window.APP_BUILD_VERSION='V61.5.3';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" onerror="__loadDependencyFallback('PapaParse','https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')"></script>
@@ -2698,7 +2698,7 @@ B0XXXXXXXX,19.99,0.28,4.35,0.15,0.02,0.03,0.08,0.35,0.30,0.10,0.10" style="min-h
 <div class="chat-container" id="aiChatHistory"></div>
 <div id="aiInputWrapper" style="display: flex; gap: 10px; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 14px;">
 <input aria-label="输入指令，例如：画一个关于各维度 CPC 的柱状图..." data-i18n-placeholder="ph_ai_chat" id="aiChatInput" placeholder="输入指令，例如：画一个关于各维度 CPC 的柱状图..." style="flex:1; border-radius: 999px; padding: 12px 16px; background: var(--input-bg);" type="text"/>
-<button class="btn primary" data-i18n="btn_send" id="btnSendAI" style="border-radius: 999px; padding: 0 24px;">发送</button>
+<button class="btn primary" data-i18n="btn_send" id="btnSendAI" type="button" style="border-radius: 999px; padding: 0 24px;">发送</button>
 </div>
 </div>
 </div>
@@ -4237,7 +4237,7 @@ const applyLanguageToDOM = () => {
       if (I18N[currentLang][key]) el.title = I18N[currentLang][key];
   });
   
-  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.4.2'}`;
+  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.5.3'}`;
   document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
   
   const btnLang = document.getElementById('btnLangToggle');
@@ -4322,7 +4322,7 @@ const PERF = {
   IDB_CHUNK_ROWS: 25000
 };
 const APP_DATA_SCHEMA_VERSION = "ADS_DECISION_OS_2026_07_TRANSACTION_ECONOMICS_V61";
-const APP_BUILD_VERSION = "V61.5.1";
+const APP_BUILD_VERSION = "V61.5.3";
 const APP_SCHEMA_VERSION = APP_DATA_SCHEMA_VERSION;
 const AMAZON_AD_PRODUCT_META = {
   SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
@@ -4876,11 +4876,15 @@ const toTransactionISODate=value=>{const s=String(value||"").trim();if(!s)return
 const transactionPreTaxNet=r=>safeNum(r.productSales)+safeNum(r.shippingCredits)+safeNum(r.giftWrapCredits)+safeNum(r.regulatoryFee)+safeNum(r.promotionalRebates)+safeNum(r.sellingFees)+safeNum(r.fbaFees)+safeNum(r.otherTransactionFees)+safeNum(r.other);
 const classifyTransactionCategory=(type,description)=>{const t=String(type||"").toLowerCase(),d=String(description||"").toLowerCase();if(t==="transfer")return"TRANSFER";if(t==="service fee"&&d.includes("cost of advertising"))return"ADVERTISING";if(d.includes("inbound placement"))return"INBOUND";if(t==="fba inventory fee"||d.includes("storage fee")||d.includes("long-term storage"))return"STORAGE";if(t==="liquidations")return"LIQUIDATION";if(t==="adjustment")return"ADJUSTMENT";if(t==="order")return"ORDER";if(t==="refund")return"REFUND";if(t==="service fee"||t==="fba transaction fees")return"ACCOUNT_OVERHEAD";return"OTHER";};
 const normalizeTransactionRow=(raw,map,sourceFile)=>{const type=String(raw[map.type]||"").trim(),description=String(raw[map.description]||"").trim(),date=toTransactionISODate(raw[map.postedAt]),status=String(raw[map.status]||"").trim()||"Released";const row={sourceFile:intern(sourceFile),reportSchemaVersion:APP_SCHEMA_VERSION,workspaceKey:intern(getWorkspaceKey()),date,postedAt:String(raw[map.postedAt]||"").trim(),releaseDate:toTransactionISODate(raw[map.releaseDate]),settlementId:intern(String(raw[map.settlementId]||"").trim()),type:intern(type),orderId:intern(String(raw[map.orderId]||"").trim()),sku:intern(String(raw[map.sku]||"").trim().toUpperCase()),description,quantity:Math.max(0,safeNum(raw[map.quantity])),marketplace:intern(normalizeMarketplace(raw[map.marketplace]||getWorkspaceConfig().marketplace)),accountType:intern(String(raw[map.accountType]||"").trim()),fulfillment:intern(String(raw[map.fulfillment]||"").trim()),status:intern(status),period:date?date.slice(0,7):""};for(const k of ["productSales","productSalesTax","shippingCredits","shippingCreditsTax","giftWrapCredits","giftWrapCreditsTax","regulatoryFee","regulatoryFeeTax","promotionalRebates","promotionalRebatesTax","marketplaceWithheldTax","sellingFees","fbaFees","otherTransactionFees","other","total"])row[k]=safeNum(raw[map[k]]);row.category=classifyTransactionCategory(type,description);row.preTaxNet=transactionPreTaxNet(row);return row;};
+const isValidTransactionDate=r=>/^\d{4}-\d{2}-\d{2}$/.test(String(r?.date||""));
+const isTransactionStatusIncluded=(r,mode="accrual")=>{const status=String(r?.status||"Released").trim().toLowerCase();return mode==="cash"?status==="released":status==="released"||status==="deferred";};
+const isTransactionMarketplaceIncluded=(r,market="")=>!market||!r?.marketplace||normalizeMarketplace(r.marketplace)===normalizeMarketplace(market);
+const filterTransactionRowsByScope=(rows,{start="",end="",mode="accrual",market=""}={})=>(rows||[]).filter(r=>isValidTransactionDate(r)&&isTransactionStatusIncluded(r,mode)&&isTransactionMarketplaceIncluded(r,market)&&(!start||r.date>=start)&&(!end||r.date<=end));
 const newTransactionAggregate=()=>({rows:0,orderRows:0,refundRows:0,orderSales:0,orderUnits:0,refundSales:0,refundUnits:0,orderSellingFees:0,orderFbaFees:0,orderPromo:0,orderOther:0,refundNetLoss:0,settlementTotal:0,operatingSettlement:0,advertisingCharges:0,inboundFees:0,storageFees:0,accountOverhead:0,liquidationIncome:0,adjustments:0,orderIds:new Set(),dates:new Set(),statuses:new Set(),skus:new Set(),asins:new Set()});
 const addTransactionAggregate=(a,r)=>{a.rows++;a.settlementTotal+=safeNum(r.total);if(r.date)a.dates.add(r.date);if(r.status)a.statuses.add(r.status);if(r.sku)a.skus.add(r.sku);if(r.category!=="TRANSFER")a.operatingSettlement+=safeNum(r.total);if(r.category==="ORDER"){a.orderRows++;a.orderSales+=safeNum(r.productSales);a.orderUnits+=Math.max(0,safeNum(r.quantity));a.orderSellingFees-=safeNum(r.sellingFees);a.orderFbaFees-=safeNum(r.fbaFees);a.orderPromo-=safeNum(r.promotionalRebates);a.orderOther-=safeNum(r.otherTransactionFees)+safeNum(r.other);if(r.orderId)a.orderIds.add(r.orderId);}else if(r.category==="REFUND"){a.refundRows++;a.refundSales-=safeNum(r.productSales);a.refundUnits+=Math.max(0,safeNum(r.quantity));a.refundNetLoss-=safeNum(r.preTaxNet);}else if(r.category==="ADVERTISING")a.advertisingCharges-=safeNum(r.total||r.otherTransactionFees);else if(r.category==="INBOUND")a.inboundFees-=safeNum(r.total||r.fbaFees||r.other);else if(r.category==="STORAGE")a.storageFees-=safeNum(r.total||r.other);else if(r.category==="ACCOUNT_OVERHEAD")a.accountOverhead-=safeNum(r.total||r.fbaFees||r.otherTransactionFees||r.other);else if(r.category==="LIQUIDATION")a.liquidationIncome+=safeNum(r.total);else if(r.category==="ADJUSTMENT")a.adjustments+=safeNum(r.total);return a;};
 const finalizeTransactionAggregate=(a,account=null,label="ACCOUNT")=>{const orderSales=Math.max(0,a.orderSales),units=a.orderUnits,refundSales=Math.max(0,a.refundSales),refundNetLoss=Math.max(0,a.refundNetLoss),returnRate=units>0?a.refundUnits/units:0,returnLossRate=refundSales>0?refundNetLoss/refundSales:0,returnCostRate=orderSales>0?refundNetLoss/orderSales:0,dates=[...a.dates].sort(),accountUnits=account?.orderUnits||units||1,storageBase=account||a,overheadBase=account||a,inboundCost=Math.max(0,(account||a).inboundFees),storageCost=Math.max(0,storageBase.storageFees),overheadCost=Math.max(0,overheadBase.accountOverhead);return{source:label,sampleUnits:units,refundUnits:a.refundUnits,orderCount:a.orderIds.size,orderRows:a.orderRows,refundRows:a.refundRows,orderSales,refundSales,refundNetLoss,netProductSales:orderSales-refundSales,unitPrice:units>0?orderSales/units:null,unitsPerOrder:a.orderIds.size>0?units/a.orderIds.size:null,referralFeeRate:orderSales>0?Math.max(0,a.orderSellingFees)/orderSales:null,fbaFee:units>0?Math.max(0,a.orderFbaFees)/units:null,promoRate:orderSales>0?Math.max(0,a.orderPromo)/orderSales:null,otherCostRate:orderSales>0?Math.max(0,a.orderOther)/orderSales:null,returnRate,returnLossRate,returnCostRate,inboundPerUnit:inboundCost>0?inboundCost/accountUnits:null,storagePerUnit:storageCost>0?storageCost/accountUnits:null,accountOverheadPerUnit:overheadCost/accountUnits,settlementTotal:a.settlementTotal,operatingSettlement:a.operatingSettlement,advertisingCharges:Math.max(0,a.advertisingCharges),inboundFees:Math.max(0,a.inboundFees),storageFees:Math.max(0,a.storageFees),accountOverhead:Math.max(0,a.accountOverhead),liquidationIncome:a.liquidationIncome,adjustments:a.adjustments,period:dates.length?`${dates[0]}~${dates[dates.length-1]}`:"",statuses:[...a.statuses],skuCount:a.skus.size,asinCount:a.asins.size};};
 const buildSkuAsinResolver=()=>{const map=new Map(),set=(sku,asin)=>{sku=String(sku||"").trim().toUpperCase();asin=String(asin||"").trim().toUpperCase();if(sku&&asin&&!map.has(sku))map.set(sku,asin);};for(const r of AdsStore.biz||[])set(r.sku,r.asin);for(const r of AdsStore.all||[]){set(r.advertisedSku,r.advertisedAsin);set(r.purchasedSku,r.purchasedAsin);}return map;};
-const buildTransactionEconomicsSnapshot=(ctx=AdsStore.currentContext||UnifiedDecisionEngine.context())=>{const cfg=ctx?.config?.transactionEconomics||{enabled:true,statusMode:"accrual",allocateAccountOverhead:true,minUnits:10},start=ctx?.filters?.dateStart||"",end=ctx?.filters?.dateEnd||"",signature=`tx${AdsStore.dataVersions.transaction||0}|ads${AdsStore.dataVersions.ads||0}|biz${AdsStore.dataVersions.biz||0}|${start}|${end}|${cfg.enabled?1:0}|${cfg.statusMode}|${cfg.allocateAccountOverhead?1:0}|${cfg.minUnits||10}`,hit=AdsStore.transactionEconomicsCache;if(hit?.signature===signature&&hit.snapshot)return hit.snapshot;const statusRows=(AdsStore.transactions||[]).filter(r=>cfg.statusMode!=="cash"||String(r.status).toLowerCase()==="released"),rows=statusRows.filter(r=>(!start||!r.date||r.date>=start)&&(!end||!r.date||r.date<=end)),resolver=buildSkuAsinResolver(),accountRaw=newTransactionAggregate(),skuRaw=new Map(),asinRaw=new Map();for(const r of rows){addTransactionAggregate(accountRaw,r);if(r.sku){if(!skuRaw.has(r.sku))skuRaw.set(r.sku,newTransactionAggregate());addTransactionAggregate(skuRaw.get(r.sku),r);const asin=resolver.get(r.sku)||"";if(asin){if(!asinRaw.has(asin))asinRaw.set(asin,newTransactionAggregate());addTransactionAggregate(asinRaw.get(asin),r);asinRaw.get(asin).asins.add(asin);}}}const account=finalizeTransactionAggregate(accountRaw,null,"TRANSACTION_ACCOUNT"),sku=new Map(),asin=new Map();for(const[k,v]of skuRaw)sku.set(k,finalizeTransactionAggregate(v,accountRaw,"TRANSACTION_SKU"));for(const[k,v]of asinRaw)asin.set(k,finalizeTransactionAggregate(v,accountRaw,"TRANSACTION_ASIN"));const snapshot={signature,enabled:Boolean(cfg.enabled),statusMode:cfg.statusMode,minUnits:cfg.minUnits||10,allocateAccountOverhead:Boolean(cfg.allocateAccountOverhead),periodMatched:rows.length>0,rows,account,sku,asin,resolver,dateStart:start,dateEnd:end};AdsStore.transactionEconomicsCache={signature,snapshot};return snapshot;};
+const buildTransactionEconomicsSnapshot=(ctx=AdsStore.currentContext||UnifiedDecisionEngine.context())=>{const cfg=ctx?.config?.transactionEconomics||{enabled:true,statusMode:"accrual",allocateAccountOverhead:true,minUnits:10},start=ctx?.filters?.dateStart||"",end=ctx?.filters?.dateEnd||"",market=ctx?.config?.workspace?.marketplace||getWorkspaceConfig().marketplace||"",signature=`tx${AdsStore.dataVersions.transaction||0}|ads${AdsStore.dataVersions.ads||0}|biz${AdsStore.dataVersions.biz||0}|${start}|${end}|${market}|${cfg.enabled?1:0}|${cfg.statusMode}|${cfg.allocateAccountOverhead?1:0}|${cfg.minUnits||10}`,hit=AdsStore.transactionEconomicsCache;if(hit?.signature===signature&&hit.snapshot)return hit.snapshot;const rows=filterTransactionRowsByScope(AdsStore.transactions||[],{start,end,mode:cfg.statusMode,market}),resolver=buildSkuAsinResolver(),accountRaw=newTransactionAggregate(),skuRaw=new Map(),asinRaw=new Map();for(const r of rows){addTransactionAggregate(accountRaw,r);if(r.sku){if(!skuRaw.has(r.sku))skuRaw.set(r.sku,newTransactionAggregate());addTransactionAggregate(skuRaw.get(r.sku),r);const asin=resolver.get(r.sku)||"";if(asin){if(!asinRaw.has(asin))asinRaw.set(asin,newTransactionAggregate());addTransactionAggregate(asinRaw.get(asin),r);asinRaw.get(asin).asins.add(asin);}}}const account=finalizeTransactionAggregate(accountRaw,null,"TRANSACTION_ACCOUNT"),sku=new Map(),asin=new Map();for(const[k,v]of skuRaw)sku.set(k,finalizeTransactionAggregate(v,accountRaw,"TRANSACTION_SKU"));for(const[k,v]of asinRaw)asin.set(k,finalizeTransactionAggregate(v,accountRaw,"TRANSACTION_ASIN"));const snapshot={signature,enabled:Boolean(cfg.enabled),statusMode:cfg.statusMode,minUnits:cfg.minUnits||10,allocateAccountOverhead:Boolean(cfg.allocateAccountOverhead),periodMatched:rows.length>0,rows,account,sku,asin,resolver,dateStart:start,dateEnd:end};AdsStore.transactionEconomicsCache={signature,snapshot};return snapshot;};
 const resolveTransactionEconomics=(asin="",sku="",ctx=AdsStore.currentContext||UnifiedDecisionEngine.context())=>{const snap=buildTransactionEconomicsSnapshot(ctx);if(!snap.enabled||!snap.periodMatched||!snap.rows.length)return null;const min=snap.minUnits||10,skuKey=String(sku||"").trim().toUpperCase(),asinKey=String(asin||"").trim().toUpperCase(),bySku=skuKey?snap.sku.get(skuKey):null,byAsin=asinKey?snap.asin.get(asinKey):null,candidate=bySku?.sampleUnits>=min?bySku:byAsin?.sampleUnits>=min?byAsin:snap.account.sampleUnits>=Math.max(50,min*3)?snap.account:null;if(!candidate)return null;return{...candidate,storagePerUnit:candidate.storagePerUnit,accountOverheadPerUnit:snap.allocateAccountOverhead?candidate.accountOverheadPerUnit:0};};
 const getTransactionReconciliation=(ctx=AdsStore.currentContext||UnifiedDecisionEngine.context())=>{const snap=buildTransactionEconomicsSnapshot(ctx),adSpend=sumMetrics(AdsStore.view||[],ctx).spend||0,charge=snap.account.advertisingCharges||0,delta=charge-adSpend,deltaRate=adSpend>0?delta/adSpend:null;return{...snap,adSpend,advertisingCharge:charge,delta,deltaRate};};
 
@@ -6036,7 +6040,8 @@ const renderSqpAnalysis = () => {
 
 const buildBusinessAggregates = () => {
   const scope=getExecutiveDateScope(AdsStore.view||[]),adAsins=new Set((AdsStore.view||[]).map(r=>String(r.advertisedAsin||"").toUpperCase()).filter(Boolean)),market=getWorkspaceConfig().marketplace;
-  const bizRows=(AdsStore.biz||[]).filter(r=>(!adAsins.size||adAsins.has(String(r.asin||"").toUpperCase()))&&(!market||!r.marketplace||normalizeMarketplace(r.marketplace)===market)&&(!scope.start||!r.date||r.date>=scope.start)&&(!scope.end||!r.date||r.date<=scope.end));
+  const bizPool=(AdsStore.biz||[]).filter(r=>(!adAsins.size||adAsins.has(String(r.asin||"").toUpperCase()))&&(!market||!r.marketplace||normalizeMarketplace(r.marketplace)===market)),hasDatedBiz=bizPool.some(r=>r.date);
+  const bizRows=bizPool.filter(r=>!hasDatedBiz||(r.date&&(!scope.start||r.date>=scope.start)&&(!scope.end||r.date<=scope.end)));
   const map=new Map();
   for(const r of bizRows){if(!r.asin)continue;const key=String(r.asin).toUpperCase();if(!map.has(key))map.set(key,{asin:key,title:r.title,sessions:0,units:0,orders:0,hasOrderData:false,sales:0,adOrders:null,adUnits:null,adOrderPenetration:null,adUnitPenetration:null,spta:null,cvr:0,aov:0,trendStatus:"insufficient",lifecycle:"insufficient",datedRows:[]});const e=map.get(key);e.sessions+=safeNum(r.sessions);e.units+=safeNum(r.units);e.sales+=safeNum(r.sales);if(Number.isFinite(r.orders)){e.orders+=safeNum(r.orders);e.hasOrderData=true;}if(r.date)e.datedRows.push(r);if(r.title&&r.title.length>(e.title||"").length)e.title=r.title;}
   const mature=splitAttributionRows(AdsStore.view||[]).mature,adOrders=new Map(),adUnits=new Map();let totalOrders=0,mappedOrders=0,totalUnits=0,mappedUnits=0;
@@ -7304,7 +7309,7 @@ const getExecutiveBizSales = (rows, scope) => {
   const adRows=rows||[],totalSpend=adRows.reduce((s,r)=>s+safeNum(r.spend),0),mappedSpend=adRows.filter(r=>r.advertisedAsin).reduce((s,r)=>s+safeNum(r.spend),0);
   const asins=[...new Set(adRows.map(r=>String(r.advertisedAsin||"").toUpperCase()).filter(Boolean))];
   if(!asins.length||(totalSpend>0&&mappedSpend/totalSpend<.95))return unavailable(currentLang==="zh"?"Advertised ASIN 覆盖不足95%":"Advertised ASIN coverage below 95%");
-  const start=$("dateStart")?.value||scope?.start||"",end=$("dateEnd")?.value||scope?.end||"",set=new Set(asins),market=getWorkspaceConfig().marketplace;
+  const start=scope?.start||$("dateStart")?.value||"",end=scope?.end||$("dateEnd")?.value||"",set=new Set(asins),market=getWorkspaceConfig().marketplace;
   const matched=datedBiz.filter(r=>set.has(String(r.asin||"").toUpperCase())&&(!market||!r.marketplace||normalizeMarketplace(r.marketplace)===market)&&(!start||r.date>=start)&&(!end||r.date<=end));
   if(!matched.length)return unavailable(currentLang==="zh"?"没有同 ASIN、同周期 Business 数据":"No same-ASIN, same-period business data");
   return {available:true,sales:matched.reduce((s,r)=>s+safeNum(r.sales),0),units:matched.reduce((s,r)=>s+safeNum(r.units),0),orders:matched.some(r=>Number.isFinite(r.orders))?matched.reduce((s,r)=>s+safeNum(r.orders),0):null,reason:"",asins,matchedRows:matched};
@@ -7316,9 +7321,9 @@ const getExecutiveTransactionSales = scope => {
   const unavailable=reason=>({available:false,sales:null,units:null,orders:null,reason,source:"transaction",statusMode:$("transactionStatusMode")?.value||"accrual",start:"",end:"",matchedRows:[]});
   const all=AdsStore.transactions||[];if(!all.length)return unavailable(currentLang==="zh"?"未导入联合报告":"Combined Transaction Report not imported");
   const statusMode=$("transactionStatusMode")?.value||"accrual",market=getWorkspaceConfig().marketplace;
-  const eligible=all.filter(r=>(statusMode!=="cash"||String(r.status||"").toLowerCase()==="released")&&(!market||!r.marketplace||normalizeMarketplace(r.marketplace)===market));
-  const dates=eligible.map(r=>r.date).filter(Boolean).sort(),start=$("dateStart")?.value||scope?.start||dates[0]||"",end=$("dateEnd")?.value||scope?.end||dates[dates.length-1]||"";
-  const matched=eligible.filter(r=>(!start||!r.date||r.date>=start)&&(!end||!r.date||r.date<=end));
+  const eligible=filterTransactionRowsByScope(all,{mode:statusMode,market});
+  const dates=eligible.map(r=>r.date).sort(),start=$("dateStart")?.value||scope?.start||dates[0]||"",end=$("dateEnd")?.value||scope?.end||dates[dates.length-1]||"";
+  const matched=filterTransactionRowsByScope(eligible,{start,end,mode:statusMode,market});
   if(!matched.length){const x=unavailable(currentLang==="zh"?"联合报告与当前日期范围无重叠":"Combined report does not overlap the selected date range");x.start=start;x.end=end;return x;}
   const orderRows=matched.filter(r=>r.category==="ORDER"),sales=orderRows.reduce((a,r)=>a+safeNum(r.productSales),0),units=orderRows.reduce((a,r)=>a+Math.max(0,safeNum(r.quantity)),0),orderIds=new Set(orderRows.map(r=>r.orderId).filter(Boolean));
   return {available:true,sales,units,orders:orderIds.size,reason:"",source:"transaction",statusMode,start,end,matchedRows:matched};
@@ -7441,7 +7446,7 @@ const execBucketKey = (date,granularity) => {
 };
 const execTransactionSalesByBucket = (scope,mode) => {
   const txMode=$("transactionStatusMode")?.value||"accrual",market=getWorkspaceConfig().marketplace,start=$("dateStart")?.value||scope?.start||"",end=$("dateEnd")?.value||scope?.end||"",map=new Map();
-  const rows=(AdsStore.transactions||[]).filter(r=>r?.date&&r.category==="ORDER"&&(txMode!=="cash"||String(r.status||"").toLowerCase()==="released")&&(!start||r.date>=start)&&(!end||r.date<=end)&&(!market||!r.marketplace||normalizeMarketplace(r.marketplace)===market));
+  const rows=filterTransactionRowsByScope(AdsStore.transactions||[],{start,end,mode:txMode,market}).filter(r=>r.category==="ORDER");
   rows.forEach(r=>{const key=execBucketKey(r.date,mode);map.set(key,(map.get(key)||0)+safeNum(r.productSales));});
   return {map,available:rows.length>0,rows:rows.length,statusMode:txMode,start,end};
 };
@@ -7486,9 +7491,9 @@ const execTransactionAggregate = rows => {
 const execTransactionKpiSnapshot = fallbackScope => {
   const all=AdsStore.transactions||[];if(!all.length)return {available:false,current:null,previous:null,start:"",end:"",mode:"accrual"};
   const mode=$("transactionStatusMode")?.value||"accrual",market=getWorkspaceConfig().marketplace;
-  const eligible=all.filter(r=>(mode!=="cash"||String(r.status||"").toLowerCase()==="released")&&(!market||!r.marketplace||normalizeMarketplace(r.marketplace)===market));
-  const dates=eligible.map(r=>r.date).filter(Boolean).sort(),start=$("dateStart")?.value||fallbackScope?.start||dates[0]||"",end=$("dateEnd")?.value||fallbackScope?.end||dates[dates.length-1]||"";
-  const inRange=(r,a,b)=>(!a||!r.date||r.date>=a)&&(!b||!r.date||r.date<=b),currentRows=eligible.filter(r=>inRange(r,start,end));
+  const eligible=filterTransactionRowsByScope(all,{mode,market});
+  const dates=eligible.map(r=>r.date).sort(),start=$("dateStart")?.value||fallbackScope?.start||dates[0]||"",end=$("dateEnd")?.value||fallbackScope?.end||dates[dates.length-1]||"";
+  const inRange=(r,a,b)=>isValidTransactionDate(r)&&(!a||r.date>=a)&&(!b||r.date<=b),currentRows=eligible.filter(r=>inRange(r,start,end));
   let previous=null,prevStart="",prevEnd="";
   if(start&&end){const span=Math.max(1,Math.round((new Date(end+"T00:00:00Z")-new Date(start+"T00:00:00Z"))/86400000)+1);prevEnd=execShiftDate(start,-1);prevStart=execShiftDate(prevEnd,-span+1);const previousRows=eligible.filter(r=>inRange(r,prevStart,prevEnd));if(previousRows.length)previous=execTransactionAggregate(previousRows);}
   return {available:currentRows.length>0,current:execTransactionAggregate(currentRows),previous,start,end,prevStart,prevEnd,mode,market,rowCount:currentRows.length};
@@ -7923,209 +7928,7 @@ const matchAdvancedSearch = (term, query) => {
     return true;
 };
 
-// ==================== Local Semantic Clustering (Transformers.js) ====================
-let embeddingPipeline = null;
-
-const buildLexicalFallbackClusters = (validTerms = []) => {
-    const clusters = [];
-    const sorted = [...validTerms].sort((a,b) => safeNum(b.metrics?.spend) - safeNum(a.metrics?.spend));
-    const tokenSet = (term) => new Set(tokenize(term).filter(Boolean));
-    const similarity = (a, b) => {
-        if (!a.size || !b.size) return 0;
-        let intersection = 0;
-        for (const x of a) if (b.has(x)) intersection++;
-        const union = a.size + b.size - intersection;
-        return union > 0 ? intersection / union : 0;
-    };
-    for (const item of sorted) {
-        const tokens = tokenSet(item.term);
-        let best = null, bestScore = 0;
-        for (const c of clusters) {
-            const score = similarity(tokens, c.tokens);
-            if (score > bestScore) { bestScore = score; best = c; }
-        }
-        const sharedCount = best ? [...tokens].filter(x => best.tokens.has(x)).length : 0;
-        if (best && (bestScore >= 0.45 || sharedCount >= 2)) {
-            best.items.push(item);
-            for (const x of tokens) best.tokens.add(x);
-        } else {
-            clusters.push({ tokens:new Set(tokens), items:[item] });
-        }
-    }
-    return clusters;
-};
-
-const renderLexicalFallbackClusters = (validTerms, progressDiv, reason = "") => {
-    const clusters = buildLexicalFallbackClusters(validTerms);
-    const clusterRows = clusters.map(c => {
-        const allRows = c.items.flatMap(it => it.rows);
-        const m = sumMetrics(allRows);
-        c.items.sort((a,b) => safeNum(b.metrics?.spend) - safeNum(a.metrics?.spend));
-        const represent = c.items[0]?.term || "(blank)";
-        return { word:`[Local Cluster] ${represent} (+${Math.max(0,c.items.length-1)} terms)`, freq:c.items.length, fullList:c.items.map(it=>it.term).join(", "), ...m };
-    }).sort((a,b) => safeNum(b.spend) - safeNum(a.spend));
-    const tbody = $("wfTable")?.querySelector("tbody");
-    const globalCvr = sumMetrics(AdsStore.view).cvr || 0.05;
-    renderProgressive(tbody, clusterRows, (r) => {
-        let rootTag = t('dyn_root_neutral');
-        if (r.orders > 0 && r.cvr > globalCvr * 1.5 && meetsDynamicProfitLine(r,1,r.advertisedAsin||r.asin||'')) rootTag = t('dyn_root_golden');
-        else if (r.clicks >= 15 && r.cvr < globalCvr * 0.5 && r.spend > 15) rootTag = t('dyn_root_toxic');
-        else if (r.spend > 20 && r.orders === 0) rootTag = t('dyn_root_bleeder');
-        const tooltip = `[ Local lexical fallback ]\n${rootTag}\nTerms in cluster:\n${r.fullList}`;
-        return `<tr title="${escapeHtml(tooltip)}"><td style="color:#10b981;font-weight:600;">${escapeHtml(r.word)}</td><td><span class="tag warn">Local Fallback</span></td><td>${fmtInt(r.freq)}</td><td>${fmtMoney(r.spend)}</td><td>${fmtInt(r.clicks||0)}</td><td>${fmtInt(r.orders)}</td><td>${fmtPct(r.cvr||0)}</td><td style="${dynamicRoasStyle(r)}">${safeNum(r.roas).toFixed(2)}</td><td>${scoreBar((r.spend>20&&r.orders===0)?85:35,true)}</td><td>${scoreBar((r.orders>0&&meetsDynamicProfitLine(r,1))?80:35,false)}</td><td>—</td><td><span class="rootDecision neutral">${escapeHtml(rootTag)}</span></td></tr>`;
-    });
-    progressDiv.style.color = "var(--warn)";
-    progressDiv.textContent = currentLang === "zh"
-      ? `⚠️ 语义模型不可用，已自动使用本地词根相似度聚类：${clusters.length} 个簇。${reason ? " 原因：" + reason : ""}`
-      : `⚠️ Semantic model unavailable. Local lexical clustering completed: ${clusters.length} clusters.${reason ? " Reason: " + reason : ""}`;
-    setTimeout(() => { progressDiv.style.display = "none"; }, 7000);
-    return clusters;
-};
-
-const runLocalSemanticClustering = async () => {
-    const minFreq = Math.max(1, Math.floor(safeNum($("wfMinFreq")?.value ?? 3))); 
-    const minSpend = Math.max(0, safeNum($("wfMinSpend")?.value ?? 10)); 
-    
-    // 获取需要聚类的所有独特搜索词
-    const termMap = new Map();
-    for (const r of AdsStore.view) {
-        if (!r.searchTerm || isASINLike(r.searchTerm)) continue;
-        if (!termMap.has(r.searchTerm)) termMap.set(r.searchTerm, []);
-        termMap.get(r.searchTerm).push(r);
-    }
-    
-    const validTerms = [];
-    for (const [term, rows] of termMap.entries()) {
-        const m = sumMetrics(rows);
-        if (m.spend >= minSpend && rows.length >= minFreq) {
-            validTerms.push({ term, metrics: m, rows });
-        }
-    }
-    
-    if (validTerms.length === 0 || validTerms.length > 3000) {
-        notify("需聚类的词太少或太多(>3000)，请调整左侧筛选器或 Min Spend 阈值。当前数量：" + validTerms.length);
-        return;
-    }
-    
-    const progressDiv = $("clusterProgress");
-    if (!progressDiv) { notify("语义聚类进度容器缺失，请刷新页面或检查 HTML。 "); return; }
-    progressDiv.style.display = "block";
-    progressDiv.style.color = "var(--warn)";
-    progressDiv.textContent = "⚙️ 正在加载 Transformers.js 模型 (本地浏览器运行，首次会下载模型)...";
-
-    try {
-        // 动态注入 ESM 版本的 transformers.js
-        if (!embeddingPipeline) {
-            const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.14.0/dist/transformers.min.js');
-            env.allowLocalModels = false; 
-            embeddingPipeline = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-        }
-
-        progressDiv.textContent = `🚀 提取 ${validTerms.length} 个词的向量特征...`;
-        
-        // 提取特征
-        const embeddings = [];
-        for (let i = 0; i < validTerms.length; i++) {
-            const output = await embeddingPipeline(validTerms[i].term, { pooling: 'mean', normalize: true });
-            embeddings.push(Array.from(output.data));
-            if (i % 10 === 0) progressDiv.textContent = `🚀 提取向量特征... (${i}/${validTerms.length})`;
-        }
-        
-        progressDiv.textContent = "🧠 计算余弦相似度并进行聚合...";
-        
-        // 简单的余弦相似度聚类 (Threshold-based)
-        const dotProduct = (a, b) => a.reduce((sum, val, idx) => sum + val * b[idx], 0);
-        
-        const clusters = [];
-        const threshold = 0.85; // 相似度阈值
-        
-        for (let i = 0; i < validTerms.length; i++) {
-            let foundCluster = false;
-            for (let c of clusters) {
-                const sim = dotProduct(embeddings[i], c.centroid);
-                if (sim >= threshold) {
-                    c.items.push(validTerms[i]);
-                    // 更新质心 (简单平均)
-                    for(let j=0; j<c.centroid.length; j++) {
-                        c.centroid[j] = (c.centroid[j] * (c.items.length - 1) + embeddings[i][j]) / c.items.length;
-                    }
-                    foundCluster = true;
-                    break;
-                }
-            }
-            if (!foundCluster) {
-                clusters.push({
-                    centroid: [...embeddings[i]],
-                    items: [validTerms[i]]
-                });
-            }
-        }
-        
-        // 构建表格数据
-        const clusterRows = clusters.map(c => {
-            const allRows = c.items.flatMap(it => it.rows);
-            const m = sumMetrics(allRows);
-            // 选出消耗最大的词作为簇命名代表
-            c.items.sort((a,b) => b.metrics.spend - a.metrics.spend);
-            const represent = c.items[0].term;
-            const size = c.items.length;
-            const fullList = c.items.map(it => it.term).join(", ");
-            return {
-                word: `[Cluster] ${represent} (+${size-1} terms)`,
-                freq: size,
-                fullList: fullList,
-                ...m
-            };
-        });
-        
-        clusterRows.sort((a,b) => b.spend - a.spend);
-        
-        // 渲染到表格
-        const tbody = $("wfTable")?.querySelector("tbody"); 
-        const globalMetrics = sumMetrics(AdsStore.view);
-        const globalCvr = globalMetrics.cvr || 0.05;
-
-        renderProgressive(tbody, clusterRows, (r) => {
-            const displayWord = escapeHtml(r.word); 
-            let rootTag = t('dyn_root_neutral');
-            if (r.orders > 0 && r.cvr > globalCvr * 1.5 && meetsDynamicProfitLine(r,1,r.advertisedAsin||r.asin||'')) rootTag = t('dyn_root_golden');
-            else if (r.clicks >= 15 && r.cvr < globalCvr * 0.5 && r.spend > 15) rootTag = t('dyn_root_toxic');
-            else if (r.spend > 20 && r.orders === 0) rootTag = t('dyn_root_bleeder');
-            
-            const hoverTooltip = `[ Semantic Cluster ]\n${rootTag}\nTerms in cluster:\n${r.fullList}`;
-
-            return `<tr title="${escapeHtml(hoverTooltip)}"> 
-                <td style="color:#10b981; font-weight:600;">${displayWord}</td>
-                <td><span class="tag good">Cluster</span></td>
-                <td>${fmtInt(r.freq)}</td>
-                <td>${fmtMoney(r.spend)}</td>
-                <td>${fmtInt(r.clicks || 0)}</td>
-                <td>${fmtInt(r.orders)}</td>
-                <td>${fmtPct(r.cvr || 0)}</td>
-                <td style="${dynamicRoasStyle(r)}">${(r.roas ?? 0).toFixed(2)}</td>
-                <td>${scoreBar((r.spend > 20 && r.orders === 0) ? 85 : 35, true)}</td>
-                <td>${scoreBar((r.orders > 0 && meetsDynamicProfitLine(r,1)) ? 80 : 35, false)}</td>
-                <td>—</td>
-                <td><span class="rootDecision neutral">${escapeHtml(rootTag)}</span></td>
-            </tr>`;
-        });
-
-        progressDiv.textContent = `✅ 聚类完成！共生成 ${clusters.length} 个语义簇。`;
-        setTimeout(() => { progressDiv.style.display = "none"; }, 5000);
-
-    } catch (e) {
-        console.warn("Semantic model unavailable; using local lexical fallback:", e);
-        try {
-            renderLexicalFallbackClusters(validTerms, progressDiv, String(e?.message || e).slice(0, 180));
-        } catch (fallbackError) {
-            console.error("Local clustering fallback failed:", fallbackError);
-            progressDiv.style.color = "var(--bad)";
-            progressDiv.textContent = currentLang === "zh" ? "❌ 语义聚类与本地备用聚类均失败，请缩小数据范围后重试。" : "❌ Semantic and local fallback clustering both failed. Narrow the data scope and retry.";
-        }
-    }
-};
-
-
+// Local semantic-clustering prototype removed in V61.5.3: no UI entry point and stale DOM dependency.
 
 // ==================== Action Command Center Simple ====================
 const extractAsinFromText = (value) => {
@@ -8493,7 +8296,7 @@ const actionV4CampaignActions=(targetAcos,controls)=>{
 };
 
 const actionV4PlacementActions=(targetAcos,controls)=>{if(!(Number.isFinite(targetAcos)&&targetAcos>.005))return [];
-  const campaigns=new Set((AdsStore.view||[]).map(r=>r.campaign).filter(Boolean)),startDate=$("dateStart")?.value||"",endDate=$("dateEnd")?.value||"",rows=(AdsStore.placement||[]).filter(r=>campaigns.has(r.campaign)&&(!startDate||!r.date||r.date>=startDate)&&(!endDate||!r.date||r.date<=endDate)),groups=groupBy(rows,r=>`${r.campaign}|${r.placement}`),out=[],idx=getBulkStructureIndex();
+  const campaigns=new Set((AdsStore.view||[]).map(r=>r.campaign).filter(Boolean)),startDate=$("dateStart")?.value||"",endDate=$("dateEnd")?.value||"",placementPool=(AdsStore.placement||[]).filter(r=>campaigns.has(r.campaign)),hasDatedPlacement=placementPool.some(r=>r.date),rows=placementPool.filter(r=>!hasDatedPlacement||(r.date&&(!startDate||r.date>=startDate)&&(!endDate||r.date<=endDate))),groups=groupBy(rows,r=>`${r.campaign}|${r.placement}`),out=[],idx=getBulkStructureIndex();
   for(const list of groups.values()){
     const m=sumMetrics(list),main=list[0]||{},scope=getExecutiveDateScope(list),days=Math.max(1,scope.days||scope.dataDays||1),projectionDays=Math.max(7,days);if(!main.campaign||m.spend<Math.max(controls.minSpend,10)||m.clicks<18)continue;
     const campaignRows=(AdsStore.view||[]).filter(r=>r.campaign===main.campaign),cm=sumMetrics(splitAttributionRows(campaignRows).mature||campaignRows),asins=[...new Set(campaignRows.map(r=>String(r.advertisedAsin||"").toUpperCase()).filter(Boolean))],singleAsin=asins.length===1?asins[0]:"",aov=cm.orders>0?cm.sales/cm.orders:15,campaignTarget=singleAsin?(getUnifiedTargetAcos(aov,singleAsin)??targetAcos):targetAcos,targetRoas=campaignTarget>0?1/campaignTarget:3,structure=idx.campaigns.get(String(main.campaign).toLowerCase())||{};
@@ -13394,13 +13197,22 @@ window.addEventListener('load', AdsDashboardApp.init);
     const status=qs('#brandStatus');
     let banner=qs('#dependencyBanner');
     if(!banner){banner=document.createElement('div');banner.id='dependencyBanner';banner.className='dependencyBanner';banner.setAttribute('role','alert');qs('.header')?.insertAdjacentElement('afterend',banner);}
+    const nativeDownload=typeof Blob!=="undefined"&&typeof URL?.createObjectURL==="function"&&"download" in HTMLAnchorElement.prototype;
     const deps={CSV:!!window.Papa,ExcelImport:!!window.XLSX,Charts:!!window.Chart,ExcelExport:!!window.ExcelJS,FileSave:!!window.saveAs,Persistence:!!window.idbKeyval};
     const missing=Object.entries(deps).filter(([,ok])=>!ok).map(([k])=>k);
-    const critical=['CSV','ExcelImport'].filter(k=>!deps[k]);
+    const importReady=Boolean(deps.CSV||deps.ExcelImport),critical=!importReady,exportReady=Boolean(window.ExcelJS?.Workbook||window.XLSX?.utils?.book_new),saveReady=Boolean(window.saveAs||nativeDownload);
     if(!missing.length){if(status){status.textContent='系统就绪 · 本地数据处理';status.classList.remove('dependency-warn','dependency-bad');}banner.classList.remove('show','bad');return;}
-    if(status){status.textContent=`依赖异常 · 缺少 ${missing.length} 项`;status.classList.toggle('dependency-bad',critical.length>0);status.classList.toggle('dependency-warn',critical.length===0);}
-    banner.classList.add('show');banner.classList.toggle('bad',critical.length>0);banner.innerHTML=`<b>${critical.length?'核心依赖加载失败':'部分功能不可用'}</b><span>缺少：${missing.join('、')}。请检查网络或 CDN 访问；系统已禁用受影响的操作，避免误报“就绪”。</span>`;
-    if(!deps.ExcelExport||!deps.FileSave) qsa('[id*="Export"], [data-i18n*="export"]').forEach(btn=>{if(btn.tagName==='BUTTON'){btn.disabled=true;btn.title='Excel 导出依赖未加载';}});
+    const limitations=[];
+    if(!deps.CSV)limitations.push('CSV 导入不可用');
+    if(!deps.ExcelImport)limitations.push('Excel 导入不可用');
+    if(!deps.Charts)limitations.push('图表不可用');
+    if(!deps.Persistence)limitations.push('持久化缓存不可用');
+    if(!deps.ExcelExport&&exportReady)limitations.push('已启用 SheetJS 兼容导出');
+    if(!deps.FileSave&&saveReady)limitations.push('已启用浏览器原生下载');
+    if(!exportReady||!saveReady)limitations.push('Excel 导出不可用');
+    if(status){status.textContent=`${critical?'核心依赖异常':'兼容模式'} · 缺少 ${missing.length} 项`;status.classList.toggle('dependency-bad',critical);status.classList.toggle('dependency-warn',!critical);}
+    banner.classList.add('show');banner.classList.toggle('bad',critical);banner.innerHTML=`<b>${critical?'文件导入能力不可用':'兼容模式已启用'}</b><span>缺少：${missing.join('、')}。${limitations.join('；')}。${critical?'请检查网络或 CDN 访问。':'现有可用能力继续运行，只有对应功能受限。'}</span>`;
+    if(!exportReady||!saveReady) qsa('[id*="Export"], [data-i18n*="export"]').forEach(btn=>{if(btn.tagName==='BUTTON'){btn.disabled=true;btn.title='导出依赖与浏览器下载能力均不可用';}});
     if(!deps.Charts) qsa('canvas').forEach(c=>{c.setAttribute('aria-label','图表依赖未加载');c.style.display='none';});
     if(!deps.CSV&&!deps.ExcelImport){const fi=qs('#fileInput');if(fi){fi.disabled=true;fi.title='文件解析依赖未加载';}}
   };
@@ -13532,8 +13344,11 @@ window.addEventListener('load', AdsDashboardApp.init);
   };
   const closeModal=()=>{destroyCharts();const m=byId('transactionFinanceModal');if(m)m.style.display='none';};
   const getAllTransactionRows=()=>{try{const rows=AdsDashboardApp?.debug?.getTransactionRowsForFinance?.();return Array.isArray(rows)?rows:[];}catch(e){return[];}};
-  const currentScope=()=>({start:byId('dateStart')?.value||'',end:byId('dateEnd')?.value||'',mode:byId('transactionStatusMode')?.value||'accrual'});
-  const rowsFor=(all,start,end,mode)=>all.filter(r=>(mode!=='cash'||String(r.status||'').toLowerCase()==='released')&&(!start||!r.date||r.date>=start)&&(!end||!r.date||r.date<=end));
+  const currentScope=()=>({start:byId('dateStart')?.value||'',end:byId('dateEnd')?.value||'',mode:byId('transactionStatusMode')?.value||'accrual',market:String(byId('workspaceMarketplace')?.value||'').trim().toUpperCase()});
+  const validDate=r=>/^\d{4}-\d{2}-\d{2}$/.test(String(r?.date||''));
+  const statusIncluded=(r,mode)=>{const s=String(r?.status||'Released').trim().toLowerCase();return mode==='cash'?s==='released':s==='released'||s==='deferred';};
+  const marketIncluded=(r,market)=>!market||!r?.marketplace||String(r.marketplace).trim().toUpperCase()===market;
+  const rowsFor=(all,start,end,mode,market)=>all.filter(r=>validDate(r)&&statusIncluded(r,mode)&&marketIncluded(r,market)&&(!start||r.date>=start)&&(!end||r.date<=end));
 
   const aggregate=(rows,scope={})=>{
     const order=rows.filter(r=>r.category==='ORDER'),refund=rows.filter(r=>r.category==='REFUND'),trade=rows.filter(r=>r.category==='ORDER'||r.category==='REFUND');
@@ -13597,10 +13412,10 @@ window.addEventListener('load', AdsDashboardApp.init);
   };
 
   const buildReport=()=>{
-    const all=getAllTransactionRows(),scope=currentScope(),rows=rowsFor(all,scope.start,scope.end,scope.mode),current=aggregate(rows,scope);
+    const all=getAllTransactionRows(),scope=currentScope(),rows=rowsFor(all,scope.start,scope.end,scope.mode,scope.market),current=aggregate(rows,scope);
     let previous=null,previousLabel='无上期数据';
     const startD=parseDate(scope.start),endD=parseDate(scope.end),span=daySpan(startD,endD);
-    if(startD&&endD&&span){const prevEnd=addDays(startD,-1),prevStart=addDays(prevEnd,-span+1);const ps=fmtDate(prevStart),pe=fmtDate(prevEnd),pr=rowsFor(all,ps,pe,scope.mode);previous=aggregate(pr,{start:ps,end:pe,mode:scope.mode});previousLabel=`${ps} → ${pe}`;}
+    if(startD&&endD&&span){const prevEnd=addDays(startD,-1),prevStart=addDays(prevEnd,-span+1);const ps=fmtDate(prevStart),pe=fmtDate(prevEnd),pr=rowsFor(all,ps,pe,scope.mode,scope.market);previous=aggregate(pr,{start:ps,end:pe,mode:scope.mode,market:scope.market});previousLabel=`${ps} → ${pe}`;}
     return {all,current,previous,previousLabel};
   };
 
@@ -13719,7 +13534,7 @@ window.addEventListener('load', AdsDashboardApp.init);
     destroyCharts();
     const r=buildReport();lastReport=r;
     const c=r.current,mode=c.mode==='cash'?'现金口径 · Released':'权责口径 · Released + Deferred';
-    byId('transactionFinanceHeaderMeta').innerHTML=`<span class="txFinanceHeaderPill"><strong>${esc(c.start||'最早')}</strong> → <strong>${esc(c.end||'最新')}</strong></span><span class="txFinanceHeaderPill">${esc(mode)}</span><span class="txFinanceHeaderPill">对比：${esc(r.previousLabel)}</span>`;
+    byId('transactionFinanceHeaderMeta').innerHTML=`<span class="txFinanceHeaderPill"><strong>${esc(c.start||'最早')}</strong> → <strong>${esc(c.end||'最新')}</strong></span><span class="txFinanceHeaderPill">${esc(c.market||'ALL')}</span><span class="txFinanceHeaderPill">${esc(mode)}</span><span class="txFinanceHeaderPill">对比：${esc(r.previousLabel)}</span>`;
     byId('transactionFinanceTabMeta').textContent=`${c.rows.length.toLocaleString()} 条交易 · ${c.skuCount.toLocaleString()} SKU · Posted Date`;
     renderBody(r);
     switchTab(activeTab);
@@ -13777,7 +13592,7 @@ window.addEventListener('load', AdsDashboardApp.init);
 
   const exportReport=async()=>{
     const r=buildReport(),c=r.current;if(!c.rows.length){try{notify('当前日期范围没有联合交易数据。','warn');}catch(e){alert('当前日期范围没有联合交易数据。');}return;}
-    const summary=[['日期开始',c.start],['日期结束',c.end],['交易口径',c.mode],['交易行数',c.rows.length],['订单数',c.orderCount],['SKU数',c.skuCount],['商品销售',c.orderSales],['退款商品额',c.refundSales],['净商品销售',c.netProductSales],['销售退款率',c.refundSalesRate],['件数退款率',c.returnRate],['交易费用',c.amazonTradeFees],['交易费用率',c.tradeFeeRate],['广告扣费',c.advertising],['广告占比',c.adRate],['非广告运营支出',c.nonAdOperatingExpenses],['非广告成本率',c.nonAdRate],['经营结算净额',c.operatingSettlement],['经营结算率',c.operatingMargin],['Transfer',c.transfer],['结算总额',c.settlementTotal]];
+    const summary=[['日期开始',c.start],['日期结束',c.end],['站点',c.market||'ALL'],['交易口径',c.mode],['交易行数',c.rows.length],['订单数',c.orderCount],['SKU数',c.skuCount],['商品销售',c.orderSales],['退款商品额',c.refundSales],['净商品销售',c.netProductSales],['销售退款率',c.refundSalesRate],['件数退款率',c.returnRate],['交易费用',c.amazonTradeFees],['交易费用率',c.tradeFeeRate],['广告扣费',c.advertising],['广告占比',c.adRate],['非广告运营支出',c.nonAdOperatingExpenses],['非广告成本率',c.nonAdRate],['经营结算净额',c.operatingSettlement],['经营结算率',c.operatingMargin],['Transfer',c.transfer],['结算总额',c.settlementTotal]];
     const expenses=c.expense.map(x=>[x.name,x.value,x.rate,x.note]);
     const daily=c.daily.map(x=>[x.date,x.rows,x.sales,x.refund,x.fees,x.ads,x.refundRate,x.net,x.netRate]);
     const sku=c.sku.slice(0,500).map(x=>[x.sku,x.units,x.refundUnits,x.sales,x.refund,x.fees,x.refundRate,x.feeRate,x.net,x.netRate]);
@@ -13809,6 +13624,11 @@ window.addEventListener('load', AdsDashboardApp.init);
   const SESSION_KEY = 'lr_private_cloud_password';
   const state = { loading: false, manifest: null };
   const byId = id => document.getElementById(id);
+  const sessionSafe = {
+    get: key => { try { return sessionStorage.getItem(key) || ''; } catch (_) { return ''; } },
+    set: (key,value) => { try { sessionStorage.setItem(key,value); return true; } catch (_) { return false; } },
+    remove: key => { try { sessionStorage.removeItem(key); } catch (_) {} }
+  };
   const sleepFrame = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
 
   const setStatus = (message, kind = '') => {
@@ -13870,7 +13690,7 @@ window.addEventListener('load', AdsDashboardApp.init);
 
     byId('btnPrivateCloudImport')?.addEventListener('click', () => loadPrivateCloudData());
     byId('btnPrivateCloudLogout')?.addEventListener('click', () => {
-      sessionStorage.removeItem(SESSION_KEY);
+      sessionSafe.remove(SESSION_KEY);
       setStatus('会话密码已清除；下次加载时需要重新输入', 'warn');
       notifyUser('私有云会话密码已清除。', 'good');
     });
@@ -13923,7 +13743,7 @@ window.addEventListener('load', AdsDashboardApp.init);
     ensureUi();
     setBusy(true);
 
-    let password = sessionStorage.getItem(SESSION_KEY) || '';
+    let password = sessionSafe.get(SESSION_KEY);
     if (!password) password = requestPassword();
     if (!password) {
       setBusy(false);
@@ -13937,7 +13757,7 @@ window.addEventListener('load', AdsDashboardApp.init);
       const entries = Array.isArray(manifest?.files) ? manifest.files : [];
       if (!entries.length) throw new Error('数据清单为空，没有可加载的月份文件');
       state.manifest = manifest;
-      sessionStorage.setItem(SESSION_KEY, password);
+      sessionSafe.set(SESSION_KEY, password);
 
       const csvFiles = [];
       let fetchedRows = 0;
@@ -13973,7 +13793,7 @@ window.addEventListener('load', AdsDashboardApp.init);
       notifyUser(`私有云广告数据加载完成：${totalRows.toLocaleString()} 行`, 'good');
     } catch (error) {
       console.error('Private cloud import failed:', error);
-      if (error?.status === 401) sessionStorage.removeItem(SESSION_KEY);
+      if (error?.status === 401) sessionSafe.remove(SESSION_KEY);
       const message = error?.status === 401
         ? '网页登录密码错误，请清除密码后重新加载'
         : error?.status === 403
@@ -13990,12 +13810,12 @@ window.addEventListener('load', AdsDashboardApp.init);
 
   const init = () => {
     ensureUi();
-    if (sessionStorage.getItem(SESSION_KEY)) {
+    if (sessionSafe.get(SESSION_KEY)) {
       setStatus('已保存当前标签页会话密码，点击即可重新加载私有云数据');
     }
     window.PrivateCloudAds = {
       load: loadPrivateCloudData,
-      clearPassword: () => sessionStorage.removeItem(SESSION_KEY),
+      clearPassword: () => sessionSafe.remove(SESSION_KEY),
       apiBase: API_BASE
     };
   };
