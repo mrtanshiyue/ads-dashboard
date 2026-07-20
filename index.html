@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://raw.githubusercontent.com https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
-<title>朗容眼镜 - 广告运营工作台 V61.5.4</title>
+<title>朗容眼镜 - 广告运营工作台 V61.5.4.1</title>
 <style>
 html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#f5f5f7;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}.box{width:min(560px,calc(100vw - 40px));padding:28px;border:1px solid #e5e5ea;border-radius:22px;background:#fff;box-shadow:0 18px 50px rgba(0,0,0,.08)}h1{font-size:20px;margin:0 0 10px}p{margin:6px 0;color:#6e6e73;line-height:1.55}.bar{height:8px;margin-top:18px;border-radius:999px;background:#e5e5ea;overflow:hidden}.bar:before{content:"";display:block;width:42%;height:100%;border-radius:inherit;background:#0071e3;animation:move 1.15s ease-in-out infinite alternate}.bad{color:#b42318;white-space:pre-wrap}@keyframes move{to{transform:translateX(138%)}}
 </style>
 </head>
 <body>
-<div class="box"><h1>正在启动广告运营工作台</h1><p id="status">加载 V61.5.4 与商品采购成本模型…</p><div class="bar" id="bar"></div></div>
+<div class="box"><h1>正在启动广告运营工作台</h1><p id="status">加载 V61.5.4.1 财务报表修复版…</p><div class="bar" id="bar"></div></div>
 <script>
 (()=>{
 'use strict';
@@ -40,8 +40,15 @@ const fail=error=>{console.error(error);document.getElementById('bar')?.remove()
   const lines=source.split(/(?<=\n)/);
   if(lines.length!==patch.oldLineCount)throw new Error('基础版本行数校验失败');
   for(let i=patch.ops.length-1;i>=0;i--){const [start,end,replacement]=patch.ops[i];lines.splice(start,end-start,replacement)}
-  const app=lines.join('');
+  let app=lines.join('');
   if((await sha(app))!==patch.newSha256)throw new Error('V61.5.4 完整性校验失败');
+  const ledgerMarker='  const renderOverview=r=>{';
+  const ledgerHotfix='  const ledgerRow=(label,note,amount,ratioText,tone=\'\')=>`<div class="txFinLedgerRow ${tone}"><div class="label"><b>${esc(label)}</b><span>${esc(note)}</span></div><div class="amount">${esc(amount)}</div><div class="ratio">${esc(ratioText)}</div></div>`;\n\n';
+  if(!app.includes('const ledgerRow=')){
+    if(!app.includes(ledgerMarker))throw new Error('交易财务报表修复锚点缺失');
+    app=app.replace(ledgerMarker,ledgerHotfix+ledgerMarker);
+  }
+  if(!app.includes('const ledgerRow='))throw new Error('交易财务报表修复失败');
   document.open();document.write(app);document.close();
 })().catch(fail);
 })();
