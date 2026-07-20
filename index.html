@@ -8,9 +8,9 @@
 <meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api-v2.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.4.2 API V1 Cache</title>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.4.3 API Route Fix</title>
 <script>
-window.APP_BUILD_VERSION='V61.5.4.2';
+window.APP_BUILD_VERSION='V61.5.4.3';
 window.PRIVATE_API_VERSION='v1';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
@@ -4240,7 +4240,7 @@ const applyLanguageToDOM = () => {
       if (I18N[currentLang][key]) el.title = I18N[currentLang][key];
   });
   
-  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.5.4.2'}`;
+  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.5.4.3'}`;
   document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
   
   const btnLang = document.getElementById('btnLangToggle');
@@ -4396,7 +4396,7 @@ const PERF = {
   IDB_CHUNK_ROWS: 25000
 };
 const APP_DATA_SCHEMA_VERSION = "ADS_DECISION_OS_2026_07_TRANSACTION_ECONOMICS_V61";
-const APP_BUILD_VERSION = "V61.5.4.2";
+const APP_BUILD_VERSION = "V61.5.4.3";
 const APP_SCHEMA_VERSION = APP_DATA_SCHEMA_VERSION;
 const AMAZON_AD_PRODUCT_META = {
   SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
@@ -13726,7 +13726,7 @@ window.addEventListener('load', AdsDashboardApp.init);
 (() => {
   'use strict';
 
-  const API_BASE = 'https://amazon-ad-private-api-v2.tanshiyuesir.workers.dev/api/v1';
+  const API_ORIGIN = 'https://amazon-ad-private-api-v2.tanshiyuesir.workers.dev';
   const SESSION_KEY = 'lr_private_cloud_password';
   const state = { loading: false, manifest: null };
   const byId = id => document.getElementById(id);
@@ -13807,9 +13807,25 @@ window.addEventListener('load', AdsDashboardApp.init);
     return typeof password === 'string' ? password.trim() : '';
   };
 
+  const normalizeApiPath = input => {
+    const raw = String(input || '').trim();
+    let pathname = raw;
+    try {
+      if (/^https?:\/\//i.test(raw)) pathname = new URL(raw).pathname;
+    } catch (_) {}
+    pathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
+    pathname = pathname.replace(/\/{2,}/g, '/');
+    pathname = pathname.replace(/^(?:\/api\/v1)+/i, '/api/v1');
+    pathname = pathname.replace(/^\/api\/v1\/processed\//i, '/api/v1/');
+    pathname = pathname.replace(/^\/processed\//i, '/');
+    if (!pathname.startsWith('/api/v1/')) pathname = `/api/v1${pathname}`;
+    return pathname;
+  };
+
   const apiFetchJson = async (path, password) => {
-    const normalized = path.startsWith('/') ? path : `/${path}`;
-    const response = await fetch(`${API_BASE}${normalized}`, {
+    const normalized = normalizeApiPath(path);
+    const requestUrl = `${API_ORIGIN}${normalized}`;
+    const response = await fetch(requestUrl, {
       method: 'GET',
       headers: { 'X-Dashboard-Password': password },
       cache: 'no-store'
@@ -13820,8 +13836,10 @@ window.addEventListener('load', AdsDashboardApp.init);
     try { payload = text ? JSON.parse(text) : null; } catch (_) {}
 
     if (!response.ok) {
-      const error = new Error(payload?.error || `私有接口请求失败（HTTP ${response.status}）`);
+      const detail = payload?.error || `私有接口请求失败（HTTP ${response.status}）`;
+      const error = new Error(`${detail} · ${normalized}`);
       error.status = response.status;
+      error.path = normalized;
       throw error;
     }
     return payload;
@@ -13863,8 +13881,12 @@ window.addEventListener('load', AdsDashboardApp.init);
       if (!health?.ok) throw new Error('私有接口健康检查失败');
       const manifest = await apiFetchJson('/manifest', password);
       const entries = Array.isArray(manifest?.files) ? manifest.files : [];
-      const dataEntries = entries.filter(entry => String(entry?.dataType || '').toLowerCase() !== 'productcosts');
-      const costEntry = entries.find(entry => String(entry?.dataType || '').toLowerCase() === 'productcosts') || manifest?.productCosts || null;
+      const entryType = entry => String(entry?.dataType || '').toLowerCase().replace(/[^a-z]/g, '');
+      const entryUrl = entry => String(entry?.url || '');
+      const isMonthlyData = entry => ['ads', 'transactions'].includes(entryType(entry)) || /(?:^|\/)(?:ads|transactions)-\d{4}-\d{2}\.json(?:$|\?)/i.test(entryUrl(entry));
+      const isCostData = entry => entryType(entry) === 'productcosts' || /(?:^|\/)product-costs\.json(?:$|\?)/i.test(entryUrl(entry));
+      const dataEntries = entries.filter(isMonthlyData);
+      const costEntry = entries.find(isCostData) || manifest?.productCosts || null;
       if (!dataEntries.length) throw new Error('数据清单为空，没有可加载的广告或交易文件');
       state.manifest = manifest;
       sessionSafe.set(SESSION_KEY, password);
@@ -13943,7 +13965,7 @@ window.addEventListener('load', AdsDashboardApp.init);
     window.PrivateCloudAds = {
       load: loadPrivateCloudData,
       clearPassword: () => sessionSafe.remove(SESSION_KEY),
-      apiBase: API_BASE
+      apiBase: API_ORIGIN
     };
   };
 
