@@ -15,7 +15,7 @@ html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#
 (()=>{
 'use strict';
 const SOURCE='https://raw.githubusercontent.com/mrtanshiyue/ads-dashboard/efca23006f433664e901053c697a0d6239f22b47/index.html';
-const PARTS=['assets/v61.5.4/patch.part00.txt','assets/v61.5.4/patch.part01.txt','assets/v61.5.4/patch.part02.txt'];
+const PARTS=Array.from({length:10},(_,i)=>`assets/v61.5.4/costpatch.part${String(i).padStart(2,'0')}.txt`);
 const status=document.getElementById('status');
 const hex=buf=>[...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');
 const sha=async text=>hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)));
