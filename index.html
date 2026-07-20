@@ -1,17 +1,17 @@
 
 
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
+<meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api-v2.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.4.1 Ledger Fix</title>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.4.2 API V1 Cache</title>
 <script>
-window.APP_BUILD_VERSION='V61.5.4.1';
+window.APP_BUILD_VERSION='V61.5.4.2';
+window.PRIVATE_API_VERSION='v1';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" onerror="__loadDependencyFallback('PapaParse','https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')"></script>
@@ -4240,7 +4240,7 @@ const applyLanguageToDOM = () => {
       if (I18N[currentLang][key]) el.title = I18N[currentLang][key];
   });
   
-  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.5.4'}`;
+  document.title = `${t('app_title')} · ${window.APP_BUILD_VERSION||'V61.5.4.2'}`;
   document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
   
   const btnLang = document.getElementById('btnLangToggle');
@@ -4396,7 +4396,7 @@ const PERF = {
   IDB_CHUNK_ROWS: 25000
 };
 const APP_DATA_SCHEMA_VERSION = "ADS_DECISION_OS_2026_07_TRANSACTION_ECONOMICS_V61";
-const APP_BUILD_VERSION = "V61.5.4";
+const APP_BUILD_VERSION = "V61.5.4.2";
 const APP_SCHEMA_VERSION = APP_DATA_SCHEMA_VERSION;
 const AMAZON_AD_PRODUCT_META = {
   SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
@@ -13726,7 +13726,7 @@ window.addEventListener('load', AdsDashboardApp.init);
 (() => {
   'use strict';
 
-  const API_BASE = 'https://amazon-ad-private-api.tanshiyuesir.workers.dev';
+  const API_BASE = 'https://amazon-ad-private-api-v2.tanshiyuesir.workers.dev/api/v1';
   const SESSION_KEY = 'lr_private_cloud_password';
   const state = { loading: false, manifest: null };
   const byId = id => document.getElementById(id);
@@ -13859,6 +13859,8 @@ window.addEventListener('load', AdsDashboardApp.init);
 
     try {
       setStatus('正在验证私有接口与读取数据清单…');
+      const health = await apiFetchJson('/health', password);
+      if (!health?.ok) throw new Error('私有接口健康检查失败');
       const manifest = await apiFetchJson('/manifest', password);
       const entries = Array.isArray(manifest?.files) ? manifest.files : [];
       const dataEntries = entries.filter(entry => String(entry?.dataType || '').toLowerCase() !== 'productcosts');
