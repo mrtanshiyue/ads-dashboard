@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://oapi.dingtalk.com https://qyapi.weixin.qq.com https://open.feishu.cn https://hooks.slack.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
+<meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.0 Private Cloud Bridge</title>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.1 Private Cloud Bridge</title>
 <script>
-window.APP_BUILD_VERSION='V61.5.0';
+window.APP_BUILD_VERSION='V61.5.1';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" onerror="__loadDependencyFallback('PapaParse','https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')"></script>
@@ -3135,7 +3135,7 @@ B0XXXXXXXX,19.99,0.28,4.35,0.15,0.02,0.03,0.08,0.35,0.30,0.10,0.10" style="min-h
     <div class="ltV5TitleBlock">
       <div class="ltV5Eyebrow">LONG-TAIL GROWTH 5.0 · MATURE ATTRIBUTION + PRODUCT ALIGNMENT</div>
       <h2 id="ltV5Title">精准长尾增长引擎</h2>
-      <div class="hint" id="ltV5Subtitle">把搜索词发现、Exact 收割、Phrase 扩展、Broad 白名单、SQP 机会和 Listing 缺口分开决策。</div>
+      <div class="hint" id="ltV5Subtitle">把搜索词发现、Exact 收割、Phrase 扩展、Broad 白名单和 SQP 机会分开决策。</div>
     </div>
     <div class="ltV5Scope" id="ltV5Scope">
       <div><span id="ltV5ScopeLabel">当前作用域</span><b id="ltV5ScopeText">—</b></div>
@@ -3164,7 +3164,6 @@ B0XXXXXXXX,19.99,0.28,4.35,0.15,0.02,0.03,0.08,0.35,0.30,0.10,0.10" style="min-h
     <button class="segBtn" type="button" data-ltv5-view="phrase">Phrase 扩展</button>
     <button class="segBtn" type="button" data-ltv5-view="broad">Broad 白名单</button>
     <button class="segBtn" type="button" data-ltv5-view="sqp">SQP 机会</button>
-    <button class="segBtn" type="button" data-ltv5-view="listing">Listing 缺口</button>
     <button class="segBtn" type="button" data-ltv5-view="review">复核 / 阻断</button>
   </div>
 
@@ -3407,12 +3406,6 @@ const I18N = {
       btn_export_neg: "导出否定词 Excel (仅 NEGATE)",
       btn_reset_rules: "重置默认规则",
       desc_export_limit: "导出限制：只有榜单维度为 Search Term / Root 时允许导出（避免导出 Campaign/AdGroup 之类的名字当否定词）",
-      lbl_ai_conversion_engine: "AI 转化诊断输入",
-      ph_listing_copy: "粘贴当前 Listing 标题、五点、后台词或 A+ 文案。AI 会用广告出单词反查承接缺口。",
-      desc_ai_conversion_engine: "用于 Listing Conversion Doctor：识别广告高转化词是否被标题/五点/A+ 承接，避免广告有流量但页面不转化。",
-      btn_export_listing_audit: "导出 Listing 转化诊断",
-      lbl_webhook: "异常告警 Webhook (如钉钉/飞书)",
-      btn_test_webhook: "测试推送",
       lbl_actions: "操作",
       btn_reset_filters: "重置筛选",
       btn_clear_data: "清空已导入数据与缓存分片",
@@ -3718,7 +3711,6 @@ const I18N = {
       dyn_lt_normal: "常规长尾",
       dyn_lt_profit: "赚钱长尾",
       dyn_lt_test: "小样本潜力",
-      dyn_lt_listing: "Listing 缺口",
       dyn_lt_risk: "风险复核",
       dyn_lt_scale: "放量 Exact",
       dyn_lt_launch: "新增 Exact",
@@ -3766,8 +3758,6 @@ const I18N = {
       dyn_msg_bulk_done: "已生成 AI Bulk 草稿 (共包含 {0} 条操作指令)",
       dyn_msg_targeting_empty: "当前没有可导出的 ASIN 商品投放或否定 ASIN。",
       dyn_msg_targeting_done: "已导出商品投放/否定 ASIN Bulk 表，共 {0} 条",
-      dyn_msg_audit_empty: "请先导入广告数据；如需检测 Listing 缺口，请在左侧粘贴 Listing 文案。",
-      dyn_msg_audit_done: "已导出 Listing 词覆盖诊断",
       dyn_msg_ai_err: "当前视图数据量不足，无法生成有效的高阶诊断。请先导入数据。"
   },
   en: {
@@ -3843,12 +3833,6 @@ const I18N = {
       btn_export_neg: "Export Negatives Excel (NEGATE Only)",
       btn_reset_rules: "Reset Default Rules",
       desc_export_limit: "Limit: Export allowed only when Rank By is Search Term / Root.",
-      lbl_ai_conversion_engine: "AI Conversion Diagnostic Input",
-      ph_listing_copy: "Paste your current title, bullets, backend terms, or A+ copy. AI will map converting ad terms to listing coverage gaps.",
-      desc_ai_conversion_engine: "Used by Listing Conversion Doctor: checks whether high-converting ad terms are supported by the listing, reducing traffic-to-page mismatch.",
-      btn_export_listing_audit: "Export Listing Conversion Audit",
-      lbl_webhook: "Anomaly Webhook (Slack/Teams)",
-      btn_test_webhook: "Test Push",
       lbl_actions: "Actions",
       btn_reset_filters: "Reset Filters",
       btn_clear_data: "Clear Imported Data & Cache",
@@ -4154,7 +4138,6 @@ const I18N = {
       dyn_lt_normal: "Normal Long-Tail",
       dyn_lt_broad: "Broad Root",
       dyn_lt_launch: "New Exact",
-      dyn_lt_listing: "Listing Gap",
       dyn_lt_phrase: "Phrase Expansion",
       dyn_lt_profit: "Profitable Long-Tail",
       dyn_lt_risk: "Risk Review",
@@ -4202,8 +4185,6 @@ const I18N = {
       dyn_msg_bulk_done: "Generated AI Bulk Draft ({0} operations)",
       dyn_msg_targeting_empty: "No ASIN product targeting or negative ASIN candidates in the current view.",
       dyn_msg_targeting_done: "Product targeting / negative ASIN Bulk sheet exported ({0} rows)",
-      dyn_msg_audit_empty: "Import ads data first; paste listing copy on the left to check listing coverage gaps.",
-      dyn_msg_audit_done: "Listing coverage audit exported",
       dyn_msg_ai_err: "Not enough data in current view to generate advanced diagnosis. Please import data first."
   }
 };
@@ -4341,7 +4322,7 @@ const PERF = {
   IDB_CHUNK_ROWS: 25000
 };
 const APP_DATA_SCHEMA_VERSION = "ADS_DECISION_OS_2026_07_TRANSACTION_ECONOMICS_V61";
-const APP_BUILD_VERSION = "V61.5.0";
+const APP_BUILD_VERSION = "V61.5.1";
 const APP_SCHEMA_VERSION = APP_DATA_SCHEMA_VERSION;
 const AMAZON_AD_PRODUCT_META = {
   SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
@@ -6223,41 +6204,7 @@ for (const r of rows) {
 return mp; 
 };
 
-// ==================== Webhook & Push ====================
-const pushToWebhook = async (textStr) => {
-    const url = $("webhookUrl")?.value.trim();
-    if (!url) { notify("Please configure a webhook URL first."); return; }
-    let parsed;
-    try { parsed = new URL(url); } catch(e) { notify("Invalid webhook URL."); return; }
-    const allowedHosts = new Set(["oapi.dingtalk.com", "qyapi.weixin.qq.com", "open.feishu.cn", "hooks.slack.com"]);
-    if (parsed.protocol !== "https:" || !allowedHosts.has(parsed.hostname)) { notify("Only supported HTTPS webhook hosts are allowed: DingTalk, WeCom, Feishu or Slack."); return; }
-    const content = "🚨 [Ads Dashboard Pro Alert]\n" + textStr;
-    let payload;
-    if (parsed.hostname === "oapi.dingtalk.com") payload = { msgtype:"text", text:{content} };
-    else if (parsed.hostname === "qyapi.weixin.qq.com") payload = { msgtype:"text", text:{content} };
-    else if (parsed.hostname === "open.feishu.cn") payload = { msg_type:"text", content:{text:content} };
-    else payload = { text: content };
-    try {
-        const response = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-        if (response.ok) notify("Push successful!");
-        else notify("Push failed: " + response.status + " " + (await response.text()).slice(0,180));
-    } catch(e) {
-        notify("Webhook request failed. Check provider permissions and browser network policy.");
-        console.warn("Webhook Error:", e);
-    }
-};
-
-$("btnTestWebhook")?.addEventListener("click", () => pushToWebhook("This is a test alert from Ultimate Pro Dashboard. Connection is successful."));
 $("btnExportExecutiveOverview")?.addEventListener("click", () => exportExecutiveOverviewExcel());
-
-let currentAlertsText = ""; // 存留一份纯文本用于 Push
-
-const detectAnomalies = (rows) => {
-  const q=AdsStore.dataQuality||getDataQualityAudit(rows||[]), groups=getExecutiveTermGroups(rows||[]), target=(sumMetrics(rows||[]).targetAcos??getActionTargetAcos());
-  const zeroOrder=groups.filter(x=>x.orders<=0&&x.spend>=Math.max(8,(x.sales/x.orders||0),getNumericInput("ruleSpendNeg",30,0,9999)*.7)).sort((a,b)=>b.spend-a.spend).slice(0,8);
-  const costly=groups.filter(x=>x.orders>0&&x.acos!==Infinity&&x.acos>target*1.4).sort((a,b)=>b.spend-a.spend).slice(0,6);
-  currentAlertsText=[...q.alerts.map(x=>x.text),...zeroOrder.map(x=>`0单高消耗: ${x.name} $${x.spend.toFixed(2)}`),...costly.map(x=>`ACOS超线: ${x.name} ${fmtPct(x.acos)}`)].join("\n");
-};
 // Legacy root table renderer removed in V60.
 const LT_MISMATCH_FORCE = new Set(["prescription","progressive","bifocal","multifocal","transition","transition_lenses","photochromic","photochromic_lenses","contact","contact_lens","safety_glasses","kid","kids","repair","replacement","sunglasses","sun_glasses"]);
 const clampNum = (n, min=0, max=100) => Math.max(min, Math.min(max, safeNum(n)));
@@ -6307,20 +6254,6 @@ const getLongTailCoverage = (term, rows=[]) => {
   return { key:"new", label: currentLang === "zh" ? "新机会" : "New Opportunity", isGap:true };
 };
 
-const getListingCoverageGap = (profile, term, m) => {
-  const raw = String($("listingCopyInput")?.value || "").trim();
-  if (!raw) return { checked:false, gap:false, missing:[] };
-  const listing = normalizeTextBase(raw);
-  const important = profile.roots
-    .filter(r => !["generic", "neutral", "watch"].includes(getRootType(r)))
-    .filter(r => !/^MAG_/.test(r))
-    .map(rootDisplay)
-    .map(x => normalizeTextBase(x))
-    .filter(Boolean);
-  const missing = [...new Set(important.filter(x => !listing.includes(x.replace(/\s+/g, " "))))];
-  const gap = missing.length > 0 && m.orders > 0 && meetsDynamicProfitLine(m,1);
-  return { checked:true, gap, missing };
-};
 
 // Legacy pre-V5 long-tail scoring/classification removed in V60.
 const LONGTAIL_V5_STATE = { view:"all", rows:[], visible:[], selected:new Set(), sortKey:"score", sortDir:"desc", detailId:"" };
@@ -6330,8 +6263,8 @@ const ltV5Words = value => ltV5Norm(value).split(" ").filter(Boolean);
 const ltV5Hash = value => { let h=2166136261; for(const ch of String(value||"")){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return (h>>>0).toString(36); };
 const ltV5StatusClass = s => s==="ready"?"good":s==="review"||s==="wait"?"warn":s==="blocked"?"bad":"neutral";
 const ltV5StatusLabel = s => ({ready:ltV5Text("可上线","Ready"),review:ltV5Text("人工复核","Review"),wait:ltV5Text("等待依赖","Wait"),blocked:ltV5Text("数据阻断","Blocked"),covered:ltV5Text("已覆盖","Covered")}[s]||s);
-const ltV5KindLabel = k => ({exact:ltV5Text("Exact 收割","Exact Harvest"),phrase:ltV5Text("Phrase 扩展","Phrase Expansion"),broad:ltV5Text("Broad 白名单","Broad Whitelist"),sqp:ltV5Text("SQP 受控测试","SQP Controlled Test"),listing:ltV5Text("Listing 缺口","Listing Gap"),covered:ltV5Text("已覆盖赢家","Covered Winner"),review:ltV5Text("复核","Review")}[k]||k);
-const ltV5ActionRank = action => ({CREATE_EXACT:1,TEST_EXACT:2,CREATE_PHRASE:3,CREATE_BROAD:4,SQP_REVIEW:5,LISTING_UPDATE:6,BID_GOVERNANCE:7,WAIT:8,REVIEW:9,BLOCKED:10}[action]||99);
+const ltV5KindLabel = k => ({exact:ltV5Text("Exact 收割","Exact Harvest"),phrase:ltV5Text("Phrase 扩展","Phrase Expansion"),broad:ltV5Text("Broad 白名单","Broad Whitelist"),sqp:ltV5Text("SQP 受控测试","SQP Controlled Test"),covered:ltV5Text("已覆盖赢家","Covered Winner"),review:ltV5Text("复核","Review")}[k]||k);
+const ltV5ActionRank = action => ({CREATE_EXACT:1,TEST_EXACT:2,CREATE_PHRASE:3,CREATE_BROAD:4,SQP_REVIEW:5,BID_GOVERNANCE:6,WAIT:7,REVIEW:8,BLOCKED:9}[action]||99);
 const ltV5CoverageRank = c => c?.exact?1:c?.phrase?2:c?.broad?3:4;
 const ltV5ReadyRank = s => ({ready:1,review:2,wait:3,covered:4,blocked:5}[s]||9);
 const ltV5KeywordValidation = value => {
@@ -6388,7 +6321,7 @@ const ltV5BuildBaseRows = (sourceRows,coverageIndex,sqpIndex) => {
   const groups=new Map();for(const r of sourceRows){const term=ltV5Norm(r.searchTerm);if(!term||isASINLike(term))continue;const asin=String(r.advertisedAsin||"UNMAPPED").toUpperCase(),key=`${normalizeMarketplace(r.marketplace||getWorkspaceConfig().marketplace)}|${asin}|${term}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);}
   const allSplit=splitAttributionRows(sourceRows),scopeMetrics=allSplit.matureMetrics,prior={mean:clamp(scopeMetrics.cvr||.05,.003,.35),strength:clamp(Math.round(Math.sqrt(Math.max(1,scopeMetrics.clicks))*2),20,55)},rows=[];
   const minWords=Math.max(2,safeNum($("ltMinWords")?.value||3)),maxWords=Math.min(10,Math.max(minWords,safeNum($("ltMaxWords")?.value||10))),minOrders=Math.max(0,safeNum($("ltMinOrders")?.value||1)),minRoas=Math.max(0,safeNum($("ltMinRoas")?.value||1.5)),minIntent=Math.max(0,safeNum($("ltMinIntent")?.value||45)),minConfidence=Math.max(0,safeNum($("ltV5MinConfidence")?.value||55));
-  for(const [key,list] of groups){const split=splitAttributionRows(list),m=split.matureMetrics,p=split.pendingMetrics,main=getMainRow(split.mature.length?split.mature:list),term=String(main.searchTerm||"").trim(),keyword=ltV5Norm(term),validation=ltV5KeywordValidation(term),wordCount=validation.words;if(wordCount<minWords||wordCount>maxWords)continue;const asin=String(main.advertisedAsin||"UNMAPPED").toUpperCase(),intent=getLongTailIntentProfile(term),alignment=ltV5Alignment(term,asin,intent),route=ltV5RouteSummary(list),coverage=ltV5Coverage(term,asin,list.map(r=>({campaign:r.campaign,adGroup:r.adGroup})),coverageIndex),sqp=sqpIndex.get(`${asin}|${keyword}`)||null,activeDays=ltV5UniqueDays(split.mature),orderDays=ltV5OrderDays(split.mature),posterior=getBidGovPosterior(m,prior),aov=m.orders>0?m.sales/m.orders:(scopeMetrics.orders>0?scopeMetrics.sales/scopeMetrics.orders:15),targetAcos=m.targetAcos??getUnifiedTargetAcos(aov,asin),targetCpa=targetAcos!==null?aov*targetAcos:null,confidence=getBidGovConfidence({matureMetrics:m,pendingMetrics:p,activeDays,orderDays,posterior,targetCpa}),pendingShare=(m.spend+p.spend)>0?p.spend/(m.spend+p.spend):0,listingGap=getListingCoverageGap(intent,term,m),cvrLift=(scopeMetrics.cvr||0)>0?m.cvr/scopeMetrics.cvr:1;
+  for(const [key,list] of groups){const split=splitAttributionRows(list),m=split.matureMetrics,p=split.pendingMetrics,main=getMainRow(split.mature.length?split.mature:list),term=String(main.searchTerm||"").trim(),keyword=ltV5Norm(term),validation=ltV5KeywordValidation(term),wordCount=validation.words;if(wordCount<minWords||wordCount>maxWords)continue;const asin=String(main.advertisedAsin||"UNMAPPED").toUpperCase(),intent=getLongTailIntentProfile(term),alignment=ltV5Alignment(term,asin,intent),route=ltV5RouteSummary(list),coverage=ltV5Coverage(term,asin,list.map(r=>({campaign:r.campaign,adGroup:r.adGroup})),coverageIndex),sqp=sqpIndex.get(`${asin}|${keyword}`)||null,activeDays=ltV5UniqueDays(split.mature),orderDays=ltV5OrderDays(split.mature),posterior=getBidGovPosterior(m,prior),aov=m.orders>0?m.sales/m.orders:(scopeMetrics.orders>0?scopeMetrics.sales/scopeMetrics.orders:15),targetAcos=m.targetAcos??getUnifiedTargetAcos(aov,asin),targetCpa=targetAcos!==null?aov*targetAcos:null,confidence=getBidGovConfidence({matureMetrics:m,pendingMetrics:p,activeDays,orderDays,posterior,targetCpa}),pendingShare=(m.spend+p.spend)>0?p.spend/(m.spend+p.spend):0,cvrLift=(scopeMetrics.cvr||0)>0?m.cvr/scopeMetrics.cvr:1;
     const econScore=targetAcos===null?0:m.orders>0&&m.contributionProfit>0&&m.acos<=targetAcos?30:m.orders>0&&m.acos<=targetAcos*1.2?18:m.orders>0?8:0,evidenceScore=confidence*.27,intentScore=alignment.score*.18,gapScore=coverage.exact?1:10,demandScore=sqp?Math.min(12,Math.log10(Math.max(10,sqp.searchVolume))*4+Math.max(0,.04-sqp.purchShare)*50):0,cvrScore=Math.min(12,Math.max(0,cvrLift-0.7)*12),penalty=(alignment.blocked?55:0)+(pendingShare>.6?10:0)+(!validation.valid?30:0)+(m.orders===0&&m.spend>Math.max(10,targetCpa===null?(safeNum(getRules()?.spendNeg)||30):targetCpa)?18:0);let score=Math.round(clamp(econScore+evidenceScore+intentScore+gapScore+demandScore+cvrScore-penalty,0,100));
     const bid=ltV5BidModel({kind:"exact",metrics:m,posterior,targetAcos,scopeMetrics});let status="review",action="REVIEW",kind="review",reason=ltV5Text("样本或经济性未达到精准投放门槛。","Evidence or economics do not meet the exact-launch threshold."),dependency="";
     if(!validation.valid||asin==="UNMAPPED"||alignment.blocked||targetAcos===null){status="blocked";action="BLOCKED";reason=[validation.reason,asin==="UNMAPPED"?ltV5Text("缺Advertised ASIN","Missing Advertised ASIN"):"",alignment.blocked?alignment.reasons.join(" / "):"",targetAcos===null?ltV5Text("Target ACOS不可用","Target ACOS unavailable"):""].filter(Boolean).join(" · ");}
@@ -6398,7 +6331,7 @@ const ltV5BuildBaseRows = (sourceRows,coverageIndex,sqpIndex) => {
     else if(m.orders>=Math.max(1,minOrders)&&m.contributionProfit>0&&m.roas>=Math.max(minRoas,targetAcos?1/targetAcos*.75:minRoas)&&m.acos<=targetAcos*.9&&confidence>=45&&score>=safeNum($("ltMinScore")?.value||60)){status="review";action="TEST_EXACT";kind="exact";reason=ltV5Text("已有盈利成交，但样本不足；建议低Bid Exact受控测试。","Profitable conversion exists, but sample is limited; use a controlled low-bid Exact test.");}
     else if(pendingShare>.55&&m.orders<2){status="wait";action="WAIT";reason=ltV5Text("较多花费仍在归因窗口，等待成熟后判断。","A large share of spend is still pending attribution.");}
     const targetRoute=ltV5RouteForKind("exact"),bulkReady=status==="ready"&&!!targetRoute.campaign&&!!targetRoute.adGroup&&!bulkObjectExists({campaign:targetRoute.campaign,adGroup:targetRoute.adGroup,term:keyword,matchType:"exact",entity:"keyword"});if(status==="ready"&&!bulkReady){status="review";reason+=` · ${!targetRoute.campaign||!targetRoute.adGroup?ltV5Text("缺少Exact目标Campaign/Ad Group","Missing Exact target Campaign/Ad Group"):ltV5Text("当前Bulk结构已存在同一关键词","Keyword already exists in current Bulk structure")}`;}
-    rows.push({id:`q_${ltV5Hash(key)}`,key,kind,keyword,displayKeyword:term,asin,productFamily:getProductFamily(asin),status,action,actionRank:ltV5ActionRank(action),reason,dependency,score,confidence,intentScore:intent.intentScore,alignment,intent,coverage,coverageRank:ltV5CoverageRank(coverage),route,sourceRows:list,matureRows:split.mature,pendingRows:split.pending,pendingMetrics:p,pendingShare,activeDays,orderDays,posterior,targetAcos,targetCpa,aov,cvrLift,sqp,searchVolume:sqp?.searchVolume||0,listingGap,suggestedBid:bid.bid,bidSource:bid.source,safeBidLow:bid.safeLow,safeBidMid:bid.safeMid,bulkReady,readyRank:ltV5ReadyRank(status),scopeLabel:`${asin} · ${route.label}`,acosGap:targetAcos===null?999:(m.acos===Infinity?999:m.acos-targetAcos),...m});}
+    rows.push({id:`q_${ltV5Hash(key)}`,key,kind,keyword,displayKeyword:term,asin,productFamily:getProductFamily(asin),status,action,actionRank:ltV5ActionRank(action),reason,dependency,score,confidence,intentScore:intent.intentScore,alignment,intent,coverage,coverageRank:ltV5CoverageRank(coverage),route,sourceRows:list,matureRows:split.mature,pendingRows:split.pending,pendingMetrics:p,pendingShare,activeDays,orderDays,posterior,targetAcos,targetCpa,aov,cvrLift,sqp,searchVolume:sqp?.searchVolume||0,suggestedBid:bid.bid,bidSource:bid.source,safeBidLow:bid.safeLow,safeBidMid:bid.safeMid,bulkReady,readyRank:ltV5ReadyRank(status),scopeLabel:`${asin} · ${route.label}`,acosGap:targetAcos===null?999:(m.acos===Infinity?999:m.acos-targetAcos),...m});}
   return {rows,scopeMetrics,split:allSplit,prior};
 };
 const LT_V5_EDGE_STOP = new Set(["the","a","an","of","to","and","or","for","with","in","on","by","at","from"]);
@@ -6465,7 +6398,7 @@ const ltV5BuildPhraseRows = (base,coverageIndex,scopeMetrics) => {
     if(!repeatedSupport&&!fullStable)continue;
     const avgScore=a.support.reduce((sum,r)=>sum+r.score,0)/Math.max(1,supportCount),score=Math.round(clamp(avgScore*.62+quality.score*.23+Math.min(10,supportCount*3)+Math.min(8,a.orders*1.2),0,100)),targetAcos=a.support.map(r=>r.targetAcos).find(v=>v!==null)??getUnifiedTargetAcos(a.orders?a.sales/a.orders:15,x.asin),posterior=getBidGovPosterior(a,{mean:clamp(scopeMetrics.cvr||.05,.003,.35),strength:24}),bid=ltV5BidModel({kind:"phrase",metrics:a,posterior,targetAcos,scopeMetrics,supportBids:a.support.map(r=>r.suggestedBid).filter(Boolean)}),route=ltV5RouteForKind("phrase"),economicsReady=targetAcos!==null&&a.contributionProfit>0&&a.acos<=targetAcos*1.08,readyEvidence=(repeatedSupport&&a.orders>=3&&orderDays>=2)||(fullStable&&a.orders>=4),status=readyEvidence&&economicsReady&&score>=74&&hasStableExact?"ready":"review",action=status==="ready"?"CREATE_PHRASE":"REVIEW",bulkReady=status==="ready"&&!!route.campaign&&!!route.adGroup&&!bulkObjectExists({campaign:route.campaign,adGroup:route.adGroup,term:x.keyword,matchType:"phrase",entity:"keyword"});
     let reason=status==="ready"?ltV5Text("该自然长尾词组由稳定Exact及多日盈利搜索词支持，可用于相邻查询扩展。","This natural long-tail phrase is supported by stable Exact coverage and profitable multi-day queries."):ltV5Text("词组具备相关性，但支持查询数量、订单天数、利润线或Exact依赖尚不足。","The phrase is relevant, but query support, order days, economics, or Exact dependency is not yet sufficient.");let finalStatus=status;if(status==="ready"&&!bulkReady){finalStatus="review";reason+=` · ${!route.campaign||!route.adGroup?ltV5Text("缺Phrase目标路由","Missing Phrase target route"):ltV5Text("已存在同一Phrase关键词","Phrase keyword already exists")}`;}
-    const routeSummary=ltV5RouteSummary(routes);candidates.push({id:`p_${ltV5Hash(key)}`,key,kind:"phrase",keyword:x.keyword,displayKeyword:x.keyword,asin:x.asin,productFamily:getProductFamily(x.asin),status:finalStatus,action,actionRank:ltV5ActionRank(action),reason,dependency:ltV5Text("先稳定Exact，再用Phrase扩展相邻长尾；Phrase Bid低于Exact，7–14天后复核。","Stabilize Exact first, then use Phrase for adjacent long-tail expansion; keep Phrase bid below Exact and review after 7–14 days."),score,confidence:Math.round(a.support.reduce((sum,r)=>sum+r.confidence,0)/Math.max(1,supportCount)),intentScore:profile.intentScore,alignment,coverage,coverageRank:ltV5CoverageRank(coverage),route:routeSummary,sourceRows:routes,matureRows:routes,pendingRows:[],pendingMetrics:{spend:0},pendingShare:0,activeDays:new Set(routes.map(r=>r.date).filter(Boolean)).size,orderDays,posterior,targetAcos,targetCpa:targetAcos!==null&&a.orders?a.sales/a.orders*targetAcos:null,aov:a.orders?a.sales/a.orders:15,cvrLift:(scopeMetrics.cvr||0)>0?a.cvr/scopeMetrics.cvr:1,sqp:null,searchVolume:0,listingGap:{gap:false,missing:[]},suggestedBid:bid.bid,bidSource:bid.source,safeBidLow:bid.safeLow,safeBidMid:bid.safeMid,bulkReady:finalStatus==="ready"&&bulkReady,readyRank:ltV5ReadyRank(finalStatus),scopeLabel:`${x.asin} · ${supportCount} ${ltV5Text("支持词","support queries")}`,acosGap:targetAcos===null?999:(a.acos===Infinity?999:a.acos-targetAcos),supportTerms:a.support.map(r=>r.displayKeyword),supportCount,support:a.support,phraseQuality:quality.score,...a});
+    const routeSummary=ltV5RouteSummary(routes);candidates.push({id:`p_${ltV5Hash(key)}`,key,kind:"phrase",keyword:x.keyword,displayKeyword:x.keyword,asin:x.asin,productFamily:getProductFamily(x.asin),status:finalStatus,action,actionRank:ltV5ActionRank(action),reason,dependency:ltV5Text("先稳定Exact，再用Phrase扩展相邻长尾；Phrase Bid低于Exact，7–14天后复核。","Stabilize Exact first, then use Phrase for adjacent long-tail expansion; keep Phrase bid below Exact and review after 7–14 days."),score,confidence:Math.round(a.support.reduce((sum,r)=>sum+r.confidence,0)/Math.max(1,supportCount)),intentScore:profile.intentScore,alignment,coverage,coverageRank:ltV5CoverageRank(coverage),route:routeSummary,sourceRows:routes,matureRows:routes,pendingRows:[],pendingMetrics:{spend:0},pendingShare:0,activeDays:new Set(routes.map(r=>r.date).filter(Boolean)).size,orderDays,posterior,targetAcos,targetCpa:targetAcos!==null&&a.orders?a.sales/a.orders*targetAcos:null,aov:a.orders?a.sales/a.orders:15,cvrLift:(scopeMetrics.cvr||0)>0?a.cvr/scopeMetrics.cvr:1,sqp:null,searchVolume:0,suggestedBid:bid.bid,bidSource:bid.source,safeBidLow:bid.safeLow,safeBidMid:bid.safeMid,bulkReady:finalStatus==="ready"&&bulkReady,readyRank:ltV5ReadyRank(finalStatus),scopeLabel:`${x.asin} · ${supportCount} ${ltV5Text("支持词","support queries")}`,acosGap:targetAcos===null?999:(a.acos===Infinity?999:a.acos-targetAcos),supportTerms:a.support.map(r=>r.displayKeyword),supportCount,support:a.support,phraseQuality:quality.score,...a});
   }
   return ltV5PrunePhraseCandidates(candidates);
 };
@@ -6473,26 +6406,25 @@ const ltV5BuildPhraseRows = (base,coverageIndex,scopeMetrics) => {
 const ltV5BuildBroadRows = (base,coverageIndex,scopeMetrics) => {
   const map=new Map();for(const row of base.filter(r=>!r.alignment.blocked&&r.orders>0&&r.contributionProfit>0&&r.score>=60)){const root=ltV5Norm(extractBroadRootTerm(row.keyword)||"");if(!root||isStudioOverBroadTerm(root)||ltV5Words(root).length<2||ltV5Words(root).length>4)continue;const key=`${row.asin}|${root}`;if(!map.has(key))map.set(key,{asin:row.asin,keyword:root,support:new Map()});map.get(key).support.set(row.id,row);}
   const out=[];for(const [key,x] of map){const a=ltV5AggregateSupport([...x.support.values()]),supportCount=a.support.length;if(supportCount<2)continue;const routes=a.support.flatMap(r=>r.sourceRows),coverage=ltV5Coverage(x.keyword,x.asin,routes.map(r=>({campaign:r.campaign,adGroup:r.adGroup})),coverageIndex);if(coverage.broad)continue;const orderDays=new Set(a.support.flatMap(r=>r.matureRows.filter(x=>safeNum(x.orders)>0).map(x=>x.date)).filter(Boolean)).size,avgScore=a.support.reduce((s,r)=>s+r.score,0)/supportCount,score=Math.round(clamp(avgScore+supportCount*3+a.orders,0,100)),targetAcos=a.support.map(r=>r.targetAcos).find(v=>v!==null)??getUnifiedTargetAcos(a.orders?a.sales/a.orders:15,x.asin),posterior=getBidGovPosterior(a,{mean:clamp(scopeMetrics.cvr||.05,.003,.35),strength:26}),bid=ltV5BidModel({kind:"broad",metrics:a,posterior,targetAcos,scopeMetrics,supportBids:a.support.map(r=>r.suggestedBid).filter(Boolean)}),route=ltV5RouteForKind("broad"),phraseDependency=a.support.some(r=>r.coverage.phrase)||a.support.some(r=>r.coverage.exact),status=supportCount>=3&&a.orders>=4&&orderDays>=2&&a.contributionProfit>0&&score>=76&&phraseDependency?"ready":"review",action=status==="ready"?"CREATE_BROAD":"REVIEW",bulkReady=status==="ready"&&!!route.campaign&&!!route.adGroup&&!bulkObjectExists({campaign:route.campaign,adGroup:route.adGroup,term:x.keyword,matchType:"broad",entity:"keyword"});let reason=status==="ready"?ltV5Text("该词根由多个盈利长尾反推，适合低Bid Broad白名单探索。","This root is supported by multiple profitable long-tail queries and qualifies for low-bid Broad exploration."):ltV5Text("Broad词根支持度或订单证据不足，仅保留复核。","Broad-root support or order evidence is insufficient; keep it in review.");let finalStatus=status;if(status==="ready"&&!bulkReady){finalStatus="review";reason+=` · ${!route.campaign||!route.adGroup?ltV5Text("缺Broad目标路由","Missing Broad target route"):ltV5Text("已存在同一Broad关键词","Broad keyword already exists")}`;}
-    const routeSummary=ltV5RouteSummary(routes);out.push({id:`b_${ltV5Hash(key)}`,key,kind:"broad",keyword:x.keyword,displayKeyword:x.keyword,asin:x.asin,productFamily:getProductFamily(x.asin),status:finalStatus,action,actionRank:ltV5ActionRank(action),reason,dependency:ltV5Text("Broad仅用于低价发现；必须由盈利Exact/Phrase支持，并配置否定词隔离。","Broad is for low-bid discovery only and requires profitable Exact/Phrase support plus negative routing."),score,confidence:Math.round(a.support.reduce((s,r)=>s+r.confidence,0)/supportCount),intentScore:Math.round(a.support.reduce((s,r)=>s+r.intentScore,0)/supportCount),alignment:{score:Math.round(a.support.reduce((s,r)=>s+r.alignment.score,0)/supportCount),blocked:false,reasons:[]},coverage,coverageRank:ltV5CoverageRank(coverage),route:routeSummary,sourceRows:routes,matureRows:routes,pendingRows:[],pendingMetrics:{spend:0},pendingShare:0,activeDays:new Set(routes.map(r=>r.date).filter(Boolean)).size,orderDays,posterior,targetAcos,targetCpa:targetAcos!==null&&a.orders?a.sales/a.orders*targetAcos:null,aov:a.orders?a.sales/a.orders:15,cvrLift:(scopeMetrics.cvr||0)>0?a.cvr/scopeMetrics.cvr:1,sqp:null,searchVolume:0,listingGap:{gap:false,missing:[]},suggestedBid:bid.bid,bidSource:bid.source,safeBidLow:bid.safeLow,safeBidMid:bid.safeMid,bulkReady:finalStatus==="ready"&&bulkReady,readyRank:ltV5ReadyRank(finalStatus),scopeLabel:`${x.asin} · ${supportCount} ${ltV5Text("支持词","support queries")}`,acosGap:targetAcos===null?999:(a.acos===Infinity?999:a.acos-targetAcos),supportTerms:a.support.map(r=>r.displayKeyword),supportCount,...a});}
+    const routeSummary=ltV5RouteSummary(routes);out.push({id:`b_${ltV5Hash(key)}`,key,kind:"broad",keyword:x.keyword,displayKeyword:x.keyword,asin:x.asin,productFamily:getProductFamily(x.asin),status:finalStatus,action,actionRank:ltV5ActionRank(action),reason,dependency:ltV5Text("Broad仅用于低价发现；必须由盈利Exact/Phrase支持，并配置否定词隔离。","Broad is for low-bid discovery only and requires profitable Exact/Phrase support plus negative routing."),score,confidence:Math.round(a.support.reduce((s,r)=>s+r.confidence,0)/supportCount),intentScore:Math.round(a.support.reduce((s,r)=>s+r.intentScore,0)/supportCount),alignment:{score:Math.round(a.support.reduce((s,r)=>s+r.alignment.score,0)/supportCount),blocked:false,reasons:[]},coverage,coverageRank:ltV5CoverageRank(coverage),route:routeSummary,sourceRows:routes,matureRows:routes,pendingRows:[],pendingMetrics:{spend:0},pendingShare:0,activeDays:new Set(routes.map(r=>r.date).filter(Boolean)).size,orderDays,posterior,targetAcos,targetCpa:targetAcos!==null&&a.orders?a.sales/a.orders*targetAcos:null,aov:a.orders?a.sales/a.orders:15,cvrLift:(scopeMetrics.cvr||0)>0?a.cvr/scopeMetrics.cvr:1,sqp:null,searchVolume:0,suggestedBid:bid.bid,bidSource:bid.source,safeBidLow:bid.safeLow,safeBidMid:bid.safeMid,bulkReady:finalStatus==="ready"&&bulkReady,readyRank:ltV5ReadyRank(finalStatus),scopeLabel:`${x.asin} · ${supportCount} ${ltV5Text("支持词","support queries")}`,acosGap:targetAcos===null?999:(a.acos===Infinity?999:a.acos-targetAcos),supportTerms:a.support.map(r=>r.displayKeyword),supportCount,...a});}
   return out;
 };
 const ltV5BuildSqpRows = (base,sqpIndex,coverageIndex,scopeMetrics) => {
   const existing=new Set(base.map(r=>`${r.asin}|${r.keyword}`)),asins=new Set(base.map(r=>r.asin).filter(x=>x&&x!=="UNMAPPED")),out=[],minWords=Math.max(2,safeNum($("ltMinWords")?.value||3)),maxWords=Math.min(10,Math.max(minWords,safeNum($("ltMaxWords")?.value||10)));
-  for(const x of sqpIndex.values()){if(!asins.has(x.asin)||existing.has(`${x.asin}|${x.query}`)||x.searchVolume<50)continue;const validation=ltV5KeywordValidation(x.query);if(!validation.valid||validation.words<minWords||validation.words>maxWords)continue;const intent=getLongTailIntentProfile(x.query),alignment=ltV5Alignment(x.query,x.asin,intent);if(alignment.blocked||alignment.score<55)continue;const coverage=ltV5Coverage(x.query,x.asin,[],coverageIndex);if(coverage.exact)continue;const score=Math.round(clamp(30+Math.log10(Math.max(10,x.searchVolume))*10+alignment.score*.25+Math.max(0,.05-x.purchShare)*80,0,68)),targetAcos=getUnifiedTargetAcos(scopeMetrics.orders?scopeMetrics.sales/scopeMetrics.orders:15,x.asin),posterior={mean:scopeMetrics.cvr||.03,lower:Math.max(.003,(scopeMetrics.cvr||.03)*.45)},bid=ltV5BidModel({kind:"sqp",metrics:{orders:0,clicks:0,cpc:scopeMetrics.cpc,sales:0},posterior,targetAcos,scopeMetrics});out.push({id:`s_${ltV5Hash(`${x.asin}|${x.query}`)}`,key:`${x.asin}|${x.query}`,kind:"sqp",keyword:x.query,displayKeyword:x.query,asin:x.asin,productFamily:getProductFamily(x.asin),status:"review",action:"SQP_REVIEW",actionRank:ltV5ActionRank("SQP_REVIEW"),reason:ltV5Text("SQP显示存在搜索需求或份额缺口，但没有广告成交证据；仅建议低Bid受控测试。","SQP indicates demand or share opportunity, but there is no ad-conversion evidence; use only a controlled low-bid test."),dependency:ltV5Text("先检查Listing相关性与产品画像，再决定是否创建Exact测试。","Verify listing relevance and product profile before creating an Exact test."),score,confidence:25,intentScore:intent.intentScore,alignment,coverage,coverageRank:ltV5CoverageRank(coverage),route:{campaigns:[],adGroups:[],matches:[],routes:[],label:ltV5Text("无广告来源","No ad source")},sourceRows:[],matureRows:[],pendingRows:[],pendingMetrics:{spend:0},pendingShare:0,activeDays:0,orderDays:0,posterior,targetAcos,targetCpa:null,aov:scopeMetrics.orders?scopeMetrics.sales/scopeMetrics.orders:15,cvrLift:0,sqp:x,searchVolume:x.searchVolume,listingGap:{gap:false,missing:[]},suggestedBid:bid.bid,bidSource:bid.source,safeBidLow:null,safeBidMid:null,bulkReady:false,readyRank:ltV5ReadyRank("review"),scopeLabel:`${x.asin} · SQP`,acosGap:999,impr:0,clicks:0,spend:0,sales:0,orders:0,units:0,contributionProfit:0,cpc:0,cvr:0,roas:0,acos:0});}
+  for(const x of sqpIndex.values()){if(!asins.has(x.asin)||existing.has(`${x.asin}|${x.query}`)||x.searchVolume<50)continue;const validation=ltV5KeywordValidation(x.query);if(!validation.valid||validation.words<minWords||validation.words>maxWords)continue;const intent=getLongTailIntentProfile(x.query),alignment=ltV5Alignment(x.query,x.asin,intent);if(alignment.blocked||alignment.score<55)continue;const coverage=ltV5Coverage(x.query,x.asin,[],coverageIndex);if(coverage.exact)continue;const score=Math.round(clamp(30+Math.log10(Math.max(10,x.searchVolume))*10+alignment.score*.25+Math.max(0,.05-x.purchShare)*80,0,68)),targetAcos=getUnifiedTargetAcos(scopeMetrics.orders?scopeMetrics.sales/scopeMetrics.orders:15,x.asin),posterior={mean:scopeMetrics.cvr||.03,lower:Math.max(.003,(scopeMetrics.cvr||.03)*.45)},bid=ltV5BidModel({kind:"sqp",metrics:{orders:0,clicks:0,cpc:scopeMetrics.cpc,sales:0},posterior,targetAcos,scopeMetrics});out.push({id:`s_${ltV5Hash(`${x.asin}|${x.query}`)}`,key:`${x.asin}|${x.query}`,kind:"sqp",keyword:x.query,displayKeyword:x.query,asin:x.asin,productFamily:getProductFamily(x.asin),status:"review",action:"SQP_REVIEW",actionRank:ltV5ActionRank("SQP_REVIEW"),reason:ltV5Text("SQP显示存在搜索需求或份额缺口，但没有广告成交证据；仅建议低Bid受控测试。","SQP indicates demand or share opportunity, but there is no ad-conversion evidence; use only a controlled low-bid test."),dependency:ltV5Text("先检查Listing相关性与产品画像，再决定是否创建Exact测试。","Verify listing relevance and product profile before creating an Exact test."),score,confidence:25,intentScore:intent.intentScore,alignment,coverage,coverageRank:ltV5CoverageRank(coverage),route:{campaigns:[],adGroups:[],matches:[],routes:[],label:ltV5Text("无广告来源","No ad source")},sourceRows:[],matureRows:[],pendingRows:[],pendingMetrics:{spend:0},pendingShare:0,activeDays:0,orderDays:0,posterior,targetAcos,targetCpa:null,aov:scopeMetrics.orders?scopeMetrics.sales/scopeMetrics.orders:15,cvrLift:0,sqp:x,searchVolume:x.searchVolume,suggestedBid:bid.bid,bidSource:bid.source,safeBidLow:null,safeBidMid:null,bulkReady:false,readyRank:ltV5ReadyRank("review"),scopeLabel:`${x.asin} · SQP`,acosGap:999,impr:0,clicks:0,spend:0,sales:0,orders:0,units:0,contributionProfit:0,cpc:0,cvr:0,roas:0,acos:0});}
   return out.sort((a,b)=>b.searchVolume-a.searchVolume);
 };
-const ltV5BuildListingRows = base => base.filter(r=>r.listingGap?.gap&&r.orders>=2&&r.score>=60&&!r.alignment.blocked).map(r=>({...r,id:`l_${r.id}`,kind:"listing",status:"review",action:"LISTING_UPDATE",actionRank:ltV5ActionRank("LISTING_UPDATE"),reason:ltV5Text(`盈利搜索词包含Listing未覆盖属性：${(r.listingGap.missing||[]).join(" / ")}`,`Profitable query contains attributes missing from the listing: ${(r.listingGap.missing||[]).join(" / ")}`),dependency:ltV5Text("先验证属性真实存在于产品，再更新Title/Bullets/Search Terms。","Verify the attribute is true for the product before updating title, bullets, or search terms."),bulkReady:false,readyRank:ltV5ReadyRank("review")}));
 const ltV5BuildData = () => {
-  const source=getBidGovScopedRows("searchTerm").filter(r=>r.searchTerm&&!isASINLike(r.searchTerm)&&normalizeAdProductCode(r.adProduct||"SP")==="SP"),coverageIndex=ltV5BuildCoverageIndex(),sqpIndex=ltV5BuildSqpIndex(),basePayload=ltV5BuildBaseRows(source,coverageIndex,sqpIndex),phrase=ltV5BuildPhraseRows(basePayload.rows,coverageIndex,basePayload.scopeMetrics),broad=ltV5BuildBroadRows(basePayload.rows,coverageIndex,basePayload.scopeMetrics),sqp=ltV5BuildSqpRows(basePayload.rows,sqpIndex,coverageIndex,basePayload.scopeMetrics),listing=ltV5BuildListingRows(basePayload.rows),rows=[...basePayload.rows,...phrase,...broad,...sqp,...listing];
-  rows.forEach(r=>{r.actionRank=ltV5ActionRank(r.action);r.coverageRank=ltV5CoverageRank(r.coverage);r.readyRank=ltV5ReadyRank(r.status);const m=r.sourceRows?.length?sumMetrics(r.sourceRows):null;r.strictEconomicsReady=m?m.strictEconomicsReady:false;if(["exact","phrase","broad"].includes(r.kind)&&!r.strictEconomicsReady){r.bulkReady=false;if(r.status==="ready")r.status="review";r.reason=`${r.reason||""} ${ltV5Text("利润基础包含估算Units或未知Halo，严格投放被阻断。","Strict launch blocked because units are estimated or halo margin is unknown.")}`.trim();}});return {source,rows,base:basePayload.rows,phrase,broad,sqp,listing,scopeMetrics:basePayload.scopeMetrics,split:basePayload.split};
+  const source=getBidGovScopedRows("searchTerm").filter(r=>r.searchTerm&&!isASINLike(r.searchTerm)&&normalizeAdProductCode(r.adProduct||"SP")==="SP"),coverageIndex=ltV5BuildCoverageIndex(),sqpIndex=ltV5BuildSqpIndex(),basePayload=ltV5BuildBaseRows(source,coverageIndex,sqpIndex),phrase=ltV5BuildPhraseRows(basePayload.rows,coverageIndex,basePayload.scopeMetrics),broad=ltV5BuildBroadRows(basePayload.rows,coverageIndex,basePayload.scopeMetrics),sqp=ltV5BuildSqpRows(basePayload.rows,sqpIndex,coverageIndex,basePayload.scopeMetrics),rows=[...basePayload.rows,...phrase,...broad,...sqp];
+  rows.forEach(r=>{r.actionRank=ltV5ActionRank(r.action);r.coverageRank=ltV5CoverageRank(r.coverage);r.readyRank=ltV5ReadyRank(r.status);const m=r.sourceRows?.length?sumMetrics(r.sourceRows):null;r.strictEconomicsReady=m?m.strictEconomicsReady:false;if(["exact","phrase","broad"].includes(r.kind)&&!r.strictEconomicsReady){r.bulkReady=false;if(r.status==="ready")r.status="review";r.reason=`${r.reason||""} ${ltV5Text("利润基础包含估算Units或未知Halo，严格投放被阻断。","Strict launch blocked because units are estimated or halo margin is unknown.")}`.trim();}});return {source,rows,base:basePayload.rows,phrase,broad,sqp,scopeMetrics:basePayload.scopeMetrics,split:basePayload.split};
 };
 const ltV5FilterRows = rows => {
-  const view=LONGTAIL_V5_STATE.view,minScore=Math.max(0,safeNum($("ltMinScore")?.value||60)),minIntent=Math.max(0,safeNum($("ltMinIntent")?.value||45)),maxRows=Math.max(50,safeNum($("ltV5MaxRows")?.value||250));let out=(rows||[]).filter(r=>r.score>=minScore||["ready","blocked","wait","covered"].includes(r.status)||r.kind==="sqp").filter(r=>r.intentScore>=minIntent||["ready","covered","blocked","wait"].includes(r.status)||r.kind==="sqp");if(view==="exact")out=out.filter(r=>r.kind==="exact"||r.kind==="covered");else if(view==="phrase")out=out.filter(r=>r.kind==="phrase");else if(view==="broad")out=out.filter(r=>r.kind==="broad");else if(view==="sqp")out=out.filter(r=>r.kind==="sqp");else if(view==="listing")out=out.filter(r=>r.kind==="listing");else if(view==="review")out=out.filter(r=>["review","wait","blocked"].includes(r.status));const key=LONGTAIL_V5_STATE.sortKey,dir=LONGTAIL_V5_STATE.sortDir==="asc"?1:-1;out.sort((a,b)=>{const av=a[key],bv=b[key];if(typeof av==="string"||typeof bv==="string")return String(av||"").localeCompare(String(bv||""))*dir;return (safeNum(av)-safeNum(bv))*dir;});return out.slice(0,maxRows);
+  const view=LONGTAIL_V5_STATE.view,minScore=Math.max(0,safeNum($("ltMinScore")?.value||60)),minIntent=Math.max(0,safeNum($("ltMinIntent")?.value||45)),maxRows=Math.max(50,safeNum($("ltV5MaxRows")?.value||250));let out=(rows||[]).filter(r=>r.score>=minScore||["ready","blocked","wait","covered"].includes(r.status)||r.kind==="sqp").filter(r=>r.intentScore>=minIntent||["ready","covered","blocked","wait"].includes(r.status)||r.kind==="sqp");if(view==="exact")out=out.filter(r=>r.kind==="exact"||r.kind==="covered");else if(view==="phrase")out=out.filter(r=>r.kind==="phrase");else if(view==="broad")out=out.filter(r=>r.kind==="broad");else if(view==="sqp")out=out.filter(r=>r.kind==="sqp");else if(view==="review")out=out.filter(r=>["review","wait","blocked"].includes(r.status));const key=LONGTAIL_V5_STATE.sortKey,dir=LONGTAIL_V5_STATE.sortDir==="asc"?1:-1;out.sort((a,b)=>{const av=a[key],bv=b[key];if(typeof av==="string"||typeof bv==="string")return String(av||"").localeCompare(String(bv||""))*dir;return (safeNum(av)-safeNum(bv))*dir;});return out.slice(0,maxRows);
 };
-const ltV5ActionLabel = row => ({CREATE_EXACT:ltV5Text("创建 Exact","Create Exact"),TEST_EXACT:ltV5Text("测试 Exact","Test Exact"),CREATE_PHRASE:ltV5Text("创建 Phrase","Create Phrase"),CREATE_BROAD:ltV5Text("创建 Broad","Create Broad"),SQP_REVIEW:ltV5Text("SQP复核","SQP Review"),LISTING_UPDATE:ltV5Text("更新Listing","Update Listing"),BID_GOVERNANCE:ltV5Text("转出价治理","Bid Governance"),WAIT:ltV5Text("等待归因","Wait"),REVIEW:ltV5Text("人工复核","Review"),BLOCKED:ltV5Text("数据阻断","Blocked")}[row.action]||row.action);
+const ltV5ActionLabel = row => ({CREATE_EXACT:ltV5Text("创建 Exact","Create Exact"),TEST_EXACT:ltV5Text("测试 Exact","Test Exact"),CREATE_PHRASE:ltV5Text("创建 Phrase","Create Phrase"),CREATE_BROAD:ltV5Text("创建 Broad","Create Broad"),SQP_REVIEW:ltV5Text("SQP复核","SQP Review"),BID_GOVERNANCE:ltV5Text("转出价治理","Bid Governance"),WAIT:ltV5Text("等待归因","Wait"),REVIEW:ltV5Text("人工复核","Review"),BLOCKED:ltV5Text("数据阻断","Blocked")}[row.action]||row.action);
 const ltV5RenderLanguage = () => {
-  const zh=currentLang==="zh";const set=(id,z,e)=>{const el=$(id);if(el)el.textContent=zh?z:e;};set("ltV5Title","精准长尾增长引擎","Precision Long-Tail Growth Engine");set("ltV5Subtitle","把搜索词发现、Exact 收割、Phrase 扩展、Broad 白名单、SQP 机会和 Listing 缺口分开决策。","Separate search-term discovery, Exact harvesting, Phrase expansion, Broad whitelisting, SQP opportunities, and listing gaps.");set("ltV5ScopeLabel","当前作用域","Current scope");set("ltV5MetricMatureLabel","成熟搜索词花费","Mature query spend");set("ltV5BlockedLabel","复核 / 阻断","Review / Blocked");set("ltV5DecisionEyebrow","本轮长尾决策","Long-tail decision");set("ltV5DetailEyebrow","长尾证据","Long-tail evidence");set("btnLtV5Recalc","重新计算","Recalculate");set("btnLtV5SelectReady","选择当前可上线","Select visible ready");set("btnLtV5ClearSelection","清空选择","Clear selection");set("btnLtV5ExportSelected","提交到最终执行清单","Submit to Final Execution");set("btnExportLongTail","导出长尾分析包","Export analysis pack");set("btnCloseLtV5Detail","关闭","Close");
-  const tabLabels={all:["全部资产","All assets"],exact:["Exact 收割","Exact harvest"],phrase:["Phrase 扩展","Phrase expansion"],broad:["Broad 白名单","Broad whitelist"],sqp:["SQP 机会","SQP opportunity"],listing:["Listing 缺口","Listing gap"],review:["复核 / 阻断","Review / blocked"]};document.querySelectorAll("[data-ltv5-view]").forEach(b=>b.textContent=tabLabels[b.dataset.ltv5View][zh?0:1]);
+  const zh=currentLang==="zh";const set=(id,z,e)=>{const el=$(id);if(el)el.textContent=zh?z:e;};set("ltV5Title","精准长尾增长引擎","Precision Long-Tail Growth Engine");set("ltV5Subtitle","把搜索词发现、Exact 收割、Phrase 扩展、Broad 白名单和 SQP 机会分开决策。","Separate search-term discovery, Exact harvesting, Phrase expansion, Broad whitelisting, and SQP opportunities.");set("ltV5ScopeLabel","当前作用域","Current scope");set("ltV5MetricMatureLabel","成熟搜索词花费","Mature query spend");set("ltV5BlockedLabel","复核 / 阻断","Review / Blocked");set("ltV5DecisionEyebrow","本轮长尾决策","Long-tail decision");set("ltV5DetailEyebrow","长尾证据","Long-tail evidence");set("btnLtV5Recalc","重新计算","Recalculate");set("btnLtV5SelectReady","选择当前可上线","Select visible ready");set("btnLtV5ClearSelection","清空选择","Clear selection");set("btnLtV5ExportSelected","提交到最终执行清单","Submit to Final Execution");set("btnExportLongTail","导出长尾分析包","Export analysis pack");set("btnCloseLtV5Detail","关闭","Close");
+  const tabLabels={all:["全部资产","All assets"],exact:["Exact 收割","Exact harvest"],phrase:["Phrase 扩展","Phrase expansion"],broad:["Broad 白名单","Broad whitelist"],sqp:["SQP 机会","SQP opportunity"],review:["复核 / 阻断","Review / blocked"]};document.querySelectorAll("[data-ltv5-view]").forEach(b=>b.textContent=tabLabels[b.dataset.ltv5View][zh?0:1]);
 };
 const ltV5RenderSummary = data => {
   const rows=data.rows,readyExact=rows.filter(r=>r.kind==="exact"&&r.status==="ready").length,readyPhrase=rows.filter(r=>r.kind==="phrase"&&r.status==="ready").length,readyBroad=rows.filter(r=>r.kind==="broad"&&r.status==="ready").length,sqp=data.sqp.length,blocked=rows.filter(r=>["review","wait","blocked"].includes(r.status)).length,total=data.split.matureMetrics.spend+data.split.pendingMetrics.spend,matureShare=total>0?data.split.matureMetrics.spend/total:0;
@@ -6506,7 +6438,7 @@ const ltV5RenderTable = rows => {
   tbody.innerHTML=rows.map(r=>{const checked=LONGTAIL_V5_STATE.selected.has(r.id),disabled=!r.bulkReady,scoreCls=r.score>=75?"good":r.score>=60?"warn":r.score<35?"bad":"neutral",statusCls=ltV5StatusClass(r.status),sqp=r.sqp?`${fmtInt(r.searchVolume)} · ${(safeNum(r.sqp.purchShare)*100).toFixed(1)}%`:"—",coverage=r.coverage?.label||"—",cvrLift=Number.isFinite(r.cvrLift)?`${r.cvrLift.toFixed(2)}x`:"—",route=r.scopeLabel||"—",bid=r.suggestedBid?`${fmtMoney(r.suggestedBid)}`:"—",target=r.targetAcos===null?"N/A":fmtPct(r.targetAcos);return `<tr data-ltv5-id="${escapeHtml(r.id)}" tabindex="0"><td><input type="checkbox" data-ltv5-select="${escapeHtml(r.id)}" ${checked?"checked":""} ${disabled?"disabled":""} aria-label="${escapeHtml(r.keyword)}"></td><td class="ltV5KeywordCell" title="${escapeHtml(r.displayKeyword)}"><b>${escapeHtml(r.keyword)}</b><small>${escapeHtml(ltV5KindLabel(r.kind))}</small></td><td><span class="ltV5ActionTag ${statusCls}">${escapeHtml(ltV5ActionLabel(r))}</span></td><td title="${escapeHtml(route)}">${escapeHtml(route)}</td><td><span class="ltV5Score ${scoreCls}">${r.score}</span></td><td>${r.confidence} · ${fmtInt(r.orderDays)}d</td><td>${fmtInt(r.orders)} / ${fmtInt(r.activeDays)}d</td><td>${fmtMoney(r.spend)} / ${fmtMoney(r.sales)}</td><td><span>${fmtAcosHtml(r.acos)} ${fmtAcosTargetStatus(r.acos,r.targetAcos)}</span></td><td>${cvrLift}</td><td>${sqp}</td><td title="${escapeHtml(coverage)}">${escapeHtml(coverage)}</td><td title="${escapeHtml(r.bidSource||"")}">${bid}</td><td><span class="ltV5ActionTag ${statusCls}">${escapeHtml(ltV5StatusLabel(r.status))}</span></td></tr>`;}).join("");
 };
 const ltV5ShowDetail = id => {
-  const row=LONGTAIL_V5_STATE.rows.find(r=>r.id===id);if(!row)return;LONGTAIL_V5_STATE.detailId=id;$("ltV5DetailTitle").textContent=row.keyword;const sqp=row.sqp,routeHtml=(row.route?.routes||[]).slice(0,30).map(x=>`<div class="ltV5Route">${escapeHtml(x)}</div>`).join("")||`<div class="ltV5Route">${ltV5Text("无具体广告路由","No source route")}</div>`,support=(row.supportTerms||[]).slice(0,20).map(x=>`<span class="pill">${escapeHtml(x)}</span>`).join("");$("ltV5DetailBody").innerHTML=`<div class="ltV5DetailGrid"><div class="ltV5DetailItem"><span>ASIN / Family</span><b>${escapeHtml(row.asin)} · ${escapeHtml(row.productFamily||"")}</b></div><div class="ltV5DetailItem"><span>${ltV5Text("动作 / 状态","Action / Status")}</span><b>${escapeHtml(ltV5ActionLabel(row))} · ${escapeHtml(ltV5StatusLabel(row.status))}</b></div><div class="ltV5DetailItem"><span>${ltV5Text("机会分 / 证据分","Opportunity / Confidence")}</span><b>${row.score} / ${row.confidence}</b></div><div class="ltV5DetailItem"><span>${ltV5Text("成熟 / Pending花费","Mature / Pending spend")}</span><b>${fmtMoney(row.spend)} / ${fmtMoney(row.pendingMetrics?.spend||0)}</b></div><div class="ltV5DetailItem"><span>Orders / Order Days</span><b>${fmtInt(row.orders)} / ${fmtInt(row.orderDays)}</b></div><div class="ltV5DetailItem"><span>ACOS / Target</span><b>${row.acos===Infinity?"∞":fmtPct(row.acos)} / ${row.targetAcos===null?"N/A":fmtPct(row.targetAcos)}</b></div><div class="ltV5DetailItem"><span>CVR / Lift</span><b>${fmtPct(row.cvr)} / ${Number.isFinite(row.cvrLift)?row.cvrLift.toFixed(2)+"x":"—"}</b></div><div class="ltV5DetailItem"><span>${ltV5Text("建议Bid / 来源","Suggested Bid / Source")}</span><b>${row.suggestedBid?fmtMoney(row.suggestedBid):"—"} · ${escapeHtml(row.bidSource||"")}</b></div>${sqp?`<div class="ltV5DetailItem"><span>SQP Volume</span><b>${fmtInt(sqp.searchVolume)}</b></div><div class="ltV5DetailItem"><span>SQP Shares</span><b>I ${fmtPct(sqp.imprShare)} · C ${fmtPct(sqp.clickShare)} · P ${fmtPct(sqp.purchShare)}</b></div>`:""}</div><div class="ltV5DetailSection"><h4>${ltV5Text("判断依据","Decision rationale")}</h4><p>${escapeHtml(row.reason||"")}</p></div>${row.dependency?`<div class="ltV5DetailSection"><h4>${ltV5Text("执行依赖","Execution dependency")}</h4><p>${escapeHtml(row.dependency)}</p></div>`:""}${support?`<div class="ltV5DetailSection"><h4>${ltV5Text("支持搜索词","Supporting queries")}</h4><div style="display:flex;gap:6px;flex-wrap:wrap">${support}</div></div>`:""}<div class="ltV5DetailSection"><h4>${ltV5Text("来源路由","Source routes")}</h4><div class="ltV5RouteList">${routeHtml}</div></div>${row.listingGap?.gap?`<div class="ltV5DetailSection"><h4>Listing Gap</h4><p>${escapeHtml((row.listingGap.missing||[]).join(" / "))}</p></div>`:""}`;$("ltV5DetailPanel").hidden=false;
+  const row=LONGTAIL_V5_STATE.rows.find(r=>r.id===id);if(!row)return;LONGTAIL_V5_STATE.detailId=id;$("ltV5DetailTitle").textContent=row.keyword;const sqp=row.sqp,routeHtml=(row.route?.routes||[]).slice(0,30).map(x=>`<div class="ltV5Route">${escapeHtml(x)}</div>`).join("")||`<div class="ltV5Route">${ltV5Text("无具体广告路由","No source route")}</div>`,support=(row.supportTerms||[]).slice(0,20).map(x=>`<span class="pill">${escapeHtml(x)}</span>`).join("");$("ltV5DetailBody").innerHTML=`<div class="ltV5DetailGrid"><div class="ltV5DetailItem"><span>ASIN / Family</span><b>${escapeHtml(row.asin)} · ${escapeHtml(row.productFamily||"")}</b></div><div class="ltV5DetailItem"><span>${ltV5Text("动作 / 状态","Action / Status")}</span><b>${escapeHtml(ltV5ActionLabel(row))} · ${escapeHtml(ltV5StatusLabel(row.status))}</b></div><div class="ltV5DetailItem"><span>${ltV5Text("机会分 / 证据分","Opportunity / Confidence")}</span><b>${row.score} / ${row.confidence}</b></div><div class="ltV5DetailItem"><span>${ltV5Text("成熟 / Pending花费","Mature / Pending spend")}</span><b>${fmtMoney(row.spend)} / ${fmtMoney(row.pendingMetrics?.spend||0)}</b></div><div class="ltV5DetailItem"><span>Orders / Order Days</span><b>${fmtInt(row.orders)} / ${fmtInt(row.orderDays)}</b></div><div class="ltV5DetailItem"><span>ACOS / Target</span><b>${row.acos===Infinity?"∞":fmtPct(row.acos)} / ${row.targetAcos===null?"N/A":fmtPct(row.targetAcos)}</b></div><div class="ltV5DetailItem"><span>CVR / Lift</span><b>${fmtPct(row.cvr)} / ${Number.isFinite(row.cvrLift)?row.cvrLift.toFixed(2)+"x":"—"}</b></div><div class="ltV5DetailItem"><span>${ltV5Text("建议Bid / 来源","Suggested Bid / Source")}</span><b>${row.suggestedBid?fmtMoney(row.suggestedBid):"—"} · ${escapeHtml(row.bidSource||"")}</b></div>${sqp?`<div class="ltV5DetailItem"><span>SQP Volume</span><b>${fmtInt(sqp.searchVolume)}</b></div><div class="ltV5DetailItem"><span>SQP Shares</span><b>I ${fmtPct(sqp.imprShare)} · C ${fmtPct(sqp.clickShare)} · P ${fmtPct(sqp.purchShare)}</b></div>`:""}</div><div class="ltV5DetailSection"><h4>${ltV5Text("判断依据","Decision rationale")}</h4><p>${escapeHtml(row.reason||"")}</p></div>${row.dependency?`<div class="ltV5DetailSection"><h4>${ltV5Text("执行依赖","Execution dependency")}</h4><p>${escapeHtml(row.dependency)}</p></div>`:""}${support?`<div class="ltV5DetailSection"><h4>${ltV5Text("支持搜索词","Supporting queries")}</h4><div style="display:flex;gap:6px;flex-wrap:wrap">${support}</div></div>`:""}<div class="ltV5DetailSection"><h4>${ltV5Text("来源路由","Source routes")}</h4><div class="ltV5RouteList">${routeHtml}</div></div>`;$("ltV5DetailPanel").hidden=false;
 };
 const ltV5BuildBulk = selectedOnly => {
   const source=selectedOnly?LONGTAIL_V5_STATE.rows.filter(r=>LONGTAIL_V5_STATE.selected.has(r.id)):LONGTAIL_V5_STATE.rows.filter(r=>r.bulkReady),headers=["Product","Entity","Operation","Campaign Id","Ad Group Id","Portfolio Id","Ad Id","Keyword Id","Product Targeting Id","Campaign Name","Ad Group Name","Keyword Text","Product Targeting Expression","Match Type","Bidding Strategy","Placement","Percentage","Bid","State"],rows=[],review=[];
@@ -7262,28 +7194,6 @@ const exportProductTargetingExcel = () => {
   ], `Ultimate_ASIN_Targeting_Draft_ONLY_${getTs()}.xlsx`).then(() => log(t('dyn_msg_targeting_done', bulkRows.length), "good"));
 };
 
-const exportListingCoverageAudit = () => {
-  if (!AdsStore.view.length) { notify(t('dyn_msg_audit_empty')); return; }
-  const doctorRows = buildListingConversionDoctorRows(5000);
-  const rows = doctorRows.map(r => [
-    r.term,
-    r.intent.label,
-    r.coverage.covered ? "Covered" : "Missing",
-    r.coverage.mode,
-    r.recommendation,
-    r.spend || 0,
-    r.sales || 0,
-    r.orders || 0,
-    r.clicks || 0,
-    r.cvr || 0,
-    r.roas || 0,
-    r.acos === Infinity ? null : r.acos
-  ]);
-  if (!rows.length) { notify(t('dyn_msg_audit_empty')); return; }
-  const headers = ["Search Term / Root", "Intent", "Listing Coverage", "Coverage Mode", "Listing Conversion Doctor", "Spend", "Sales", "Orders", "Clicks", "CVR", "ROAS", "ACOS"];
-  exportRichExcelMultiSheet([{ sheetName: "Listing Conversion Doctor", headers, dataRows: rows }], `Ultimate_Listing_Conversion_Doctor_${getTs()}.xlsx`).then(() => log(t('dyn_msg_audit_done'), "good"));
-};
-
 const exportNegativesExcel = () => {
 const rankBy = $("rankBy").value; 
 if (!["searchTerm", "searchTermRoot"].includes(rankBy)) { log(t('dyn_msg_export_err'), "bad"); return; } 
@@ -7373,10 +7283,10 @@ const buildLongTailExpansionSheets = (rows) => {
 
 const exportLongTailExcel = () => {
   if(!LONGTAIL_V5_STATE.rows.length)renderLongTailMining();const rows=LONGTAIL_V5_STATE.rows;if(!rows.length){notify(ltV5Text("没有可导出的长尾资产。","No long-tail assets to export."),"warn");return;}
-  const headers=["Keyword","Type","ASIN","Product Family","Status","Action","Opportunity Score","Confidence","Intent Score","Coverage","Mature Spend","Pending Spend","Sales","Orders","Order Days","Clicks","CPC","CVR","CVR Lift","ROAS","ACOS","Target ACOS","Contribution Profit","SQP Search Volume","SQP Impression Share","SQP Click Share","SQP Purchase Share","Suggested Bid","Bid Source","Central Ready","Reason","Dependency","Source Campaigns","Source Ad Groups","Support Queries","Phrase Quality","Listing Missing Roots"],toData=r=>[r.keyword,r.kind,r.asin,r.productFamily,r.status,r.action,r.score,r.confidence,r.intentScore,r.coverage?.label||"",r.spend||0,r.pendingMetrics?.spend||0,r.sales||0,r.orders||0,r.orderDays||0,r.clicks||0,r.cpc||0,r.cvr||0,r.cvrLift||0,r.roas||0,r.acos===Infinity?null:r.acos,r.targetAcos,r.contributionProfit||0,r.searchVolume||0,r.sqp?.imprShare||0,r.sqp?.clickShare||0,r.sqp?.purchShare||0,r.suggestedBid||"",r.bidSource||"",r.bulkReady?"YES":"NO",r.reason||"",r.dependency||"",(r.route?.campaigns||[]).join(" / "),(r.route?.adGroups||[]).join(" / "),(r.supportTerms||[]).join(" / "),r.phraseQuality||"",(r.listingGap?.missing||[]).join(" / ")];
+  const headers=["Keyword","Type","ASIN","Product Family","Status","Action","Opportunity Score","Confidence","Intent Score","Coverage","Mature Spend","Pending Spend","Sales","Orders","Order Days","Clicks","CPC","CVR","CVR Lift","ROAS","ACOS","Target ACOS","Contribution Profit","SQP Search Volume","SQP Impression Share","SQP Click Share","SQP Purchase Share","Suggested Bid","Bid Source","Central Ready","Reason","Dependency","Source Campaigns","Source Ad Groups","Support Queries","Phrase Quality"],toData=r=>[r.keyword,r.kind,r.asin,r.productFamily,r.status,r.action,r.score,r.confidence,r.intentScore,r.coverage?.label||"",r.spend||0,r.pendingMetrics?.spend||0,r.sales||0,r.orders||0,r.orderDays||0,r.clicks||0,r.cpc||0,r.cvr||0,r.cvrLift||0,r.roas||0,r.acos===Infinity?null:r.acos,r.targetAcos,r.contributionProfit||0,r.searchVolume||0,r.sqp?.imprShare||0,r.sqp?.clickShare||0,r.sqp?.purchShare||0,r.suggestedBid||"",r.bidSource||"",r.bulkReady?"YES":"NO",r.reason||"",r.dependency||"",(r.route?.campaigns||[]).join(" / "),(r.route?.adGroups||[]).join(" / "),(r.supportTerms||[]).join(" / "),r.phraseQuality||""];
   const summary=[["Package type","Analysis only"],["Final execution entry","Decision & Execution Center"],["Scope",$("ltV5ScopeText")?.textContent||""],["Assets",rows.length],["Central-ready keyword candidates",rows.filter(r=>r.bulkReady).length],["Selected candidates",LONGTAIL_V5_STATE.selected.size]];
   const routing=rows.filter(r=>r.kind==="exact"&&["ready","review"].includes(r.status)&&r.route?.routes?.length).flatMap(r=>r.route.routes.map(route=>[r.keyword,r.asin,route,ltV5Text("Exact稳定后添加Negative Exact","Add Negative Exact after Exact stabilizes"),r.dependency||""]));
-  exportRichExcelMultiSheet([{sheetName:"Executive Summary",headers:["Metric","Value"],dataRows:summary},{sheetName:"All Long-Tail Assets",headers,dataRows:rows.map(toData)},{sheetName:"Central Ready Candidates",headers,dataRows:rows.filter(r=>r.bulkReady).map(toData)},{sheetName:"Exact Harvest",headers,dataRows:rows.filter(r=>r.kind==="exact"||r.kind==="covered").map(toData)},{sheetName:"Phrase Expansion",headers,dataRows:rows.filter(r=>r.kind==="phrase").map(toData)},{sheetName:"Broad Whitelist",headers,dataRows:rows.filter(r=>r.kind==="broad").map(toData)},{sheetName:"SQP Controlled Review",headers,dataRows:rows.filter(r=>r.kind==="sqp").map(toData)},{sheetName:"Listing Gaps",headers,dataRows:rows.filter(r=>r.kind==="listing").map(toData)},{sheetName:"Review and Blocked",headers,dataRows:rows.filter(r=>["review","wait","blocked"].includes(r.status)).map(toData)},{sheetName:"Routing Plan",headers:["Exact Keyword","ASIN","Source Route","Future Action","Dependency"],dataRows:routing}],`LongTail_Growth_5_Analysis_${getTs()}.xlsx`);
+  exportRichExcelMultiSheet([{sheetName:"Executive Summary",headers:["Metric","Value"],dataRows:summary},{sheetName:"All Long-Tail Assets",headers,dataRows:rows.map(toData)},{sheetName:"Central Ready Candidates",headers,dataRows:rows.filter(r=>r.bulkReady).map(toData)},{sheetName:"Exact Harvest",headers,dataRows:rows.filter(r=>r.kind==="exact"||r.kind==="covered").map(toData)},{sheetName:"Phrase Expansion",headers,dataRows:rows.filter(r=>r.kind==="phrase").map(toData)},{sheetName:"Broad Whitelist",headers,dataRows:rows.filter(r=>r.kind==="broad").map(toData)},{sheetName:"SQP Controlled Review",headers,dataRows:rows.filter(r=>r.kind==="sqp").map(toData)},{sheetName:"Review and Blocked",headers,dataRows:rows.filter(r=>["review","wait","blocked"].includes(r.status)).map(toData)},{sheetName:"Routing Plan",headers:["Exact Keyword","ASIN","Source Route","Future Action","Dependency"],dataRows:routing}],`LongTail_Growth_5_Analysis_${getTs()}.xlsx`);
 };
 const getExecutiveDateScope = (rows) => {
   const uniqueDates = [...new Set((rows || []).map(r => r.date).filter(Boolean))].sort();
@@ -8421,60 +8331,6 @@ const buildAIDecisionSchema = (row) => ({
   humanReviewRequired: !row.bulkReady || row.negativeGuard?.level === "review" || row.negativeGuard?.level === "block"
 });
 
-const getListingCopyText = () => String($("listingCopyInput")?.value || "").toLowerCase().replace(/[^a-z0-9+.\s-]/g, " ").replace(/\s+/g, " ").trim();
-
-const checkListingCoverage = (term, listingCopy = getListingCopyText()) => {
-  if (!listingCopy) return { covered: false, mode: "No Listing Copy" };
-  const clean = String(term || "").toLowerCase().replace(/[^a-z0-9+.\s-]/g, " ").replace(/\s+/g, " ").trim();
-  if (clean && listingCopy.includes(clean)) return { covered: true, mode: "Exact Phrase" };
-  const tokens = clean.split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
-  const hit = tokens.filter(w => listingCopy.includes(w));
-  return { covered: hit.length >= Math.max(1, Math.ceil(tokens.length * 0.55)), mode: hit.length ? `Token ${hit.length}/${tokens.length}` : "Missing" };
-};
-
-const getListingDoctorRecommendation = (term, m, intent, coverage) => {
-  const lowCvr = m.clicks >= 20 && (m.cvr || 0) < 0.035;
-  if (intent.key === "mismatch") return currentLang === "zh" ? "不要写进 Listing；优先否定或降价隔离" : "Do not add to listing; negative or reduce bid";
-  if (intent.key === "male") return currentLang === "zh" ? "保留观察，可单独建男士测试组，不要自动否定" : "Keep under review; separate men test group, no auto-negative";
-  if (intent.key === "blue_light" && safeNum(m.orders)>0 && !meetsDynamicProfitLine(m,.85,m.advertisedAsin||m.asin||"")) return currentLang === "zh" ? "Blue Light 只做功能辅助，不要标题前置放量" : "Use blue light as supporting feature, not front-loaded scaling";
-  if (!coverage.covered && m.orders >= 2 && meetsDynamicProfitLine(m,1)) return currentLang === "zh" ? "高转化但 Listing 未承接，建议加入五点/A+图片文案或后台词" : "High-converting but missing from listing; add to bullets/A+ image copy/backend terms";
-  if (!coverage.covered && m.orders >= 1 && meetsDynamicProfitLine(m,.9)) return currentLang === "zh" ? "中等优先级承接，可放五点或场景图" : "Medium priority; support in bullets or scenario image";
-  if (coverage.covered && lowCvr) return currentLang === "zh" ? "Listing 已覆盖但 CVR 低，检查主图、价格、评论、A+卖点承接" : "Covered but low CVR; inspect main image, price, reviews, and A+";
-  if (!coverage.covered && lowCvr) return currentLang === "zh" ? "低转化且未承接，先判断相关性，不要盲目加词" : "Low CVR and missing; validate relevance before adding";
-  return currentLang === "zh" ? "观察" : "Observe";
-};
-
-const buildListingConversionDoctorRows = (limit = 500) => {
-  const groups = AdsStore.rankGroups || groupBy(AdsStore.view || [], getRankKey());
-  const listingCopy = getListingCopyText();
-  return [...groups.entries()].map(([term, list]) => {
-    const m = sumMetrics(list);
-    const intent = classifySearchTermIntent(term);
-    const coverage = checkListingCoverage(term, listingCopy);
-    let priorityScore = 0;
-    if (!coverage.covered && m.orders >= 2 && meetsDynamicProfitLine(m,1)) priorityScore += 1000;
-    if (m.clicks >= 20 && (m.cvr || 0) < 0.035) priorityScore += 450;
-    if (intent.key === "mismatch") priorityScore += 300;
-    priorityScore += (m.sales || 0) + (m.spend || 0) * 0.5 + (m.orders || 0) * 35;
-    return { term, intent, coverage, recommendation: getListingDoctorRecommendation(term, m, intent, coverage), priorityScore, ...m };
-  }).filter(r => r.term && r.term !== "(blank)").sort((a,b) => b.priorityScore - a.priorityScore).slice(0, limit);
-};
-
-const buildListingConversionDoctorContext = () => {
-  if (!AdsStore.view || !AdsStore.view.length) return currentLang === "zh" ? "暂无广告数据。" : "No ad data.";
-  const rows = buildListingConversionDoctorRows(40);
-  const missingWinners = rows.filter(r => !r.coverage.covered && r.orders >= 1 && meetsDynamicProfitLine(r,.9,r.advertisedAsin||"")).slice(0, 10);
-  const coveredLowCvr = rows.filter(r => r.coverage.covered && r.clicks >= 20 && r.cvr < 0.035).slice(0, 8);
-  const mismatch = rows.filter(r => r.intent.key === "mismatch").slice(0, 8);
-  const fmt = (r) => `${r.term} | ${r.intent.label} | ${r.coverage.mode} | Spend:$${(r.spend||0).toFixed(0)} | Orders:${r.orders||0} | ROAS:${(r.roas||0).toFixed(2)} | ${r.recommendation}`;
-  return [
-    currentLang === "zh" ? "【Listing Conversion Doctor】" : "【Listing Conversion Doctor】",
-    `${currentLang === "zh" ? "高转化但 Listing 未承接" : "Converting terms missing from listing"}: ${missingWinners.map(fmt).join(" ; ") || "-"}`,
-    `${currentLang === "zh" ? "已承接但低 CVR" : "Covered but low CVR"}: ${coveredLowCvr.map(fmt).join(" ; ") || "-"}`,
-    `${currentLang === "zh" ? "禁止写入 Listing 的错配词" : "Mismatch terms not to add"}: ${mismatch.map(fmt).join(" ; ") || "-"}`
-  ].join("\n");
-};
-
 const countTermWords = (text) => String(text || "").toLowerCase().replace(/[^a-z0-9+.\s-]/g, " ").split(/\s+/).filter(Boolean).length;
 
 const normalizeBroadRootTerm = (text) => String(text || "")
@@ -8690,9 +8546,6 @@ const buildActionPlan = (options={}) => {
 
     if(it.orders>0&&targetAcos!==null&&(it.contributionProfit<0||it.acos>targetAcos*1.25)){const bid=getSuggestedBid(it,"decrease",targetAcos);rows.push(makeSimpleAction(it,"decrease",actionV4Text("利润线降价","Profit-line Bid Down"),"Bid Decrease",bid,actionV4Text("已有订单但广告贡献利润为负或ACOS明显高于产品利润线。","Has orders, but contribution profit is negative or ACOS is materially above the product profit line."),false,{category:"repair",manualReady:Boolean(bid),blockedReason:bid?"":actionV4Text("缺少Current Bid，不能生成可执行调价","Current Bid missing; executable bid change blocked")}));continue;}
 
-    const cvrStats=getBayesianCvrStats(it,global),lowCvr=isRelevant&&it.clicks>=Math.max(20,Math.ceil(2/Math.max(.01,global.cvr||.05)))&&cvrStats.upper<Math.max(.025,(global.cvr||.05)*.75);
-    if(lowCvr&&it.orders<=1){rows.push(makeSimpleAction(it,"listing",actionV4Text("Listing转化修复","Listing Conversion Repair"),actionV4Text("检查主图/价格/评论/A+","Review image/price/reviews/A+"),"",actionV4Text("流量相关但贝叶斯CVR上限仍低于账户基准，继续加词或加价前先修复转化承接。","Traffic is relevant but Bayesian CVR upper bound remains below account baseline; repair conversion before scaling."),false,{category:"listing",status:"review",objectType:"Search Term",currentValue:`CVR ${fmtPct(it.cvr)}`,proposedValue:actionV4Text("转化诊断","Conversion audit"),impact:{kind:"sales",amount:Math.max(0,it.sales/Math.max(7,it.activeDays)*30*.10),label:actionV4Text("潜在转化机会","Potential conversion opportunity")}}));continue;}
-
     if(isAsin&&stable&&it.roas>=effRoas*1.05&&meetsDynamicProfitLine(it,1.05,it.advertisedAsin||it.asin||"")){const bid=getSuggestedBid(it,"increase",targetAcos);if(bid)rows.push(makeSimpleAction(it,"increase",actionV4Text("ASIN加价","ASIN Bid Up"),"Product Target Bid Increase",bid,actionV4Text("商品投放具备稳定订单日、正贡献利润和高于目标的ROAS。","Product target has stable order days, positive contribution profit, and ROAS above target."),false,{category:"scale",manualReady:true}));continue;}
 
     // Do not change Exact bid in the same cycle that the same term is moving to a new match layer.
@@ -8717,9 +8570,9 @@ const buildActionPlan = (options={}) => {
 
   rows.push(...actionV4CampaignActions(globalTarget,controls),...actionV4PlacementActions(globalTarget,controls));
   for(const r of rows){
-    const owner={increase:"Bid Governance",decrease:"Bid Governance",exact:"Long-Tail Growth",phrase:"Long-Tail Growth",broad:"Long-Tail Growth",budget:"Campaign Studio",placement:"Campaign Studio",listing:"Manual / Listing"}[r.actionKey]||"Action Command Center";
+    const owner={increase:"Bid Governance",decrease:"Bid Governance",exact:"Long-Tail Growth",phrase:"Long-Tail Growth",broad:"Long-Tail Growth",budget:"Campaign Studio",placement:"Campaign Studio"}[r.actionKey]||"Action Command Center";
     r.owner=owner;
-    if(owner!=="Action Command Center"&&!["listing","wait"].includes(r.actionKey)){r.exportReady=false;r.bulkReady=false;r.executionMode="handoff";r.status=r.status==="execute"?"review":r.status;r.conflict=`Execution owner: ${owner}`;}
+    if(owner!=="Action Command Center"&&r.actionKey!=="wait"){r.exportReady=false;r.bulkReady=false;r.executionMode="handoff";r.status=r.status==="execute"?"review":r.status;r.conflict=`Execution owner: ${owner}`;}
   }
   const unique=[...new Map(rows.map(r=>[r.id,r])).values()],filter=options.actionFilter||controls.actionFilter,statusFilter=options.status||controls.status;let filtered=unique.filter(r=>(filter==="all"||r.actionKey===filter)&&(statusFilter==="all"||r.status===statusFilter));
   const sort=options.sort||controls.sort;filtered.sort((a,b)=>sort==="impact"?(b.impactAmount-a.impactAmount)||b.priorityScore-a.priorityScore:sort==="confidence"?(b.confidenceScore-a.confidenceScore)||b.impactAmount-a.impactAmount:sort==="spend"?(b.spend-a.spend)||b.priorityScore-a.priorityScore:(b.priorityScore-a.priorityScore)||b.impactAmount-a.impactAmount||b.spend-a.spend);
@@ -12029,7 +11882,6 @@ const renderFilteredWorkspace = ({generation=0,total=null,reason="filter"}={}) =
     ["经营总览",()=>renderKPIs(metrics)],
     ["数据完整性",()=>renderDataIntegrityPanel(rows)],
     ["决策完整性",renderOperationsIntegrityHub],
-    ["异常检测",()=>detectAnomalies(rows)],
     ["经营趋势",()=>renderTrend(rows)],
     ["榜单治理",renderRankTable],
     ["Business Report",renderBusinessReport],
@@ -12296,7 +12148,7 @@ const bindEvents = () => {
       AdsStore.bidControlIndex.clear(); AdsStore.rankGroups = new Map(); AdsStore.isolationRows = []; AdsStore.structureIndex=null; APP_RUNTIME.bulkIndexVersion="";
       AdsStore.indexes.exactTerm.clear(); AdsStore.bizLifecycleMap.clear(); AdsStore.bizAggregateMap.clear(); AdsStore.transactionEconomicsCache={signature:"",snapshot:null};
       rootCache.clear(); tokenCache.clear(); clearStringPool(); deepAnalysisRequested = false;
-      lastCampaignStudioData = null; lastCampaignStudioPlainText = ""; currentAlertsText = "";
+      lastCampaignStudioData = null; lastCampaignStudioPlainText = "";
       if ($("dataIntegrityPanel")) { $("dataIntegrityPanel").style.display = "none"; $("dataIntegrityPanel").innerHTML = ""; }
       try { idbKeyval.clear(); } catch(e) {}
       renderFileList(); populateDropdowns(); applyFilters(true);
@@ -12365,7 +12217,6 @@ const bindEvents = () => {
     $("btnExportNeg").addEventListener("click", exportNegativesExcel); 
     $("btnExportLongTail").addEventListener("click", exportLongTailExcel); 
     $("btnExportRank").addEventListener("click", exportRankExcel);
-    $("btnExportListingAudit")?.addEventListener("click", exportListingCoverageAudit);
     $("btnExportActionPlan")?.addEventListener("click", exportActionPlanExcel);
     $("btnExportActionBulk")?.addEventListener("click", exportActionBulkExcel);
     $("btnExportActionKeywordExact")?.addEventListener("click", () => exportActionKeywordTemplateExcel("exact"));
@@ -12373,7 +12224,6 @@ const bindEvents = () => {
     $("btnExportActionKeywordBroad")?.addEventListener("click", () => exportActionKeywordTemplateExcel("broad"));
     $("btnRefreshActionPlan")?.addEventListener("click",()=>{renderActionCommandCenter();renderCentralDecisionRegistry(true);notify(actionV4Text("统一决策与执行中心已重新计算。","Decision & Execution Center recalculated."),"good");});
     ["actionFilterType", "actionTopMode", "actionSortMode", "actionBroadRootMode", "actionMinSpend", "actionMaxRows"].forEach(id => { $(id)?.addEventListener("input", debounce(renderActionCommandCenter, 200)); $(id)?.addEventListener("change", renderActionCommandCenter); });
-    $("listingCopyInput")?.addEventListener("input", debounce(() => { renderLongTailMining(); renderActionCommandCenter(); }, 300));
     $("btnActionSelectExecutable")?.addEventListener("click", actionV4SelectExecutable);
     $("btnActionClearSelection")?.addEventListener("click", actionV4ClearSelection);
     $("btnActionExportSelected")?.addEventListener("click", exportActionBulkExcel);
@@ -12559,13 +12409,13 @@ const getAiInitialPrompt = () => currentLang === 'zh'
 2. 🧠 搜索词意图分层与否定冲突风险
 3. 🩸 止血手术清单 (Negation & Downbidding)
 4. 🚀 结构重组、精准/词组/广泛拓词建议
-5. 🧩 Listing Conversion Doctor 与接下来 14 天操盘指令`
+5. 🧩 接下来 14 天操盘指令`
     : `Run a full account health diagnosis. Output exactly these 5 modules with <h3> tags:
 1. 🧭 Core Health Check and Trend Direction
 2. 🧠 Search Term Intent Layers and Negative Conflict Risk
 3. 🩸 Bleeding Control List (Negation & Downbidding)
 4. 🚀 Structure Rebuild and Exact/Phrase/Broad Expansion
-5. 🧩 Listing Conversion Doctor and 14-Day Command Plan`;
+5. 🧩 14-Day Command Plan`;
 
 const getGeminiErrorMessage = async (response) => {
     let detail = '';
@@ -12644,7 +12494,6 @@ const buildAdvancedAIContext = () => {
   const actionRowsForAI = buildActionPlan({ actionFilter: 'all', noLimit: true });
   const actionCenterSummary = summarizeActionRowsForAI(actionRowsForAI);
   const schemaAuditSummary = (AdsStore.schemaAudits || []).slice(-8).map(a => `${a.fileName || '-'} | ${a.reportType} | ${a.adProduct ? getAdProductDisplayLabel(a.adProduct) : '-'} | ${a.attributionWindowDays || '-'}d | warnings:${(a.warnings || []).length}`).join('\n') || 'No schema audit records in current session.';
-  const listingDoctorSummary = buildListingConversionDoctorContext();
   const decisionSchemaSnapshot = JSON.stringify(actionRowsForAI.slice(0, 25).map(r => r.decisionSchema), null, 2);
 
   return `
@@ -12675,7 +12524,6 @@ ${recent7Days.join(' ➡️ ')}
 【Action Center 已判定动作池】
 ${actionCenterSummary}
 
-${listingDoctorSummary}
 
 【AI 决策 JSON Schema 快照】
 ${decisionSchemaSnapshot}
@@ -13027,7 +12875,6 @@ ${getAiLanguageInstruction()}
 7. 任何 Bulk 文件都只能称为草稿，上传前必须确认 Campaign、Ad Group、Match Type、Bid。
 8. 必须优先引用【AI 决策 JSON Schema 快照】里的 action、intent、confidence、negativeGuard 和 evidence，不允许凭感觉给否定/加价/拓词。
 9. 否定词必须通过 Negative Conflict Guard：遇到 review/block 只能建议人工复核或降价，不得说“直接上传”。
-10. Listing 建议必须基于 Listing Conversion Doctor：高转化但未承接的词才建议加入五点/A+/后台词；错配词绝不写入 Listing。
 
 【你的任务约束】
 1. 绝对禁止使用 Markdown 语法（如 ** 或 #）。必须且只能使用基础 HTML 标签。
@@ -13406,9 +13253,6 @@ return {
     },true);
     window.addEventListener("unhandledrejection",e=>{reportError("异步任务",e.reason||"Unhandled rejection");});
     AdsDashboardApp.isInitialized = true;
-  },
-  pushCurrentAlerts: () => {
-      pushToWebhook(currentAlertsText || "No alerts to push.");
   },
   debug: {
     getUnifiedDiagnostics: () => ({schema:APP_SCHEMA_VERSION,build:APP_BUILD_VERSION,dependencyHealth:window.__dependencyHealth||null,performance:APP_RUNTIME.performance||null,revision:AdsStore.calculationRevision||0,context:AdsStore.currentContext?{signature:AdsStore.currentContext.signature,grain:AdsStore.currentContext.grain,filters:AdsStore.currentContext.filters,configHash:AdsStore.currentContext.configHash}:null,dimensions:Object.keys(UNIFIED_DIMENSIONS),metricDictionary:Object.keys(UNIFIED_METRIC_DICTIONARY),moduleContracts:UNIFIED_MODULE_CONTRACTS,viewMetrics:AdsStore.view?.length?getViewMetricsCached():null,transaction:AdsStore.transactions?.length?{rows:AdsStore.transactions.length,summary:buildTransactionEconomicsSnapshot(AdsStore.currentContext||UnifiedDecisionEngine.context()).account}:null,cache:{hits:APP_RUNTIME.unifiedEngine.metricHits,misses:APP_RUNTIME.unifiedEngine.metricMisses},invalidations:[...APP_RUNTIME.unifiedEngine.invalidations]}),
