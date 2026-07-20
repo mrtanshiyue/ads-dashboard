@@ -6,9 +6,9 @@
 <meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://oapi.dingtalk.com https://qyapi.weixin.qq.com https://open.feishu.cn https://hooks.slack.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.4.9 Private Cloud Bridge</title>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.0 Private Cloud Bridge</title>
 <script>
-window.APP_BUILD_VERSION='V61.4.9';
+window.APP_BUILD_VERSION='V61.5.0';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" onerror="__loadDependencyFallback('PapaParse','https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js')"></script>
@@ -2654,24 +2654,6 @@ B0XXXXXXXX,19.99,0.28,4.35,0.15,0.02,0.03,0.08,0.35,0.30,0.10,0.10" style="min-h
 <div class="small" data-i18n="desc_export_limit">导出限制：只有榜单维度为 Search Term / Root 时允许导出（避免导出 Campaign/AdGroup 之类的名字当否定词）</div>
 </div>
 <div class="fieldGroup">
-<div class="fieldRow">
-<label data-i18n="lbl_ai_conversion_engine">AI 转化诊断输入</label>
-<textarea aria-label="AI 转化诊断输入" data-i18n-placeholder="ph_listing_copy" id="listingCopyInput" placeholder="粘贴当前 Listing 标题、五点、后台词或 A+ 文案。AI 会用广告出单词反查承接缺口。"></textarea>
-<div class="small" data-i18n="desc_ai_conversion_engine">用于 Listing Conversion Doctor：识别广告高转化词是否被标题/五点/A+ 承接，避免广告有流量但页面不转化。</div>
-</div>
-<div class="fieldRow">
-<button class="btn primary" data-i18n="btn_export_listing_audit" id="btnExportListingAudit" type="button">导出 Listing 转化诊断</button>
-</div>
-</div>
-<div class="fieldGroup">
-<div class="fieldRow"><label data-i18n="lbl_webhook">异常告警 Webhook (如钉钉/飞书)</label>
-<div style="display: flex; gap: 6px;">
-<input aria-label="异常告警 Webhook (如钉钉/飞书)" id="webhookUrl" placeholder="https://oapi.dingtalk.com/robot/send?access_token=..." style="flex:1" type="text">
-<button class="btn" data-i18n="btn_test_webhook" id="btnTestWebhook" type="button">测试推送</button>
-</div>
-</div>
-</div>
-<div class="fieldGroup">
 <div class="fieldRow"><label data-i18n="lbl_actions">操作</label></div>
 <div class="fieldRow"><button class="btn" data-i18n="btn_reset_filters" id="btnReset" type="button">重置筛选</button></div>
 <div class="fieldRow"><button class="btn danger" data-i18n="btn_clear_data" id="btnClearAll" type="button">清空已导入数据与缓存分片</button></div>
@@ -4359,7 +4341,7 @@ const PERF = {
   IDB_CHUNK_ROWS: 25000
 };
 const APP_DATA_SCHEMA_VERSION = "ADS_DECISION_OS_2026_07_TRANSACTION_ECONOMICS_V61";
-const APP_BUILD_VERSION = "V61.4.9";
+const APP_BUILD_VERSION = "V61.5.0";
 const APP_SCHEMA_VERSION = APP_DATA_SCHEMA_VERSION;
 const AMAZON_AD_PRODUCT_META = {
   SP: { code: "SP", label: "Sponsored Products", bulkAllowed: true, defaultAttributionDays: 7, role: "keyword_and_product_targeting" },
@@ -13494,10 +13476,8 @@ window.addEventListener('load', AdsDashboardApp.init);
     '03 · 筛选与流量范围',
     '04 · 榜单分析范围',
     '05 · 利润与决策规则',
-    '06 · Listing 转化诊断',
-    '07 · 自动化告警',
-    '08 · 系统操作',
-    '09 · 导入日志'
+    '06 · 系统操作',
+    '07 · 导入日志'
   ];
   document.querySelectorAll('.sidebar > .fieldGroup').forEach((group, i) => {
     group.dataset.sectionTitle = titles[i] || `配置模块 ${String(i + 1).padStart(2, '0')}`;
