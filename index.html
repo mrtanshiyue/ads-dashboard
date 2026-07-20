@@ -28,10 +28,15 @@ const getText=async url=>{const r=await fetch(url,{cache:'no-store'});if(!r.ok)t
 const fail=error=>{console.error(error);document.getElementById('bar')?.remove();status.className='bad';status.textContent='平台启动失败：'+(error?.message||String(error))+'\n请刷新页面重试。'};
 (async()=>{
   status.textContent='正在读取稳定版应用核心…';
-  const [source,...parts]=await Promise.all([getText(SOURCE),...PARTS.map(getText)]);
+  let [source,...parts]=await Promise.all([getText(SOURCE),...PARTS.map(getText)]);
   status.textContent='正在校验并装载采购成本模型…';
   const patch=JSON.parse(await ungzip(parts.join('')));
-  if((await sha(source))!==patch.oldSha256)throw new Error('基础版本校验失败，请联系维护人员');
+  const lf=source.replace(/\r\n/g,'\n');
+  const candidates=[source,lf,'\n'+source,'\n\n'+source,'\n'+lf,'\n\n'+lf];
+  let verified='';
+  for(const candidate of candidates){if((await sha(candidate))===patch.oldSha256){verified=candidate;break;}}
+  if(!verified)throw new Error('基础版本校验失败，请联系维护人员');
+  source=verified;
   const lines=source.split(/(?<=\n)/);
   if(lines.length!==patch.oldLineCount)throw new Error('基础版本行数校验失败');
   for(let i=patch.ops.length-1;i>=0;i--){const [start,end,replacement]=patch.ops[i];lines.splice(start,end-start,replacement)}
