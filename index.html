@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -8,9 +9,9 @@
 <meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api-v2.tanshiyuesir.workers.dev https://amazon-ad-private-api.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.4.4 Dual API Fallback</title>
+<title>朗容眼镜 - 广告运营工作台 V61.5.4.7 Trend First</title>
 <script>
-window.APP_BUILD_VERSION='V61.5.4.4';
+window.APP_BUILD_VERSION='V61.5.4.7';
 window.PRIVATE_API_VERSION='v1';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
@@ -2754,9 +2755,9 @@ B0XXXXXXXX,19.99,0.28,4.35,0.15,0.02,0.03,0.08,0.35,0.30,0.10,0.10" style="min-h
 <div class="card chartCard execOverviewCard execOverviewV3 uiSectionAnchor" id="overviewSection">
 <div class="execOverviewHeader">
 <div class="execOverviewTitle">
-<div class="execSectionEyebrow">EXECUTIVE CONTROL TOWER</div>
-<h2 data-i18n="title_exec_overview">经营与决策完整性中心 (Executive Overview)</h2>
-<div class="hint" data-i18n="hint_exec_overview">经营指标、数据质量、执行门禁与联动动作统一显示，先识别风险，再决定修复与扩量</div>
+<div class="execSectionEyebrow">EXECUTIVE OVERVIEW</div>
+<h2 data-i18n="title_exec_overview">经营总览</h2>
+<div class="hint" data-i18n="hint_exec_overview">经营结果、真实费用、利润线与执行风险统一查看</div>
 </div>
 <div class="execOverviewMeta" id="execOverviewMeta">—</div>
 </div>
@@ -3436,8 +3437,8 @@ const I18N = {
       ph_ai_chat: "输入指令，例如：画一个关于各维度 CPC 的柱状图...",
       btn_send: "发送",
       btn_ai_stop: "停止生成",
-      title_exec_overview: "经营与决策完整性中心 (Executive Overview)",
-      hint_exec_overview: "经营指标、数据质量、执行门禁与联动动作统一显示，先识别风险，再决定修复与扩量",
+      title_exec_overview: "经营总览",
+      hint_exec_overview: "经营结果、真实费用、利润线与执行风险统一查看",
       title_action_center: "统一广告决策与执行中心",
       hint_action_center: "只输出 6 类动作：否定、加价、降价、投放精准、投放词组、投放广泛；新增今日 Top 20 与广泛词根提炼",
       btn_action_refresh: "刷新建议",
@@ -14024,5 +14025,26 @@ window.addEventListener('load', AdsDashboardApp.init);
 })();
 </script>
 
+<!-- LR_TREND_FIRST_V61547_START -->
+<style id="lrTrendFirstGithubPatch">
+#growthCommandSection,.execCompactActions,.sidebarNav a[href="#growthCommandSection"]{display:none!important}
+.execOverviewV3 .execOverviewHeader{padding:12px 16px 8px!important}
+.execOverviewV3 .execOverviewTitle h2{font-size:16px!important}
+.execOverviewV3 .execOverviewTitle .hint{margin-top:3px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#execTrendDetails{margin:8px 16px 0!important}
+#execTrendDetails .execChartWrap{height:260px!important}
+.execFinanceBand{margin:8px 16px 0!important;padding:9px!important;border:1px solid color-mix(in srgb,var(--accent) 20%,var(--line))!important;border-radius:13px!important;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 5%,var(--card)),var(--card))!important;box-shadow:none!important}
+.execFinanceBand .transactionSummaryGrid{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.execFinanceBand .transactionMetric{padding:6px 7px;border-radius:9px}
+.execFinanceBand .transactionMetric .v{margin-top:2px;font-size:13.5px}
+.execFinanceBand .transactionMetric .m{display:none}
+.execFinanceBand .transactionStatusStrip{margin:6px 0}
+@media(max-width:1280px){.execFinanceBand .transactionSummaryGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.execOverviewV3 .execOverviewTitle .hint{white-space:normal}.execFinanceBand .transactionSummaryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<script id="lrTrendFirstGithubRuntime">
+(()=>{const apply=()=>{const overview=document.getElementById('overviewSection'),toolbar=overview?.querySelector('.execToolbar'),trend=document.getElementById('execTrendDetails');if(toolbar&&trend){trend.open=true;toolbar.insertAdjacentElement('afterend',trend)}const kpi=document.getElementById('kpiGrid'),tx=document.getElementById('transactionReportCard');if(kpi&&tx){tx.classList.remove('card');tx.classList.add('execFinanceBand');kpi.insertAdjacentElement('afterend',tx);const h=tx.querySelector('h2'),hint=tx.querySelector('.hint'),details=tx.querySelector('.transactionReportDetails'),note=document.getElementById('transactionDecisionNote');if(h)h.textContent='实际费用与利润线';if(hint)hint.textContent='联合交易报告按 Posted Date 生效；广告扣款仅用于对账，不重复扣减';if(details){const s=details.querySelector('summary'),table=details.querySelector('.table-container');if(s)s.textContent='利润口径与 SKU 实际经济参数';if(note&&table&&note.parentElement!==details)details.insertBefore(note,table)}}document.querySelectorAll('#growthCommandSection,.execCompactActions').forEach(el=>{el.hidden=true;el.setAttribute('aria-hidden','true')});const nav=document.querySelector('.sidebarNav a[href="#growthCommandSection"]');if(nav)nav.hidden=true};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();let n=0;const timer=setInterval(()=>{apply();if(++n>=20)clearInterval(timer)},300)})();
+</script>
+<!-- LR_TREND_FIRST_V61547_END -->
 </body>
 </html>
