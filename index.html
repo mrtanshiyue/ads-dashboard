@@ -5,12 +5,12 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api-v2.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
+<meta content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://generativelanguage.googleapis.com https://openrouter.ai https://api.groq.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://amazon-ad-private-api-v2.tanshiyuesir.workers.dev https://amazon-ad-private-api.tanshiyuesir.workers.dev; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" http-equiv="Content-Security-Policy"/>
 <meta content="strict-origin-when-cross-origin" name="referrer"/>
 <meta content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" http-equiv="Permissions-Policy"/>
-<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.4.3 API Route Fix</title>
+<title>朗容眼镜 - 广告运营工作台 v2026.07 V61.5.4.4 Dual API Fallback</title>
 <script>
-window.APP_BUILD_VERSION='V61.5.4.3';
+window.APP_BUILD_VERSION='V61.5.4.4';
 window.PRIVATE_API_VERSION='v1';
 window.__loadDependencyFallback=(name,url)=>{window.__dependencyFallbacks=window.__dependencyFallbacks||{};if(window.__dependencyFallbacks[name])return;window.__dependencyFallbacks[name]=true;const s=document.createElement('script');s.src=url;s.crossOrigin='anonymous';s.dataset.dependencyFallback=name;s.onerror=()=>console.error(`Dependency fallback failed: ${name}`);document.head.appendChild(s);};
 </script>
@@ -13727,6 +13727,7 @@ window.addEventListener('load', AdsDashboardApp.init);
   'use strict';
 
   const API_ORIGIN = 'https://amazon-ad-private-api-v2.tanshiyuesir.workers.dev';
+  const API_FALLBACK_ORIGIN = 'https://amazon-ad-private-api.tanshiyuesir.workers.dev';
   const SESSION_KEY = 'lr_private_cloud_password';
   const state = { loading: false, manifest: null };
   const byId = id => document.getElementById(id);
@@ -13822,27 +13823,70 @@ window.addEventListener('load', AdsDashboardApp.init);
     return pathname;
   };
 
-  const apiFetchJson = async (path, password) => {
-    const normalized = normalizeApiPath(path);
-    const requestUrl = `${API_ORIGIN}${normalized}`;
-    const response = await fetch(requestUrl, {
+  const toLegacyApiPath = normalized => {
+    let pathname = String(normalized || '');
+    pathname = pathname.replace(/^\/api\/v1\/manifest$/i, '/manifest');
+    pathname = pathname.replace(/^\/api\/v1\/audit$/i, '/audit');
+    pathname = pathname.replace(/^\/api\/v1\/data\/product-costs(?:\.json)?$/i, '/data/product-costs.json');
+    pathname = pathname.replace(/^\/api\/v1\/data\/(ads|transactions)\/(\d{4}-\d{2})$/i, '/data/$1-$2.json');
+    pathname = pathname.replace(/^\/api\/v1\/data\//i, '/data/');
+    return pathname;
+  };
+
+  const requestApiJson = async (origin, pathname, password) => {
+    const response = await fetch(`${origin}${pathname}`, {
       method: 'GET',
       headers: { 'X-Dashboard-Password': password },
       cache: 'no-store'
     });
-
     const text = await response.text();
     let payload = null;
     try { payload = text ? JSON.parse(text) : null; } catch (_) {}
+    return { response, payload };
+  };
 
-    if (!response.ok) {
-      const detail = payload?.error || `私有接口请求失败（HTTP ${response.status}）`;
-      const error = new Error(`${detail} · ${normalized}`);
-      error.status = response.status;
-      error.path = normalized;
+  const apiFetchJson = async (path, password) => {
+    const normalized = normalizeApiPath(path);
+    let primaryResult = null;
+    let primaryNetworkError = null;
+
+    try {
+      primaryResult = await requestApiJson(API_ORIGIN, normalized, password);
+      if (primaryResult.response.ok) {
+        state.apiChannel = 'v2-cache';
+        return primaryResult.payload;
+      }
+      if (![404, 502, 503, 504].includes(primaryResult.response.status)) {
+        const detail = primaryResult.payload?.error || `私有接口请求失败（HTTP ${primaryResult.response.status}）`;
+        const error = new Error(`${detail} · ${normalized}`);
+        error.status = primaryResult.response.status;
+        error.path = normalized;
+        throw error;
+      }
+    } catch (error) {
+      if (error?.status) throw error;
+      primaryNetworkError = error;
+    }
+
+    const legacyPath = toLegacyApiPath(normalized);
+    try {
+      const fallbackResult = await requestApiJson(API_FALLBACK_ORIGIN, legacyPath, password);
+      if (fallbackResult.response.ok) {
+        state.apiChannel = 'legacy-fallback';
+        return fallbackResult.payload;
+      }
+      const detail = fallbackResult.payload?.error || `备用私有接口请求失败（HTTP ${fallbackResult.response.status}）`;
+      const error = new Error(`${detail} · ${legacyPath}`);
+      error.status = fallbackResult.response.status;
+      error.path = legacyPath;
+      throw error;
+    } catch (fallbackError) {
+      if (fallbackError?.status) throw fallbackError;
+      const primaryStatus = primaryResult?.response?.status ? `HTTP ${primaryResult.response.status}` : (primaryNetworkError?.message || '网络错误');
+      const error = new Error(`V2接口不可用（${primaryStatus}），备用接口连接失败 · ${legacyPath}`);
+      error.path = legacyPath;
       throw error;
     }
-    return payload;
   };
 
   const extractRows = payload => {
@@ -13935,7 +13979,8 @@ window.addEventListener('load', AdsDashboardApp.init);
 
       const totalRows = Number(manifest.totalRows || fetchedRows || 0);
       const costRows = Number(costSummary?.rowCount || 0);
-      const statusText = `私有云数据已加载：${totalRows.toLocaleString()} 行 · ${dataEntries.length} 个广告/交易文件${costRows?` · 成本库 ${costRows.toLocaleString()} SKU`:' · 成本库未加载'}`;
+      const apiLabel = state.apiChannel === 'legacy-fallback' ? '备用接口' : 'V2缓存接口';
+      const statusText = `私有云数据已加载：${totalRows.toLocaleString()} 行 · ${dataEntries.length} 个广告/交易文件${costRows?` · 成本库 ${costRows.toLocaleString()} SKU`:' · 成本库未加载'} · ${apiLabel}`;
       setStatus(statusText, costWarning ? 'warn' : 'good');
       const brand = byId('brandStatus');
       if (brand) brand.textContent = `系统就绪 · 私有云 ${totalRows.toLocaleString()} 行${costRows?` · 成本 ${costRows.toLocaleString()} SKU`:''}`;
@@ -13965,7 +14010,9 @@ window.addEventListener('load', AdsDashboardApp.init);
     window.PrivateCloudAds = {
       load: loadPrivateCloudData,
       clearPassword: () => sessionSafe.remove(SESSION_KEY),
-      apiBase: API_ORIGIN
+      apiBase: API_ORIGIN,
+      fallbackApiBase: API_FALLBACK_ORIGIN,
+      channel: () => state.apiChannel || 'unknown'
     };
   };
 
